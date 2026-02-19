@@ -1,0 +1,166 @@
+from datetime import datetime, timedelta, timezone
+
+from fastapi import Depends, HTTPException, Query, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from .config import settings
+from .database import get_db
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+security_scheme = HTTPBearer()
+
+IMPERSONATION_TOKEN_EXPIRE_MINUTES = 120
+
+
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
+
+
+def create_access_token(data: dict) -> str:
+    to_encode = data.copy()
+    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire, "type": "access"})
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+
+def create_refresh_token(data: dict) -> str:
+    to_encode = data.copy()
+    expire = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    to_encode.update({"exp": expire, "type": "refresh"})
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+
+def create_impersonation_token(
+    target_user_id: int,
+    target_email: str,
+    admin_user_id: int,
+    session_id: str,
+) -> str:
+    to_encode = {
+        "sub": str(target_user_id),
+        "email": target_email,
+        "impersonated_by": admin_user_id,
+        "impersonation_session_id": session_id,
+        "type": "access",
+    }
+    expire = datetime.now(timezone.utc) + timedelta(minutes=IMPERSONATION_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+
+def decode_token(token: str) -> dict:
+    try:
+        return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token invalide ou expiré",
+        )
+
+
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security_scheme),
+    db: AsyncSession = Depends(get_db),
+):
+    from ..features._core.models import User, ImpersonationLog
+
+    payload = decode_token(credentials.credentials)
+    if payload.get("type") != "access":
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Type de token invalide")
+
+    user_id = payload.get("sub")
+    if user_id is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide")
+
+    impersonated_by = payload.get("impersonated_by")
+    if impersonated_by:
+        session_id = payload.get("impersonation_session_id")
+        if not session_id:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Session d'impersonation invalide")
+
+        result = await db.execute(
+            select(ImpersonationLog).where(
+                ImpersonationLog.session_id == session_id,
+                ImpersonationLog.ended_at.is_(None),
+            )
+        )
+        session = result.scalar_one_or_none()
+        if not session:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Session d'impersonation expirée")
+
+        session.last_activity_at = datetime.now(timezone.utc)
+        await db.flush()
+
+    result = await db.execute(select(User).where(User.id == int(user_id)))
+    user = result.scalar_one_or_none()
+    if user is None or not user.is_active:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Utilisateur introuvable ou désactivé")
+
+    user._impersonated_by = impersonated_by
+    user._impersonation_session_id = payload.get("impersonation_session_id")
+    return user
+
+
+async def get_current_super_admin(
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if is_impersonating(current_user):
+        original_admin_id = get_original_admin_id(current_user)
+        if original_admin_id:
+            from ..features._core.models import User
+
+            result = await db.execute(select(User).where(User.id == original_admin_id))
+            original_admin = result.scalar_one_or_none()
+            if original_admin and original_admin.is_super_admin:
+                return current_user
+
+    if not current_user.is_super_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès réservé aux super administrateurs")
+    return current_user
+
+
+def is_impersonating(user) -> bool:
+    return hasattr(user, "_impersonated_by") and user._impersonated_by is not None
+
+
+def get_original_admin_id(user) -> int | None:
+    return getattr(user, "_impersonated_by", None)
+
+
+async def prevent_impersonation_action(current_user=Depends(get_current_user)):
+    if is_impersonating(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cette action n'est pas autorisée en mode impersonation",
+        )
+    return current_user
+
+
+async def get_current_user_from_query_token(
+    token: str = Query(...),
+    db: AsyncSession = Depends(get_db),
+):
+    from ..features._core.models import User
+
+    payload = decode_token(token)
+    if payload.get("type") != "access":
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide")
+
+    user_id = payload.get("sub")
+    if user_id is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide")
+
+    result = await db.execute(select(User).where(User.id == int(user_id)))
+    user = result.scalar_one_or_none()
+    if user is None or not user.is_active:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Utilisateur introuvable")
+    return user

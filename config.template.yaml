@@ -1,0 +1,28 @@
+# ============================================================
+# Template Configuration — Overwritten on template update
+# Project-specific overrides go in config.custom.yaml
+# ============================================================
+
+app:
+  name: "Kertios Template"
+  version: "1.0.0"
+
+# Default feature states (true = active by default)
+features:
+  notification: true
+  notification.email: true
+  notification.push: false
+  notification.webhook: true
+
+# Feature-specific configuration defaults
+notification.email:
+  smtp_host: "smtp.office365.com"
+  smtp_port: 587
+  smtp_use_tls: true
+
+notification.push:
+  vapid_subject: "mailto:noreply@example.com"
+
+notification.webhook:
+  timeout: 10
+  max_retries: 3
