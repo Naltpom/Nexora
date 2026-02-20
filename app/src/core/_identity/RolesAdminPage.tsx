@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, FormEvent } from 'react'
 import Layout from '../../core/Layout'
 import { useConfirm } from '../../core/ConfirmModal'
 import api from '../../api'
+import './_identity.scss'
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -335,7 +336,7 @@ export default function RolesAdminPage() {
       {loading ? (
         <div className="spinner" />
       ) : (
-        <div style={isPermsMode ? { display: 'flex', gap: '16px' } : undefined}>
+        <div className={isPermsMode ? 'flex-row-lg' : ''}>
           {/* ---- Roles table ---- */}
           <div
             className={`unified-card card-table${isPermsMode ? '' : ' full-width-breakout'}`}
@@ -355,7 +356,7 @@ export default function RolesAdminPage() {
                 <tbody>
                   {roles.length === 0 ? (
                     <tr>
-                      <td colSpan={isPermsMode ? 2 : 5} style={{ textAlign: 'center', padding: '32px', color: 'var(--gray-400)' }}>
+                      <td colSpan={isPermsMode ? 2 : 5} className="empty-state-sm">
                         Aucun role trouve
                       </td>
                     </tr>
@@ -372,14 +373,13 @@ export default function RolesAdminPage() {
                         <td><strong>{role.name}</strong></td>
 
                         {!isPermsMode && (
-                          <td style={{ color: 'var(--gray-500)' }}>{role.description || '\u2014'}</td>
+                          <td className="text-gray-500">{role.description || '\u2014'}</td>
                         )}
 
                         {!isPermsMode && (
                           <td>
                             <span
-                              className="badge badge-info"
-                              style={{ cursor: 'pointer' }}
+                              className="badge badge-info cursor-pointer"
                               onClick={() => openPerms(role)}
                               title="Gerer les permissions"
                             >
@@ -389,7 +389,7 @@ export default function RolesAdminPage() {
                         )}
 
                         {!isPermsMode && (
-                          <td style={{ fontSize: 13, color: 'var(--gray-500)', whiteSpace: 'nowrap' }}>
+                          <td className="text-gray-500-sm nowrap">
                             {formatDate(role.created_at)}
                           </td>
                         )}
@@ -408,7 +408,7 @@ export default function RolesAdminPage() {
                               </button>
                             ) : null
                           ) : (
-                            <div style={{ display: 'flex', gap: 4 }}>
+                            <div className="flex-row-xs">
                               <button
                                 className="btn-icon btn-icon-primary"
                                 onClick={() => openPerms(role)}
@@ -452,17 +452,16 @@ export default function RolesAdminPage() {
           {/* ---- Permissions panel ---- */}
           {isPermsMode && permsRole && (
             <div
-              className="unified-card"
-              style={{ flex: '1 1 auto', overflow: 'hidden' }}
+              className="unified-card perms-panel-flex"
             >
               {/* Panel header */}
-              <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--gray-100)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <div className="section-header">
+                <div className="perms-panel-header">
                   <div>
-                    <h2 style={{ fontSize: '16px', fontWeight: 600, margin: 0 }}>
+                    <h2 className="title-section-lg">
                       Permissions de {permsRole.name}
                     </h2>
-                    <span style={{ fontSize: '13px', color: 'var(--gray-400)' }}>
+                    <span className="text-muted-sm">
                       {permsGrantedCount} / {permsTotal} actives
                     </span>
                   </div>
@@ -482,22 +481,14 @@ export default function RolesAdminPage() {
                   placeholder="Rechercher une permission..."
                   value={permsSearch}
                   onChange={(e) => handlePermsSearch(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px 12px',
-                    fontSize: '13px',
-                    border: '1px solid var(--gray-200)',
-                    borderRadius: '8px',
-                    background: 'var(--gray-50)',
-                    color: 'var(--text-primary, var(--gray-700))',
-                  }}
+                  className="input-styled"
                 />
               </div>
 
               {/* Permissions table */}
               <div className="table-container">
                 {permsLoading ? (
-                  <div style={{ textAlign: 'center', padding: '32px' }}>
+                  <div className="perms-panel-spinner">
                     <div className="spinner" />
                   </div>
                 ) : (
@@ -507,31 +498,31 @@ export default function RolesAdminPage() {
                         <th>Nom</th>
                         <th>Slug</th>
                         <th>Description</th>
-                        <th style={{ textAlign: 'center' }}>Active</th>
+                        <th className="text-center">Active</th>
                       </tr>
                     </thead>
                     <tbody>
                       {perms.length === 0 ? (
                         <tr>
-                          <td colSpan={4} style={{ textAlign: 'center', padding: '32px', color: 'var(--gray-400)' }}>
+                          <td colSpan={4} className="empty-state-sm">
                             Aucune permission trouvee
                           </td>
                         </tr>
                       ) : (
                         perms.map((perm) => (
                           <tr key={perm.id}>
-                            <td style={{ fontWeight: 500, fontSize: '13px' }}>
+                            <td className="font-medium-sm">
                               {perm.label || perm.code}
                             </td>
                             <td>
-                              <code style={{ fontSize: '11px', color: 'var(--gray-500)', backgroundColor: 'var(--gray-100)', padding: '2px 6px', borderRadius: '4px' }}>
+                              <code className="badge-tag badge-tag--gray">
                                 {perm.code}
                               </code>
                             </td>
-                            <td style={{ fontSize: '13px', color: 'var(--gray-500)' }}>
+                            <td className="text-gray-500-sm">
                               {perm.description || '\u2014'}
                             </td>
-                            <td style={{ textAlign: 'center' }}>
+                            <td className="text-center">
                               <label className="toggle" style={{ cursor: togglingPermId === perm.id ? 'wait' : 'pointer' }}>
                                 <input
                                   type="checkbox"
@@ -552,7 +543,7 @@ export default function RolesAdminPage() {
 
               {/* Pagination */}
               {!permsLoading && permsTotal > 0 && (
-                <div style={{ padding: '0 20px 12px' }}>
+                <div className="section-padding-h">
                   {renderPagination()}
                 </div>
               )}

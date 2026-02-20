@@ -33,6 +33,7 @@ Quand tu crees une feature :
 - Runtime & package manager : **Bun** (pas npm, pas yarn)
 - Dark theme et light theme obligatoires (toute UI doit supporter les deux)
 - Decouverte dynamique des routes via `import.meta.glob`
+- **AUCUN style inline dans les TSX** (`style={{}}` interdit) — tous les styles dans des fichiers `.scss` uniquement
 
 ### Backend
 - FastAPI + Python 3.11
@@ -98,7 +99,7 @@ Meme structure que ci-dessus.
 <name>/
   index.ts         # Export manifest + routes
   *.tsx             # Composants React
-  *.css             # Styles
+  *.scss            # Styles (SCSS, jamais de CSS brut)
 ```
 
 ### Frontend projet (`app/src/features/<name>/`)
@@ -191,3 +192,4 @@ manifest = FeatureManifest(
 - Ne pas ajouter de tests sauf demande explicite
 - Apres chaque modification, mettre a jour le CHANGELOG concerne
 - **Toujours utiliser Docker** pour executer des commandes (build, install, run, migrations, etc.). Ne jamais executer directement sur la machine hote. Exception : les commandes `git` s'executent sur la machine hote.
+- **Avant chaque git add/commit** : verifier et mettre a jour les changelogs (global + features concernees) et bumper les versions si necessaire

@@ -1,3 +1,4 @@
+import './backgrounds.scss'
 import { useDarkMode } from './useDarkMode'
 
 const LIGHT_BLOBS = [
@@ -24,66 +25,25 @@ export default function MeshGradientBlobsBg() {
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: -1,
-        background: bg,
-        overflow: 'hidden',
-        transition: 'background 0.5s ease',
-      }}
+      className="mesh-bg-container"
+      style={{ background: bg }}
     >
       {blobs.map((blob, i) => (
         <div
           key={i}
+          className="mesh-blob"
           style={{
-            position: 'absolute',
             width: blob.size,
             height: blob.size,
-            borderRadius: '50%',
             background: `radial-gradient(circle, ${blob.color} 0%, transparent 70%)`,
-            filter: 'blur(60px)',
             animation: `${blob.anim} ${18 + i * 3}s ease-in-out infinite`,
             top: blob.top,
             bottom: blob.bottom,
             left: blob.left,
             right: blob.right,
-            transition: 'background 0.8s ease',
           }}
         />
       ))}
-
-      <style>{`
-        @keyframes meshBlob1 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          25% { transform: translate(15vw, 12vh) scale(1.08); }
-          50% { transform: translate(8vw, 25vh) scale(0.92); }
-          75% { transform: translate(-5vw, 8vh) scale(1.04); }
-        }
-        @keyframes meshBlob2 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          25% { transform: translate(-12vw, -18vh) scale(1.12); }
-          50% { transform: translate(-20vw, -4vh) scale(0.88); }
-          75% { transform: translate(-8vw, -12vh) scale(1.06); }
-        }
-        @keyframes meshBlob3 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(-16vw, 8vh) scale(1.08); }
-          66% { transform: translate(4vw, -12vh) scale(0.94); }
-        }
-        @keyframes meshBlob4 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          20% { transform: translate(12vw, -8vh) scale(1.04); }
-          40% { transform: translate(20vw, 4vh) scale(0.92); }
-          60% { transform: translate(8vw, 12vh) scale(1.1); }
-          80% { transform: translate(-4vw, 4vh) scale(0.96); }
-        }
-        @keyframes meshBlob5 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          30% { transform: translate(-8vw, 16vh) scale(1.08); }
-          60% { transform: translate(12vw, -8vh) scale(0.92); }
-        }
-      `}</style>
     </div>
   )
 }

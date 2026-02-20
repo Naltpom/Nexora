@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useAuth } from '../../../core/AuthContext'
 import BackgroundThemePicker from '../../../core/BackgroundThemePicker'
+import '../../_identity/_identity.scss'
+import '../preference.scss'
 
 export default function ThemeSection() {
   const { getPreference, updatePreference } = useAuth()
@@ -13,12 +15,12 @@ export default function ThemeSection() {
   }
 
   return (
-    <div className="unified-card" style={{ padding: 24 }}>
-      <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Theme et Apparence</h2>
+    <div className="unified-card card-padded">
+      <h2 className="title-sm">Theme et Apparence</h2>
 
-      <div className="form-group" style={{ marginBottom: 20 }}>
+      <div className="form-group pref-form-group-spaced">
         <label>Mode</label>
-        <div style={{ display: 'flex', gap: 12 }}>
+        <div className="flex-row">
           <button
             className={`btn ${currentTheme === 'light' ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => handleThemeChange('light')}
@@ -38,11 +40,11 @@ export default function ThemeSection() {
 
       <div className="form-group">
         <label>Fond d'ecran</label>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div className="pref-actions-row">
           <button className="btn btn-secondary" onClick={() => setShowBgPicker(true)} type="button">
             Choisir un fond
           </button>
-          <span style={{ fontSize: 12, color: 'var(--gray-400)' }}>
+          <span className="pref-hint">
             ou Alt + T
           </span>
         </div>

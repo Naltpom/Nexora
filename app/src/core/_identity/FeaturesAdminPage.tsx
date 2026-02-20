@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import Layout from '../../core/Layout'
 import { useConfirm } from '../../core/ConfirmModal'
 import api from '../../api'
+import './_identity.scss'
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -137,16 +138,7 @@ export default function FeaturesAdminPage() {
       </div>
 
       {message && (
-        <div
-          className="card"
-          style={{
-            marginBottom: '16px',
-            padding: '12px 16px',
-            backgroundColor: message.type === 'success' ? 'var(--success-bg, #ecfdf5)' : 'var(--danger-bg, #fef2f2)',
-            color: message.type === 'success' ? 'var(--success, #059669)' : 'var(--danger, #DC2626)',
-            border: `1px solid ${message.type === 'success' ? 'var(--success, #059669)' : 'var(--danger, #DC2626)'}20`,
-          }}
-        >
+        <div className={`alert-dynamic alert-dynamic--${message.type === 'success' ? 'success' : 'error'}`}>
           {message.text}
         </div>
       )}
@@ -154,28 +146,19 @@ export default function FeaturesAdminPage() {
       {loading ? (
         <div className="spinner" />
       ) : features.length === 0 ? (
-        <div className="unified-card" style={{ textAlign: 'center', padding: '48px', color: 'var(--gray-400)' }}>
+        <div className="unified-card empty-state">
           Aucune feature trouvee
         </div>
       ) : (
         <div className="unified-card full-width-breakout">
           {/* Search bar */}
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--gray-100)' }}>
+          <div className="section-header">
             <input
               type="text"
               placeholder="Rechercher une feature..."
               value={searchValue}
               onChange={(e) => handleSearchChange(e.target.value)}
-              style={{
-                width: '100%',
-                maxWidth: '320px',
-                padding: '8px 12px',
-                fontSize: '13px',
-                border: '1px solid var(--gray-200)',
-                borderRadius: '8px',
-                background: 'var(--gray-50)',
-                color: 'var(--text-primary, var(--gray-700))',
-              }}
+              className="input-search-wide"
             />
           </div>
 
@@ -189,13 +172,13 @@ export default function FeaturesAdminPage() {
                   <th>Statut</th>
                   <th>Infos</th>
                   <th>Dependances</th>
-                  <th style={{ textAlign: 'center' }}>Activer</th>
+                  <th className="text-center">Activer</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredFeatures.length === 0 ? (
                   <tr>
-                    <td colSpan={7} style={{ textAlign: 'center', padding: '32px', color: 'var(--gray-400)' }}>
+                    <td colSpan={7} className="empty-state-sm">
                       {search ? 'Aucune feature correspondante' : 'Aucune feature trouvee'}
                     </td>
                   </tr>
@@ -203,51 +186,50 @@ export default function FeaturesAdminPage() {
                   filteredFeatures.map(({ feature, isChild }) => (
                     <tr
                       key={feature.name}
-                      style={{ opacity: feature.active ? 1 : 0.6 }}
+                      className={feature.active ? '' : 'opacity-60'}
                     >
                       {/* Feature name */}
                       <td style={{ paddingLeft: isChild ? '48px' : undefined }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div className="feature-name-col">
                           {isChild && (
-                            <span style={{ color: 'var(--gray-300)', fontSize: '14px', marginLeft: '-20px', marginRight: '4px' }}>└</span>
+                            <span className="feature-child-arrow">└</span>
                           )}
                           <div>
-                            <div style={{ fontWeight: 500 }}>{feature.label}</div>
-                            <code style={{ fontSize: '11px', color: 'var(--gray-400)' }}>{feature.name}</code>
+                            <div className="font-medium">{feature.label}</div>
+                            <code className="text-gray-400-code">{feature.name}</code>
                           </div>
                         </div>
                       </td>
 
                       {/* Description */}
-                      <td style={{ fontSize: '13px', color: 'var(--gray-500)', maxWidth: '300px' }}>
+                      <td className="feature-desc-col">
                         {feature.description || '\u2014'}
                       </td>
 
                       {/* Version */}
-                      <td style={{ fontSize: '13px', color: 'var(--gray-500)', whiteSpace: 'nowrap' }}>
+                      <td className="text-gray-500-sm nowrap">
                         v{feature.version}
                       </td>
 
                       {/* Status */}
                       <td>
-                        <span className={`badge ${feature.active ? 'badge-success' : 'badge-warning'}`} style={{ fontSize: '11px' }}>
+                        <span className={`badge ${feature.active ? 'badge-success' : 'badge-warning'} text-xs`}>
                           {feature.active ? 'Actif' : 'Inactif'}
                         </span>
                       </td>
 
                       {/* Info badges */}
                       <td>
-                        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                        <div className="flex-row-xs flex-wrap">
                           {feature.is_core && (
-                            <span className="badge badge-secondary" style={{ fontSize: '11px' }}>Core</span>
+                            <span className="badge badge-secondary text-xs">Core</span>
                           )}
                           {feature.has_routes && (
-                            <span className="badge badge-info" style={{ fontSize: '11px' }}>Routes</span>
+                            <span className="badge badge-info text-xs">Routes</span>
                           )}
                           {feature.permissions.length > 0 && (
                             <span
-                              className="badge badge-secondary"
-                              style={{ fontSize: '11px', cursor: 'pointer' }}
+                              className="badge badge-secondary text-xs cursor-pointer"
                               onClick={async () => {
                                 setDetailModal({
                                   title: `Permissions de ${feature.label}`,
@@ -276,8 +258,7 @@ export default function FeaturesAdminPage() {
                           )}
                           {feature.children.length > 0 && (
                             <span
-                              className="badge badge-secondary"
-                              style={{ fontSize: '11px', cursor: 'pointer' }}
+                              className="badge badge-secondary text-xs cursor-pointer"
                               onClick={() => {
                                 const childItems = feature.children.map(name => {
                                   const child = features.find(f => f.name === name)
@@ -302,14 +283,14 @@ export default function FeaturesAdminPage() {
                       </td>
 
                       {/* Dependencies */}
-                      <td style={{ fontSize: '13px', color: 'var(--gray-500)' }}>
+                      <td className="text-gray-500-sm">
                         {feature.depends.length > 0 ? feature.depends.join(', ') : '\u2014'}
                       </td>
 
                       {/* Toggle */}
-                      <td style={{ textAlign: 'center' }}>
+                      <td className="text-center">
                         {feature.is_core ? (
-                          <span style={{ fontSize: '12px', color: 'var(--gray-400)', fontStyle: 'italic' }}>
+                          <span className="feature-locked">
                             Verrouille
                           </span>
                         ) : (
@@ -336,33 +317,29 @@ export default function FeaturesAdminPage() {
       {/* Detail modal (permissions / children list) */}
       {detailModal && (
         <div className="modal-overlay" onClick={() => setDetailModal(null)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+          <div className="modal modal-narrow" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{detailModal.title}</h2>
               <button className="modal-close" onClick={() => setDetailModal(null)}>&times;</button>
             </div>
-            <div className="modal-body" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+            <div className="modal-body modal-body-scroll">
               {detailModal.loading ? (
-                <div style={{ textAlign: 'center', padding: '24px' }}><div className="spinner" /></div>
+                <div className="text-center p-24"><div className="spinner" /></div>
               ) : detailModal.items.length === 0 ? (
-                <p style={{ color: 'var(--gray-400)', textAlign: 'center' }}>Aucun element</p>
+                <p className="text-gray-400 text-center">Aucun element</p>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div className="flex-col-sm">
                   {detailModal.items.map((item) => (
                     <div
                       key={item.code}
-                      style={{
-                        padding: '10px 12px',
-                        borderRadius: '6px',
-                        border: '1px solid var(--gray-200)',
-                      }}
+                      className="detail-item"
                     >
                       {item.label && (
-                        <div style={{ fontSize: '13px', fontWeight: 500, marginBottom: '2px' }}>{item.label}</div>
+                        <div className="detail-item-label">{item.label}</div>
                       )}
-                      <code style={{ fontSize: '11px', color: 'var(--gray-500)' }}>{item.code}</code>
+                      <code className="text-gray-500-code">{item.code}</code>
                       {item.description && (
-                        <div style={{ fontSize: '12px', color: 'var(--gray-400)', marginTop: '4px' }}>{item.description}</div>
+                        <div className="detail-item-desc">{item.description}</div>
                       )}
                     </div>
                   ))}

@@ -1,5 +1,6 @@
 import { useState, FormEvent, Suspense, lazy } from 'react'
 import { Link } from 'react-router-dom'
+import './_identity.scss'
 import Layout from '../../core/Layout'
 import { useAuth } from '../../core/AuthContext'
 import { useFeature } from '../../core/FeatureContext'
@@ -89,13 +90,13 @@ export default function Profile() {
 
   return (
     <Layout breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Mon profil' }]} title="Mon profil">
-      <div style={{ maxWidth: 640, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div className="page-narrow">
         {/* User Info Section */}
-        <div className="unified-card" style={{ padding: 24 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Informations personnelles</h2>
+        <div className="unified-card card-padded">
+          <h2 className="title-sm">Informations personnelles</h2>
           <form onSubmit={handleSaveInfo}>
-            {infoError && <div className="alert alert-error" style={{ marginBottom: 12 }}>{infoError}</div>}
-            {infoMessage && <div className="alert alert-success" style={{ marginBottom: 12 }}>{infoMessage}</div>}
+            {infoError && <div className="alert alert-error alert-spaced">{infoError}</div>}
+            {infoMessage && <div className="alert alert-success alert-spaced">{infoMessage}</div>}
 
             <div className="form-group">
               <label>Email</label>
@@ -107,7 +108,7 @@ export default function Profile() {
               />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div className="form-grid-2col">
               <div className="form-group">
                 <label>Prenom</label>
                 <input
@@ -135,11 +136,11 @@ export default function Profile() {
         </div>
 
         {/* Password Section */}
-        <div className="unified-card" style={{ padding: 24 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Changer le mot de passe</h2>
+        <div className="unified-card card-padded">
+          <h2 className="title-sm">Changer le mot de passe</h2>
           <form onSubmit={handleChangePassword}>
-            {pwdError && <div className="alert alert-error" style={{ marginBottom: 12 }}>{pwdError}</div>}
-            {pwdMessage && <div className="alert alert-success" style={{ marginBottom: 12 }}>{pwdMessage}</div>}
+            {pwdError && <div className="alert alert-error alert-spaced">{pwdError}</div>}
+            {pwdMessage && <div className="alert alert-success alert-spaced">{pwdMessage}</div>}
 
             <div className="form-group">
               <label>Mot de passe actuel</label>
@@ -180,14 +181,14 @@ export default function Profile() {
 
         {/* MFA Section */}
         {isActive('mfa') && (
-          <div className="unified-card" style={{ padding: 24 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>Authentification multi-facteurs (MFA)</h2>
+          <div className="unified-card card-padded">
+            <div className="flex-between mb-16">
+              <h2 className="title-sm mb-0">Authentification multi-facteurs (MFA)</h2>
               <Suspense fallback={null}>
                 <MFAStatusBadge />
               </Suspense>
             </div>
-            <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 16 }}>
+            <p className="text-secondary">
               Renforcez la securite de votre compte en activant une methode de verification supplementaire.
             </p>
             <Link to="/profile/mfa" className="btn btn-secondary">
@@ -198,9 +199,9 @@ export default function Profile() {
 
         {/* SSO Section */}
         {isActive('sso') && (
-          <div className="unified-card" style={{ padding: 24 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Comptes lies</h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 16 }}>
+          <div className="unified-card card-padded">
+            <h2 className="title-sm">Comptes lies</h2>
+            <p className="text-secondary">
               Liez vos comptes externes pour vous connecter plus rapidement.
             </p>
             <Suspense fallback={null}>
@@ -211,9 +212,9 @@ export default function Profile() {
 
         {/* Preferences Section */}
         {isActive('preference') ? (
-          <div className="unified-card" style={{ padding: 24 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Preferences</h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 16 }}>
+          <div className="unified-card card-padded">
+            <h2 className="title-sm">Preferences</h2>
+            <p className="text-secondary">
               Gerez vos preferences de theme, tutoriels, et plus.
             </p>
             <Link to="/profile/preferences" className="btn btn-secondary">
@@ -221,11 +222,11 @@ export default function Profile() {
             </Link>
           </div>
         ) : (
-          <div className="unified-card" style={{ padding: 24 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Preferences</h2>
+          <div className="unified-card card-padded">
+            <h2 className="title-sm">Preferences</h2>
             <div className="form-group">
               <label>Theme</label>
-              <div style={{ display: 'flex', gap: 12 }}>
+              <div className="flex-row">
                 <button
                   className={`btn ${currentTheme === 'light' ? 'btn-primary' : 'btn-secondary'}`}
                   onClick={() => handleThemeChange('light')}

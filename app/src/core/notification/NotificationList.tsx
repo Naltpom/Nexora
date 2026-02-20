@@ -5,7 +5,7 @@ import { useAuth } from '../../core/AuthContext'
 import { useNotifications } from './NotificationContext'
 import { useConfirm } from '../../core/ConfirmModal'
 import api from '../../api'
-import './notifications.css'
+import './notifications.scss'
 
 function timeAgo(dateStr: string): string {
   const now = new Date()
@@ -168,8 +168,8 @@ function UserNotificationList() {
       {loading ? (
         <div className="spinner" />
       ) : notifications.length === 0 ? (
-        <div className="unified-card" style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--gray-400)' }}>
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ margin: '0 auto 12px', display: 'block', opacity: 0.3 }}>
+        <div className="unified-card notif-empty-state">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="notif-empty-icon">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
             <path d="M13.73 21a2 2 0 0 1-3.46 0" />
           </svg>
@@ -177,7 +177,7 @@ function UserNotificationList() {
         </div>
       ) : (
         <>
-          <div className="unified-card" style={{ padding: 0, overflow: 'hidden' }}>
+          <div className="unified-card notif-card-flush">
             {notifications.map(notif => (
               <div
                 key={notif.id}
@@ -193,7 +193,7 @@ function UserNotificationList() {
                   )}
                   <div className="notification-list-card-meta">
                     <span className="notification-event-badge">{notif.event_type}</span>
-                    <span style={{ fontSize: '12px', color: 'var(--gray-400)' }}>{timeAgo(notif.created_at)}</span>
+                    <span className="notif-time-ago">{timeAgo(notif.created_at)}</span>
                   </div>
                 </div>
                 <div className="notification-list-card-actions">
@@ -444,7 +444,7 @@ function AdminNotificationList() {
                 <tbody>
                   {notifications.length === 0 ? (
                     <tr>
-                      <td colSpan={myOnly ? 7 : 8} style={{ textAlign: 'center', padding: '32px', color: 'var(--gray-400)' }}>
+                      <td colSpan={myOnly ? 7 : 8} className="notif-admin-empty-cell">
                         Aucune notification
                       </td>
                     </tr>
@@ -453,8 +453,8 @@ function AdminNotificationList() {
                       <tr key={notif.id}>
                         {!myOnly && (
                           <td>
-                            <div style={{ fontWeight: 500, fontSize: '13px' }}>{notif.user_name}</div>
-                            <div style={{ fontSize: '11px', color: 'var(--gray-400)' }}>{notif.user_email}</div>
+                            <div className="notif-user-name">{notif.user_name}</div>
+                            <div className="notif-user-email">{notif.user_email}</div>
                           </td>
                         )}
                         <td>
@@ -462,7 +462,7 @@ function AdminNotificationList() {
                             {notif.title}
                           </div>
                           {notif.body && (
-                            <div style={{ fontSize: '11px', color: 'var(--gray-400)' }}>
+                            <div className="notif-body-secondary">
                               {notif.body}
                             </div>
                           )}
@@ -472,7 +472,7 @@ function AdminNotificationList() {
                         </td>
                         <td>
                           {notif.is_read ? (
-                            <span style={{ color: 'var(--green-500, #22c55e)' }} title="Lu">
+                            <span className="notif-status-green" title="Lu">
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="20 6 9 17 4 12" />
                               </svg>
@@ -481,35 +481,35 @@ function AdminNotificationList() {
                             <span className="notification-item-dot" title="Non lu" />
                           )}
                         </td>
-                        <td style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>
+                        <td className="notif-cell-nowrap">
                           {notif.email_sent_at ? (
-                            <span style={{ color: 'var(--green-500, #22c55e)' }} title={formatDate(notif.email_sent_at)}>
+                            <span className="notif-status-green" title={formatDate(notif.email_sent_at)}>
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="20 6 9 17 4 12" />
                               </svg>
                               {' '}{formatDate(notif.email_sent_at)}
                             </span>
                           ) : (
-                            <span style={{ color: 'var(--gray-400)' }}>{'\u2014'}</span>
+                            <span className="notif-dash-muted">{'\u2014'}</span>
                           )}
                         </td>
-                        <td style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>
+                        <td className="notif-cell-nowrap">
                           {notif.webhook_sent_at ? (
-                            <span style={{ color: 'var(--green-500, #22c55e)' }} title={formatDate(notif.webhook_sent_at)}>
+                            <span className="notif-status-green" title={formatDate(notif.webhook_sent_at)}>
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="20 6 9 17 4 12" />
                               </svg>
                               {' '}{formatDate(notif.webhook_sent_at)}
                             </span>
                           ) : (
-                            <span style={{ color: 'var(--gray-400)' }}>{'\u2014'}</span>
+                            <span className="notif-dash-muted">{'\u2014'}</span>
                           )}
                         </td>
-                        <td style={{ whiteSpace: 'nowrap', fontSize: '12px' }}>
+                        <td className="notif-cell-nowrap">
                           {formatDate(notif.created_at)}
                         </td>
                         <td>
-                          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', alignItems: 'center' }}>
+                          <div className="notif-actions-wrap">
                             {!notif.is_read && (
                               <button
                                 className="btn-icon btn-icon-secondary"

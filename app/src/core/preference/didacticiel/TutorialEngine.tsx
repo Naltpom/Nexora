@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useTutorial } from './TutorialContext'
-import './didacticiel.css'
+import './didacticiel.scss'
 
 interface TargetRect {
   top: number
@@ -71,9 +71,9 @@ export default function TutorialEngine() {
   const isLast = activeStepIndex === totalSteps - 1
   const padding = 8
 
-  const getTooltipStyle = (): React.CSSProperties => {
+  const getTooltipStyle = (): React.CSSProperties | undefined => {
     if (!targetRect) {
-      return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }
+      return undefined
     }
 
     const pos = step.position || 'auto'
@@ -172,7 +172,7 @@ export default function TutorialEngine() {
       )}
 
       {/* Tooltip */}
-      <div className="tutorial-tooltip" style={getTooltipStyle()} ref={tooltipRef}>
+      <div className={`tutorial-tooltip${!targetRect ? ' tutorial-tooltip-centered' : ''}`} style={getTooltipStyle()} ref={tooltipRef}>
         <div className="tutorial-tooltip-header">
           <span className="tutorial-tooltip-step">{activeStepIndex + 1} / {totalSteps}</span>
           <button className="tutorial-tooltip-close" onClick={skipTutorial} type="button">&times;</button>

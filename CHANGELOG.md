@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026.02.11
+
+### Refactoring : migration CSS → SCSS + extraction des styles inline
+- Migration de 6 fichiers CSS vers SCSS (`global`, `notifications`, `sso`, `mfa`, `didacticiel`, `events`)
+- Creation de 3 nouveaux fichiers SCSS (`backgrounds.scss`, `_identity.scss`, `preference.scss`)
+- Extraction de 360+ styles inline des fichiers TSX vers des classes CSS dans les fichiers SCSS
+- Ajout de la dependance `sass` (dev)
+- Application du nesting SCSS aux fichiers features (notifications, sso, mfa, events, didacticiel)
+- Deplacement des `@keyframes` inline (`<style>` JSX) vers les fichiers SCSS
+- Seuls les styles dynamiques (valeurs calculees en JS) restent inline (13 instances)
+
 ## 2026.02.10
 
 ### Refactoring : renommage des dossiers

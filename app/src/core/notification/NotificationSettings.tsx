@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '../../core/AuthContext'
 import Layout from '../../core/Layout'
 import api from '../../api'
-import './notifications.css'
+import '../_identity/_identity.scss'
+import './notifications.scss'
 
 /* -- Types -- */
 
@@ -453,13 +454,13 @@ export default function NotificationSettings() {
             <span className="notif-rule-template-badge">Template</span>
           )}
           {showBadges && locked && rule.user_preference?.is_customized && (
-            <span className="notif-rule-template-badge" style={{ background: 'rgba(245, 158, 11, 0.12)', color: '#f59e0b' }}>
+            <span className="notif-rule-template-badge notif-badge-personalized">
               Personnalise
             </span>
           )}
           {showBadges && locked && (
             <span className="notif-rule-template-badge notif-rule-admin-badge">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: 3, verticalAlign: 'middle' }}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="notif-lock-icon">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
@@ -545,13 +546,13 @@ export default function NotificationSettings() {
                           const wh = myWebhooks.find(w => w.id === whId)
                           if (!wh) return null
                           return (
-                            <span key={whId} className="webhook-badge" style={{ background: 'rgba(99,102,241,0.12)', color: '#6366f1' }}>
+                            <span key={whId} className="webhook-badge webhook-badge-indigo">
                               {wh.name || 'Webhook'}
                             </span>
                           )
                         })
                       ) : (
-                        <span style={{ color: 'var(--gray-400)', fontSize: 12 }}>Aucun webhook</span>
+                        <span className="notif-webhook-placeholder">Aucun webhook</span>
                       )}
                     </div>
                   </div>
@@ -566,7 +567,7 @@ export default function NotificationSettings() {
                               checked={selected}
                               onChange={() => toggleWebhookForRule(rule, wh.id)}
                             />
-                            <span className="webhook-badge" style={{ background: 'rgba(99,102,241,0.12)', color: '#6366f1' }}>
+                            <span className="webhook-badge webhook-badge-indigo">
                               {wh.name || 'Webhook'}
                             </span>
                           </label>
@@ -603,13 +604,13 @@ export default function NotificationSettings() {
                           const wh = myWebhooks.find(w => w.id === whId)
                           if (!wh) return null
                           return (
-                            <span key={whId} className="webhook-badge" style={{ background: 'rgba(99,102,241,0.12)', color: '#6366f1' }}>
+                            <span key={whId} className="webhook-badge webhook-badge-indigo">
                               {wh.name || 'Webhook'}
                             </span>
                           )
                         })
                       ) : (
-                        <span style={{ color: 'var(--gray-400)', fontSize: 12 }}>Aucun webhook</span>
+                        <span className="notif-webhook-placeholder">Aucun webhook</span>
                       )}
                     </div>
                   </div>
@@ -624,7 +625,7 @@ export default function NotificationSettings() {
                               checked={selected}
                               onChange={() => togglePersonalWebhook(rule, wh.id)}
                             />
-                            <span className="webhook-badge" style={{ background: 'rgba(99,102,241,0.12)', color: '#6366f1' }}>
+                            <span className="webhook-badge webhook-badge-indigo">
                               {wh.name || 'Webhook'}
                             </span>
                           </label>
@@ -720,12 +721,12 @@ export default function NotificationSettings() {
         <div className="notif-webhook-name">
           {wh.name || 'Webhook'}
           {wh.format && wh.format !== 'custom' && (
-            <span className="notif-event-tag" style={{ marginLeft: 8, textTransform: 'capitalize' }}>{wh.format}</span>
+            <span className="notif-event-tag notif-format-tag">{wh.format}</span>
           )}
         </div>
         <div className="notif-webhook-url">{wh.url}</div>
         {wh.prefix && (
-          <div className="notif-webhook-url" style={{ fontStyle: 'italic' }}>Prefixe : {wh.prefix}</div>
+          <div className="notif-webhook-url italic">Prefixe : {wh.prefix}</div>
         )}
       </div>
       <div className="notif-webhook-actions">
@@ -755,7 +756,7 @@ export default function NotificationSettings() {
   if (loading) {
     return (
       <Layout title="Notifications" breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Notifications', path: '/notifications' }, { label: 'Parametres' }]}>
-        <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}>
+        <div className="notif-loading-center">
           <div className="spinner" />
         </div>
       </Layout>
@@ -897,13 +898,13 @@ export default function NotificationSettings() {
       {/* -- Rule Modal -- */}
       {showRuleModal && (
         <div className="modal-overlay" onClick={() => setShowRuleModal(false)}>
-          <div className="modal" style={{ maxWidth: 560 }} onClick={e => e.stopPropagation()}>
+          <div className="modal notif-modal-rule" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{editingRule ? 'Modifier la regle' : 'Nouvelle regle'}</h2>
               <button className="modal-close" onClick={() => setShowRuleModal(false)}>&times;</button>
             </div>
             <div className="modal-body">
-              {error && <div className="alert alert-error" style={{ marginBottom: 12 }}>{error}</div>}
+              {error && <div className="alert alert-error notif-alert-spaced">{error}</div>}
 
               <div className="form-group">
                 <label>Nom de la regle</label>
@@ -924,7 +925,7 @@ export default function NotificationSettings() {
                 </label>
                 <div className="notif-event-checkboxes">
                   {Object.entries(eventsByCategory).map(([category, events]) => (
-                    <div key={category} style={{ display: 'contents' }}>
+                    <div key={category} className="notif-display-contents">
                       <div className="notif-event-category">{category}</div>
                       {events.map(et => (
                         <label key={et.event_type} className="notif-event-checkbox">
@@ -1016,7 +1017,7 @@ export default function NotificationSettings() {
               {ruleScope === 'global' && isSuperAdmin && ruleForm.is_default_template && (
                 <div className="form-group">
                   <label>Canaux actives par defaut chez les utilisateurs</label>
-                  <p style={{ fontSize: 12, color: 'var(--gray-400)', margin: '2px 0 8px' }}>
+                  <p className="notif-default-channels-desc">
                     Les utilisateurs qui n'ont pas personnalise leurs preferences recevront ces canaux par defaut.
                   </p>
                   <div className="notif-channel-options">
@@ -1064,13 +1065,13 @@ export default function NotificationSettings() {
       {/* -- Webhook Modal -- */}
       {showWebhookModal && (
         <div className="modal-overlay" onClick={() => setShowWebhookModal(false)}>
-          <div className="modal" style={{ maxWidth: 480 }} onClick={e => e.stopPropagation()}>
+          <div className="modal notif-modal-webhook" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{editingWebhook ? 'Modifier le webhook' : 'Nouveau webhook'}</h2>
               <button className="modal-close" onClick={() => setShowWebhookModal(false)}>&times;</button>
             </div>
             <div className="modal-body">
-              {error && <div className="alert alert-error" style={{ marginBottom: 12 }}>{error}</div>}
+              {error && <div className="alert alert-error notif-alert-spaced">{error}</div>}
 
               <div className="form-group">
                 <label>Nom (optionnel)</label>
@@ -1122,7 +1123,7 @@ export default function NotificationSettings() {
                   onChange={e => setWebhookForm(prev => ({ ...prev, prefix: e.target.value }))}
                   placeholder="Ex: @canal"
                 />
-                <small style={{ color: 'var(--text-secondary)', marginTop: 4, display: 'block' }}>
+                <small className="notif-form-hint">
                   Ajoute en premiere ligne de chaque message envoye
                 </small>
               </div>

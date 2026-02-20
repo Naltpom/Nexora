@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../core/AuthContext'
 import api from '../../api'
-import './sso.css'
+import './sso.scss'
 
 function parseJwtPayload(token: string): Record<string, any> | null {
   try {
@@ -98,7 +98,7 @@ export default function SSOCallbackPage() {
         {loading && !error && (
           <div className="sso-callback-loading">
             <div className="sso-spinner" />
-            <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginTop: 16 }}>
+            <p className="sso-callback-loading-text">
               Connexion en cours...
             </p>
           </div>
@@ -111,13 +111,13 @@ export default function SSOCallbackPage() {
               <line x1="15" y1="9" x2="9" y2="15" />
               <line x1="9" y1="9" x2="15" y2="15" />
             </svg>
-            <h2 style={{ fontSize: 18, fontWeight: 600, margin: '16px 0 8px', color: 'var(--text-primary)' }}>
+            <h2 className="sso-callback-error-title">
               Echec de la connexion
             </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 20 }}>
+            <p className="sso-callback-error-message">
               {error}
             </p>
-            <Link to="/login" className="btn btn-primary" style={{ textDecoration: 'none' }}>
+            <Link to="/login" className="btn btn-primary sso-callback-back-link">
               Retour a la connexion
             </Link>
           </div>

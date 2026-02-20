@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Layout from '../../core/Layout'
 import api from '../../api'
+import './_identity.scss'
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                             */
@@ -192,7 +193,7 @@ export default function UserDetailPage() {
   if (!user) {
     return (
       <Layout breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Utilisateurs', path: '/admin/users' }]} title="Utilisateur introuvable">
-        <div className="unified-card" style={{ textAlign: 'center', padding: '48px', color: 'var(--gray-400)' }}>
+        <div className="unified-card empty-state">
           Utilisateur introuvable
         </div>
       </Layout>
@@ -211,47 +212,34 @@ export default function UserDetailPage() {
       title={`${user.first_name} ${user.last_name}`}
     >
       {message && (
-        <div
-          className="card"
-          style={{
-            marginBottom: '16px',
-            padding: '12px 16px',
-            backgroundColor: message.type === 'success' ? 'var(--success-bg, #ecfdf5)' : 'var(--danger-bg, #fef2f2)',
-            color: message.type === 'success' ? 'var(--success, #059669)' : 'var(--danger, #DC2626)',
-            border: `1px solid ${message.type === 'success' ? 'var(--success, #059669)' : 'var(--danger, #DC2626)'}20`,
-          }}
-        >
+        <div className={`alert-dynamic ${message.type === 'success' ? 'alert-dynamic--success' : 'alert-dynamic--error'}`}>
           {message.text}
         </div>
       )}
 
       {/* Header card */}
-      <div className="unified-card" style={{ padding: '20px', marginBottom: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{
-            width: 48, height: 48, borderRadius: '50%', backgroundColor: '#3B82F6',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#fff', fontWeight: 700, fontSize: 20, flexShrink: 0,
-          }}>
+      <div className="unified-card ud-header-card">
+        <div className="flex-center-xl">
+          <div className="avatar-circle">
             {avatarInitial}
           </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 600, fontSize: 18 }}>{user.first_name} {user.last_name.toUpperCase()}</div>
-            <div style={{ fontSize: 13, color: 'var(--gray-500)' }}>{user.email}</div>
+          <div className="flex-1">
+            <div className="ud-name">{user.first_name} {user.last_name.toUpperCase()}</div>
+            <div className="text-gray-500-sm">{user.email}</div>
           </div>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-            <span className={`badge ${user.is_active ? 'badge-success' : 'badge-warning'}`} style={{ fontSize: 11 }}>
+          <div className="ud-badges">
+            <span className={`badge ${user.is_active ? 'badge-success' : 'badge-warning'} text-xs`}>
               {user.is_active ? 'Actif' : 'Inactif'}
             </span>
             {user.is_super_admin && (
-              <span className="badge badge-info" style={{ fontSize: 11 }}>Admin</span>
+              <span className="badge badge-info text-xs">Admin</span>
             )}
-            <span className="badge badge-secondary" style={{ fontSize: 11 }}>
+            <span className="badge badge-secondary text-xs">
               {user.auth_source}
             </span>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '24px', marginTop: '12px', fontSize: 12, color: 'var(--gray-400)' }}>
+        <div className="info-row">
           <span>Derniere connexion : {formatDate(user.last_login)}</span>
           <span>Derniere activite : {formatDate(user.last_active)}</span>
           <span>Cree le : {formatDate(user.created_at)}</span>
@@ -259,87 +247,87 @@ export default function UserDetailPage() {
       </div>
 
       {/* Info + Roles side by side */}
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+      <div className="flex-row-lg section-mb">
         {/* Profile form */}
-        <div className="unified-card" style={{ flex: '1 1 0', padding: '20px' }}>
-          <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 16 }}>Informations</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <label style={{ fontSize: 13 }}>
-              <span style={{ display: 'block', fontWeight: 500, marginBottom: 4, color: 'var(--gray-500)' }}>Email</span>
+        <div className="unified-card ud-main-panel">
+          <h3 className="title-section mb-16">Informations</h3>
+          <div className="flex-col-lg">
+            <label className="text-sm">
+              <span className="field-label">Email</span>
               <input
                 type="email"
                 value={form.email}
                 onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                style={{ width: '100%', padding: '8px 12px', fontSize: 13, border: '1px solid var(--gray-200)', borderRadius: 8, background: 'var(--gray-50)', color: 'var(--text-primary)' }}
+                className="input-styled"
               />
             </label>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <label style={{ fontSize: 13, flex: 1 }}>
-                <span style={{ display: 'block', fontWeight: 500, marginBottom: 4, color: 'var(--gray-500)' }}>Prenom</span>
+            <div className="flex-row">
+              <label className="text-sm flex-1">
+                <span className="field-label">Prenom</span>
                 <input
                   type="text"
                   value={form.first_name}
                   onChange={e => setForm(f => ({ ...f, first_name: e.target.value }))}
-                  style={{ width: '100%', padding: '8px 12px', fontSize: 13, border: '1px solid var(--gray-200)', borderRadius: 8, background: 'var(--gray-50)', color: 'var(--text-primary)' }}
+                  className="input-styled"
                 />
               </label>
-              <label style={{ fontSize: 13, flex: 1 }}>
-                <span style={{ display: 'block', fontWeight: 500, marginBottom: 4, color: 'var(--gray-500)' }}>Nom</span>
+              <label className="text-sm flex-1">
+                <span className="field-label">Nom</span>
                 <input
                   type="text"
                   value={form.last_name}
                   onChange={e => setForm(f => ({ ...f, last_name: e.target.value }))}
-                  style={{ width: '100%', padding: '8px 12px', fontSize: 13, border: '1px solid var(--gray-200)', borderRadius: 8, background: 'var(--gray-50)', color: 'var(--text-primary)' }}
+                  className="input-styled"
                 />
               </label>
             </div>
-            <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
-                <span style={{ color: 'var(--gray-500)', fontWeight: 500 }}>Admin</span>
+            <div className="ud-toggle-row">
+              <label className="ud-toggle-label">
+                <span className="text-gray-500-sm font-medium">Admin</span>
                 <label className="toggle">
                   <input type="checkbox" checked={form.is_super_admin} onChange={e => setForm(f => ({ ...f, is_super_admin: e.target.checked }))} />
                   <span className="toggle-slider" />
                 </label>
               </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
-                <span style={{ color: 'var(--gray-500)', fontWeight: 500 }}>Actif</span>
+              <label className="ud-toggle-label">
+                <span className="text-gray-500-sm font-medium">Actif</span>
                 <label className="toggle">
                   <input type="checkbox" checked={form.is_active} onChange={e => setForm(f => ({ ...f, is_active: e.target.checked }))} />
                   <span className="toggle-slider" />
                 </label>
               </label>
             </div>
-            <button className="btn btn-primary" onClick={handleSaveProfile} disabled={saving} style={{ alignSelf: 'flex-start', fontSize: 13 }}>
+            <button className="btn btn-primary ud-save-btn" onClick={handleSaveProfile} disabled={saving}>
               {saving ? 'Sauvegarde...' : 'Sauvegarder'}
             </button>
           </div>
         </div>
 
         {/* Roles */}
-        <div className="unified-card" style={{ flex: '0 0 280px', padding: '20px' }}>
-          <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 16 }}>Roles</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div className="unified-card ud-side-panel">
+          <h3 className="title-section mb-16">Roles</h3>
+          <div className="flex-col-md">
             {allRoles.map(role => {
               const assigned = user.roles.some(r => r.id === role.id)
               return (
-                <label key={role.id} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, cursor: 'pointer' }}>
+                <label key={role.id} className="ud-role-label">
                   <input
                     type="checkbox"
                     checked={assigned}
                     onChange={() => handleToggleRole(role.id)}
-                    style={{ accentColor: '#3B82F6' }}
+                    className="accent-blue"
                   />
                   <div>
-                    <div style={{ fontWeight: 500 }}>{role.name}</div>
+                    <div className="font-medium">{role.name}</div>
                     {role.description && (
-                      <div style={{ fontSize: 11, color: 'var(--gray-400)' }}>{role.description}</div>
+                      <div className="text-muted text-xs">{role.description}</div>
                     )}
                   </div>
                 </label>
               )
             })}
             {allRoles.length === 0 && (
-              <div style={{ fontSize: 12, color: 'var(--gray-400)' }}>Aucun role disponible</div>
+              <div className="text-muted">Aucun role disponible</div>
             )}
           </div>
         </div>
@@ -347,21 +335,21 @@ export default function UserDetailPage() {
 
       {/* Permissions table */}
       <div className="unified-card full-width-breakout">
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--gray-100)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>Permissions</h3>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div className="section-header flex-between">
+          <h3 className="title-section mb-0">Permissions</h3>
+          <div className="flex-center-xl">
             {/* Legend */}
-            <div style={{ display: 'flex', gap: 8, fontSize: 11 }}>
-              <span style={{ padding: '2px 6px', borderRadius: 4, backgroundColor: '#7C3AED', color: '#fff' }}>U</span>
-              <span style={{ padding: '2px 6px', borderRadius: 4, border: '1px solid #3B82F6', color: '#3B82F6' }}>R</span>
-              <span style={{ padding: '2px 6px', borderRadius: 4, border: '1px solid #059669', color: '#059669' }}>G</span>
+            <div className="ud-legend">
+              <span className="badge-tag badge-tag--purple">U</span>
+              <span className="badge-tag badge-tag--blue-outline">R</span>
+              <span className="badge-tag badge-tag--green-outline">G</span>
             </div>
             <input
               type="text"
               placeholder="Rechercher..."
               value={permSearch}
               onChange={e => setPermSearch(e.target.value)}
-              style={{ padding: '6px 12px', fontSize: 13, border: '1px solid var(--gray-200)', borderRadius: 8, background: 'var(--gray-50)', color: 'var(--text-primary)', maxWidth: 240 }}
+              className="input-filter"
             />
           </div>
         </div>
@@ -372,47 +360,38 @@ export default function UserDetailPage() {
                 <th>Permission</th>
                 <th>Code</th>
                 <th>Feature</th>
-                <th style={{ textAlign: 'center' }}>User</th>
-                <th style={{ textAlign: 'center' }}>Role</th>
-                <th style={{ textAlign: 'center' }}>Global</th>
-                <th style={{ textAlign: 'center' }}>Effectif</th>
+                <th className="text-center">User</th>
+                <th className="text-center">Role</th>
+                <th className="text-center">Global</th>
+                <th className="text-center">Effectif</th>
               </tr>
             </thead>
             <tbody>
               {filteredPerms.length === 0 ? (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: 'center', padding: 32, color: 'var(--gray-400)' }}>
+                  <td colSpan={7} className="empty-state-sm">
                     {permSearch ? 'Aucune permission correspondante' : 'Aucune permission'}
                   </td>
                 </tr>
               ) : (
                 filteredPerms.map(perm => (
-                  <tr key={perm.permission_id} style={{ opacity: perm.effective ? 1 : 0.6 }}>
+                  <tr key={perm.permission_id} className={perm.effective ? '' : 'opacity-60'}>
                     <td>
-                      <div style={{ fontWeight: 500, fontSize: 13 }}>{perm.label || perm.code}</div>
+                      <div className="font-medium text-sm">{perm.label || perm.code}</div>
                       {perm.description && (
-                        <div style={{ fontSize: 11, color: 'var(--gray-400)' }}>{perm.description}</div>
+                        <div className="text-muted text-xs">{perm.description}</div>
                       )}
                     </td>
                     <td>
-                      <code style={{ fontSize: 11, color: 'var(--gray-500)' }}>{perm.code}</code>
+                      <code className="text-gray-500-sm text-xs">{perm.code}</code>
                     </td>
-                    <td style={{ fontSize: 12, color: 'var(--gray-500)' }}>{perm.feature}</td>
+                    <td className="text-muted text-sm">{perm.feature}</td>
 
                     {/* User override — clickable */}
-                    <td style={{ textAlign: 'center' }}>
+                    <td className="text-center">
                       <button
                         onClick={() => handlePermissionCycle(perm)}
-                        style={{
-                          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                          width: 28, height: 24, borderRadius: 4, border: 'none', cursor: 'pointer',
-                          fontSize: 12, fontWeight: 600,
-                          ...(perm.user_override === true
-                            ? { backgroundColor: '#7C3AED', color: '#fff' }
-                            : perm.user_override === false
-                            ? { backgroundColor: '#DC2626', color: '#fff' }
-                            : { backgroundColor: 'var(--gray-100)', color: 'var(--gray-400)' }),
-                        }}
+                        className={`perm-indicator perm-indicator--btn ${perm.user_override === true ? 'perm-indicator--user-granted' : perm.user_override === false ? 'perm-indicator--user-denied' : 'perm-indicator--none'}`}
                         title={perm.user_override === true ? 'Autorise (clic: bloquer)' : perm.user_override === false ? 'Bloque (clic: retirer)' : 'Non defini (clic: autoriser)'}
                       >
                         {perm.user_override === true ? '\u2713' : perm.user_override === false ? '\u2717' : '\u2014'}
@@ -420,36 +399,22 @@ export default function UserDetailPage() {
                     </td>
 
                     {/* Role — read only */}
-                    <td style={{ textAlign: 'center' }}>
-                      <span style={{
-                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                        width: 28, height: 24, borderRadius: 4, fontSize: 12, fontWeight: 600,
-                        ...(perm.role_granted === true
-                          ? { border: '2px solid #3B82F6', color: '#3B82F6', backgroundColor: 'transparent' }
-                          : { backgroundColor: 'var(--gray-100)', color: 'var(--gray-400)', border: 'none' }),
-                      }}>
+                    <td className="text-center">
+                      <span className={`perm-indicator ${perm.role_granted === true ? 'perm-indicator--role-granted' : 'perm-indicator--none'}`}>
                         {perm.role_granted === true ? '\u2713' : '\u2014'}
                       </span>
                     </td>
 
                     {/* Global — read only */}
-                    <td style={{ textAlign: 'center' }}>
-                      <span style={{
-                        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                        width: 28, height: 24, borderRadius: 4, fontSize: 12, fontWeight: 600,
-                        ...(perm.global_granted === true
-                          ? { border: '2px solid #059669', color: '#059669', backgroundColor: 'transparent' }
-                          : perm.global_granted === false
-                          ? { border: '2px solid #D97706', color: '#D97706', backgroundColor: 'transparent' }
-                          : { backgroundColor: 'var(--gray-100)', color: 'var(--gray-400)', border: 'none' }),
-                      }}>
+                    <td className="text-center">
+                      <span className={`perm-indicator ${perm.global_granted === true ? 'perm-indicator--global-granted' : perm.global_granted === false ? 'perm-indicator--global-warning' : 'perm-indicator--none'}`}>
                         {perm.global_granted === true ? '\u2713' : perm.global_granted === false ? '\u2717' : '\u2014'}
                       </span>
                     </td>
 
                     {/* Effective */}
-                    <td style={{ textAlign: 'center' }}>
-                      <span className={`badge ${perm.effective ? 'badge-success' : 'badge-warning'}`} style={{ fontSize: 11 }}>
+                    <td className="text-center">
+                      <span className={`badge ${perm.effective ? 'badge-success' : 'badge-warning'} text-xs`}>
                         {perm.effective ? 'Oui' : 'Non'}
                       </span>
                     </td>

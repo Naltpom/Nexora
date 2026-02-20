@@ -1,3 +1,4 @@
+import './backgrounds.scss'
 import { useEffect, useRef } from 'react'
 import { useDarkMode } from './useDarkMode'
 
@@ -85,8 +86,8 @@ export default function FloatingParticlesBg() {
   }, [])
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: -1, overflow: 'hidden' }}>
-      <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0 }} />
+    <div className="bg-container">
+      <canvas ref={canvasRef} className="bg-canvas" />
     </div>
   )
 }

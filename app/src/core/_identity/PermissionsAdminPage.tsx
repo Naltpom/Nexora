@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import './_identity.scss'
 import Layout from '../../core/Layout'
 import api from '../../api'
 
@@ -120,54 +121,23 @@ export default function PermissionsAdminPage() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: '0', marginBottom: '20px', borderBottom: '2px solid var(--gray-200)' }}>
+      <div className="tab-bar">
         <button
           onClick={() => setActiveTab('permissions')}
-          style={{
-            padding: '10px 20px',
-            border: 'none',
-            backgroundColor: 'transparent',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: activeTab === 'permissions' ? 600 : 400,
-            color: activeTab === 'permissions' ? 'var(--primary, #1E40AF)' : 'var(--gray-500)',
-            borderBottom: activeTab === 'permissions' ? '2px solid var(--primary, #1E40AF)' : '2px solid transparent',
-            marginBottom: '-2px',
-            transition: 'all 0.15s',
-          }}
+          className={`tab-button ${activeTab === 'permissions' ? 'tab-button--active' : 'tab-button--inactive'}`}
         >
           Permissions
         </button>
         <button
           onClick={() => setActiveTab('global')}
-          style={{
-            padding: '10px 20px',
-            border: 'none',
-            backgroundColor: 'transparent',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: activeTab === 'global' ? 600 : 400,
-            color: activeTab === 'global' ? 'var(--primary, #1E40AF)' : 'var(--gray-500)',
-            borderBottom: activeTab === 'global' ? '2px solid var(--primary, #1E40AF)' : '2px solid transparent',
-            marginBottom: '-2px',
-            transition: 'all 0.15s',
-          }}
+          className={`tab-button ${activeTab === 'global' ? 'tab-button--active' : 'tab-button--inactive'}`}
         >
           Permissions globales
         </button>
       </div>
 
       {message && (
-        <div
-          className="card"
-          style={{
-            marginBottom: '16px',
-            padding: '12px 16px',
-            backgroundColor: message.type === 'success' ? 'var(--success-bg, #ecfdf5)' : 'var(--danger-bg, #fef2f2)',
-            color: message.type === 'success' ? 'var(--success, #059669)' : 'var(--danger, #DC2626)',
-            border: `1px solid ${message.type === 'success' ? 'var(--success, #059669)' : 'var(--danger, #DC2626)'}20`,
-          }}
-        >
+        <div className={`alert-dynamic ${message.type === 'success' ? 'alert-dynamic--success' : 'alert-dynamic--error'}`}>
           {message.text}
         </div>
       )}
@@ -177,13 +147,13 @@ export default function PermissionsAdminPage() {
         loading ? (
           <div className="spinner" />
         ) : Object.keys(permissionsByFeature).length === 0 ? (
-          <div className="unified-card" style={{ textAlign: 'center', padding: '48px', color: 'var(--gray-400)' }}>
+          <div className="unified-card empty-state">
             Aucune permission trouvee
           </div>
         ) : (
           Object.entries(permissionsByFeature).map(([feature, perms]) => (
-            <div key={feature} style={{ marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '16px', fontWeight: 600, textTransform: 'uppercase', color: 'var(--gray-500)', marginBottom: '8px', letterSpacing: '0.5px' }}>
+            <div key={feature} className="section-mb-lg">
+              <h2 className="section-category-title">
                 {feature}
               </h2>
               <div className="unified-card card-table">
@@ -191,8 +161,8 @@ export default function PermissionsAdminPage() {
                   <table className="unified-table">
                     <thead>
                       <tr>
-                        <th style={{ width: '200px' }}>Code</th>
-                        <th style={{ width: '200px' }}>Label</th>
+                        <th className="col-200">Code</th>
+                        <th className="col-200">Label</th>
                         <th>Description</th>
                       </tr>
                     </thead>
@@ -200,12 +170,12 @@ export default function PermissionsAdminPage() {
                       {perms.map((perm) => (
                         <tr key={perm.id}>
                           <td>
-                            <code style={{ fontSize: '12px', backgroundColor: 'var(--gray-100)', padding: '2px 6px', borderRadius: '4px', fontFamily: 'monospace' }}>
+                            <code className="badge-tag badge-tag--mono">
                               {perm.code}
                             </code>
                           </td>
                           <td><strong>{perm.label}</strong></td>
-                          <td style={{ color: 'var(--gray-500)' }}>{perm.description || '\u2014'}</td>
+                          <td className="text-gray-500">{perm.description || '\u2014'}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -222,74 +192,43 @@ export default function PermissionsAdminPage() {
         loadingGlobal ? (
           <div className="spinner" />
         ) : Object.keys(permissionsByFeature).length === 0 ? (
-          <div className="unified-card" style={{ textAlign: 'center', padding: '48px', color: 'var(--gray-400)' }}>
+          <div className="unified-card empty-state">
             Aucune permission trouvee
           </div>
         ) : (
           <>
             {Object.entries(permissionsByFeature).map(([feature, perms]) => (
-              <div key={feature} style={{ marginBottom: '24px' }}>
-                <h2 style={{ fontSize: '16px', fontWeight: 600, textTransform: 'uppercase', color: 'var(--gray-500)', marginBottom: '8px', letterSpacing: '0.5px' }}>
+              <div key={feature} className="section-mb-lg">
+                <h2 className="section-category-title">
                   {feature}
                 </h2>
-                <div className="unified-card" style={{ padding: '16px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div className="unified-card p-16">
+                  <div className="flex-col-md">
                     {perms.map((perm) => {
                       const granted = isGlobalGranted(perm.id)
                       return (
                         <div
                           key={perm.id}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            padding: '10px 14px',
-                            borderRadius: '8px',
-                            backgroundColor: granted ? 'var(--primary-bg, #eff6ff)' : 'var(--gray-50, #f9fafb)',
-                            border: '1px solid',
-                            borderColor: granted ? 'var(--primary, #1E40AF)20' : 'var(--gray-200)',
-                            transition: 'all 0.15s',
-                          }}
+                          className={`global-perm-row ${granted ? 'global-perm-row--on' : 'global-perm-row--off'}`}
                         >
-                          <div style={{ flex: 1 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-                              <strong style={{ fontSize: '14px' }}>{perm.label}</strong>
-                              <code style={{ fontSize: '11px', backgroundColor: 'var(--gray-100)', padding: '1px 4px', borderRadius: '3px', color: 'var(--gray-500)' }}>
+                          <div className="flex-1">
+                            <div className="flex-center mb-2">
+                              <strong>{perm.label}</strong>
+                              <code className="badge-tag badge-tag--mono-sm">
                                 {perm.code}
                               </code>
                             </div>
                             {perm.description && (
-                              <div style={{ fontSize: '12px', color: 'var(--gray-500)' }}>{perm.description}</div>
+                              <div className="text-gray-500-sm">{perm.description}</div>
                             )}
                           </div>
                           <button
                             onClick={() => toggleGlobalPermission(perm.id)}
-                            style={{
-                              position: 'relative',
-                              width: '44px',
-                              height: '24px',
-                              borderRadius: '12px',
-                              border: 'none',
-                              backgroundColor: granted ? 'var(--primary, #1E40AF)' : 'var(--gray-300)',
-                              cursor: 'pointer',
-                              transition: 'background-color 0.2s',
-                              flexShrink: 0,
-                              marginLeft: '16px',
-                            }}
+                            className={`toggle-switch ${granted ? 'toggle-switch--on' : 'toggle-switch--off'}`}
                             title={granted ? 'Desactiver' : 'Activer'}
                           >
                             <span
-                              style={{
-                                position: 'absolute',
-                                top: '2px',
-                                left: granted ? '22px' : '2px',
-                                width: '20px',
-                                height: '20px',
-                                borderRadius: '50%',
-                                backgroundColor: 'white',
-                                transition: 'left 0.2s',
-                                boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                              }}
+                              className={`toggle-switch-knob ${granted ? 'toggle-switch-knob--on' : 'toggle-switch-knob--off'}`}
                             />
                           </button>
                         </div>
@@ -300,7 +239,7 @@ export default function PermissionsAdminPage() {
               </div>
             ))}
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
+            <div className="flex-end mt-8">
               <button className="btn btn-primary" onClick={saveGlobalPermissions} disabled={savingGlobal}>
                 {savingGlobal ? 'Enregistrement...' : 'Enregistrer les permissions globales'}
               </button>

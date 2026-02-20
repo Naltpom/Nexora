@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api from '../../api'
+import './notifications.scss'
 
 export default function NotificationRedirect() {
   const { token } = useParams<{ token: string }>()
@@ -22,7 +23,7 @@ export default function NotificationRedirect() {
   }, [token, navigate])
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+    <div className="notif-fullscreen-center">
       <div className="spinner" />
     </div>
   )

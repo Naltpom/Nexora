@@ -1,0 +1,98 @@
+// ─── Background Components ───
+
+// Shared container for all background themes
+.bg-container {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+}
+
+// Absolute fill layer
+.bg-layer {
+  position: absolute;
+  inset: 0;
+}
+
+// Light theme overlay
+.bg-light-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.25);
+
+  &--subtle {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+
+// Canvas fill (FloatingParticles)
+.bg-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+// Mesh blob base
+.mesh-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  transition: background 0.8s ease;
+}
+
+// Mesh container (extends bg-container with transition)
+.mesh-bg-container {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  transition: background 0.5s ease;
+}
+
+// ─── Keyframes ───
+
+@keyframes breathingGradient {
+  0% { background-position: 0% 50%; }
+  25% { background-position: 50% 100%; }
+  50% { background-position: 100% 50%; }
+  75% { background-position: 50% 0%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes meshBlob1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(15vw, 12vh) scale(1.08); }
+  50% { transform: translate(8vw, 25vh) scale(0.92); }
+  75% { transform: translate(-5vw, 8vh) scale(1.04); }
+}
+
+@keyframes meshBlob2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(-12vw, -18vh) scale(1.12); }
+  50% { transform: translate(-20vw, -4vh) scale(0.88); }
+  75% { transform: translate(-8vw, -12vh) scale(1.06); }
+}
+
+@keyframes meshBlob3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-16vw, 8vh) scale(1.08); }
+  66% { transform: translate(4vw, -12vh) scale(0.94); }
+}
+
+@keyframes meshBlob4 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  20% { transform: translate(12vw, -8vh) scale(1.04); }
+  40% { transform: translate(20vw, 4vh) scale(0.92); }
+  60% { transform: translate(8vw, 12vh) scale(1.1); }
+  80% { transform: translate(-4vw, 4vh) scale(0.96); }
+}
+
+@keyframes meshBlob5 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  30% { transform: translate(-8vw, 16vh) scale(1.08); }
+  60% { transform: translate(12vw, -8vh) scale(0.92); }
+}
+
+@keyframes huePreviewRotate {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}

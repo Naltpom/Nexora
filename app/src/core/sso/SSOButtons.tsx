@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import api from '../../api'
-import './sso.css'
+import './sso.scss'
 
 interface SSOProvider {
   name: string
@@ -65,7 +65,7 @@ export default function SSOButtons() {
   return (
     <div className="sso-buttons">
       {error && (
-        <div className="alert alert-error" style={{ marginBottom: 4, fontSize: 13 }}>
+        <div className="alert alert-error sso-error-alert">
           {error}
         </div>
       )}

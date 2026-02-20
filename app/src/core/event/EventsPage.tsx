@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Layout from '../../core/Layout'
 import api from '../../api'
-import './events.css'
+import './events.scss'
 
 /* -- Types -- */
 
@@ -113,7 +113,7 @@ export default function EventsPage() {
       {loading ? (
         <div className="spinner" />
       ) : eventTypes.length === 0 ? (
-        <div className="unified-card" style={{ textAlign: 'center', padding: '48px', color: 'var(--gray-400)' }}>
+        <div className="unified-card events-empty-state">
           Aucun type d'evenement declare
         </div>
       ) : (
@@ -129,7 +129,7 @@ export default function EventsPage() {
           </div>
 
           {Object.keys(filteredGroups).length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '32px', color: 'var(--gray-400)' }}>
+            <div className="events-no-match">
               Aucun evenement correspondant
             </div>
           ) : (
@@ -148,7 +148,7 @@ export default function EventsPage() {
                         <polyline points="9 18 15 12 9 6" />
                       </svg>
                       <span className="events-feature-name">{feature}</span>
-                      <span className="badge badge-secondary" style={{ fontSize: '11px' }}>
+                      <span className="badge badge-secondary events-badge-sm">
                         {events.length} event{events.length > 1 ? 's' : ''}
                       </span>
                     </div>
@@ -179,20 +179,20 @@ export default function EventsPage() {
                               <td>
                                 <code className="events-code">{evt.event_type}</code>
                               </td>
-                              <td style={{ fontWeight: 500 }}>{evt.label}</td>
+                              <td className="events-cell-label">{evt.label}</td>
                               <td>
-                                <span className="badge badge-info" style={{ fontSize: '11px' }}>
+                                <span className="badge badge-info events-badge-sm">
                                   {evt.category}
                                 </span>
                               </td>
-                              <td style={{ fontSize: '13px', color: 'var(--gray-500)', maxWidth: '300px' }}>
+                              <td className="events-cell-desc">
                                 {evt.description || '\u2014'}
                               </td>
                               <td>
                                 {evt.admin_only ? (
-                                  <span className="badge badge-warning" style={{ fontSize: '11px' }}>Admin</span>
+                                  <span className="badge badge-warning events-badge-sm">Admin</span>
                                 ) : (
-                                  <span className="badge badge-success" style={{ fontSize: '11px' }}>Tous</span>
+                                  <span className="badge badge-success events-badge-sm">Tous</span>
                                 )}
                               </td>
                             </tr>

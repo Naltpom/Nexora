@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useRef, useCallback, Re
 import api from '../../api'
 import { useAuth } from '../../core/AuthContext'
 import { useFeature } from '../../core/FeatureContext'
-import './notifications.css'
+import './notifications.scss'
 
 // ── Inline push notification helpers ──
 

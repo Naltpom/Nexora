@@ -4,6 +4,7 @@ import Layout from '../../core/Layout'
 import { useAuth } from '../../core/AuthContext'
 import { useConfirm } from '../../core/ConfirmModal'
 import api from '../../api'
+import './_identity.scss'
 
 interface User {
   id: number
@@ -401,7 +402,7 @@ export default function Users() {
                           {getEffectiveValue(u, 'is_active') ? 'Actif' : 'Inactif'}
                         </button>
                       </td>
-                      <td style={{ fontSize: 13, color: 'var(--gray-500)', whiteSpace: 'nowrap' }}>
+                      <td className="text-gray-500-sm nowrap">
                         {u.last_active
                           ? new Date(u.last_active).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
                           : '\u2014'}
@@ -416,7 +417,7 @@ export default function Users() {
                         })()}
                       </td>
                       <td>
-                        <div style={{ display: 'flex', gap: 4 }}>
+                        <div className="flex-row-xs">
                           {/* Detail button */}
                           <Link
                             to={`/admin/users/${u.uuid}`}
@@ -444,7 +445,7 @@ export default function Users() {
                               </svg>
                             </button>
                           ) : (
-                            <div style={{ width: 32, height: 32 }} />
+                            <div className="spacer-32" />
                           )}
 
                           {/* Reset password button */}
@@ -549,10 +550,10 @@ export default function Users() {
                 {Object.keys(pendingChanges).length} utilisateur(s) modifie(s)
               </span>
               <div className="unified-changes-bar-actions">
-                <button className="btn-unified-secondary" onClick={cancelChanges} style={{ padding: '8px 16px' }}>
+                <button className="btn-unified-secondary btn-padded" onClick={cancelChanges}>
                   Annuler
                 </button>
-                <button className="btn-unified-primary" onClick={() => setShowRecapModal(true)} style={{ padding: '8px 16px' }}>
+                <button className="btn-unified-primary btn-padded" onClick={() => setShowRecapModal(true)}>
                   Valider les changements
                 </button>
               </div>
@@ -607,8 +608,8 @@ export default function Users() {
                     />
                   </div>
                 </div>
-                <div className="form-group" style={{ display: 'flex', gap: 24 }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div className="form-group flex-row-xl">
+                  <label className="flex-center">
                     <input
                       type="checkbox"
                       checked={createForm.is_super_admin}
@@ -616,7 +617,7 @@ export default function Users() {
                     />
                     Super Admin
                   </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <label className="flex-center">
                     <input
                       type="checkbox"
                       checked={createForm.must_change_password}

@@ -2,6 +2,7 @@ import { useState, useEffect, FormEvent, useRef } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import api from '../../api'
 import { useAuth } from '../../core/AuthContext'
+import './_identity.scss'
 
 export default function VerifyEmail() {
   const navigate = useNavigate()
@@ -82,26 +83,17 @@ export default function VerifyEmail() {
       <div className="login-container">
         <div className="login-card">
           <div className="login-header">
-            <div style={{
-              width: 64,
-              height: 64,
-              borderRadius: '50%',
-              background: '#10B981',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 16px',
-            }}>
+            <div className="avatar-circle-lg">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
             <h1>Email verifie !</h1>
           </div>
-          <p style={{ textAlign: 'center', color: 'var(--gray-500)', marginBottom: 16 }}>
+          <p className="text-center text-gray-500 mb-16">
             Votre compte a ete active avec succes.
           </p>
-          <p style={{ textAlign: 'center', color: 'var(--gray-400)', fontSize: 14 }}>
+          <p className="text-center text-gray-500">
             Redirection en cours...
           </p>
         </div>
@@ -118,22 +110,15 @@ export default function VerifyEmail() {
             <text x="16" y="22" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold">K</text>
           </svg>
           <h1>Verification de l'email</h1>
-          <p style={{ color: 'var(--gray-500)', fontSize: 14 }}>
+          <p className="text-gray-500">
             Un code de verification a ete envoye a <strong>{email}</strong>
           </p>
         </div>
 
         {debugCode && (
-          <div style={{
-            background: '#FEF3C7',
-            border: '1px solid #F59E0B',
-            borderRadius: 8,
-            padding: '12px 16px',
-            marginBottom: 16,
-            textAlign: 'center',
-          }}>
-            <span style={{ fontSize: 12, color: '#92400E', fontWeight: 600 }}>MODE DEV — Code :</span>
-            <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: 4, color: '#92400E', marginLeft: 8 }}>{debugCode}</span>
+          <div className="verify-debug-box">
+            <span className="verify-debug-label">MODE DEV — Code :</span>
+            <span className="verify-debug-code">{debugCode}</span>
           </div>
         )}
 
@@ -148,12 +133,7 @@ export default function VerifyEmail() {
               onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
               placeholder="000000"
               maxLength={6}
-              style={{
-                textAlign: 'center',
-                fontSize: 24,
-                letterSpacing: 8,
-                fontWeight: 600,
-              }}
+              className="verify-code-input"
               required
               autoFocus
               disabled={submitting}
@@ -164,18 +144,12 @@ export default function VerifyEmail() {
             {submitting ? 'Verification...' : 'Valider'}
           </button>
 
-          <div style={{ textAlign: 'center', marginTop: 16 }}>
+          <div className="text-center mt-16">
             <button
               type="button"
               onClick={handleResendCode}
               disabled={resendCooldown > 0}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: resendCooldown > 0 ? 'var(--gray-400)' : 'var(--primary)',
-                cursor: resendCooldown > 0 ? 'not-allowed' : 'pointer',
-                fontSize: 14,
-              }}
+              className={resendCooldown > 0 ? 'verify-resend-btn verify-resend-btn--disabled' : 'verify-resend-btn verify-resend-btn--active'}
             >
               {resendCooldown > 0
                 ? `Renvoyer le code (${resendCooldown}s)`
@@ -183,13 +157,13 @@ export default function VerifyEmail() {
             </button>
           </div>
 
-          <p style={{ color: 'var(--gray-400)', fontSize: 12, textAlign: 'center', marginTop: 16 }}>
+          <p className="text-muted text-center mt-16">
             Le code est valable 5 minutes.
           </p>
         </form>
 
-        <div style={{ textAlign: 'center', marginTop: 16 }}>
-          <Link to="/login" style={{ color: 'var(--gray-500)', fontSize: 14 }}>
+        <div className="login-footer">
+          <Link to="/login" className="link-primary text-gray-500">
             Retourner a la connexion
           </Link>
         </div>

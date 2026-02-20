@@ -1,3 +1,4 @@
+import './backgrounds.scss'
 import { useEffect, useState } from 'react'
 import { useDarkMode } from './useDarkMode'
 
@@ -26,24 +27,17 @@ export default function RotatingHueBg() {
   const saturation = isDark ? '70%' : '60%'
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: -1, overflow: 'hidden' }}>
+    <div className="bg-container">
       <div
+        className="bg-layer"
         style={{
-          position: 'absolute',
-          inset: 0,
           background: `linear-gradient(135deg, hsl(${hue}, ${saturation}, ${lightness}), hsl(${hue2}, ${saturation}, ${lightness}), hsl(${hue3}, ${saturation}, ${lightness}))`,
           transition: 'background 0.1s linear',
         }}
       />
 
       {!isDark && (
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'rgba(255,255,255,0.2)',
-          }}
-        />
+        <div className="bg-light-overlay bg-light-overlay--subtle" />
       )}
     </div>
   )

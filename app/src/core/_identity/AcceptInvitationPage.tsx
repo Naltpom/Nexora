@@ -2,6 +2,7 @@ import { useState, useEffect, FormEvent, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import api from '../../api'
 import { useAuth } from '../../core/AuthContext'
+import './_identity.scss'
 
 type Step = 'loading' | 'invalid' | 'form' | 'verify' | 'success'
 
@@ -149,8 +150,8 @@ export default function AcceptInvitation() {
     return (
       <div className="login-container">
         <div className="login-card">
-          <div style={{ textAlign: 'center' }}>
-            <div className="spinner" style={{ margin: '20px auto' }} />
+          <div className="text-center">
+            <div className="spinner spinner-centered" />
             <p>Verification de l'invitation...</p>
           </div>
         </div>
@@ -166,10 +167,10 @@ export default function AcceptInvitation() {
           <div className="login-header">
             <h1>Invitation invalide</h1>
           </div>
-          <div className="alert alert-error" style={{ marginBottom: 16 }}>
+          <div className="alert alert-error mb-16">
             {error}
           </div>
-          <p style={{ color: 'var(--gray-500)', fontSize: 14, marginBottom: 16 }}>
+          <p className="text-gray-500 mb-16">
             Cette invitation n'est plus valide. Elle a peut-etre expire ou a deja ete utilisee.
           </p>
           <Link to="/login" className="btn btn-primary btn-block">
@@ -186,26 +187,17 @@ export default function AcceptInvitation() {
       <div className="login-container">
         <div className="login-card">
           <div className="login-header">
-            <div style={{
-              width: 64,
-              height: 64,
-              borderRadius: '50%',
-              background: '#10B981',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 16px',
-            }}>
+            <div className="avatar-circle-lg">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
             <h1>Bienvenue !</h1>
           </div>
-          <p style={{ textAlign: 'center', color: 'var(--gray-500)', marginBottom: 16 }}>
+          <p className="text-center text-gray-500 mb-16">
             Vous avez accepte l'invitation avec succes.
           </p>
-          <p style={{ textAlign: 'center', color: 'var(--gray-400)', fontSize: 14 }}>
+          <p className="text-center text-gray-500">
             Redirection en cours...
           </p>
         </div>
@@ -220,7 +212,7 @@ export default function AcceptInvitation() {
         <div className="login-card">
           <div className="login-header">
             <h1>Verification</h1>
-            <p style={{ color: 'var(--gray-500)', fontSize: 14 }}>
+            <p className="text-gray-500">
               Un code de verification a ete envoye a <strong>{invitation?.email}</strong>
             </p>
           </div>
@@ -236,12 +228,7 @@ export default function AcceptInvitation() {
                 onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 placeholder="000000"
                 maxLength={6}
-                style={{
-                  textAlign: 'center',
-                  fontSize: 24,
-                  letterSpacing: 8,
-                  fontWeight: 600,
-                }}
+                className="verify-code-input"
                 required
                 autoFocus
                 disabled={submitting}
@@ -252,18 +239,12 @@ export default function AcceptInvitation() {
               {submitting ? 'Verification...' : 'Valider'}
             </button>
 
-            <div style={{ textAlign: 'center', marginTop: 16 }}>
+            <div className="text-center mt-16">
               <button
                 type="button"
                 onClick={handleResendCode}
                 disabled={resendCooldown > 0}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: resendCooldown > 0 ? 'var(--gray-400)' : 'var(--primary)',
-                  cursor: resendCooldown > 0 ? 'not-allowed' : 'pointer',
-                  fontSize: 14,
-                }}
+                className={resendCooldown > 0 ? 'verify-resend-btn verify-resend-btn--disabled' : 'verify-resend-btn verify-resend-btn--active'}
               >
                 {resendCooldown > 0
                   ? `Renvoyer le code (${resendCooldown}s)`
@@ -271,7 +252,7 @@ export default function AcceptInvitation() {
               </button>
             </div>
 
-            <p style={{ color: 'var(--gray-400)', fontSize: 12, textAlign: 'center', marginTop: 16 }}>
+            <p className="text-muted text-center mt-16">
               Le code est valable 5 minutes.
             </p>
           </form>
@@ -285,21 +266,7 @@ export default function AcceptInvitation() {
     <div className="login-container">
       <div className="login-card">
         <div className="login-header">
-          <div
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 8,
-              background: '#3B82F6',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontWeight: 700,
-              fontSize: 20,
-              margin: '0 auto 16px',
-            }}
-          >
+          <div className="avatar-square">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
               <circle cx="9" cy="7" r="4" />
@@ -308,7 +275,7 @@ export default function AcceptInvitation() {
             </svg>
           </div>
           <h1>Invite par {invitation?.inviter_name}</h1>
-          <p style={{ color: 'var(--gray-500)', fontSize: 14 }}>
+          <p className="text-gray-500">
             {invitation?.user_exists
               ? 'Connectez-vous pour accepter l\'invitation'
               : 'Creez votre compte pour continuer'}
@@ -324,7 +291,7 @@ export default function AcceptInvitation() {
               type="email"
               value={invitation?.email || ''}
               disabled
-              style={{ background: 'var(--gray-100)' }}
+              className="input-disabled-bg"
             />
           </div>
 
@@ -345,7 +312,7 @@ export default function AcceptInvitation() {
           ) : (
             // New user - needs full registration
             <>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="form-grid-2col">
                 <div className="form-group">
                   <label>Prenom</label>
                   <input
@@ -400,8 +367,8 @@ export default function AcceptInvitation() {
           </button>
         </form>
 
-        <div style={{ textAlign: 'center', marginTop: 16 }}>
-          <Link to="/login" style={{ color: 'var(--gray-500)', fontSize: 14 }}>
+        <div className="login-footer">
+          <Link to="/login" className="text-gray-500">
             Annuler et retourner a la connexion
           </Link>
         </div>

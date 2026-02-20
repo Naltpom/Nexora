@@ -1,5 +1,6 @@
 import { useState, FormEvent } from 'react'
 import { Link } from 'react-router-dom'
+import './_identity.scss'
 import axios from 'axios'
 
 export default function ForgotPassword() {
@@ -76,8 +77,8 @@ export default function ForgotPassword() {
           </button>
         </form>
 
-        <div style={{ marginTop: 16, textAlign: 'center' }}>
-          <Link to="/login" style={{ color: 'var(--primary)', fontSize: 14 }}>
+        <div className="login-footer">
+          <Link to="/login" className="link-primary">
             Retour a la connexion
           </Link>
         </div>

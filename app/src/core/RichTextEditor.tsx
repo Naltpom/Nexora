@@ -161,7 +161,7 @@ export default function RichTextEditor({ content, onChange, placeholder = 'Ecriv
           ref={fileInputRef}
           type="file"
           accept="image/*"
-          style={{ display: 'none' }}
+          className="hidden-input"
           onChange={handleFileChange}
         />
       </div>

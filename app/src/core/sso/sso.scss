@@ -22,33 +22,53 @@
   transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
   border: none;
   line-height: 1.4;
-}
 
-.sso-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 
-/* Google */
-.sso-btn-google {
-  background: #fff;
-  border: 1px solid #dadce0;
-  color: #3c4043;
-}
+  /* Google */
+  &-google {
+    background: #fff;
+    border: 1px solid #dadce0;
+    color: #3c4043;
 
-.sso-btn-google:hover:not(:disabled) {
-  background: #f7f8f8;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-}
+    &:hover:not(:disabled) {
+      background: #f7f8f8;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
 
-/* GitHub */
-.sso-btn-github {
-  background: #24292e;
-  color: #fff;
-}
+    @at-root [data-theme="dark"] & {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.9);
 
-.sso-btn-github:hover:not(:disabled) {
-  background: #2f363d;
+      &:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.12);
+        box-shadow: none;
+      }
+    }
+  }
+
+  /* GitHub */
+  &-github {
+    background: #24292e;
+    color: #fff;
+
+    &:hover:not(:disabled) {
+      background: #2f363d;
+    }
+
+    @at-root [data-theme="dark"] & {
+      background: #f0f0f0;
+      color: #24292e;
+
+      &:hover:not(:disabled) {
+        background: #e0e0e0;
+      }
+    }
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -60,6 +80,12 @@
   flex-direction: column;
   align-items: center;
   padding: 40px 20px;
+
+  &-text {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-top: 16px;
+  }
 }
 
 .sso-callback-error {
@@ -68,6 +94,23 @@
   align-items: center;
   text-align: center;
   padding: 32px 20px;
+
+  &-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 16px 0 8px;
+    color: var(--text-primary);
+  }
+
+  &-message {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+}
+
+.sso-callback-back-link {
+  text-decoration: none;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -81,21 +124,26 @@
   border-top-color: var(--primary);
   border-radius: 50%;
   animation: sso-spin 0.7s linear infinite;
-}
 
-.sso-spinner-small {
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(128, 128, 128, 0.3);
-  border-top-color: currentColor;
-  border-radius: 50%;
-  animation: sso-spin 0.7s linear infinite;
+  &-small {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(128, 128, 128, 0.3);
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: sso-spin 0.7s linear infinite;
+  }
 }
 
 @keyframes sso-spin {
   to {
     transform: rotate(360deg);
   }
+}
+
+.sso-error-alert {
+  margin-bottom: 4px;
+  font-size: 13px;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -117,10 +165,18 @@
   border-radius: 10px;
   gap: 12px;
   transition: border-color 0.15s;
-}
 
-.sso-account-item:hover {
-  border-color: var(--primary);
+  &:hover {
+    border-color: var(--primary);
+  }
+
+  @at-root [data-theme="dark"] & {
+    border-color: rgba(255, 255, 255, 0.08);
+
+    &:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+  }
 }
 
 .sso-provider-icon {
@@ -128,39 +184,109 @@
   height: 24px;
   flex-shrink: 0;
   object-fit: cover;
+
+  &--rounded {
+    border-radius: 50%;
+  }
+
+  &--placeholder {
+    border-radius: 50%;
+    background: var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   Dark Theme
+   SSO Account Links — Loading
    ══════════════════════════════════════════════════════════════════════════ */
 
-/* Google button in dark mode */
-[data-theme="dark"] .sso-btn-google {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.9);
+.sso-loading-state {
+  text-align: center;
+  padding: 16px 0;
+  color: var(--text-secondary);
+  font-size: 13px;
 }
 
-[data-theme="dark"] .sso-btn-google:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.12);
-  box-shadow: none;
+/* ══════════════════════════════════════════════════════════════════════════
+   SSO Account Links — Inline Extractions
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.sso-alert-spaced {
+  margin-bottom: 12px;
+  font-size: 13px;
 }
 
-/* GitHub button in dark mode */
-[data-theme="dark"] .sso-btn-github {
-  background: #f0f0f0;
-  color: #24292e;
+.sso-account-info-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
 }
 
-[data-theme="dark"] .sso-btn-github:hover:not(:disabled) {
-  background: #e0e0e0;
+.sso-account-details {
+  min-width: 0;
 }
 
-/* Account item in dark mode */
-[data-theme="dark"] .sso-account-item {
-  border-color: rgba(255, 255, 255, 0.08);
+.sso-account-provider-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-transform: capitalize;
 }
 
-[data-theme="dark"] .sso-account-item:hover {
-  border-color: rgba(255, 255, 255, 0.2);
+.sso-account-email {
+  font-size: 12px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sso-account-date {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.sso-unlink-btn {
+  flex-shrink: 0;
+  font-size: 12px;
+}
+
+.sso-empty-message {
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.sso-link-section {
+  &-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+
+  &-spaced {
+    margin-top: 16px;
+  }
+}
+
+.sso-link-buttons-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sso-link-btn {
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, FormEvent } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../core/AuthContext'
 import api from '../../api'
-import './mfa.css'
+import './mfa.scss'
 
 type MFAMethod = 'totp' | 'email' | 'backup'
 

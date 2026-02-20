@@ -8,7 +8,7 @@ import { FeatureProvider } from './core/FeatureContext'
 import { AppSettingsProvider } from './core/AppSettingsContext'
 import { ConfirmProvider } from './core/ConfirmModal'
 import { NotificationProvider } from './core/notification/NotificationContext'
-import './core/styles/global.css'
+import './core/styles/global.scss'
 
 // Apply theme before render to prevent white flash
 ;(() => {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import api from '../../api'
-import './sso.css'
+import './sso.scss'
 
 interface SSOAccount {
   id: number
@@ -96,7 +96,7 @@ export default function SSOAccountLinks() {
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '16px 0', color: 'var(--text-secondary)', fontSize: 13 }}>
+      <div className="sso-loading-state">
         Chargement...
       </div>
     )
@@ -105,7 +105,7 @@ export default function SSOAccountLinks() {
   return (
     <div>
       {error && (
-        <div className="alert alert-error" style={{ marginBottom: 12, fontSize: 13 }}>
+        <div className="alert alert-error sso-alert-spaced">
           {error}
         </div>
       )}
@@ -115,48 +115,34 @@ export default function SSOAccountLinks() {
         <div className="sso-accounts-list">
           {accounts.map((account) => (
             <div key={account.id} className="sso-account-item">
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
+              <div className="sso-account-info-row">
                 {account.provider_avatar_url ? (
                   <img
                     src={account.provider_avatar_url}
                     alt=""
-                    className="sso-provider-icon"
-                    style={{ borderRadius: '50%' }}
+                    className="sso-provider-icon sso-provider-icon--rounded"
                   />
                 ) : (
-                  <div
-                    className="sso-provider-icon"
-                    style={{
-                      borderRadius: '50%',
-                      background: 'var(--border-color)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 12,
-                      fontWeight: 600,
-                      color: 'var(--text-secondary)',
-                    }}
-                  >
+                  <div className="sso-provider-icon sso-provider-icon--placeholder">
                     {account.provider.charAt(0).toUpperCase()}
                   </div>
                 )}
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-primary)', textTransform: 'capitalize' }}>
+                <div className="sso-account-details">
+                  <div className="sso-account-provider-name">
                     {account.provider}
                   </div>
-                  <div style={{ fontSize: 12, color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div className="sso-account-email">
                     {account.provider_email}
                   </div>
-                  <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 2 }}>
+                  <div className="sso-account-date">
                     Lie le {formatDate(account.created_at)}
                   </div>
                 </div>
               </div>
               <button
-                className="btn btn-secondary btn-sm"
+                className="btn btn-secondary btn-sm sso-unlink-btn"
                 onClick={() => handleUnlink(account)}
                 disabled={unlinkingId === account.id}
-                style={{ flexShrink: 0, fontSize: 12 }}
               >
                 {unlinkingId === account.id ? 'Suppression...' : 'Delier'}
               </button>
@@ -166,25 +152,24 @@ export default function SSOAccountLinks() {
       )}
 
       {accounts.length === 0 && (
-        <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginBottom: 16 }}>
+        <p className="sso-empty-message">
           Aucun compte externe lie.
         </p>
       )}
 
       {/* Link new providers */}
       {unlinkableProviders.length > 0 && (
-        <div style={{ marginTop: accounts.length > 0 ? 16 : 0 }}>
-          <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 8 }}>
+        <div className={accounts.length > 0 ? 'sso-link-section-spaced' : ''}>
+          <div className="sso-link-section-label">
             Lier un nouveau compte
           </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <div className="sso-link-buttons-row">
             {unlinkableProviders.map((p) => (
               <button
                 key={p.name}
-                className="btn btn-secondary"
+                className="btn btn-secondary sso-link-btn"
                 onClick={() => handleLink(p.name)}
                 disabled={linkingProvider !== null}
-                style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}
               >
                 {linkingProvider === p.name ? (
                   'Redirection...'

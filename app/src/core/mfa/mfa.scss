@@ -1,0 +1,870 @@
+/* ======================================================================
+   MFA Feature Styles
+   ====================================================================== */
+
+/* ── Verify Page ── */
+
+.mfa-verify-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+
+  @at-root [data-theme="dark"] & {
+    background: transparent;
+  }
+}
+
+.mfa-verify-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  padding: 40px;
+  width: 100%;
+  max-width: 420px;
+
+  @at-root [data-theme="dark"] & {
+    background: rgba(30, 27, 46, 0.85);
+    backdrop-filter: blur(20px);
+  }
+}
+
+/* ── Method Tabs ── */
+
+.mfa-methods-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--gray-100);
+  border-radius: 10px;
+  margin-bottom: 24px;
+
+  @at-root [data-theme="dark"] & {
+    background: rgba(255, 255, 255, 0.05);
+  }
+}
+
+.mfa-method-tab {
+  flex: 1;
+  padding: 7px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-500);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+
+  &:hover {
+    color: var(--gray-700);
+  }
+
+  &.active {
+    background: white;
+    color: var(--gray-900);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  }
+
+  @at-root [data-theme="dark"] & {
+    color: rgba(255, 255, 255, 0.5);
+
+    &:hover {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    &.active {
+      background: rgba(30, 27, 46, 0.9);
+      color: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+  }
+}
+
+/* ── Code Inputs ── */
+
+.mfa-code-input {
+  text-align: center;
+  font-size: 24px;
+  letter-spacing: 8px;
+  font-weight: 600;
+  padding: 12px 16px !important;
+  font-family: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', monospace;
+}
+
+.mfa-backup-input {
+  text-align: center;
+  font-size: 18px;
+  letter-spacing: 2px;
+  font-weight: 500;
+  padding: 12px 16px !important;
+  font-family: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', monospace;
+}
+
+/* ── Attempts Hint ── */
+
+.mfa-attempts-hint {
+  text-align: center;
+  font-size: 12px;
+  color: var(--warning);
+  margin-bottom: 12px;
+  font-weight: 500;
+
+  @at-root [data-theme="dark"] & {
+    color: #fbbf24;
+  }
+}
+
+/* ── Email Prompt ── */
+
+.mfa-email-prompt {
+  text-align: center;
+  padding: 16px 0;
+
+  p {
+    color: var(--gray-500);
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+
+  @at-root [data-theme="dark"] & p {
+    color: rgba(255, 255, 255, 0.5);
+  }
+}
+
+/* ── Resend Button ── */
+
+.mfa-resend-btn {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 8px;
+  border: none;
+  background: transparent;
+  color: var(--primary-light);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s;
+
+  &:hover {
+    color: var(--primary);
+    text-decoration: underline;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    text-decoration: none;
+  }
+
+  @at-root [data-theme="dark"] & {
+    color: #93c5fd;
+
+    &:hover {
+      color: #bfdbfe;
+    }
+  }
+}
+
+/* ── Back Link ── */
+
+.mfa-back-link {
+  text-align: center;
+  margin-top: 16px;
+}
+
+.mfa-link-btn {
+  border: none;
+  background: transparent;
+  color: var(--primary-light);
+  font-size: 14px;
+  cursor: pointer;
+  transition: color 0.15s;
+
+  &:hover {
+    color: var(--primary);
+    text-decoration: underline;
+  }
+
+  @at-root [data-theme="dark"] & {
+    color: #93c5fd;
+
+    &:hover {
+      color: #bfdbfe;
+    }
+  }
+}
+
+/* ======================================================================
+   Setup Page
+   ====================================================================== */
+
+.mfa-setup-section {
+  overflow: hidden;
+
+  &-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--gray-100);
+
+    @at-root [data-theme="dark"] & {
+      border-bottom-color: rgba(255, 255, 255, 0.06);
+    }
+  }
+
+  &-info {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+
+    h3 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--gray-800);
+      margin: 0 0 2px 0;
+    }
+
+    @at-root [data-theme="dark"] & h3 {
+      color: rgba(255, 255, 255, 0.9);
+    }
+  }
+
+  &-icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(59, 130, 246, 0.08);
+    color: var(--primary-light);
+
+    @at-root [data-theme="dark"] & {
+      background: rgba(59, 130, 246, 0.12);
+      color: #93c5fd;
+    }
+  }
+
+  &-desc {
+    font-size: 13px;
+    color: var(--gray-500);
+    line-height: 1.4;
+
+    @at-root [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.45);
+    }
+  }
+
+  &-body {
+    padding: 18px 24px;
+  }
+}
+
+.mfa-setup-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* ── QR Code ── */
+
+.mfa-qr-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.mfa-qr-image {
+  width: 200px;
+  height: 200px;
+  border-radius: 8px;
+  border: 1px solid var(--gray-200);
+  padding: 8px;
+  background: white;
+
+  @at-root [data-theme="dark"] & {
+    border-color: rgba(255, 255, 255, 0.1);
+    /* Keep QR code background white for contrast */
+    background: white;
+  }
+}
+
+/* ── Secret Code ── */
+
+.mfa-secret-container {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.mfa-secret-code {
+  display: inline-block;
+  padding: 8px 16px;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', monospace;
+  letter-spacing: 1px;
+  color: var(--gray-700);
+  word-break: break-all;
+  user-select: all;
+
+  @at-root [data-theme="dark"] & {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+  }
+}
+
+/* ── TOTP Setup Flow ── */
+
+.mfa-totp-setup {
+  padding-top: 4px;
+}
+
+/* ── Secret Label ── */
+
+.mfa-secret-label {
+  font-size: 12px;
+  color: var(--gray-500);
+  margin-bottom: 4px;
+  display: block;
+}
+
+/* ======================================================================
+   Admin Policy Page — Inline Extractions
+   ====================================================================== */
+
+.mfa-admin-page {
+  &-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  &-title {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  &-desc {
+    color: var(--gray-500);
+    font-size: 14px;
+  }
+}
+
+/* ======================================================================
+   Setup Banner
+   ====================================================================== */
+
+.mfa-setup-banner {
+  background: var(--warning, #D97706);
+  color: #fff;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  font-size: 14px;
+  position: relative;
+  z-index: 50;
+
+  &-link {
+    color: #fff;
+    font-weight: 600;
+    text-decoration: underline;
+    white-space: nowrap;
+  }
+
+  &-dismiss {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 0 4px;
+    line-height: 1;
+    opacity: 0.7;
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+}
+
+/* ======================================================================
+   Backup Codes — Inline Extractions
+   ====================================================================== */
+
+.mfa-backup-close-row {
+  text-align: center;
+  margin-top: 8px;
+}
+
+/* ======================================================================
+   Force Setup Page — Inline Extractions
+   ====================================================================== */
+
+.mfa-force {
+  &-card {
+    max-width: 480px;
+  }
+
+  &-title {
+    font-size: 20px;
+  }
+
+  &-subtitle {
+    font-size: 14px;
+  }
+
+  &-methods-col {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  &-method-card {
+    padding: 16px;
+    border: 1px solid var(--gray-200);
+    border-radius: 12px;
+    background: var(--gray-50);
+  }
+
+  &-method-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  &-method-desc {
+    font-size: 13px;
+    color: var(--gray-500);
+    margin-bottom: 12px;
+  }
+
+  &-qr-center {
+    text-align: center;
+    margin-bottom: 16px;
+  }
+
+  &-qr-img {
+    width: 180px;
+    height: 180px;
+    border-radius: 8px;
+  }
+
+  &-secret-hint {
+    margin-bottom: 12px;
+    font-size: 12px;
+    color: var(--gray-500);
+
+    code {
+      word-break: break-all;
+    }
+  }
+
+  &-no-methods {
+    text-align: center;
+    color: var(--gray-500);
+    font-size: 14px;
+  }
+
+  &-logout-btn {
+    margin-top: 16px;
+    width: 100%;
+  }
+}
+
+/* ======================================================================
+   Setup Page — Inline Extractions
+   ====================================================================== */
+
+.mfa-setup-page {
+  &-layout {
+    max-width: 640px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  &-title {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  &-desc {
+    color: var(--gray-500);
+    font-size: 14px;
+  }
+}
+
+.mfa-setup-totp-instructions {
+  font-size: 13px;
+  color: var(--gray-600);
+  margin-bottom: 16px;
+}
+
+.mfa-setup-no-backup-warning {
+  color: var(--warning);
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+/* ======================================================================
+   Backup Codes
+   ====================================================================== */
+
+.mfa-backup {
+  &-container {
+    padding: 20px 24px;
+  }
+
+  &-warning {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: rgba(217, 119, 6, 0.08);
+    border: 1px solid rgba(217, 119, 6, 0.2);
+    border-radius: 8px;
+    margin-bottom: 16px;
+    color: var(--warning);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.4;
+
+    svg {
+      flex-shrink: 0;
+    }
+
+    @at-root [data-theme="dark"] & {
+      background: rgba(217, 119, 6, 0.1);
+      border-color: rgba(217, 119, 6, 0.25);
+      color: #fbbf24;
+    }
+  }
+
+  &-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  &-code {
+    padding: 10px 14px;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: 6px;
+    font-family: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--gray-800);
+    text-align: center;
+    letter-spacing: 1px;
+    user-select: all;
+
+    @at-root [data-theme="dark"] & {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.9);
+    }
+  }
+
+  &-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+  }
+}
+
+/* ======================================================================
+   Status Badge
+   ====================================================================== */
+
+.mfa-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  line-height: 1;
+
+  &-active {
+    background: rgba(5, 150, 105, 0.1);
+    color: var(--success);
+
+    @at-root [data-theme="dark"] & {
+      background: rgba(5, 150, 105, 0.15);
+      color: #34d399;
+    }
+  }
+
+  &-inactive {
+    background: var(--gray-100);
+    color: var(--gray-500);
+
+    @at-root [data-theme="dark"] & {
+      background: rgba(255, 255, 255, 0.06);
+      color: rgba(255, 255, 255, 0.4);
+    }
+  }
+
+  &-required {
+    background: rgba(217, 119, 6, 0.1);
+    color: var(--warning);
+
+    @at-root [data-theme="dark"] & {
+      background: rgba(217, 119, 6, 0.15);
+      color: #fbbf24;
+    }
+  }
+}
+
+/* ======================================================================
+   Admin Policy Page
+   ====================================================================== */
+
+.mfa-policy {
+  &-table-wrapper {
+    overflow-x: auto;
+  }
+
+  &-table {
+    width: 100%;
+    border-collapse: collapse;
+
+    thead th {
+      text-align: left;
+      padding: 10px 20px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      color: var(--gray-500);
+      background: var(--gray-50);
+      border-bottom: 1px solid var(--gray-200);
+      white-space: nowrap;
+
+      @at-root [data-theme="dark"] & {
+        background: #12121f;
+        color: rgba(255, 255, 255, 0.4);
+        border-bottom-color: rgba(255, 255, 255, 0.08);
+      }
+    }
+
+    tbody td {
+      padding: 14px 20px;
+      font-size: 13px;
+      color: var(--gray-700);
+      border-bottom: 1px solid var(--gray-100);
+      vertical-align: middle;
+
+      @at-root [data-theme="dark"] & {
+        color: rgba(255, 255, 255, 0.8);
+        border-bottom-color: rgba(255, 255, 255, 0.04);
+      }
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:hover td {
+      background: var(--gray-50);
+
+      @at-root [data-theme="dark"] & {
+        background: rgba(255, 255, 255, 0.03);
+      }
+    }
+  }
+
+  &-role-name {
+    font-weight: 600;
+    color: var(--gray-800);
+    font-size: 14px;
+
+    @at-root [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.9);
+    }
+  }
+
+  &-role-desc {
+    font-size: 12px;
+    color: var(--gray-500);
+    margin-top: 2px;
+
+    @at-root [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.4);
+    }
+  }
+
+  &-empty {
+    text-align: center;
+    color: var(--gray-400);
+    padding: 32px 20px !important;
+
+    @at-root [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.3);
+    }
+  }
+
+  &-methods {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &-method-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--gray-700);
+    cursor: pointer;
+
+    input[type="checkbox"] {
+      accent-color: var(--primary-light);
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+    }
+
+    @at-root [data-theme="dark"] & {
+      color: rgba(255, 255, 255, 0.7);
+    }
+  }
+
+  &-grace-input {
+    width: 80px;
+    padding: 6px 10px;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius);
+    font-size: 13px;
+    text-align: center;
+    transition: border-color 0.15s;
+
+    &:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+    }
+
+    @at-root [data-theme="dark"] & {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.9);
+
+      &:focus {
+        border-color: var(--primary-light);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+      }
+    }
+  }
+
+  &-actions {
+    display: flex;
+    gap: 6px;
+  }
+}
+
+/* ── Toggle Switch ── */
+
+.mfa-toggle {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+
+    &:checked + .mfa-toggle-slider {
+      background-color: var(--success);
+
+      &::before {
+        transform: translateX(16px);
+      }
+    }
+  }
+
+  &-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--gray-300);
+    border-radius: 10px;
+    transition: background-color 0.2s;
+
+    &::before {
+      content: '';
+      position: absolute;
+      height: 16px;
+      width: 16px;
+      left: 2px;
+      bottom: 2px;
+      background-color: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+
+    @at-root [data-theme="dark"] & {
+      background-color: rgba(255, 255, 255, 0.15);
+    }
+  }
+}
+
+/* ======================================================================
+   Responsive
+   ====================================================================== */
+
+@media (max-width: 640px) {
+  .mfa-verify-card {
+    margin: 16px;
+    padding: 28px 24px;
+  }
+
+  .mfa-backup-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mfa-setup-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .mfa-policy-table-wrapper {
+    margin: 0 -1px;
+  }
+
+  .mfa-setup-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

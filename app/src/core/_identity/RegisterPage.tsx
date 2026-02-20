@@ -1,5 +1,6 @@
 import { useState, FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import './_identity.scss'
 import api from '../../api'
 
 export default function Register() {
@@ -83,7 +84,7 @@ export default function Register() {
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div className="form-grid-2col">
             <div className="form-group">
               <label htmlFor="firstName">Prenom</label>
               <input
@@ -137,8 +138,8 @@ export default function Register() {
           </button>
         </form>
 
-        <div style={{ marginTop: 16, textAlign: 'center' }}>
-          <Link to="/login" style={{ color: 'var(--primary)', fontSize: 14 }}>
+        <div className="login-footer">
+          <Link to="/login" className="link-primary">
             Deja un compte ? Connectez-vous
           </Link>
         </div>

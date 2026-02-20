@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import api from '../../api'
-import './mfa.css'
+import './mfa.scss'
 
 interface MFAStatusResponse {
   is_mfa_enabled: boolean

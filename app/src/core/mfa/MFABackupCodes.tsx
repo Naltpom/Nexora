@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import './mfa.css'
+import './mfa.scss'
 
 interface Props {
   codes: string[]
@@ -89,7 +89,7 @@ export default function MFABackupCodes({ codes, onClose }: Props) {
       </div>
 
       {onClose && (
-        <div style={{ textAlign: 'center', marginTop: 8 }}>
+        <div className="mfa-backup-close-row">
           <button className="btn btn-primary btn-sm" onClick={onClose}>
             J'ai sauvegarde mes codes
           </button>

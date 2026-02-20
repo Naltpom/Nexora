@@ -1,5 +1,6 @@
 import { useState, FormEvent, Suspense, lazy } from 'react'
 import { useNavigate, Link, useSearchParams } from 'react-router-dom'
+import './_identity.scss'
 import { useAuth } from '../../core/AuthContext'
 import { useFeature } from '../../core/FeatureContext'
 
@@ -97,10 +98,10 @@ export default function Login() {
 
         {isActive('sso') && (
           <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '16px 0' }}>
-              <div style={{ flex: 1, height: 1, background: 'var(--border-color)' }} />
-              <span style={{ color: 'var(--text-secondary)', fontSize: 13 }}>ou</span>
-              <div style={{ flex: 1, height: 1, background: 'var(--border-color)' }} />
+            <div className="login-divider">
+              <div className="login-divider-line" />
+              <span className="login-divider-text">ou</span>
+              <div className="login-divider-line" />
             </div>
             <Suspense fallback={null}>
               <SSOButtons />
@@ -108,11 +109,11 @@ export default function Login() {
           </>
         )}
 
-        <div style={{ marginTop: 16, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <Link to="/forgot-password" style={{ color: 'var(--primary)', fontSize: 14 }}>
+        <div className="login-footer-flex">
+          <Link to="/forgot-password" className="link-primary">
             Mot de passe oublie ?
           </Link>
-          <Link to="/register" style={{ color: 'var(--primary)', fontSize: 14 }}>
+          <Link to="/register" className="link-primary">
             Pas encore de compte ? Creez-en un
           </Link>
         </div>

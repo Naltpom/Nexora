@@ -1,3 +1,4 @@
+import './backgrounds/backgrounds.scss'
 import { useEffect } from 'react'
 import { useAuth } from './AuthContext'
 
@@ -78,7 +79,7 @@ export default function BackgroundThemePicker({ isOpen, onClose }: BackgroundThe
   if (!isOpen) return null
 
   return (
-    <div className="modal-overlay" onClick={onClose} style={{ zIndex: 1000 }}>
+    <div className="modal-overlay" onClick={onClose}>
       <div className="bg-theme-picker" onClick={e => e.stopPropagation()}>
         <h3>Fond d'ecran</h3>
         <div className="bg-theme-grid">
@@ -98,13 +99,6 @@ export default function BackgroundThemePicker({ isOpen, onClose }: BackgroundThe
         </div>
         <div className="bg-theme-hint">Alt + T pour ouvrir / fermer</div>
       </div>
-
-      <style>{`
-        @keyframes huePreviewRotate {
-          0% { filter: hue-rotate(0deg); }
-          100% { filter: hue-rotate(360deg); }
-        }
-      `}</style>
     </div>
   )
 }

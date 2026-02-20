@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import './_identity.scss'
 import Layout from '../../core/Layout'
 import api from '../../api'
 
@@ -146,32 +147,32 @@ export default function DatabaseAdminPage() {
             <th>Type</th>
             <th>Taille</th>
             <th>Date</th>
-            <th style={{ width: '280px' }}>Actions</th>
+            <th className="col-actions-wide">Actions</th>
           </tr>
         </thead>
         <tbody>
           {loading ? (
-            <tr><td colSpan={5} style={{ textAlign: 'center', padding: '32px' }}><span className="spinner" /></td></tr>
+            <tr><td colSpan={5} className="empty-state-sm"><span className="spinner" /></td></tr>
           ) : files.length === 0 ? (
-            <tr><td colSpan={5} style={{ textAlign: 'center', padding: '32px', color: 'var(--gray-400)' }}>{emptyText}</td></tr>
+            <tr><td colSpan={5} className="empty-state-sm">{emptyText}</td></tr>
           ) : (
             files.map((b) => (
               <tr key={b.filename}>
-                <td><span style={{ fontFamily: 'monospace', fontSize: '13px' }}>{b.filename}</span></td>
+                <td><span className="text-mono">{b.filename}</span></td>
                 <td><span className={`badge ${b.type === 'dump' ? 'badge-warning' : 'badge-success'}`}>{b.type.toUpperCase()}</span></td>
                 <td>{b.size_display}</td>
                 <td>{formatDate(b.created_at)}</td>
                 <td>
-                  <div style={{ display: 'flex', gap: '4px' }}>
+                  <div className="flex-row-xs">
                     <button className="btn btn-secondary btn-sm" onClick={() => setRestoreTarget({ filename: b.filename, source })} disabled={isBusy} title="Restaurer cette sauvegarde">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" /></svg>
                       Restaurer
                     </button>
                     {source === 'backups' && isDev && (
-                      <button className="btn btn-sm" style={{ backgroundColor: 'var(--gray-100)', color: 'var(--gray-700)', border: '1px solid var(--gray-300)' }} onClick={() => handleCopyToDemo(b.filename)} disabled={isBusy} title="Copier vers les démos">Vers démo</button>
+                      <button className="btn btn-sm badge-tag db-badge--active" onClick={() => handleCopyToDemo(b.filename)} disabled={isBusy} title="Copier vers les démos">Vers démo</button>
                     )}
                     {source === 'demos' && (
-                      <button className="btn btn-sm" style={{ backgroundColor: 'var(--primary-bg, #eff6ff)', color: 'var(--primary, #1E40AF)', border: '1px solid var(--primary, #1E40AF)40' }} onClick={() => handleCopyToInitial(b.filename)} disabled={isBusy} title="Définir comme backup initial">Vers initial</button>
+                      <button className="btn btn-sm badge-tag db-badge--highlight" onClick={() => handleCopyToInitial(b.filename)} disabled={isBusy} title="Définir comme backup initial">Vers initial</button>
                     )}
                   </div>
                 </td>
@@ -191,35 +192,35 @@ export default function DatabaseAdminPage() {
             <h1>Base de données</h1>
             <p>Gérez les sauvegardes et restaurations de la base de données</p>
           </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div className="flex-row-sm">
             <button className="btn btn-primary" onClick={handleCreateBackup} disabled={isBusy}>
-              {creating ? (<><span className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> Sauvegarde en cours...</>) : (<><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg> Nouvelle sauvegarde</>)}
+              {creating ? (<><span className="spinner spinner-sm" /> Sauvegarde en cours...</>) : (<><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg> Nouvelle sauvegarde</>)}
             </button>
           </div>
         </div>
       </div>
 
       {activeJob && (
-        <div className="card" style={{ marginBottom: '16px', padding: '12px 16px', backgroundColor: 'var(--primary-bg, #eff6ff)', color: 'var(--primary, #1E40AF)', border: '1px solid var(--primary, #1E40AF)20', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} />
+        <div className="alert-dynamic alert-dynamic--info">
+          <span className="spinner spinner-md" />
           {activeJob.message}
         </div>
       )}
 
       {message && !activeJob && (
-        <div className="card" style={{ marginBottom: '16px', padding: '12px 16px', backgroundColor: message.type === 'success' ? 'var(--success-bg, #ecfdf5)' : 'var(--danger-bg, #fef2f2)', color: message.type === 'success' ? 'var(--success, #059669)' : 'var(--danger, #DC2626)', border: `1px solid ${message.type === 'success' ? 'var(--success, #059669)' : 'var(--danger, #DC2626)'}20` }}>
+        <div className={`alert-dynamic ${message.type === 'success' ? 'alert-dynamic--success' : 'alert-dynamic--error'}`}>
           {message.text}
         </div>
       )}
 
-      <h2 style={{ marginBottom: '12px', fontSize: '18px' }}>Sauvegardes</h2>
-      <div className="unified-card card-table" style={{ marginBottom: '24px' }}>
+      <h2 className="title-sm mb-12">Sauvegardes</h2>
+      <div className="unified-card card-table section-mb-lg">
         {renderTable(backups, 'backups', 'Aucune sauvegarde trouvée')}
       </div>
 
       {isDev && (
         <>
-          <h2 style={{ marginBottom: '12px', fontSize: '18px' }}>Sauvegardes démo</h2>
+          <h2 className="title-sm mb-12">Sauvegardes démo</h2>
           <div className="unified-card card-table">
             {renderTable(demos, 'demos', 'Aucune sauvegarde démo trouvée')}
           </div>
@@ -228,19 +229,19 @@ export default function DatabaseAdminPage() {
 
       {restoreTarget && (
         <div className="modal-overlay" onClick={() => setRestoreTarget(null)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+          <div className="modal modal-narrow" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Restaurer une sauvegarde</h3>
               <button className="modal-close" onClick={() => setRestoreTarget(null)}>&times;</button>
             </div>
             <div className="modal-body">
-              <p style={{ marginBottom: '8px' }}>Fichier : <strong style={{ fontFamily: 'monospace' }}>{restoreTarget.filename}</strong></p>
-              <p style={{ marginBottom: '8px' }}>Cette action va <strong>remplacer toutes les données actuelles</strong> par celles de cette sauvegarde.</p>
+              <p className="mb-8">Fichier : <strong className="text-mono">{restoreTarget.filename}</strong></p>
+              <p className="mb-8">Cette action va <strong>remplacer toutes les données actuelles</strong> par celles de cette sauvegarde.</p>
               <p>Voulez-vous créer une sauvegarde de la base actuelle avant de restaurer ?</p>
             </div>
-            <div className="modal-footer" style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+            <div className="modal-footer flex-end flex-row-sm">
               <button className="btn btn-secondary btn-sm" onClick={() => setRestoreTarget(null)}>Annuler</button>
-              <button className="btn btn-sm" style={{ backgroundColor: 'var(--warning, #D97706)', color: 'white' }} onClick={() => handleRestore(restoreTarget.filename, restoreTarget.source, false)}>Restaurer directement</button>
+              <button className="btn btn-warning btn-sm" onClick={() => handleRestore(restoreTarget.filename, restoreTarget.source, false)}>Restaurer directement</button>
               <button className="btn btn-primary btn-sm" onClick={() => handleRestore(restoreTarget.filename, restoreTarget.source, true)}>Sauvegarder puis restaurer</button>
             </div>
           </div>

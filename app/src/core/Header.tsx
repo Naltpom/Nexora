@@ -48,9 +48,9 @@ export default function Header() {
   return (
     <header className="header">
       <div className="header-left">
-        <Link to="/" className="header-logo" style={{ cursor: 'pointer', textDecoration: 'none', color: 'inherit' }}>
-          <div style={{ backgroundColor: appSettings.primary_color || '#1E40AF', borderRadius: '6px', padding: '6px 10px', display: 'flex', alignItems: 'center', height: '36px', boxSizing: 'border-box' }}>
-            <img src={appSettings.app_logo || '/logo_full.svg'} alt={appSettings.app_name} style={{ height: '18px', display: 'block' }} />
+        <Link to="/" className="header-logo">
+          <div className="header-logo-icon" style={{ backgroundColor: appSettings.primary_color || '#1E40AF' }}>
+            <img src={appSettings.app_logo || '/logo_full.svg'} alt={appSettings.app_name} className="header-logo-img" />
           </div>
           <span className="header-title">{appSettings.app_name}</span>
         </Link>
@@ -95,7 +95,6 @@ export default function Header() {
                 <Link
                   to="/profile"
                   className="header-user-name"
-                  style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}
                   title="Mon profil"
                 >
                   {user.first_name} {user.last_name?.toUpperCase()}
@@ -158,7 +157,6 @@ export default function Header() {
                       to="/profile"
                       className={`header-admin-menu-item${isMenuActive('/profile') ? ' header-admin-menu-item-active' : ''}`}
                       onClick={() => setShowAdminMenu(false)}
-                      style={{ textDecoration: 'none', color: 'inherit' }}
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -171,7 +169,6 @@ export default function Header() {
                         to="/profile/preferences"
                         className={`header-admin-menu-item${isMenuActive('/profile/preferences') ? ' header-admin-menu-item-active' : ''}`}
                         onClick={() => setShowAdminMenu(false)}
-                        style={{ textDecoration: 'none', color: 'inherit' }}
                       >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <circle cx="12" cy="12" r="3" />
@@ -188,7 +185,6 @@ export default function Header() {
                       to="/admin/users"
                       className={`header-admin-menu-item${isMenuActive('/admin/users') ? ' header-admin-menu-item-active' : ''}`}
                       onClick={() => setShowAdminMenu(false)}
-                      style={{ textDecoration: 'none', color: 'inherit' }}
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -203,7 +199,6 @@ export default function Header() {
                         to="/notifications/settings"
                         className={`header-admin-menu-item${isMenuActive('/notifications/settings') ? ' header-admin-menu-item-active' : ''}`}
                         onClick={() => setShowAdminMenu(false)}
-                        style={{ textDecoration: 'none', color: 'inherit' }}
                       >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
@@ -216,7 +211,6 @@ export default function Header() {
                       to="/admin/roles"
                       className={`header-admin-menu-item${isMenuActive('/admin/roles') ? ' header-admin-menu-item-active' : ''}`}
                       onClick={() => setShowAdminMenu(false)}
-                      style={{ textDecoration: 'none', color: 'inherit' }}
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
@@ -227,7 +221,6 @@ export default function Header() {
                       to="/admin/permissions"
                       className={`header-admin-menu-item${isMenuActive('/admin/permissions') ? ' header-admin-menu-item-active' : ''}`}
                       onClick={() => setShowAdminMenu(false)}
-                      style={{ textDecoration: 'none', color: 'inherit' }}
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
@@ -239,7 +232,6 @@ export default function Header() {
                       to="/admin/features"
                       className={`header-admin-menu-item${isMenuActive('/admin/features') ? ' header-admin-menu-item-active' : ''}`}
                       onClick={() => setShowAdminMenu(false)}
-                      style={{ textDecoration: 'none', color: 'inherit' }}
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <rect x="3" y="3" width="7" height="7" />
@@ -254,7 +246,6 @@ export default function Header() {
                         to="/admin/events"
                         className={`header-admin-menu-item${isMenuActive('/admin/events') ? ' header-admin-menu-item-active' : ''}`}
                         onClick={() => setShowAdminMenu(false)}
-                        style={{ textDecoration: 'none', color: 'inherit' }}
                       >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
@@ -267,7 +258,6 @@ export default function Header() {
                         to="/admin/mfa-policy"
                         className={`header-admin-menu-item${isMenuActive('/admin/mfa-policy') ? ' header-admin-menu-item-active' : ''}`}
                         onClick={() => setShowAdminMenu(false)}
-                        style={{ textDecoration: 'none', color: 'inherit' }}
                       >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
@@ -281,7 +271,6 @@ export default function Header() {
                       to="/admin/settings"
                       className={`header-admin-menu-item${isMenuActive('/admin/settings') ? ' header-admin-menu-item-active' : ''}`}
                       onClick={() => setShowAdminMenu(false)}
-                      style={{ textDecoration: 'none', color: 'inherit' }}
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <circle cx="12" cy="12" r="3" />
@@ -293,7 +282,6 @@ export default function Header() {
                       to="/admin/database"
                       className={`header-admin-menu-item${isMenuActive('/admin/database') ? ' header-admin-menu-item-active' : ''}`}
                       onClick={() => setShowAdminMenu(false)}
-                      style={{ textDecoration: 'none', color: 'inherit' }}
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <ellipse cx="12" cy="5" rx="9" ry="3" />

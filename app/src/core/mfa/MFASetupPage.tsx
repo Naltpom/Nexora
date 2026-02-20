@@ -3,7 +3,8 @@ import Layout from '../../core/Layout'
 import { useAuth } from '../../core/AuthContext'
 import api from '../../api'
 import MFABackupCodes from './MFABackupCodes'
-import './mfa.css'
+import '../_identity/_identity.scss'
+import './mfa.scss'
 
 interface MFAMethodStatus {
   method: string
@@ -200,10 +201,10 @@ export default function MFASetupPage() {
 
   return (
     <Layout breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Mon profil', path: '/profile' }, { label: 'MFA' }]} title="Configuration MFA">
-      <div style={{ maxWidth: 640, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div className="mfa-setup-page-layout">
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>Authentification multi-facteurs</h1>
-          <p style={{ color: 'var(--gray-500)', fontSize: 14 }}>
+          <h1 className="mfa-setup-page-title">Authentification multi-facteurs</h1>
+          <p className="mfa-setup-page-desc">
             Configurez vos methodes de verification pour renforcer la securite de votre compte.
           </p>
         </div>
@@ -242,11 +243,11 @@ export default function MFASetupPage() {
             </div>
 
             <div className="mfa-setup-section-body">
-              {totpError && <div className="alert alert-error" style={{ marginBottom: 12 }}>{totpError}</div>}
+              {totpError && <div className="alert alert-error alert-spaced">{totpError}</div>}
 
               {totpEnabled && !totpSetupData && (
                 <div className="mfa-setup-actions">
-                  <p style={{ color: 'var(--gray-500)', fontSize: 13 }}>
+                  <p className="text-gray-500-sm">
                     Votre application d'authentification est configuree et active.
                   </p>
                   <button
@@ -271,7 +272,7 @@ export default function MFASetupPage() {
 
               {totpSetupData && (
                 <div className="mfa-totp-setup">
-                  <p style={{ fontSize: 13, color: 'var(--gray-600)', marginBottom: 16 }}>
+                  <p className="mfa-setup-totp-instructions">
                     Scannez ce QR code avec votre application d'authentification, puis entrez le code genere pour confirmer.
                   </p>
 
@@ -284,13 +285,13 @@ export default function MFASetupPage() {
                   </div>
 
                   <div className="mfa-secret-container">
-                    <label style={{ fontSize: 12, color: 'var(--gray-500)', marginBottom: 4, display: 'block' }}>
+                    <label className="mfa-secret-label">
                       Cle manuelle :
                     </label>
                     <code className="mfa-secret-code">{totpSetupData.secret}</code>
                   </div>
 
-                  <div className="form-group" style={{ marginTop: 16 }}>
+                  <div className="form-group mt-16">
                     <label>Code de verification</label>
                     <input
                       type="text"
@@ -304,7 +305,7 @@ export default function MFASetupPage() {
                     />
                   </div>
 
-                  <div style={{ display: 'flex', gap: 8 }}>
+                  <div className="flex-row-sm">
                     <button
                       className="btn btn-primary"
                       onClick={handleTotpVerify}
@@ -354,7 +355,7 @@ export default function MFASetupPage() {
             <div className="mfa-setup-section-body">
               {emailEnabled ? (
                 <div className="mfa-setup-actions">
-                  <p style={{ color: 'var(--gray-500)', fontSize: 13 }}>
+                  <p className="text-gray-500-sm">
                     La verification par email est active sur votre compte.
                   </p>
                   <button
@@ -404,7 +405,7 @@ export default function MFASetupPage() {
 
           <div className="mfa-setup-section-body">
             {status && status.backup_codes_remaining === 0 && (
-              <p style={{ color: 'var(--warning)', fontSize: 13, marginBottom: 12 }}>
+              <p className="mfa-setup-no-backup-warning">
                 Vous n'avez aucun code de secours. Nous vous recommandons d'en generer.
               </p>
             )}

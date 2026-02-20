@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Layout from '../../core/Layout'
 import api from '../../api'
-import './mfa.css'
+import './mfa.scss'
 
 interface Role {
   id: number
@@ -176,10 +176,10 @@ export default function MFAAdminPolicy() {
 
   return (
     <Layout breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Administration' }, { label: 'Politique MFA' }]} title="Politique MFA">
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div className="mfa-admin-page-layout">
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4 }}>Politique MFA par role</h1>
-          <p style={{ color: 'var(--gray-500)', fontSize: 14 }}>
+          <h1 className="mfa-admin-page-title">Politique MFA par role</h1>
+          <p className="mfa-admin-page-desc">
             Configurez les exigences d'authentification multi-facteurs pour chaque role.
           </p>
         </div>

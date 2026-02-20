@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, FormEvent } from 'react'
+import './_identity.scss'
 import Layout from '../../core/Layout'
 import api from '../../api'
 
@@ -103,20 +104,20 @@ export default function AppSettingsAdminPage() {
       </div>
 
       {loading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}>
+        <div className="text-center loading-pad-lg">
           <div className="spinner" />
         </div>
       ) : (
         <form onSubmit={handleSubmit}>
-          {error && <div className="alert alert-error" style={{ marginBottom: 16 }}>{error}</div>}
-          {success && <div className="alert alert-success" style={{ marginBottom: 16 }}>{success}</div>}
+          {error && <div className="alert alert-error mb-16">{error}</div>}
+          {success && <div className="alert alert-success mb-16">{success}</div>}
 
           {/* Identite */}
-          <div className="unified-card" style={{ padding: 24, marginBottom: 16 }}>
-            <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 20, color: 'var(--gray-700)' }}>Identite</h3>
+          <div className="unified-card settings-section">
+            <h3 className="settings-section-title">Identite</h3>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              <div className="form-group" style={{ marginBottom: 0 }}>
+            <div className="settings-grid">
+              <div className="form-group mb-0">
                 <label>Nom de l'application</label>
                 <input
                   type="text"
@@ -126,7 +127,7 @@ export default function AppSettingsAdminPage() {
                 />
               </div>
 
-              <div className="form-group" style={{ marginBottom: 0 }}>
+              <div className="form-group mb-0">
                 <label>Email de support</label>
                 <input
                   type="email"
@@ -137,7 +138,7 @@ export default function AppSettingsAdminPage() {
               </div>
             </div>
 
-            <div className="form-group" style={{ marginTop: 16, marginBottom: 0 }}>
+            <div className="form-group mt-16 mb-0">
               <label>Description</label>
               <textarea
                 value={form.app_description || ''}
@@ -149,44 +150,35 @@ export default function AppSettingsAdminPage() {
           </div>
 
           {/* Apparence */}
-          <div className="unified-card" style={{ padding: 24, marginBottom: 16 }}>
-            <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 20, color: 'var(--gray-700)' }}>Apparence</h3>
+          <div className="unified-card settings-section">
+            <h3 className="settings-section-title">Apparence</h3>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, alignItems: 'start' }}>
+            <div className="settings-grid-align">
               {/* Logo */}
-              <div className="form-group" style={{ marginBottom: 0 }}>
+              <div className="form-group mb-0">
                 <label>Logo</label>
-                <p style={{ fontSize: 13, color: 'var(--gray-500)', margin: '0 0 8px 0' }}>URL ou chemin du logo (header)</p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <p className="text-gray-500-sm mb-8">URL ou chemin du logo (header)</p>
+                <div className="flex-center-lg">
                   {form.app_logo && (
-                    <div style={{
-                      backgroundColor: form.primary_color || '#1E40AF',
-                      borderRadius: 8,
-                      padding: '8px 16px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      height: 44,
-                      flexShrink: 0,
-                    }}>
+                    <div className="header-logo-icon flex-shrink-0" style={{ backgroundColor: form.primary_color || '#1E40AF' }}>
                       <img
                         src={form.app_logo}
                         alt="Logo"
-                        style={{ height: 24, display: 'block' }}
+                        className="logo-preview-img"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                       />
                     </div>
                   )}
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="flex-1 min-w-0">
                     <input
                       type="text"
                       value={form.app_logo || ''}
                       onChange={(e) => setForm(prev => ({ ...prev, app_logo: e.target.value }))}
                       placeholder="/logo_full.svg"
-                      style={{ marginBottom: 8 }}
+                      className="mb-8"
                     />
                     <label
-                      className="btn btn-secondary"
-                      style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13 }}
+                      className="btn btn-secondary cursor-pointer flex-center text-sm"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -197,7 +189,7 @@ export default function AppSettingsAdminPage() {
                       <input
                         type="file"
                         accept="image/*"
-                        style={{ display: 'none' }}
+                        className="hidden-input"
                         onChange={(e) => {
                           const f = e.target.files?.[0]
                           if (f) handleLogoUpload(f)
@@ -212,25 +204,25 @@ export default function AppSettingsAdminPage() {
               <div>
                 <div className="form-group">
                   <label>Couleur principale</label>
-                  <p style={{ fontSize: 13, color: 'var(--gray-500)', margin: '0 0 8px 0' }}>Couleur de la marque (hex)</p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <p className="text-gray-500-sm mb-8">Couleur de la marque (hex)</p>
+                  <div className="flex-center-lg">
                     <input
                       type="color"
                       value={form.primary_color || '#1E40AF'}
                       onChange={(e) => setForm(prev => ({ ...prev, primary_color: e.target.value }))}
-                      style={{ width: 44, height: 38, padding: 2, border: '1px solid var(--gray-300)', borderRadius: 6, cursor: 'pointer', flexShrink: 0 }}
+                      className="color-picker-input"
                     />
                     <input
                       type="text"
                       value={form.primary_color || ''}
                       onChange={(e) => setForm(prev => ({ ...prev, primary_color: e.target.value }))}
                       placeholder="#1E40AF"
-                      style={{ flex: 1 }}
+                      className="flex-1"
                     />
                   </div>
                 </div>
 
-                <div className="form-group" style={{ marginBottom: 0 }}>
+                <div className="form-group mb-0">
                   <label>Favicon</label>
                   <input
                     type="text"
@@ -245,8 +237,8 @@ export default function AppSettingsAdminPage() {
 
           {/* Extra settings not in predefined keys */}
           {settings.filter(s => !orderedKeys.includes(s.key)).length > 0 && (
-            <div className="unified-card" style={{ padding: 24, marginBottom: 16 }}>
-              <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 20, color: 'var(--gray-700)' }}>Autres</h3>
+            <div className="unified-card settings-section">
+              <h3 className="settings-section-title">Autres</h3>
               {settings
                 .filter(s => !orderedKeys.includes(s.key))
                 .map(s => (
@@ -264,7 +256,7 @@ export default function AppSettingsAdminPage() {
           )}
 
           {/* Save button */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: 8 }}>
+          <div className="flex-end pt-8">
             <button type="submit" className="btn btn-primary" disabled={saving}>
               {saving ? 'Enregistrement...' : 'Enregistrer les parametres'}
             </button>

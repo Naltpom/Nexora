@@ -83,7 +83,7 @@ export default function GlobalSearch() {
                 <div className="global-search-group">
                   <div className="global-search-group-title">Utilisateurs</div>
                   {results!.users.map(u => (
-                    <Link key={`u-${u.id}`} to={`/admin/users`} className="global-search-item" onClick={clearSearch} style={{ textDecoration: 'none', color: 'inherit' }}>
+                    <Link key={`u-${u.id}`} to={`/admin/users`} className="global-search-item" onClick={clearSearch}>
                       <span className="global-search-item-icon">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
