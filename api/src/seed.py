@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .core.database import engine, async_session, Base
 from .core.security import hash_password
-from .features._core.models import User, FeatureState
+from .features._core.models import User, FeatureState, AppSetting
 
 
 def ago(days: int) -> datetime:
@@ -88,6 +88,19 @@ async def seed():
         ]
         for fs in default_features:
             session.add(fs)
+
+        # ── DEFAULT APP SETTINGS ────────────────────────────────────
+
+        default_settings = [
+            AppSetting(key="app_name", value="Template App"),
+            AppSetting(key="app_description", value=""),
+            AppSetting(key="app_logo", value="/logo_full.svg"),
+            AppSetting(key="app_favicon", value="/favicon.ico"),
+            AppSetting(key="primary_color", value="#1E40AF"),
+            AppSetting(key="support_email", value=""),
+        ]
+        for s in default_settings:
+            session.add(s)
 
         await session.commit()
 

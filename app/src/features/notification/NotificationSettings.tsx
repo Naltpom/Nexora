@@ -126,7 +126,7 @@ export default function NotificationSettings() {
       const promises: Promise<any>[] = [
         api.get('/notifications/event-types'),
         api.get('/notifications/rules/my'),
-        api.get('/notifications/webhooks'),
+        api.get('/notifications/webhooks/'),
       ]
 
       if (isSuperAdmin) {
@@ -379,7 +379,7 @@ export default function NotificationSettings() {
       } else {
         const endpoint = webhookForm.is_global
           ? '/notifications/webhooks/global'
-          : '/notifications/webhooks'
+          : '/notifications/webhooks/'
         await api.post(endpoint, payload)
       }
       setShowWebhookModal(false)

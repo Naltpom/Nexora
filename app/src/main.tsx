@@ -5,6 +5,7 @@ import App from './App'
 import { AuthProvider } from './core/AuthContext'
 import { PermissionProvider } from './core/PermissionContext'
 import { FeatureProvider } from './core/FeatureContext'
+import { AppSettingsProvider } from './core/AppSettingsContext'
 import { ConfirmProvider } from './core/ConfirmModal'
 import { NotificationProvider } from './features/notification/NotificationContext'
 import './core/styles/global.css'
@@ -44,17 +45,19 @@ if ('serviceWorker' in navigator) {
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
-      <AuthProvider>
-        <PermissionProvider>
-          <FeatureProvider>
-            <ConfirmProvider>
-              <NotificationProvider>
-                <App />
-              </NotificationProvider>
-            </ConfirmProvider>
-          </FeatureProvider>
-        </PermissionProvider>
-      </AuthProvider>
+      <AppSettingsProvider>
+        <AuthProvider>
+          <PermissionProvider>
+            <FeatureProvider>
+              <ConfirmProvider>
+                <NotificationProvider>
+                  <App />
+                </NotificationProvider>
+              </ConfirmProvider>
+            </FeatureProvider>
+          </PermissionProvider>
+        </AuthProvider>
+      </AppSettingsProvider>
     </BrowserRouter>
   </React.StrictMode>,
 )

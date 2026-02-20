@@ -81,7 +81,7 @@ class Settings(BaseSettings):
     ENV: str = "production"
 
     # Frontend URL (for reset password links)
-    FRONTEND_URL: str = "http://localhost:5462"
+    FRONTEND_URL: str = "http://localhost:5472"
 
     @property
     def database_url(self) -> str:

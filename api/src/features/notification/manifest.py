@@ -4,7 +4,7 @@ manifest = FeatureManifest(
     name="notification",
     label="Notifications",
     description="In-app notification system with rules engine and SSE",
-    version="1.0.0",
+    version="2026.02.1",
     children=["notification.email", "notification.push", "notification.webhook"],
     permissions=[
         "notification.read", "notification.delete",

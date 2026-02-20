@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { useAuth } from './AuthContext'
+import { useFeature } from './FeatureContext'
+import { useAppSettings } from './AppSettingsContext'
 import { useNavigate, Link } from 'react-router-dom'
 import GlobalSearch from './GlobalSearch'
 
@@ -7,6 +9,8 @@ const NotificationBell = lazy(() => import('../features/notification/Notificatio
 
 export default function Header() {
   const { user, logout, getPreference, updatePreference } = useAuth()
+  const { isActive } = useFeature()
+  const { settings: appSettings } = useAppSettings()
   const navigate = useNavigate()
   const [showAdminMenu, setShowAdminMenu] = useState(false)
   const adminDropdownRef = useRef<HTMLDivElement>(null)
@@ -42,10 +46,10 @@ export default function Header() {
     <header className="header">
       <div className="header-left">
         <Link to="/" className="header-logo" style={{ cursor: 'pointer', textDecoration: 'none', color: 'inherit' }}>
-          <div style={{ backgroundColor: '#1E40AF', borderRadius: '6px', padding: '6px 10px', display: 'flex', alignItems: 'center', height: '36px', boxSizing: 'border-box' }}>
-            <img src="/logo_full.svg" alt="Kertios" style={{ height: '18px', display: 'block' }} />
+          <div style={{ backgroundColor: appSettings.primary_color || '#1E40AF', borderRadius: '6px', padding: '6px 10px', display: 'flex', alignItems: 'center', height: '36px', boxSizing: 'border-box' }}>
+            <img src={appSettings.app_logo || '/logo_full.svg'} alt={appSettings.app_name} style={{ height: '18px', display: 'block' }} />
           </div>
-          <span className="header-title">Support</span>
+          <span className="header-title">{appSettings.app_name}</span>
         </Link>
         {user && <GlobalSearch />}
       </div>
@@ -76,9 +80,11 @@ export default function Header() {
               )}
             </button>
 
-            <Suspense fallback={null}>
-              <NotificationBell />
-            </Suspense>
+            {isActive('notification') && (
+              <Suspense fallback={null}>
+                <NotificationBell />
+              </Suspense>
+            )}
 
             {/* Non-admin user */}
             {!user.is_super_admin && (
@@ -155,18 +161,20 @@ export default function Header() {
                       </svg>
                       Utilisateurs
                     </Link>
-                    <Link
-                      to="/notifications/settings"
-                      className="header-admin-menu-item"
-                      onClick={() => setShowAdminMenu(false)}
-                      style={{ textDecoration: 'none', color: 'inherit' }}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                      </svg>
-                      Notifications
-                    </Link>
+                    {isActive('notification') && (
+                      <Link
+                        to="/notifications/settings"
+                        className="header-admin-menu-item"
+                        onClick={() => setShowAdminMenu(false)}
+                        style={{ textDecoration: 'none', color: 'inherit' }}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                        </svg>
+                        Notifications
+                      </Link>
+                    )}
                     <Link
                       to="/admin/roles"
                       className="header-admin-menu-item"
@@ -203,6 +211,18 @@ export default function Header() {
                         <rect x="3" y="14" width="7" height="7" />
                       </svg>
                       Features
+                    </Link>
+                    <Link
+                      to="/admin/settings"
+                      className="header-admin-menu-item"
+                      onClick={() => setShowAdminMenu(false)}
+                      style={{ textDecoration: 'none', color: 'inherit' }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="3" />
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                      </svg>
+                      Parametres
                     </Link>
                     <Link
                       to="/admin/database"

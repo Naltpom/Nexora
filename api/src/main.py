@@ -69,7 +69,7 @@ def create_app() -> FastAPI:
     application = FastAPI(
         title="Kertios Template",
         description="Feature-based modular application template",
-        version="1.0.0",
+        version="2026.02.1",
         docs_url="/api/docs",
         openapi_url="/api/openapi.json",
     )
@@ -77,7 +77,7 @@ def create_app() -> FastAPI:
     # ── CORS ─────────────────────────────────────────────────────────
     application.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:3020", "http://localhost:5462"],
+        allow_origins=["http://localhost:5472"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

@@ -11,7 +11,9 @@ interface Role {
   id: number
   name: string
   description: string
+  permissions: string[]
   created_at: string
+  updated_at: string
 }
 
 interface Permission {
@@ -31,9 +33,6 @@ export default function RolesAdminPage() {
   const [roles, setRoles] = useState<Role[]>([])
   const [allPermissions, setAllPermissions] = useState<Permission[]>([])
   const [loading, setLoading] = useState(true)
-  const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [total, setTotal] = useState(0)
 
   // Modal state
   const [showModal, setShowModal] = useState(false)
@@ -45,22 +44,19 @@ export default function RolesAdminPage() {
   // Permission assignment state
   const [showPermModal, setShowPermModal] = useState(false)
   const [permRole, setPermRole] = useState<Role | null>(null)
-  const [rolePermissions, setRolePermissions] = useState<string[]>([])
+  const [selectedPermissionIds, setSelectedPermissionIds] = useState<number[]>([])
   const [savingPerms, setSavingPerms] = useState(false)
 
-  const loadRoles = useCallback(async (p?: number) => {
-    const currentPage = p ?? page
+  const loadRoles = useCallback(async () => {
     try {
-      const res = await api.get('/roles/', { params: { page: currentPage, per_page: 25 } })
-      setRoles(res.data.items)
-      setTotal(res.data.total)
-      setTotalPages(res.data.pages)
+      const res = await api.get('/roles/')
+      setRoles(res.data)
     } catch {
       console.error('Erreur lors du chargement des roles')
     } finally {
       setLoading(false)
     }
-  }, [page])
+  }, [])
 
   const loadPermissions = useCallback(async () => {
     try {
@@ -75,11 +71,6 @@ export default function RolesAdminPage() {
     loadRoles()
     loadPermissions()
   }, [])
-
-  const goToPage = (p: number) => {
-    setPage(p)
-    loadRoles(p)
-  }
 
   const formatDate = (iso: string) => {
     const d = new Date(iso)
@@ -145,22 +136,21 @@ export default function RolesAdminPage() {
   }
 
   // --- Permission assignment ---
-  const openPermissions = async (role: Role) => {
+  const openPermissions = (role: Role) => {
     setPermRole(role)
+    // Convert permission codes from the role to permission IDs
+    const ids = allPermissions
+      .filter(p => role.permissions.includes(p.code))
+      .map(p => p.id)
+    setSelectedPermissionIds(ids)
     setShowPermModal(true)
-    try {
-      const res = await api.get(`/roles/${role.id}/permissions`)
-      setRolePermissions(res.data)
-    } catch {
-      setRolePermissions([])
-    }
   }
 
-  const togglePermission = (code: string) => {
-    setRolePermissions(prev =>
-      prev.includes(code)
-        ? prev.filter(c => c !== code)
-        : [...prev, code]
+  const togglePermission = (id: number) => {
+    setSelectedPermissionIds(prev =>
+      prev.includes(id)
+        ? prev.filter(pid => pid !== id)
+        : [...prev, id]
     )
   }
 
@@ -168,34 +158,16 @@ export default function RolesAdminPage() {
     if (!permRole) return
     setSavingPerms(true)
     try {
-      await api.put(`/roles/${permRole.id}/permissions`, { permission_codes: rolePermissions })
+      await api.post(`/roles/${permRole.id}/permissions`, { permission_ids: selectedPermissionIds })
       setShowPermModal(false)
       setPermRole(null)
+      loadRoles()
     } catch {
       console.error('Erreur lors de la sauvegarde des permissions')
     } finally {
       setSavingPerms(false)
     }
   }
-
-  // --- Count permissions for a role (displayed inline) ---
-  const [permCounts, setPermCounts] = useState<Record<number, number>>({})
-
-  useEffect(() => {
-    const loadCounts = async () => {
-      const counts: Record<number, number> = {}
-      for (const role of roles) {
-        try {
-          const res = await api.get(`/roles/${role.id}/permissions`)
-          counts[role.id] = res.data.length
-        } catch {
-          counts[role.id] = 0
-        }
-      }
-      setPermCounts(counts)
-    }
-    if (roles.length > 0) loadCounts()
-  }, [roles])
 
   return (
     <Layout breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Roles' }]} title="Roles">
@@ -219,135 +191,83 @@ export default function RolesAdminPage() {
       {loading ? (
         <div className="spinner" />
       ) : (
-        <>
-          <div className="unified-card full-width-breakout card-table">
-            <div className="table-container">
-              <table className="unified-table">
-                <thead>
+        <div className="unified-card full-width-breakout card-table">
+          <div className="table-container">
+            <table className="unified-table">
+              <thead>
+                <tr>
+                  <th>Nom</th>
+                  <th>Description</th>
+                  <th>Permissions</th>
+                  <th>Date creation</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {roles.length === 0 ? (
                   <tr>
-                    <th>Nom</th>
-                    <th>Description</th>
-                    <th>Permissions</th>
-                    <th>Date creation</th>
-                    <th>Actions</th>
+                    <td colSpan={5} style={{ textAlign: 'center', padding: '32px', color: 'var(--gray-400)' }}>
+                      Aucun role trouve
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {roles.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} style={{ textAlign: 'center', padding: '32px', color: 'var(--gray-400)' }}>
-                        Aucun role trouve
+                ) : (
+                  roles.map((role) => (
+                    <tr key={role.id}>
+                      <td><strong>{role.name}</strong></td>
+                      <td style={{ color: 'var(--gray-500)' }}>{role.description || '\u2014'}</td>
+                      <td>
+                        <span
+                          className="badge badge-info"
+                          style={{ cursor: 'pointer' }}
+                          onClick={() => openPermissions(role)}
+                          title="Gerer les permissions"
+                        >
+                          {role.permissions.length} permission{role.permissions.length !== 1 ? 's' : ''}
+                        </span>
                       </td>
-                    </tr>
-                  ) : (
-                    roles.map((role) => (
-                      <tr key={role.id}>
-                        <td><strong>{role.name}</strong></td>
-                        <td style={{ color: 'var(--gray-500)' }}>{role.description || '\u2014'}</td>
-                        <td>
-                          <span
-                            className="badge badge-info"
-                            style={{ cursor: 'pointer' }}
+                      <td style={{ fontSize: 13, color: 'var(--gray-500)', whiteSpace: 'nowrap' }}>
+                        {formatDate(role.created_at)}
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          <button
+                            className="btn-icon btn-icon-primary"
                             onClick={() => openPermissions(role)}
                             title="Gerer les permissions"
                           >
-                            {permCounts[role.id] !== undefined ? permCounts[role.id] : '...'} permission{(permCounts[role.id] ?? 0) !== 1 ? 's' : ''}
-                          </span>
-                        </td>
-                        <td style={{ fontSize: 13, color: 'var(--gray-500)', whiteSpace: 'nowrap' }}>
-                          {formatDate(role.created_at)}
-                        </td>
-                        <td>
-                          <div style={{ display: 'flex', gap: 4 }}>
-                            <button
-                              className="btn-icon btn-icon-primary"
-                              onClick={() => openPermissions(role)}
-                              title="Gerer les permissions"
-                            >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                              </svg>
-                            </button>
-                            <button
-                              className="btn-icon btn-icon-primary"
-                              onClick={() => openEdit(role)}
-                              title="Modifier"
-                            >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                              </svg>
-                            </button>
-                            <button
-                              className="btn-icon btn-icon-danger"
-                              onClick={() => handleDelete(role)}
-                              title="Supprimer"
-                            >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <polyline points="3 6 5 6 21 6" />
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                              </svg>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                            </svg>
+                          </button>
+                          <button
+                            className="btn-icon btn-icon-primary"
+                            onClick={() => openEdit(role)}
+                            title="Modifier"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
+                          </button>
+                          <button
+                            className="btn-icon btn-icon-danger"
+                            onClick={() => handleDelete(role)}
+                            title="Supprimer"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="3 6 5 6 21 6" />
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                            </svg>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
-
-          <div className="unified-pagination">
-            <span className="unified-pagination-info">{total} role{total > 1 ? 's' : ''}</span>
-            <div className="unified-pagination-controls">
-              {totalPages > 1 && (
-                <>
-                  <button
-                    className="unified-pagination-btn"
-                    disabled={page <= 1}
-                    onClick={() => goToPage(page - 1)}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="15 18 9 12 15 6" />
-                    </svg>
-                  </button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1)
-                    .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
-                    .reduce((acc: (number | string)[], p, idx, arr) => {
-                      if (idx > 0 && typeof arr[idx - 1] === 'number' && (p as number) - (arr[idx - 1] as number) > 1) {
-                        acc.push('...')
-                      }
-                      acc.push(p)
-                      return acc
-                    }, [])
-                    .map((p, i) =>
-                      typeof p === 'string' ? (
-                        <span key={`dots-${i}`} className="unified-pagination-dots">...</span>
-                      ) : (
-                        <button
-                          key={p}
-                          className={`unified-pagination-btn${p === page ? ' active' : ''}`}
-                          onClick={() => goToPage(p)}
-                        >
-                          {p}
-                        </button>
-                      )
-                    )}
-                  <button
-                    className="unified-pagination-btn"
-                    disabled={page >= totalPages}
-                    onClick={() => goToPage(page + 1)}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="9 18 15 12 9 6" />
-                    </svg>
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        </>
+        </div>
       )}
 
       {/* Create / Edit Role Modal */}
@@ -421,21 +341,21 @@ export default function RolesAdminPage() {
                             gap: '10px',
                             padding: '8px 12px',
                             borderRadius: '6px',
-                            backgroundColor: rolePermissions.includes(perm.code) ? 'var(--primary-bg, #eff6ff)' : 'transparent',
+                            backgroundColor: selectedPermissionIds.includes(perm.id) ? 'var(--primary-bg, #eff6ff)' : 'transparent',
                             border: '1px solid',
-                            borderColor: rolePermissions.includes(perm.code) ? 'var(--primary, #1E40AF)20' : 'var(--gray-200)',
+                            borderColor: selectedPermissionIds.includes(perm.id) ? 'var(--primary, #1E40AF)20' : 'var(--gray-200)',
                             cursor: 'pointer',
                             transition: 'all 0.15s',
                           }}
                         >
                           <input
                             type="checkbox"
-                            checked={rolePermissions.includes(perm.code)}
-                            onChange={() => togglePermission(perm.code)}
+                            checked={selectedPermissionIds.includes(perm.id)}
+                            onChange={() => togglePermission(perm.id)}
                             style={{ marginTop: '2px' }}
                           />
                           <div>
-                            <div style={{ fontWeight: 500, fontSize: '14px' }}>{perm.label}</div>
+                            <div style={{ fontWeight: 500, fontSize: '14px' }}>{perm.label || perm.code}</div>
                             <div style={{ fontSize: '12px', color: 'var(--gray-500)' }}>
                               <code style={{ fontSize: '11px', backgroundColor: 'var(--gray-100)', padding: '1px 4px', borderRadius: '3px' }}>{perm.code}</code>
                               {perm.description && <span style={{ marginLeft: '8px' }}>{perm.description}</span>}

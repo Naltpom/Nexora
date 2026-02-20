@@ -202,6 +202,20 @@ class InvitationTokenResponse(BaseModel):
     refresh_token: str
 
 
+# ── App Settings ────────────────────────────────────────────────────────
+
+class AppSettingResponse(BaseModel):
+    key: str
+    value: str | None = None
+    updated_at: datetime | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class AppSettingsUpdate(BaseModel):
+    settings: dict[str, str | None]
+
+
 # ── Impersonation ────────────────────────────────────────────────────────
 
 class ImpersonationStartResponse(BaseModel):

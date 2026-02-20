@@ -104,6 +104,13 @@ async def get_me(
     )
 
 
+@router.get("/me/permissions")
+async def get_my_permissions(
+    permission_codes: list[str] = Depends(get_user_permission_codes),
+):
+    return {"permissions": permission_codes}
+
+
 # ---------------------------------------------------------------------------
 #  Preferences
 # ---------------------------------------------------------------------------

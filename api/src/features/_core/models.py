@@ -157,6 +157,21 @@ class ImpersonationLog(Base):
     target_user = relationship("User", foreign_keys=[target_user_id])
 
 
+# ── App Settings ────────────────────────────────────────────────────────
+
+class AppSetting(Base):
+    __tablename__ = "app_settings"
+
+    key: Mapped[str] = mapped_column(String(100), primary_key=True)
+    value: Mapped[str | None] = mapped_column(Text, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+    updated_by: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"), nullable=True)
+
+
 class ImpersonationAction(Base):
     __tablename__ = "impersonation_actions"
 

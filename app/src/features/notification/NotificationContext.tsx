@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react'
 import api from '../../api'
 import { useAuth } from '../../core/AuthContext'
+import { useFeature } from '../../core/FeatureContext'
 import './notifications.css'
 
 // ── Inline push notification helpers ──
@@ -138,6 +139,8 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
+  const { isActive } = useFeature()
+  const pushFeatureActive = isActive('notification.push')
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(false)
@@ -304,7 +307,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   // Show push prompt after login if not subscribed and not dismissed
   useEffect(() => {
-    if (!user || !pushSupported) {
+    if (!user || !pushSupported || !pushFeatureActive) {
       setShowPushPrompt(false)
       return
     }
@@ -332,7 +335,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       const timer = setTimeout(() => setShowPushPrompt(true), 2000)
       return () => clearTimeout(timer)
     })
-  }, [user, pushSupported, pushSubscribed])
+  }, [user, pushSupported, pushSubscribed, pushFeatureActive])
 
   // Listen for push notification clicks (from service worker)
   useEffect(() => {
