@@ -27,6 +27,7 @@ from .schemas import (
     InvitationVerify,
 )
 from .services import find_pending_invitation
+from ...core.events import event_bus
 
 router = APIRouter()
 
@@ -94,6 +95,18 @@ async def create_invitation(
         )
     except Exception:
         pass
+
+    await event_bus.emit(
+        "user.invited",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="invitation",
+        resource_id=invitation.id,
+        payload={
+            "actor_name": invited_by_name,
+            "invited_email": email,
+        },
+    )
 
     return InvitationListResponse(
         id=invitation.id,
@@ -322,6 +335,19 @@ async def verify_invitation_code(
 
     inv.consumed_at = datetime.now(timezone.utc)
     await db.flush()
+
+    await event_bus.emit(
+        "user.invitation_accepted",
+        db=db,
+        actor_id=user.id,
+        resource_type="user",
+        resource_id=user.id,
+        payload={
+            "actor_name": f"{user.first_name} {user.last_name}",
+            "member_name": f"{user.first_name} {user.last_name}",
+            "email": user.email,
+        },
+    )
 
     token_data = {"sub": str(user.id), "email": user.email}
     return InvitationTokenResponse(

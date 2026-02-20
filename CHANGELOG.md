@@ -1,5 +1,100 @@
 # Changelog
 
+## 2026.02.9
+
+### event (NEW)
+> [Changelog complet](api/src/features/event/CHANGELOG.md)
+- Nouvelle feature `event` : bus d'evenements generique avec persistence
+- Declaration des types d'events dans les manifests des features (`FeatureManifest.events`)
+- Endpoint `GET /api/events/event-types` pour la decouverte dynamique
+- Page admin "Catalogue d'evenements" : liste groupee par feature avec recherche
+
+### _core
+- Emission d'evenements via event bus : `user.registered`, `user.invited`, `user.invitation_accepted`, `user.updated`, `user.deactivated`, `admin.impersonation_started`
+- Lien "Events" dans le menu admin (conditionne par la feature event)
+
+### notification
+- Cablage event bus : ecoute `event.persisted` pour le moteur de regles (remplace l'ancien dispatch interne)
+- Dependance vers la feature `event` (persistence + catalogue)
+- Suppression de l'endpoint doublon `GET /notifications/event-types` (utilise `GET /events/event-types`)
+- Emission de `notification.rule_created` a la creation de regles
+
+## 2026.02.8
+
+### notification
+- Fix : les regles personnelles n'apparaissent plus dans la section "Regles globales" du super admin
+
+## 2026.02.7
+
+### mfa
+- MFA enforcement : banner d'avertissement pendant la periode de grace, redirection forcee apres expiration
+- Nouvelle page `MFAForceSetupPage` pour la configuration MFA obligatoire
+- Nouveau composant `MFASetupBanner` affiche dans le Layout
+- Ajout `mfa_grace_period_expires` dans `TokenResponse`
+
+### preference (NEW)
+> [Changelog complet](api/src/features/preference/CHANGELOG.md)
+- Feature parent "Preferences" avec sous-features `preference.theme` et `preference.didacticiel`
+- Page preferences (`/profile/preferences`) accessible depuis le profil
+- `preference.theme` : section theme (dark/light + fond visuel) dans la page preferences
+- `preference.didacticiel` : systeme de tutoriels in-app type intro.js (spotlight/tooltip SVG mask)
+- Backend : endpoints seen-state (`GET/POST/DELETE /api/preference/didacticiel/seen`)
+- Frontend : TutorialContext, TutorialEngine (spotlight overlay), TutorialSection (page preferences)
+- Auto-declenchement des tutoriels par route, etat "vu" persiste cote serveur
+- Exemple de tutoriel dans la feature notification
+
+## 2026.02.6
+
+### _core
+- Verification d'email a l'inscription : code 6 chiffres avec expiration 5 min et cooldown 60s
+- Nouveaux endpoints API : `POST /auth/verify-email`, `POST /auth/resend-verification`
+- Page frontend VerifyEmailPage avec saisie du code, renvoi, et redirection automatique
+- Modification du login : redirection vers verification si email non verifie
+- Si `EMAIL_ENABLED=False`, la verification est skippee (mode dev)
+
+### notification.email
+- Ajout fonction factory `get_email_sender()` (prerequis utilise par _core)
+
+## 2026.02.5
+
+### _core
+- Page detail utilisateur par UUID (`/admin/users/:uuid`) avec edition profil, roles, et permissions visuelles (User > Role > Global)
+- Ajout UUID sur les utilisateurs (migration Alembic)
+- Cascade desactivation des features enfants/dependants
+- Fix MFA : feature check avant verification, filtrage methodes par sous-features actives
+- Lien MFA Policy dans le menu admin
+
+### sso
+- Fix : flow "Lier un compte" SSO (GitHub/Google) redirige correctement vers `/link` au lieu de `/callback`
+
+## 2026.02.4
+
+### _core
+- Refonte page admin Features : layout en tableau compact au lieu de cartes
+- Refonte page admin Roles : panneau lateral split-panel pour la gestion des permissions (pagination, recherche, toggle en temps reel)
+- Ajout endpoints API pour permissions paginées et toggle individuel
+
+## 2026.02.3
+
+### sso (NEW)
+> [Changelog complet](api/src/features/sso/CHANGELOG.md)
+- Feature SSO (Single Sign-On) avec OAuth2 : Google et GitHub
+- Liaison automatique de comptes, creation d'utilisateur SSO
+- Boutons SSO sur la page de connexion, gestion des comptes lies dans le profil
+
+### mfa (NEW)
+> [Changelog complet](api/src/features/mfa/CHANGELOG.md)
+- Feature MFA (Authentification Multi-Facteurs) : TOTP et Email OTP
+- Codes de secours (backup codes)
+- Policy MFA par role avec periode de grace
+- Configuration MFA dans le profil, page admin de gestion des policies
+
+### _core
+- Modification du flow de login pour supporter le MFA (token MFA temporaire en 2 etapes)
+- Extension de `TokenResponse` avec champs MFA
+- Ajout `create_mfa_token()` / `decode_mfa_token()` dans security.py
+- Support des routes features publiques (flag `public`) dans ProtectedRoute
+
 ## 2026.02.2
 
 ### _core

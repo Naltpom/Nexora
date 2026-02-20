@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import Layout from '../../core/Layout'
 import { useConfirm } from '../../core/ConfirmModal'
 import api from '../../api'
@@ -31,6 +31,13 @@ export default function FeaturesAdminPage() {
   const [loading, setLoading] = useState(true)
   const [toggling, setToggling] = useState<string | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [search, setSearch] = useState('')
+  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [searchValue, setSearchValue] = useState('')
+
+  // Detail modal
+  interface DetailItem { code: string; label?: string; description?: string }
+  const [detailModal, setDetailModal] = useState<{ title: string; items: DetailItem[]; loading: boolean } | null>(null)
 
   const loadFeatures = useCallback(async () => {
     try {
@@ -46,6 +53,14 @@ export default function FeaturesAdminPage() {
   useEffect(() => {
     loadFeatures()
   }, [loadFeatures])
+
+  const handleSearchChange = (value: string) => {
+    setSearchValue(value)
+    if (searchTimeout.current) clearTimeout(searchTimeout.current)
+    searchTimeout.current = setTimeout(() => {
+      setSearch(value.toLowerCase())
+    }, 200)
+  }
 
   const handleToggle = async (feature: Feature) => {
     const action = feature.active ? 'desactiver' : 'activer'
@@ -64,8 +79,10 @@ export default function FeaturesAdminPage() {
     setToggling(feature.name)
     setMessage(null)
     try {
-      await api.put(`/features/${feature.name}/toggle`, { active: !feature.active })
-      setMessage({ type: 'success', text: `Feature "${feature.label}" ${!feature.active ? 'activee' : 'desactivee'}` })
+      const res = await api.put(`/features/${feature.name}/toggle`, { active: !feature.active })
+      const cascaded: string[] = res.data.cascaded || []
+      const cascadeText = cascaded.length > 0 ? ` (+ ${cascaded.length} enfant(s) desactive(s) : ${cascaded.join(', ')})` : ''
+      setMessage({ type: 'success', text: `Feature "${feature.label}" ${!feature.active ? 'activee' : 'desactivee'}${cascadeText}` })
       await loadFeatures()
     } catch (err: any) {
       setMessage({ type: 'error', text: err.response?.data?.detail || `Erreur lors du changement de statut de "${feature.label}"` })
@@ -74,7 +91,7 @@ export default function FeaturesAdminPage() {
     }
   }
 
-  // --- Group features: parents first, then children indented ---
+  // --- Group features: parents first, then children ---
   const rootFeatures = features.filter(f => !f.parent)
   const childrenMap = features.reduce<Record<string, Feature[]>>((acc, f) => {
     if (f.parent) {
@@ -84,140 +101,29 @@ export default function FeaturesAdminPage() {
     return acc
   }, {})
 
-  const renderFeatureCard = (feature: Feature, isChild: boolean = false) => (
-    <div
-      key={feature.name}
-      className="unified-card"
-      style={{
-        marginBottom: '12px',
-        marginLeft: isChild ? '32px' : '0',
-        padding: '20px',
-        borderLeft: isChild ? '3px solid var(--primary, #1E40AF)40' : undefined,
-        opacity: feature.active ? 1 : 0.7,
-        transition: 'opacity 0.2s',
-      }}
-    >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px' }}>
-        {/* Left: info */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '6px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 600, margin: 0 }}>{feature.label}</h3>
-            <code style={{ fontSize: '12px', backgroundColor: 'var(--gray-100)', padding: '2px 6px', borderRadius: '4px', color: 'var(--gray-500)', fontFamily: 'monospace' }}>
-              {feature.name}
-            </code>
-            <span
-              className={`badge ${feature.active ? 'badge-success' : 'badge-warning'}`}
-              style={{ fontSize: '11px' }}
-            >
-              {feature.active ? 'Actif' : 'Inactif'}
-            </span>
-            {feature.is_core && (
-              <span
-                className="badge"
-                style={{
-                  fontSize: '11px',
-                  backgroundColor: 'var(--gray-100)',
-                  color: 'var(--gray-600)',
-                  border: '1px solid var(--gray-300)',
-                }}
-              >
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '3px', verticalAlign: 'middle' }}>
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                </svg>
-                Core
-              </span>
-            )}
-            {feature.has_routes && (
-              <span
-                className="badge"
-                style={{
-                  fontSize: '11px',
-                  backgroundColor: 'var(--primary-bg, #eff6ff)',
-                  color: 'var(--primary, #1E40AF)',
-                  border: '1px solid var(--primary, #1E40AF)20',
-                }}
-              >
-                Routes
-              </span>
-            )}
-            <span style={{ fontSize: '12px', color: 'var(--gray-400)' }}>v{feature.version}</span>
-          </div>
+  // Build ordered list: parent then its children
+  const orderedFeatures: { feature: Feature; isChild: boolean }[] = []
+  for (const root of rootFeatures) {
+    orderedFeatures.push({ feature: root, isChild: false })
+    if (childrenMap[root.name]) {
+      for (const child of childrenMap[root.name]) {
+        orderedFeatures.push({ feature: child, isChild: true })
+      }
+    }
+  }
+  // Orphan children (parent not in list)
+  features
+    .filter(f => f.parent && !rootFeatures.find(r => r.name === f.parent))
+    .forEach(f => orderedFeatures.push({ feature: f, isChild: false }))
 
-          {feature.description && (
-            <p style={{ fontSize: '14px', color: 'var(--gray-500)', margin: '0 0 10px 0' }}>
-              {feature.description}
-            </p>
-          )}
-
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '13px' }}>
-            {feature.parent && (
-              <span style={{ color: 'var(--gray-500)' }}>
-                <strong>Parent :</strong> {feature.parent}
-              </span>
-            )}
-            {feature.children.length > 0 && (
-              <span style={{ color: 'var(--gray-500)' }}>
-                <strong>Enfants :</strong> {feature.children.join(', ')}
-              </span>
-            )}
-            {feature.depends.length > 0 && (
-              <span style={{ color: 'var(--gray-500)' }}>
-                <strong>Depend de :</strong> {feature.depends.join(', ')}
-              </span>
-            )}
-            {feature.permissions.length > 0 && (
-              <span style={{ color: 'var(--gray-500)' }}>
-                <span className="badge badge-info" style={{ fontSize: '11px' }}>
-                  {feature.permissions.length} permission{feature.permissions.length > 1 ? 's' : ''}
-                </span>
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Right: toggle */}
-        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
-          {feature.is_core ? (
-            <span style={{ fontSize: '12px', color: 'var(--gray-400)', fontStyle: 'italic' }}>
-              Verrouille
-            </span>
-          ) : (
-            <button
-              onClick={() => handleToggle(feature)}
-              disabled={toggling === feature.name}
-              style={{
-                position: 'relative',
-                width: '48px',
-                height: '26px',
-                borderRadius: '13px',
-                border: 'none',
-                backgroundColor: feature.active ? 'var(--primary, #1E40AF)' : 'var(--gray-300)',
-                cursor: toggling === feature.name ? 'wait' : 'pointer',
-                transition: 'background-color 0.2s',
-                opacity: toggling === feature.name ? 0.6 : 1,
-              }}
-              title={feature.active ? 'Desactiver' : 'Activer'}
-            >
-              <span
-                style={{
-                  position: 'absolute',
-                  top: '3px',
-                  left: feature.active ? '25px' : '3px',
-                  width: '20px',
-                  height: '20px',
-                  borderRadius: '50%',
-                  backgroundColor: 'white',
-                  transition: 'left 0.2s',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                }}
-              />
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  )
+  // Filter by search
+  const filteredFeatures = search
+    ? orderedFeatures.filter(({ feature }) =>
+        feature.name.toLowerCase().includes(search) ||
+        feature.label.toLowerCase().includes(search) ||
+        feature.description.toLowerCase().includes(search)
+      )
+    : orderedFeatures
 
   return (
     <Layout breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Features' }]} title="Features">
@@ -252,18 +158,223 @@ export default function FeaturesAdminPage() {
           Aucune feature trouvee
         </div>
       ) : (
-        <div>
-          {rootFeatures.map((feature) => (
-            <div key={feature.name}>
-              {renderFeatureCard(feature, false)}
-              {childrenMap[feature.name]?.map((child) => renderFeatureCard(child, true))}
-            </div>
-          ))}
+        <div className="unified-card full-width-breakout">
+          {/* Search bar */}
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--gray-100)' }}>
+            <input
+              type="text"
+              placeholder="Rechercher une feature..."
+              value={searchValue}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              style={{
+                width: '100%',
+                maxWidth: '320px',
+                padding: '8px 12px',
+                fontSize: '13px',
+                border: '1px solid var(--gray-200)',
+                borderRadius: '8px',
+                background: 'var(--gray-50)',
+                color: 'var(--text-primary, var(--gray-700))',
+              }}
+            />
+          </div>
 
-          {/* Render orphan children (whose parent is not in the list) */}
-          {features
-            .filter(f => f.parent && !rootFeatures.find(r => r.name === f.parent))
-            .map((feature) => renderFeatureCard(feature, false))}
+          <div className="table-container">
+            <table className="unified-table">
+              <thead>
+                <tr>
+                  <th>Feature</th>
+                  <th>Description</th>
+                  <th>Version</th>
+                  <th>Statut</th>
+                  <th>Infos</th>
+                  <th>Dependances</th>
+                  <th style={{ textAlign: 'center' }}>Activer</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredFeatures.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} style={{ textAlign: 'center', padding: '32px', color: 'var(--gray-400)' }}>
+                      {search ? 'Aucune feature correspondante' : 'Aucune feature trouvee'}
+                    </td>
+                  </tr>
+                ) : (
+                  filteredFeatures.map(({ feature, isChild }) => (
+                    <tr
+                      key={feature.name}
+                      style={{ opacity: feature.active ? 1 : 0.6 }}
+                    >
+                      {/* Feature name */}
+                      <td style={{ paddingLeft: isChild ? '48px' : undefined }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {isChild && (
+                            <span style={{ color: 'var(--gray-300)', fontSize: '14px', marginLeft: '-20px', marginRight: '4px' }}>└</span>
+                          )}
+                          <div>
+                            <div style={{ fontWeight: 500 }}>{feature.label}</div>
+                            <code style={{ fontSize: '11px', color: 'var(--gray-400)' }}>{feature.name}</code>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Description */}
+                      <td style={{ fontSize: '13px', color: 'var(--gray-500)', maxWidth: '300px' }}>
+                        {feature.description || '\u2014'}
+                      </td>
+
+                      {/* Version */}
+                      <td style={{ fontSize: '13px', color: 'var(--gray-500)', whiteSpace: 'nowrap' }}>
+                        v{feature.version}
+                      </td>
+
+                      {/* Status */}
+                      <td>
+                        <span className={`badge ${feature.active ? 'badge-success' : 'badge-warning'}`} style={{ fontSize: '11px' }}>
+                          {feature.active ? 'Actif' : 'Inactif'}
+                        </span>
+                      </td>
+
+                      {/* Info badges */}
+                      <td>
+                        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                          {feature.is_core && (
+                            <span className="badge badge-secondary" style={{ fontSize: '11px' }}>Core</span>
+                          )}
+                          {feature.has_routes && (
+                            <span className="badge badge-info" style={{ fontSize: '11px' }}>Routes</span>
+                          )}
+                          {feature.permissions.length > 0 && (
+                            <span
+                              className="badge badge-secondary"
+                              style={{ fontSize: '11px', cursor: 'pointer' }}
+                              onClick={async () => {
+                                setDetailModal({
+                                  title: `Permissions de ${feature.label}`,
+                                  items: [],
+                                  loading: true,
+                                })
+                                try {
+                                  const res = await api.get('/permissions/', { params: { feature: feature.name } })
+                                  setDetailModal({
+                                    title: `Permissions de ${feature.label}`,
+                                    items: res.data.map((p: any) => ({ code: p.code, label: p.label, description: p.description })),
+                                    loading: false,
+                                  })
+                                } catch {
+                                  setDetailModal({
+                                    title: `Permissions de ${feature.label}`,
+                                    items: feature.permissions.map(code => ({ code })),
+                                    loading: false,
+                                  })
+                                }
+                              }}
+                              title="Voir les permissions"
+                            >
+                              {feature.permissions.length} perm{feature.permissions.length > 1 ? 's' : ''}
+                            </span>
+                          )}
+                          {feature.children.length > 0 && (
+                            <span
+                              className="badge badge-secondary"
+                              style={{ fontSize: '11px', cursor: 'pointer' }}
+                              onClick={() => {
+                                const childItems = feature.children.map(name => {
+                                  const child = features.find(f => f.name === name)
+                                  return {
+                                    code: name,
+                                    label: child?.label,
+                                    description: child?.description,
+                                  }
+                                })
+                                setDetailModal({
+                                  title: `Enfants de ${feature.label}`,
+                                  items: childItems,
+                                  loading: false,
+                                })
+                              }}
+                              title="Voir les enfants"
+                            >
+                              {feature.children.length} enfant{feature.children.length > 1 ? 's' : ''}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Dependencies */}
+                      <td style={{ fontSize: '13px', color: 'var(--gray-500)' }}>
+                        {feature.depends.length > 0 ? feature.depends.join(', ') : '\u2014'}
+                      </td>
+
+                      {/* Toggle */}
+                      <td style={{ textAlign: 'center' }}>
+                        {feature.is_core ? (
+                          <span style={{ fontSize: '12px', color: 'var(--gray-400)', fontStyle: 'italic' }}>
+                            Verrouille
+                          </span>
+                        ) : (
+                          <label className="toggle" style={{ cursor: toggling === feature.name ? 'wait' : 'pointer' }}>
+                            <input
+                              type="checkbox"
+                              checked={feature.active}
+                              onChange={() => handleToggle(feature)}
+                              disabled={toggling === feature.name}
+                            />
+                            <span className="toggle-slider" />
+                          </label>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Detail modal (permissions / children list) */}
+      {detailModal && (
+        <div className="modal-overlay" onClick={() => setDetailModal(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+            <div className="modal-header">
+              <h2>{detailModal.title}</h2>
+              <button className="modal-close" onClick={() => setDetailModal(null)}>&times;</button>
+            </div>
+            <div className="modal-body" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+              {detailModal.loading ? (
+                <div style={{ textAlign: 'center', padding: '24px' }}><div className="spinner" /></div>
+              ) : detailModal.items.length === 0 ? (
+                <p style={{ color: 'var(--gray-400)', textAlign: 'center' }}>Aucun element</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {detailModal.items.map((item) => (
+                    <div
+                      key={item.code}
+                      style={{
+                        padding: '10px 12px',
+                        borderRadius: '6px',
+                        border: '1px solid var(--gray-200)',
+                      }}
+                    >
+                      {item.label && (
+                        <div style={{ fontSize: '13px', fontWeight: 500, marginBottom: '2px' }}>{item.label}</div>
+                      )}
+                      <code style={{ fontSize: '11px', color: 'var(--gray-500)' }}>{item.code}</code>
+                      {item.description && (
+                        <div style={{ fontSize: '12px', color: 'var(--gray-400)', marginTop: '4px' }}>{item.description}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => setDetailModal(null)}>
+                Fermer
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </Layout>

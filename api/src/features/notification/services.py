@@ -1,70 +1,17 @@
-"""Notification feature services: SSE broadcaster, event dispatch, notification processing."""
+"""Notification feature services: SSE broadcaster, notification processing."""
 
 import asyncio
 import logging
-import uuid
 from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import select, func, desc, asc, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .models import Event, Notification, NotificationRule, UserRulePreference
+from ..event.models import Event
+from .models import Notification, NotificationRule, UserRulePreference
 
 logger = logging.getLogger(__name__)
-
-
-# ---------------------------------------------------------------------------
-#  Event catalog
-# ---------------------------------------------------------------------------
-
-EVENT_CATALOG: dict[str, dict] = {
-    "user.registered": {
-        "label": "Utilisateur inscrit",
-        "category": "Utilisateurs",
-        "description": "Un nouvel utilisateur s'est inscrit sur la plateforme",
-    },
-    "user.invited": {
-        "label": "Utilisateur invite",
-        "category": "Utilisateurs",
-        "description": "Un utilisateur a ete invite sur la plateforme",
-    },
-    "user.invitation_accepted": {
-        "label": "Invitation acceptee",
-        "category": "Utilisateurs",
-        "description": "Un utilisateur invite a accepte l'invitation",
-    },
-    "user.updated": {
-        "label": "Profil mis a jour",
-        "category": "Utilisateurs",
-        "description": "Un utilisateur a mis a jour son profil",
-    },
-    "user.deactivated": {
-        "label": "Utilisateur desactive",
-        "category": "Utilisateurs",
-        "description": "Un utilisateur a ete desactive par un administrateur",
-    },
-    "notification.rule_created": {
-        "label": "Regle de notification creee",
-        "category": "Notifications",
-        "description": "Une nouvelle regle de notification a ete creee",
-    },
-    "admin.impersonation_started": {
-        "label": "Impersonation demarree",
-        "category": "Administration",
-        "description": "Un administrateur a commence a impersonifier un utilisateur",
-        "admin_only": True,
-    },
-}
-
-
-def get_event_categories() -> list[str]:
-    return sorted(set(e["category"] for e in EVENT_CATALOG.values()))
-
-
-def is_admin_only_event(event_type: str) -> bool:
-    info = EVENT_CATALOG.get(event_type, {})
-    return info.get("admin_only", False)
 
 
 # ---------------------------------------------------------------------------
@@ -147,8 +94,7 @@ def build_notification_content(event: Event) -> tuple[str, str | None, str | Non
         target = payload.get("target_name", "un utilisateur")
         msg = f"{actor} impersonifie {target}"
     else:
-        event_info = EVENT_CATALOG.get(event.event_type, {})
-        msg = event_info.get("label", event.event_type)
+        msg = event.event_type
 
     title = msg
     return title, None, None
@@ -218,33 +164,6 @@ def resolve_channels(
         "webhook": rule.channel_webhook,
         "push": rule.channel_push,
     }
-
-
-# ---------------------------------------------------------------------------
-#  Event dispatch
-# ---------------------------------------------------------------------------
-
-
-async def dispatch_event(
-    db: AsyncSession,
-    event_type: str,
-    actor_id: int,
-    resource_type: str,
-    resource_id: int,
-    payload: dict,
-) -> Event:
-    """Create a new Event and return it."""
-    event = Event(
-        event_type=event_type,
-        actor_id=actor_id,
-        resource_type=resource_type,
-        resource_id=resource_id,
-        payload=payload,
-        redirect_token=str(uuid.uuid4()),
-    )
-    db.add(event)
-    await db.flush()
-    return event
 
 
 # ---------------------------------------------------------------------------
@@ -568,12 +487,14 @@ async def delete_notification(db: AsyncSession, notification_id: int, user_id: i
 
 
 async def list_all_rules(db: AsyncSession) -> list[dict]:
-    """List all notification rules with creator names."""
+    """List global notification rules (exclude personal rules) with creator names."""
     from .._core.models import User
 
     result = await db.execute(
         select(NotificationRule, User).join(
             User, NotificationRule.created_by_id == User.id
+        ).where(
+            NotificationRule.target_type != "self",
         ).order_by(NotificationRule.created_at.desc())
     )
     rules = []

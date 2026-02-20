@@ -25,6 +25,7 @@ from .schemas import (
     ImpersonationStopResponse,
     UserSearchResult,
 )
+from ...core.events import event_bus
 
 router = APIRouter()
 
@@ -94,6 +95,20 @@ async def start_impersonation(
         "impersonated_by": current_admin.id,
         "impersonation_session_id": session_id,
     })
+
+    await event_bus.emit(
+        "admin.impersonation_started",
+        db=db,
+        actor_id=current_admin.id,
+        resource_type="user",
+        resource_id=target.id,
+        payload={
+            "actor_name": f"{current_admin.first_name} {current_admin.last_name}",
+            "target_name": f"{target.first_name} {target.last_name}",
+            "target_email": target.email,
+            "session_id": session_id,
+        },
+    )
 
     return ImpersonationStartResponse(
         access_token=access_token,

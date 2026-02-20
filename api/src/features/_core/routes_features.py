@@ -74,22 +74,27 @@ async def toggle_feature(
     if not ok:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=reason)
 
-    # Persist state to DB
-    result = await db.execute(select(FeatureState).where(FeatureState.name == name))
-    state = result.scalar_one_or_none()
+    # Build list of features to update (cascade children on deactivation)
+    names_to_toggle = [name]
+    if not data.active:
+        names_to_toggle.extend(registry.get_cascade_deactivations(name))
 
-    if state:
-        state.is_active = data.active
-        state.updated_by = current_user.id
-    else:
-        db.add(FeatureState(name=name, is_active=data.active, updated_by=current_user.id))
+    # Persist state to DB + update in-memory for each feature
+    for fname in names_to_toggle:
+        result = await db.execute(select(FeatureState).where(FeatureState.name == fname))
+        state = result.scalar_one_or_none()
+
+        if state:
+            state.is_active = data.active
+            state.updated_by = current_user.id
+        else:
+            db.add(FeatureState(name=fname, is_active=data.active, updated_by=current_user.id))
+
+        registry.toggle(fname, data.active)
 
     await db.flush()
 
-    # Update in-memory state
-    registry.toggle(name, data.active)
-
-    return {"name": name, "active": data.active}
+    return {"name": name, "active": data.active, "cascaded": names_to_toggle[1:]}
 
 
 # ---------------------------------------------------------------------------

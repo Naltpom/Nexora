@@ -11,12 +11,13 @@ from sse_starlette.sse import EventSourceResponse
 
 from ...core.security import get_current_user, get_current_super_admin, get_current_user_from_query_token, decode_query_token_lightweight
 from ...core.database import get_db
+from ...core.events import event_bus
 from ...core.exceptions import EntityNotFoundError, AuthorizationError
-from .models import Event, Notification, NotificationRule, UserRulePreference
+from ..event.models import Event
+from .models import Notification, NotificationRule, UserRulePreference
 from .schemas import (
     AdminNotificationListResponse,
     AdminNotificationResponse,
-    EventTypeResponse,
     NotificationListResponse,
     NotificationResponse,
     NotificationRuleCreate,
@@ -27,7 +28,6 @@ from .schemas import (
     UserRulePreferenceResponse,
 )
 from .services import (
-    EVENT_CATALOG,
     sse_broadcaster,
     list_notifications as svc_list_notifications,
     get_unread_count as svc_get_unread_count,
@@ -134,29 +134,6 @@ async def _build_rule_response_from_entity(
         user_preference=pref_response,
         created_at=rule.created_at,
     )
-
-
-# -- Event Types ---------------------------------------------------------------
-
-
-@router.get("/event-types", response_model=list[EventTypeResponse])
-async def list_event_types(
-    current_user=Depends(get_current_user),
-):
-    """Liste des types d'events disponibles."""
-    result = []
-    for event_type, info in EVENT_CATALOG.items():
-        admin_only = info.get("admin_only", False)
-        if admin_only and not current_user.is_super_admin:
-            continue
-        result.append(EventTypeResponse(
-            event_type=event_type,
-            label=info["label"],
-            category=info["category"],
-            description=info.get("description"),
-            admin_only=admin_only,
-        ))
-    return result
 
 
 # -- Notifications In-App ------------------------------------------------------
@@ -496,6 +473,20 @@ async def create_rule(
     )
     db.add(rule)
     await db.flush()
+
+    await event_bus.emit(
+        "notification.rule_created",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="notification_rule",
+        resource_id=rule.id,
+        payload={
+            "actor_name": f"{current_user.first_name} {current_user.last_name}",
+            "rule_name": rule.name,
+            "target_type": rule.target_type,
+        },
+    )
+
     return await _build_rule_response_from_entity(rule, db)
 
 
@@ -590,6 +581,20 @@ async def create_my_rule(
     )
     db.add(rule)
     await db.flush()
+
+    await event_bus.emit(
+        "notification.rule_created",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="notification_rule",
+        resource_id=rule.id,
+        payload={
+            "actor_name": f"{current_user.first_name} {current_user.last_name}",
+            "rule_name": rule.name,
+            "target_type": "self",
+        },
+    )
+
     return await _build_rule_response_from_entity(rule, db)
 
 

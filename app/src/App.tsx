@@ -6,6 +6,8 @@ import ProtectedRoute from './core/ProtectedRoute'
 import MeshBackground from './core/MeshBackground'
 import BackgroundThemePicker from './core/BackgroundThemePicker'
 
+const TutorialWrapper = lazy(() => import('./features/preference/didacticiel/TutorialWrapper'))
+
 // Core pages (always available)
 import LoginPage from './features/_core/LoginPage'
 import RegisterPage from './features/_core/RegisterPage'
@@ -13,6 +15,7 @@ import ForceChangePasswordPage from './features/_core/ForceChangePasswordPage'
 import ResetPasswordPage from './features/_core/ResetPasswordPage'
 import ForgotPasswordPage from './features/_core/ForgotPasswordPage'
 import AcceptInvitationPage from './features/_core/AcceptInvitationPage'
+import VerifyEmailPage from './features/_core/VerifyEmailPage'
 import HomePage from './features/_core/HomePage'
 import ProfilePage from './features/_core/ProfilePage'
 import UsersAdminPage from './features/_core/UsersAdminPage'
@@ -21,6 +24,7 @@ import RolesAdminPage from './features/_core/RolesAdminPage'
 import PermissionsAdminPage from './features/_core/PermissionsAdminPage'
 import FeaturesAdminPage from './features/_core/FeaturesAdminPage'
 import AppSettingsAdminPage from './features/_core/AppSettingsAdminPage'
+import UserDetailPage from './features/_core/UserDetailPage'
 
 // Feature manifests (auto-discovered)
 const featureModules = import.meta.glob('./features/*/index.ts', { eager: true }) as Record<string, any>
@@ -60,6 +64,7 @@ export default function App() {
     component: React.LazyExoticComponent<any>
     permission?: string
     feature?: string
+    public?: boolean
   }> = []
 
   for (const [, mod] of Object.entries(featureModules)) {
@@ -74,6 +79,43 @@ export default function App() {
     }
   }
 
+  const routes = (
+    <Routes>
+      {/* Public routes */}
+      <Route path="/login" element={user ? <Navigate to="/" /> : <LoginPage />} />
+      <Route path="/register" element={user ? <Navigate to="/" /> : <RegisterPage />} />
+      <Route path="/forgot-password" element={user ? <Navigate to="/" /> : <ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/verify-email" element={user ? <Navigate to="/" /> : <VerifyEmailPage />} />
+      <Route path="/invitation/:token" element={<AcceptInvitationPage />} />
+      <Route path="/change-password" element={user ? <ForceChangePasswordPage /> : <Navigate to="/login" />} />
+
+      {/* Core protected routes */}
+      <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+      <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+      <Route path="/admin/users" element={<ProtectedRoute requireSuperAdmin><UsersAdminPage /></ProtectedRoute>} />
+      <Route path="/admin/users/:uuid" element={<ProtectedRoute requireSuperAdmin><UserDetailPage /></ProtectedRoute>} />
+      <Route path="/admin/database" element={<ProtectedRoute requireSuperAdmin><DatabaseAdminPage /></ProtectedRoute>} />
+      <Route path="/admin/roles" element={<ProtectedRoute requireSuperAdmin><RolesAdminPage /></ProtectedRoute>} />
+      <Route path="/admin/permissions" element={<ProtectedRoute requireSuperAdmin><PermissionsAdminPage /></ProtectedRoute>} />
+      <Route path="/admin/features" element={<ProtectedRoute requireSuperAdmin><FeaturesAdminPage /></ProtectedRoute>} />
+      <Route path="/admin/settings" element={<ProtectedRoute requireSuperAdmin><AppSettingsAdminPage /></ProtectedRoute>} />
+
+      {/* Dynamic feature routes */}
+      {featureRoutes.map((route) => (
+        <Route
+          key={route.path}
+          path={route.path}
+          element={
+            <ProtectedRoute permission={route.permission} feature={route.feature} isPublic={route.public}>
+              <route.component />
+            </ProtectedRoute>
+          }
+        />
+      ))}
+    </Routes>
+  )
+
   return (
     <>
       <MeshBackground />
@@ -84,38 +126,9 @@ export default function App() {
         />
       )}
       <Suspense fallback={<LoadingSpinner />}>
-        <Routes>
-          {/* Public routes */}
-          <Route path="/login" element={user ? <Navigate to="/" /> : <LoginPage />} />
-          <Route path="/register" element={user ? <Navigate to="/" /> : <RegisterPage />} />
-          <Route path="/forgot-password" element={user ? <Navigate to="/" /> : <ForgotPasswordPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/invitation/:token" element={<AcceptInvitationPage />} />
-          <Route path="/change-password" element={user ? <ForceChangePasswordPage /> : <Navigate to="/login" />} />
-
-          {/* Core protected routes */}
-          <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-          <Route path="/admin/users" element={<ProtectedRoute requireSuperAdmin><UsersAdminPage /></ProtectedRoute>} />
-          <Route path="/admin/database" element={<ProtectedRoute requireSuperAdmin><DatabaseAdminPage /></ProtectedRoute>} />
-          <Route path="/admin/roles" element={<ProtectedRoute requireSuperAdmin><RolesAdminPage /></ProtectedRoute>} />
-          <Route path="/admin/permissions" element={<ProtectedRoute requireSuperAdmin><PermissionsAdminPage /></ProtectedRoute>} />
-          <Route path="/admin/features" element={<ProtectedRoute requireSuperAdmin><FeaturesAdminPage /></ProtectedRoute>} />
-          <Route path="/admin/settings" element={<ProtectedRoute requireSuperAdmin><AppSettingsAdminPage /></ProtectedRoute>} />
-
-          {/* Dynamic feature routes */}
-          {featureRoutes.map((route) => (
-            <Route
-              key={route.path}
-              path={route.path}
-              element={
-                <ProtectedRoute permission={route.permission} feature={route.feature}>
-                  <route.component />
-                </ProtectedRoute>
-              }
-            />
-          ))}
-        </Routes>
+        {isActive('preference.didacticiel') ? (
+          <TutorialWrapper>{routes}</TutorialWrapper>
+        ) : routes}
       </Suspense>
     </>
   )

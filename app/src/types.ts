@@ -51,3 +51,19 @@ export interface Permission {
   label: string | null
   description: string | null
 }
+
+export interface TutorialStep {
+  target: string
+  title: string
+  description: string
+  position?: 'top' | 'bottom' | 'left' | 'right' | 'auto'
+}
+
+export interface TutorialDefinition {
+  id: string
+  label: string
+  description?: string
+  permission?: string
+  triggerPath?: string
+  steps: TutorialStep[]
+}

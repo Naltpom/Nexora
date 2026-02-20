@@ -35,6 +35,10 @@ class FeatureManifest:
     # Permissions this feature provides
     permissions: list[str] = field(default_factory=list)
 
+    # Events this feature emits (for discovery by other features)
+    # Each dict: {"event_type": "user.registered", "label": "...", "category": "...", "description": "...", "admin_only": False}
+    events: list[dict[str, Any]] = field(default_factory=list)
+
     # Required config keys
     config_keys: list[str] = field(default_factory=list)
 
@@ -57,12 +61,22 @@ class FeatureManifest:
     is_core: bool = False
 
 
+_registry_instance: "FeatureRegistry | None" = None
+
+
+def get_registry() -> "FeatureRegistry | None":
+    """Return the global FeatureRegistry singleton (available after startup)."""
+    return _registry_instance
+
+
 class FeatureRegistry:
     """Discovers, validates, and loads features at startup."""
 
     def __init__(self):
+        global _registry_instance
         self._manifests: dict[str, FeatureManifest] = {}
         self._states: dict[str, bool] = {}
+        _registry_instance = self
 
     @property
     def manifests(self) -> dict[str, FeatureManifest]:
@@ -208,32 +222,72 @@ class FeatureRegistry:
             for dep in manifest.depends:
                 if not self.is_active(dep):
                     return False, f"Dependency '{dep}' must be active first"
-        else:
-            # Check no active children depend on this
-            for name, m in self._manifests.items():
-                if self.is_active(name):
-                    if m.parent == feature_name:
-                        return False, f"Child feature '{name}' is still active"
-                    if feature_name in m.depends:
-                        return False, f"Feature '{name}' depends on this feature"
+        # Deactivation is always allowed — children/dependants are cascaded
 
         return True, ""
+
+    def get_cascade_deactivations(self, feature_name: str) -> list[str]:
+        """Return list of active features that must be deactivated when *feature_name* is turned off.
+
+        Includes children and features that depend on *feature_name*, recursively.
+        """
+        to_deactivate: list[str] = []
+        visited: set[str] = set()
+
+        def _collect(name: str):
+            for fname, m in self._manifests.items():
+                if fname in visited or not self.is_active(fname):
+                    continue
+                if m.parent == name or name in m.depends:
+                    visited.add(fname)
+                    _collect(fname)
+                    to_deactivate.append(fname)
+
+        _collect(feature_name)
+        return to_deactivate
 
     def toggle(self, feature_name: str, active: bool):
         """Toggle feature state in memory."""
         self._states[feature_name] = active
+
+    _ACTION_DESCRIPTIONS: dict[str, str] = {
+        "read": "Consulter",
+        "create": "Creer",
+        "update": "Modifier",
+        "delete": "Supprimer",
+        "manage": "Gerer",
+        "send": "Envoyer",
+        "export": "Exporter",
+        "import": "Importer",
+    }
 
     def collect_all_permissions(self) -> list[dict]:
         """Gather all permissions from all manifests."""
         perms = []
         for manifest in self._manifests.values():
             for perm_code in manifest.permissions:
+                parts = perm_code.split(".")
+                action = parts[-1] if len(parts) > 1 else parts[0]
+                resource = ".".join(parts[:-1]) if len(parts) > 1 else manifest.name
+                resource_label = resource.replace(".", " ").replace("_", " ").title()
+                action_label = self._ACTION_DESCRIPTIONS.get(action, action.replace("_", " ").title())
                 perms.append({
                     "code": perm_code,
                     "feature": manifest.name,
                     "label": perm_code.replace(".", " ").replace("_", " ").title(),
+                    "description": f"{action_label} les {resource_label.lower()}",
                 })
         return perms
+
+    def collect_all_events(self, *, include_inactive: bool = False) -> list[dict]:
+        """Gather all event declarations from active feature manifests."""
+        events = []
+        for manifest in self._manifests.values():
+            if not include_inactive and not self.is_active(manifest.name):
+                continue
+            for evt in manifest.events:
+                events.append({**evt, "feature": manifest.name})
+        return events
 
     def get_manifest_data_for_frontend(self) -> list[dict]:
         """Return feature data for the frontend manifest endpoint."""

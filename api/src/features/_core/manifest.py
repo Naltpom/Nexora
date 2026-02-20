@@ -5,7 +5,7 @@ manifest = FeatureManifest(
     name="_core",
     label="Core",
     description="Authentication, users, roles, permissions, feature management",
-    version="2026.02.1",
+    version="2026.02.9",
     is_core=True,
     permissions=[
         "users.read", "users.create", "users.update", "users.delete",
@@ -17,6 +17,14 @@ manifest = FeatureManifest(
         "impersonation.start", "impersonation.read",
         "backups.create", "backups.restore", "backups.read",
         "search.global",
+    ],
+    events=[
+        {"event_type": "user.registered", "label": "Utilisateur inscrit", "category": "Utilisateurs", "description": "Un nouvel utilisateur s'est inscrit"},
+        {"event_type": "user.invited", "label": "Utilisateur invite", "category": "Utilisateurs", "description": "Un utilisateur a ete invite"},
+        {"event_type": "user.invitation_accepted", "label": "Invitation acceptee", "category": "Utilisateurs", "description": "Un utilisateur invite a accepte l'invitation"},
+        {"event_type": "user.updated", "label": "Profil mis a jour", "category": "Utilisateurs", "description": "Un utilisateur a mis a jour son profil"},
+        {"event_type": "user.deactivated", "label": "Utilisateur desactive", "category": "Utilisateurs", "description": "Un utilisateur a ete desactive"},
+        {"event_type": "admin.impersonation_started", "label": "Impersonation demarree", "category": "Administration", "description": "Un administrateur impersonifie un utilisateur", "admin_only": True},
     ],
     middleware=[ImpersonationAuditMiddleware, LastActiveMiddleware],
     extra_routers=[

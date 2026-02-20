@@ -238,3 +238,8 @@ class SmtpEmailSender:
         else:
             logger.error("Failed to send verification code email to %s", to_email)
         return ok
+
+
+def get_email_sender() -> SmtpEmailSender:
+    """Factory function for obtaining an email sender instance."""
+    return SmtpEmailSender()

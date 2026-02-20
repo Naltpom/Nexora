@@ -8,13 +8,22 @@ interface Props {
   requireSuperAdmin?: boolean
   permission?: string
   feature?: string
+  isPublic?: boolean
 }
 
-export default function ProtectedRoute({ children, requireSuperAdmin = false, permission, feature }: Props) {
+export default function ProtectedRoute({ children, requireSuperAdmin = false, permission, feature, isPublic = false }: Props) {
   const { user, loading } = useAuth()
   const { can } = usePermission()
   const { isActive } = useFeature()
   const location = useLocation()
+
+  // Public feature routes only check if the feature is active
+  if (isPublic) {
+    if (feature && !isActive(feature)) {
+      return <Navigate to="/" replace />
+    }
+    return <>{children}</>
+  }
 
   if (loading) {
     return (
@@ -32,6 +41,14 @@ export default function ProtectedRoute({ children, requireSuperAdmin = false, pe
 
   if (user.must_change_password) {
     return <Navigate to="/change-password" replace />
+  }
+
+  // MFA setup enforcement after grace period
+  if (localStorage.getItem('mfa_setup_required') === 'true') {
+    const raw = localStorage.getItem('mfa_grace_period_expires')
+    if (raw && new Date() >= new Date(raw)) {
+      return <Navigate to="/mfa/force-setup" replace />
+    }
   }
 
   if (requireSuperAdmin && !user.is_super_admin) {

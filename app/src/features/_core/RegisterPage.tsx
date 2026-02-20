@@ -35,13 +35,19 @@ export default function Register() {
 
     setLoading(true)
     try {
-      await api.post('/auth/register', {
+      const response = await api.post('/auth/register', {
         email,
         first_name: firstName,
         last_name: lastName,
         password,
       })
-      navigate('/login?registered=1')
+      if (response.data.email_verification_required) {
+        navigate('/verify-email', {
+          state: { email: response.data.email, debugCode: response.data.debug_code || null },
+        })
+      } else {
+        navigate('/login?registered=1')
+      }
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Erreur lors de l\'inscription')
     } finally {

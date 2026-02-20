@@ -1,7 +1,10 @@
-import { ReactNode, useEffect } from 'react'
+import { ReactNode, useEffect, Suspense, lazy } from 'react'
 import Header from './Header'
 import Breadcrumb from './Breadcrumb'
 import ImpersonationBanner from './ImpersonationBanner'
+import { useFeature } from './FeatureContext'
+
+const MFASetupBanner = lazy(() => import('../features/mfa/MFASetupBanner'))
 
 interface BreadcrumbItem {
   label: string
@@ -16,6 +19,8 @@ interface Props {
 }
 
 export default function Layout({ children, breadcrumb, fullWidth, title }: Props) {
+  const { isActive } = useFeature()
+
   useEffect(() => {
     document.title = title ? `${title} | Kertios Support` : 'Kertios Support'
     return () => { document.title = 'Kertios Support' }
@@ -25,6 +30,11 @@ export default function Layout({ children, breadcrumb, fullWidth, title }: Props
     <div className="layout">
       <Header />
       <ImpersonationBanner />
+      {isActive('mfa') && (
+        <Suspense fallback={null}>
+          <MFASetupBanner />
+        </Suspense>
+      )}
       <main className={`main-content${fullWidth ? ' main-content-full' : ''}`}>
         {breadcrumb && breadcrumb.length > 0 && <Breadcrumb items={breadcrumb} />}
         {children}

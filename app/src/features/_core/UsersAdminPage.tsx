@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import Layout from '../../core/Layout'
 import { useAuth } from '../../core/AuthContext'
 import { useConfirm } from '../../core/ConfirmModal'
@@ -7,6 +7,7 @@ import api from '../../api'
 
 interface User {
   id: number
+  uuid: string
   email: string
   first_name: string
   last_name: string
@@ -416,6 +417,18 @@ export default function Users() {
                       </td>
                       <td>
                         <div style={{ display: 'flex', gap: 4 }}>
+                          {/* Detail button */}
+                          <Link
+                            to={`/admin/users/${u.uuid}`}
+                            className="btn-icon btn-icon-secondary"
+                            title="Voir le detail"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                              <circle cx="12" cy="12" r="3" />
+                            </svg>
+                          </Link>
+
                           {/* Impersonate button - hidden for super admins */}
                           {!u.is_super_admin ? (
                             <button

@@ -76,6 +76,23 @@ class Settings(BaseSettings):
     # Intranet SSO (for @kertios.com accounts)
     INTRANET_AUTH_URL: str = ""
 
+    # SSO - Google OAuth2
+    SSO_GOOGLE_CLIENT_ID: str = ""
+    SSO_GOOGLE_CLIENT_SECRET: str = ""
+    SSO_GOOGLE_REDIRECT_URI: str = "http://localhost:5472/sso/callback/google"
+
+    # SSO - GitHub OAuth2
+    SSO_GITHUB_CLIENT_ID: str = ""
+    SSO_GITHUB_CLIENT_SECRET: str = ""
+    SSO_GITHUB_REDIRECT_URI: str = "http://localhost:5472/sso/callback/github"
+
+    # MFA - TOTP
+    MFA_TOTP_ISSUER_NAME: str = "Kertios Template"
+
+    # MFA - Email OTP
+    MFA_EMAIL_CODE_LENGTH: int = 6
+    MFA_EMAIL_CODE_EXPIRY_MINUTES: int = 5
+
     # Backups
     BACKUP_DIR: str = "/app/backups"
     ENV: str = "production"

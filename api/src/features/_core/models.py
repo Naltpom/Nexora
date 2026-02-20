@@ -2,9 +2,11 @@
 
 from datetime import datetime, timezone, timedelta
 
+import uuid as uuid_mod
+
 from sqlalchemy import String, Boolean, Integer, ForeignKey, DateTime, Text, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 
 from ...core.database import Base
 
@@ -15,12 +17,19 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    uuid: Mapped[uuid_mod.UUID] = mapped_column(
+        UUID(as_uuid=True), unique=True, nullable=False, default=uuid_mod.uuid4, index=True
+    )
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
     password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
     first_name: Mapped[str] = mapped_column(String(100), nullable=False)
     last_name: Mapped[str] = mapped_column(String(100), nullable=False)
     auth_source: Mapped[str] = mapped_column(String(20), nullable=False, default="local")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    email_verified: Mapped[bool] = mapped_column(Boolean, default=True)
+    verification_code_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    verification_code_expires: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    verification_code_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     is_super_admin: Mapped[bool] = mapped_column(Boolean, default=False)
     must_change_password: Mapped[bool] = mapped_column(Boolean, default=False)
     preferences: Mapped[str | None] = mapped_column(Text, nullable=True)

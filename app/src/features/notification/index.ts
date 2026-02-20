@@ -1,4 +1,5 @@
 import { lazy } from 'react'
+import type { TutorialDefinition } from '../../types'
 
 export const manifest = {
   name: 'notification',
@@ -11,4 +12,27 @@ export const manifest = {
     { label: 'Notifications', path: '/notifications', icon: 'bell' },
   ],
   headerComponents: [lazy(() => import('./NotificationBell'))],
+  tutorials: [
+    {
+      id: 'notification.overview',
+      label: 'Decouvrir les notifications',
+      description: 'Apprenez a utiliser le systeme de notifications.',
+      permission: 'notification.read',
+      triggerPath: '/notifications',
+      steps: [
+        {
+          target: '.notification-bell-btn',
+          title: 'Cloche de notifications',
+          description: 'Cliquez ici pour voir vos notifications recentes sans quitter la page courante.',
+          position: 'bottom',
+        },
+        {
+          target: '.notification-dropdown-footer a[href="/notifications/settings"]',
+          title: 'Parametres',
+          description: 'Configurez vos preferences de notification : email, push, webhooks.',
+          position: 'bottom',
+        },
+      ],
+    },
+  ] satisfies TutorialDefinition[],
 }

@@ -61,6 +61,32 @@ def create_impersonation_token(
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 
+MFA_TOKEN_EXPIRE_MINUTES = 5
+
+
+def create_mfa_token(user_id: int, email: str) -> str:
+    """Create a short-lived token for the MFA verification step."""
+    to_encode = {
+        "sub": str(user_id),
+        "email": email,
+        "type": "mfa_pending",
+    }
+    expire = datetime.now(timezone.utc) + timedelta(minutes=MFA_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+
+def decode_mfa_token(token: str) -> dict:
+    """Decode and validate an MFA pending token."""
+    payload = decode_token(token)
+    if payload.get("type") != "mfa_pending":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token MFA invalide",
+        )
+    return payload
+
+
 def decode_token(token: str) -> dict:
     try:
         return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])

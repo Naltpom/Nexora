@@ -5,7 +5,7 @@
 
 app:
   name: "Kertios Template"
-  version: "2026.02.1"
+  version: "2026.02.9"
 
 # Default feature states (true = active by default)
 features:
@@ -13,6 +13,15 @@ features:
   notification.email: true
   notification.push: false
   notification.webhook: true
+  sso: true
+  sso.google: false
+  sso.github: false
+  mfa: true
+  mfa.totp: true
+  mfa.email: true
+  preference: true
+  preference.theme: true
+  preference.didacticiel: true
 
 # Feature-specific configuration defaults
 notification.email:
@@ -26,3 +35,20 @@ notification.push:
 notification.webhook:
   timeout: 10
   max_retries: 3
+
+sso.google:
+  client_id: ""
+  client_secret: ""
+  redirect_uri: "http://localhost:5472/sso/callback/google"
+
+sso.github:
+  client_id: ""
+  client_secret: ""
+  redirect_uri: "http://localhost:5472/sso/callback/github"
+
+mfa.totp:
+  issuer_name: "Kertios Template"
+
+mfa.email:
+  code_length: 6
+  code_expiry_minutes: 5

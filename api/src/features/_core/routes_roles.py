@@ -1,7 +1,9 @@
 """Role CRUD + permission assignment endpoints."""
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+import math
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -10,9 +12,12 @@ from ...core.permissions import require_permission
 from .models import Permission, Role, RolePermission, UserRole, User
 from .schemas import (
     AssignPermissionsRequest,
+    PermissionWithGranted,
+    PermissionWithGrantedPaginated,
     RoleCreate,
     RoleResponse,
     RoleUpdate,
+    TogglePermissionRequest,
     UserResponse,
 )
 
@@ -171,6 +176,114 @@ async def assign_permissions(
     )
     role = result.scalar_one()
     return _role_to_response(role)
+
+
+# ---------------------------------------------------------------------------
+#  Paginated permissions for a role (with granted status)
+# ---------------------------------------------------------------------------
+
+
+@router.get(
+    "/{role_id}/permissions/all",
+    response_model=PermissionWithGrantedPaginated,
+    dependencies=[Depends(require_permission("roles.read"))],
+)
+async def list_role_permissions_paginated(
+    role_id: int,
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    search: str | None = Query(None),
+    db: AsyncSession = Depends(get_db),
+):
+    """List all permissions with granted status for a role, paginated."""
+    result = await db.execute(select(Role).where(Role.id == role_id))
+    if not result.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="Role introuvable")
+
+    # Get granted permission IDs for this role
+    rp_result = await db.execute(
+        select(RolePermission.permission_id).where(RolePermission.role_id == role_id)
+    )
+    granted_ids = {row[0] for row in rp_result.all()}
+
+    # Build query
+    query = select(Permission).order_by(Permission.feature, Permission.code)
+    count_query = select(func.count(Permission.id))
+
+    if search:
+        search_filter = or_(
+            Permission.code.ilike(f"%{search}%"),
+            Permission.label.ilike(f"%{search}%"),
+            Permission.description.ilike(f"%{search}%"),
+        )
+        query = query.where(search_filter)
+        count_query = count_query.where(search_filter)
+
+    # Count
+    total = (await db.execute(count_query)).scalar() or 0
+    pages = math.ceil(total / per_page) if total > 0 else 1
+
+    # Paginate
+    offset = (page - 1) * per_page
+    result = await db.execute(query.offset(offset).limit(per_page))
+    permissions = result.scalars().all()
+
+    items = [
+        PermissionWithGranted(
+            id=p.id,
+            code=p.code,
+            feature=p.feature,
+            label=p.label,
+            description=p.description,
+            granted=p.id in granted_ids,
+        )
+        for p in permissions
+    ]
+
+    return PermissionWithGrantedPaginated(
+        items=items,
+        total=total,
+        page=page,
+        per_page=per_page,
+        pages=pages,
+    )
+
+
+@router.post(
+    "/{role_id}/permissions/toggle",
+    dependencies=[Depends(require_permission("roles.update"))],
+)
+async def toggle_role_permission(
+    role_id: int,
+    data: TogglePermissionRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Toggle a single permission on a role. Returns the new granted state."""
+    result = await db.execute(select(Role).where(Role.id == role_id))
+    if not result.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="Role introuvable")
+
+    result = await db.execute(select(Permission).where(Permission.id == data.permission_id))
+    if not result.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="Permission introuvable")
+
+    # Check if already assigned
+    result = await db.execute(
+        select(RolePermission).where(
+            RolePermission.role_id == role_id,
+            RolePermission.permission_id == data.permission_id,
+        )
+    )
+    existing = result.scalar_one_or_none()
+
+    if existing:
+        await db.delete(existing)
+        await db.flush()
+        return {"granted": False}
+    else:
+        db.add(RolePermission(role_id=role_id, permission_id=data.permission_id))
+        await db.flush()
+        return {"granted": True}
 
 
 # ---------------------------------------------------------------------------

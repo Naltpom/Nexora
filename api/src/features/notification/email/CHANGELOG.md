@@ -1,5 +1,9 @@
 # notification.email — Changelog
 
+## 2026.02.2
+
+- Ajout fonction factory `get_email_sender()` pour instancier `SmtpEmailSender`
+
 ## 2026.02.1 — Init
 
 - Envoi d'emails via SMTP configurable (host, port, TLS, credentials)

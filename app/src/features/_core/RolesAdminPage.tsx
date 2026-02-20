@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, FormEvent } from 'react'
+import { useState, useEffect, useCallback, useRef, FormEvent } from 'react'
 import Layout from '../../core/Layout'
 import { useConfirm } from '../../core/ConfirmModal'
 import api from '../../api'
@@ -16,12 +16,21 @@ interface Role {
   updated_at: string
 }
 
-interface Permission {
+interface PermissionWithGranted {
   id: number
   code: string
   feature: string
-  label: string
-  description: string
+  label: string | null
+  description: string | null
+  granted: boolean
+}
+
+interface PermsPaginated {
+  items: PermissionWithGranted[]
+  total: number
+  page: number
+  per_page: number
+  pages: number
 }
 
 /* ------------------------------------------------------------------ */
@@ -31,21 +40,33 @@ interface Permission {
 export default function RolesAdminPage() {
   const { confirm } = useConfirm()
   const [roles, setRoles] = useState<Role[]>([])
-  const [allPermissions, setAllPermissions] = useState<Permission[]>([])
   const [loading, setLoading] = useState(true)
 
-  // Modal state
+  // Modal state (create / edit role)
   const [showModal, setShowModal] = useState(false)
   const [editingRole, setEditingRole] = useState<Role | null>(null)
   const [form, setForm] = useState({ name: '', description: '' })
   const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
 
-  // Permission assignment state
-  const [showPermModal, setShowPermModal] = useState(false)
-  const [permRole, setPermRole] = useState<Role | null>(null)
-  const [selectedPermissionIds, setSelectedPermissionIds] = useState<number[]>([])
-  const [savingPerms, setSavingPerms] = useState(false)
+  // Permission panel state
+  const [permsRole, setPermsRole] = useState<Role | null>(null)
+  const [perms, setPerms] = useState<PermissionWithGranted[]>([])
+  const [permsLoading, setPermsLoading] = useState(false)
+  const [permsPage, setPermsPage] = useState(1)
+  const [permsTotalPages, setPermsTotalPages] = useState(1)
+  const [permsTotal, setPermsTotal] = useState(0)
+  const [permsPerPage, setPermsPerPage] = useState(20)
+  const [permsSearch, setPermsSearch] = useState('')
+  const [togglingPermId, setTogglingPermId] = useState<number | null>(null)
+  const [permsGrantedCount, setPermsGrantedCount] = useState(0)
+  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const isPermsMode = permsRole !== null
+
+  /* ---------------------------------------------------------------- */
+  /*  Data loading                                                    */
+  /* ---------------------------------------------------------------- */
 
   const loadRoles = useCallback(async () => {
     try {
@@ -58,33 +79,49 @@ export default function RolesAdminPage() {
     }
   }, [])
 
-  const loadPermissions = useCallback(async () => {
-    try {
-      const res = await api.get('/permissions/')
-      setAllPermissions(res.data)
-    } catch {
-      console.error('Erreur lors du chargement des permissions')
-    }
-  }, [])
-
   useEffect(() => {
     loadRoles()
-    loadPermissions()
-  }, [])
+  }, [loadRoles])
+
+  const loadPerms = useCallback(async (roleId: number, page?: number, search?: string, pp?: number) => {
+    const p = page ?? permsPage
+    const s = search ?? permsSearch
+    const perPageVal = pp ?? permsPerPage
+    setPermsLoading(true)
+    try {
+      const res = await api.get(`/roles/${roleId}/permissions/all`, {
+        params: { page: p, per_page: perPageVal, search: s || undefined },
+      })
+      const data: PermsPaginated = res.data
+      setPerms(data.items)
+      setPermsTotal(data.total)
+      setPermsTotalPages(data.pages)
+      setPermsPage(data.page)
+      // Update granted count from the roles list
+      const currentRole = roles.find(r => r.id === roleId)
+      if (currentRole) {
+        setPermsGrantedCount(currentRole.permissions.length)
+      }
+    } catch {
+      console.error('Erreur lors du chargement des permissions')
+    } finally {
+      setPermsLoading(false)
+    }
+  }, [permsPage, permsSearch, permsPerPage, roles])
+
+  /* ---------------------------------------------------------------- */
+  /*  Helpers                                                         */
+  /* ---------------------------------------------------------------- */
 
   const formatDate = (iso: string) => {
     const d = new Date(iso)
     return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
   }
 
-  // --- Group permissions by feature ---
-  const permissionsByFeature = allPermissions.reduce<Record<string, Permission[]>>((acc, perm) => {
-    if (!acc[perm.feature]) acc[perm.feature] = []
-    acc[perm.feature].push(perm)
-    return acc
-  }, {})
+  /* ---------------------------------------------------------------- */
+  /*  Create / Edit role                                              */
+  /* ---------------------------------------------------------------- */
 
-  // --- Create / Edit ---
   const openCreate = () => {
     setEditingRole(null)
     setForm({ name: '', description: '' })
@@ -118,7 +155,10 @@ export default function RolesAdminPage() {
     }
   }
 
-  // --- Delete ---
+  /* ---------------------------------------------------------------- */
+  /*  Delete                                                          */
+  /* ---------------------------------------------------------------- */
+
   const handleDelete = async (role: Role) => {
     const confirmed = await confirm({
       title: 'Supprimer le role',
@@ -129,45 +169,149 @@ export default function RolesAdminPage() {
     if (!confirmed) return
     try {
       await api.delete(`/roles/${role.id}`)
+      if (permsRole?.id === role.id) {
+        setPermsRole(null)
+      }
       loadRoles()
     } catch (err: any) {
       console.error(err.response?.data?.detail || 'Erreur lors de la suppression')
     }
   }
 
-  // --- Permission assignment ---
-  const openPermissions = (role: Role) => {
-    setPermRole(role)
-    // Convert permission codes from the role to permission IDs
-    const ids = allPermissions
-      .filter(p => role.permissions.includes(p.code))
-      .map(p => p.id)
-    setSelectedPermissionIds(ids)
-    setShowPermModal(true)
+  /* ---------------------------------------------------------------- */
+  /*  Permission panel                                                */
+  /* ---------------------------------------------------------------- */
+
+  const openPerms = (role: Role) => {
+    setPermsRole(role)
+    setPermsSearch('')
+    setPermsPage(1)
+    loadPerms(role.id, 1, '', permsPerPage)
   }
 
-  const togglePermission = (id: number) => {
-    setSelectedPermissionIds(prev =>
-      prev.includes(id)
-        ? prev.filter(pid => pid !== id)
-        : [...prev, id]
+  const closePerms = () => {
+    setPermsRole(null)
+    setPerms([])
+    setPermsSearch('')
+    setPermsPage(1)
+  }
+
+  const handlePermsSearch = (value: string) => {
+    setPermsSearch(value)
+    if (searchTimeout.current) clearTimeout(searchTimeout.current)
+    searchTimeout.current = setTimeout(() => {
+      if (permsRole) {
+        setPermsPage(1)
+        loadPerms(permsRole.id, 1, value)
+      }
+    }, 300)
+  }
+
+  const handlePermsPageChange = (p: number) => {
+    if (permsRole) {
+      setPermsPage(p)
+      loadPerms(permsRole.id, p)
+    }
+  }
+
+  const handlePermsPerPageChange = (pp: number) => {
+    setPermsPerPage(pp)
+    if (permsRole) {
+      setPermsPage(1)
+      loadPerms(permsRole.id, 1, permsSearch, pp)
+    }
+  }
+
+  const handleTogglePerm = async (perm: PermissionWithGranted) => {
+    if (!permsRole) return
+    setTogglingPermId(perm.id)
+    try {
+      const res = await api.post(`/roles/${permsRole.id}/permissions/toggle`, {
+        permission_id: perm.id,
+      })
+      const newGranted: boolean = res.data.granted
+      // Update local permission state
+      setPerms(prev => prev.map(p => p.id === perm.id ? { ...p, granted: newGranted } : p))
+      setPermsGrantedCount(prev => newGranted ? prev + 1 : prev - 1)
+      // Update role in roles list
+      setRoles(prev => prev.map(r => {
+        if (r.id !== permsRole.id) return r
+        const newPermissions = newGranted
+          ? [...r.permissions, perm.code]
+          : r.permissions.filter(c => c !== perm.code)
+        return { ...r, permissions: newPermissions }
+      }))
+    } catch {
+      console.error('Erreur lors du toggle de la permission')
+    } finally {
+      setTogglingPermId(null)
+    }
+  }
+
+  /* ---------------------------------------------------------------- */
+  /*  Pagination                                                      */
+  /* ---------------------------------------------------------------- */
+
+  const renderPagination = () => {
+    const pages: (number | '...')[] = []
+    for (let i = 1; i <= permsTotalPages; i++) {
+      if (i === 1 || i === permsTotalPages || (i >= permsPage - 1 && i <= permsPage + 1)) {
+        pages.push(i)
+      } else if (pages[pages.length - 1] !== '...') {
+        pages.push('...')
+      }
+    }
+
+    return (
+      <div className="unified-pagination">
+        <div className="unified-pagination-info">
+          {permsTotal} permission{permsTotal !== 1 ? 's' : ''}
+        </div>
+        <div className="unified-pagination-controls">
+          <select
+            className="per-page-select"
+            value={permsPerPage}
+            onChange={(e) => handlePermsPerPageChange(Number(e.target.value))}
+          >
+            <option value={10}>10</option>
+            <option value={20}>20</option>
+            <option value={50}>50</option>
+          </select>
+          <button
+            className="unified-pagination-btn"
+            disabled={permsPage <= 1}
+            onClick={() => handlePermsPageChange(permsPage - 1)}
+          >
+            &laquo;
+          </button>
+          {pages.map((p, i) =>
+            p === '...' ? (
+              <span key={`dots-${i}`} className="unified-pagination-dots">...</span>
+            ) : (
+              <button
+                key={p}
+                className={`unified-pagination-btn ${p === permsPage ? 'active' : ''}`}
+                onClick={() => handlePermsPageChange(p)}
+              >
+                {p}
+              </button>
+            )
+          )}
+          <button
+            className="unified-pagination-btn"
+            disabled={permsPage >= permsTotalPages}
+            onClick={() => handlePermsPageChange(permsPage + 1)}
+          >
+            &raquo;
+          </button>
+        </div>
+      </div>
     )
   }
 
-  const savePermissions = async () => {
-    if (!permRole) return
-    setSavingPerms(true)
-    try {
-      await api.post(`/roles/${permRole.id}/permissions`, { permission_ids: selectedPermissionIds })
-      setShowPermModal(false)
-      setPermRole(null)
-      loadRoles()
-    } catch {
-      console.error('Erreur lors de la sauvegarde des permissions')
-    } finally {
-      setSavingPerms(false)
-    }
-  }
+  /* ---------------------------------------------------------------- */
+  /*  Render                                                          */
+  /* ---------------------------------------------------------------- */
 
   return (
     <Layout breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Roles' }]} title="Roles">
@@ -191,82 +335,229 @@ export default function RolesAdminPage() {
       {loading ? (
         <div className="spinner" />
       ) : (
-        <div className="unified-card full-width-breakout card-table">
-          <div className="table-container">
-            <table className="unified-table">
-              <thead>
-                <tr>
-                  <th>Nom</th>
-                  <th>Description</th>
-                  <th>Permissions</th>
-                  <th>Date creation</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {roles.length === 0 ? (
+        <div style={isPermsMode ? { display: 'flex', gap: '16px' } : undefined}>
+          {/* ---- Roles table ---- */}
+          <div
+            className={`unified-card card-table${isPermsMode ? '' : ' full-width-breakout'}`}
+            style={isPermsMode ? { flex: '0 0 240px', overflow: 'hidden' } : undefined}
+          >
+            <div className="table-container">
+              <table className="unified-table">
+                <thead>
                   <tr>
-                    <td colSpan={5} style={{ textAlign: 'center', padding: '32px', color: 'var(--gray-400)' }}>
-                      Aucun role trouve
-                    </td>
+                    <th>Nom</th>
+                    {!isPermsMode && <th>Description</th>}
+                    {!isPermsMode && <th>Permissions</th>}
+                    {!isPermsMode && <th>Date creation</th>}
+                    <th>{isPermsMode ? '' : 'Actions'}</th>
                   </tr>
-                ) : (
-                  roles.map((role) => (
-                    <tr key={role.id}>
-                      <td><strong>{role.name}</strong></td>
-                      <td style={{ color: 'var(--gray-500)' }}>{role.description || '\u2014'}</td>
-                      <td>
-                        <span
-                          className="badge badge-info"
-                          style={{ cursor: 'pointer' }}
-                          onClick={() => openPermissions(role)}
-                          title="Gerer les permissions"
-                        >
-                          {role.permissions.length} permission{role.permissions.length !== 1 ? 's' : ''}
-                        </span>
-                      </td>
-                      <td style={{ fontSize: 13, color: 'var(--gray-500)', whiteSpace: 'nowrap' }}>
-                        {formatDate(role.created_at)}
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', gap: 4 }}>
-                          <button
-                            className="btn-icon btn-icon-primary"
-                            onClick={() => openPermissions(role)}
-                            title="Gerer les permissions"
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                            </svg>
-                          </button>
-                          <button
-                            className="btn-icon btn-icon-primary"
-                            onClick={() => openEdit(role)}
-                            title="Modifier"
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                            </svg>
-                          </button>
-                          <button
-                            className="btn-icon btn-icon-danger"
-                            onClick={() => handleDelete(role)}
-                            title="Supprimer"
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <polyline points="3 6 5 6 21 6" />
-                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                            </svg>
-                          </button>
-                        </div>
+                </thead>
+                <tbody>
+                  {roles.length === 0 ? (
+                    <tr>
+                      <td colSpan={isPermsMode ? 2 : 5} style={{ textAlign: 'center', padding: '32px', color: 'var(--gray-400)' }}>
+                        Aucun role trouve
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    roles.map((role) => (
+                      <tr
+                        key={role.id}
+                        style={{
+                          backgroundColor: permsRole?.id === role.id ? 'rgba(30, 64, 175, 0.08)' : undefined,
+                          cursor: isPermsMode ? 'pointer' : undefined,
+                        }}
+                        onClick={isPermsMode ? () => openPerms(role) : undefined}
+                      >
+                        <td><strong>{role.name}</strong></td>
+
+                        {!isPermsMode && (
+                          <td style={{ color: 'var(--gray-500)' }}>{role.description || '\u2014'}</td>
+                        )}
+
+                        {!isPermsMode && (
+                          <td>
+                            <span
+                              className="badge badge-info"
+                              style={{ cursor: 'pointer' }}
+                              onClick={() => openPerms(role)}
+                              title="Gerer les permissions"
+                            >
+                              {role.permissions.length} permission{role.permissions.length !== 1 ? 's' : ''}
+                            </span>
+                          </td>
+                        )}
+
+                        {!isPermsMode && (
+                          <td style={{ fontSize: 13, color: 'var(--gray-500)', whiteSpace: 'nowrap' }}>
+                            {formatDate(role.created_at)}
+                          </td>
+                        )}
+
+                        <td>
+                          {isPermsMode ? (
+                            permsRole?.id === role.id ? (
+                              <button
+                                className="btn-icon btn-icon-secondary"
+                                onClick={(e) => { e.stopPropagation(); closePerms() }}
+                                title="Retour au tableau complet"
+                              >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M19 12H5M12 19l-7-7 7-7" />
+                                </svg>
+                              </button>
+                            ) : null
+                          ) : (
+                            <div style={{ display: 'flex', gap: 4 }}>
+                              <button
+                                className="btn-icon btn-icon-primary"
+                                onClick={() => openPerms(role)}
+                                title="Gerer les permissions"
+                              >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                                </svg>
+                              </button>
+                              <button
+                                className="btn-icon btn-icon-primary"
+                                onClick={() => openEdit(role)}
+                                title="Modifier"
+                              >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                </svg>
+                              </button>
+                              <button
+                                className="btn-icon btn-icon-danger"
+                                onClick={() => handleDelete(role)}
+                                title="Supprimer"
+                              >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="3 6 5 6 21 6" />
+                                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                </svg>
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
+
+          {/* ---- Permissions panel ---- */}
+          {isPermsMode && permsRole && (
+            <div
+              className="unified-card"
+              style={{ flex: '1 1 auto', overflow: 'hidden' }}
+            >
+              {/* Panel header */}
+              <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--gray-100)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <div>
+                    <h2 style={{ fontSize: '16px', fontWeight: 600, margin: 0 }}>
+                      Permissions de {permsRole.name}
+                    </h2>
+                    <span style={{ fontSize: '13px', color: 'var(--gray-400)' }}>
+                      {permsGrantedCount} / {permsTotal} actives
+                    </span>
+                  </div>
+                  <button
+                    className="btn-icon btn-icon-secondary"
+                    onClick={closePerms}
+                    title="Fermer"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Rechercher une permission..."
+                  value={permsSearch}
+                  onChange={(e) => handlePermsSearch(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    fontSize: '13px',
+                    border: '1px solid var(--gray-200)',
+                    borderRadius: '8px',
+                    background: 'var(--gray-50)',
+                    color: 'var(--text-primary, var(--gray-700))',
+                  }}
+                />
+              </div>
+
+              {/* Permissions table */}
+              <div className="table-container">
+                {permsLoading ? (
+                  <div style={{ textAlign: 'center', padding: '32px' }}>
+                    <div className="spinner" />
+                  </div>
+                ) : (
+                  <table className="unified-table">
+                    <thead>
+                      <tr>
+                        <th>Nom</th>
+                        <th>Slug</th>
+                        <th>Description</th>
+                        <th style={{ textAlign: 'center' }}>Active</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {perms.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} style={{ textAlign: 'center', padding: '32px', color: 'var(--gray-400)' }}>
+                            Aucune permission trouvee
+                          </td>
+                        </tr>
+                      ) : (
+                        perms.map((perm) => (
+                          <tr key={perm.id}>
+                            <td style={{ fontWeight: 500, fontSize: '13px' }}>
+                              {perm.label || perm.code}
+                            </td>
+                            <td>
+                              <code style={{ fontSize: '11px', color: 'var(--gray-500)', backgroundColor: 'var(--gray-100)', padding: '2px 6px', borderRadius: '4px' }}>
+                                {perm.code}
+                              </code>
+                            </td>
+                            <td style={{ fontSize: '13px', color: 'var(--gray-500)' }}>
+                              {perm.description || '\u2014'}
+                            </td>
+                            <td style={{ textAlign: 'center' }}>
+                              <label className="toggle" style={{ cursor: togglingPermId === perm.id ? 'wait' : 'pointer' }}>
+                                <input
+                                  type="checkbox"
+                                  checked={perm.granted}
+                                  onChange={() => handleTogglePerm(perm)}
+                                  disabled={togglingPermId === perm.id}
+                                />
+                                <span className="toggle-slider" />
+                              </label>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+
+              {/* Pagination */}
+              {!permsLoading && permsTotal > 0 && (
+                <div style={{ padding: '0 20px 12px' }}>
+                  {renderPagination()}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -310,72 +601,6 @@ export default function RolesAdminPage() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Permission Assignment Modal */}
-      {showPermModal && permRole && (
-        <div className="modal-overlay" onClick={() => { setShowPermModal(false); setPermRole(null) }}>
-          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '700px' }}>
-            <div className="modal-header">
-              <h2>Permissions du role : {permRole.name}</h2>
-              <button className="modal-close" onClick={() => { setShowPermModal(false); setPermRole(null) }}>&times;</button>
-            </div>
-            <div className="modal-body" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-              {Object.keys(permissionsByFeature).length === 0 ? (
-                <p style={{ color: 'var(--gray-400)', textAlign: 'center', padding: '24px' }}>Aucune permission disponible</p>
-              ) : (
-                Object.entries(permissionsByFeature).map(([feature, perms]) => (
-                  <div key={feature} style={{ marginBottom: '20px' }}>
-                    <h3 style={{ fontSize: '14px', fontWeight: 600, textTransform: 'uppercase', color: 'var(--gray-500)', marginBottom: '8px', letterSpacing: '0.5px' }}>
-                      {feature}
-                    </h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      {perms.map((perm) => (
-                        <label
-                          key={perm.id}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'flex-start',
-                            gap: '10px',
-                            padding: '8px 12px',
-                            borderRadius: '6px',
-                            backgroundColor: selectedPermissionIds.includes(perm.id) ? 'var(--primary-bg, #eff6ff)' : 'transparent',
-                            border: '1px solid',
-                            borderColor: selectedPermissionIds.includes(perm.id) ? 'var(--primary, #1E40AF)20' : 'var(--gray-200)',
-                            cursor: 'pointer',
-                            transition: 'all 0.15s',
-                          }}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedPermissionIds.includes(perm.id)}
-                            onChange={() => togglePermission(perm.id)}
-                            style={{ marginTop: '2px' }}
-                          />
-                          <div>
-                            <div style={{ fontWeight: 500, fontSize: '14px' }}>{perm.label || perm.code}</div>
-                            <div style={{ fontSize: '12px', color: 'var(--gray-500)' }}>
-                              <code style={{ fontSize: '11px', backgroundColor: 'var(--gray-100)', padding: '1px 4px', borderRadius: '3px' }}>{perm.code}</code>
-                              {perm.description && <span style={{ marginLeft: '8px' }}>{perm.description}</span>}
-                            </div>
-                          </div>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-            <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => { setShowPermModal(false); setPermRole(null) }}>
-                Annuler
-              </button>
-              <button className="btn btn-primary" onClick={savePermissions} disabled={savingPerms}>
-                {savingPerms ? 'Enregistrement...' : 'Enregistrer'}
-              </button>
-            </div>
           </div>
         </div>
       )}

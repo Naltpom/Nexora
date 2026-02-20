@@ -1,10 +1,16 @@
-import { useState, FormEvent } from 'react'
+import { useState, FormEvent, Suspense, lazy } from 'react'
+import { Link } from 'react-router-dom'
 import Layout from '../../core/Layout'
 import { useAuth } from '../../core/AuthContext'
+import { useFeature } from '../../core/FeatureContext'
 import api from '../../api'
+
+const SSOAccountLinks = lazy(() => import('../sso/SSOAccountLinks'))
+const MFAStatusBadge = lazy(() => import('../mfa/MFAStatusBadge'))
 
 export default function Profile() {
   const { user, refreshUser, getPreference, updatePreference } = useAuth()
+  const { isActive } = useFeature()
 
   // User info
   const [firstName, setFirstName] = useState(user?.first_name || '')
@@ -172,30 +178,72 @@ export default function Profile() {
           </form>
         </div>
 
-        {/* Preferences Section */}
-        <div className="unified-card" style={{ padding: 24 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Preferences</h2>
+        {/* MFA Section */}
+        {isActive('mfa') && (
+          <div className="unified-card" style={{ padding: 24 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <h2 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>Authentification multi-facteurs (MFA)</h2>
+              <Suspense fallback={null}>
+                <MFAStatusBadge />
+              </Suspense>
+            </div>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 16 }}>
+              Renforcez la securite de votre compte en activant une methode de verification supplementaire.
+            </p>
+            <Link to="/profile/mfa" className="btn btn-secondary">
+              Configurer MFA
+            </Link>
+          </div>
+        )}
 
-          <div className="form-group">
-            <label>Theme</label>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <button
-                className={`btn ${currentTheme === 'light' ? 'btn-primary' : 'btn-secondary'}`}
-                onClick={() => handleThemeChange('light')}
-                type="button"
-              >
-                Clair
-              </button>
-              <button
-                className={`btn ${currentTheme === 'dark' ? 'btn-primary' : 'btn-secondary'}`}
-                onClick={() => handleThemeChange('dark')}
-                type="button"
-              >
-                Sombre
-              </button>
+        {/* SSO Section */}
+        {isActive('sso') && (
+          <div className="unified-card" style={{ padding: 24 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Comptes lies</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 16 }}>
+              Liez vos comptes externes pour vous connecter plus rapidement.
+            </p>
+            <Suspense fallback={null}>
+              <SSOAccountLinks />
+            </Suspense>
+          </div>
+        )}
+
+        {/* Preferences Section */}
+        {isActive('preference') ? (
+          <div className="unified-card" style={{ padding: 24 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Preferences</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 16 }}>
+              Gerez vos preferences de theme, tutoriels, et plus.
+            </p>
+            <Link to="/profile/preferences" className="btn btn-secondary">
+              Gerer les preferences
+            </Link>
+          </div>
+        ) : (
+          <div className="unified-card" style={{ padding: 24 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>Preferences</h2>
+            <div className="form-group">
+              <label>Theme</label>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button
+                  className={`btn ${currentTheme === 'light' ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => handleThemeChange('light')}
+                  type="button"
+                >
+                  Clair
+                </button>
+                <button
+                  className={`btn ${currentTheme === 'dark' ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => handleThemeChange('dark')}
+                  type="button"
+                >
+                  Sombre
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </Layout>
   )

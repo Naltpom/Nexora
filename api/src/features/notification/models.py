@@ -1,6 +1,8 @@
-"""Notification feature models: Event, Notification, NotificationRule, UserRulePreference."""
+"""Notification feature models: Notification, NotificationRule, UserRulePreference.
 
-import uuid
+The Event model is owned by the ``event`` feature.
+"""
+
 from datetime import datetime, timezone
 
 from sqlalchemy import String, Integer, Text, Boolean, ForeignKey, DateTime, Index, UniqueConstraint
@@ -8,31 +10,6 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ...core.database import Base
-
-
-class Event(Base):
-    __tablename__ = "events"
-
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    redirect_token: Mapped[str] = mapped_column(
-        String(36), default=lambda: str(uuid.uuid4()), unique=True, nullable=False
-    )
-    event_type: Mapped[str] = mapped_column(String(100), nullable=False)
-    actor_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
-    resource_type: Mapped[str] = mapped_column(String(50), nullable=False)
-    resource_id: Mapped[int] = mapped_column(Integer, nullable=False)
-    payload: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
-    )
-
-    actor = relationship("User", foreign_keys=[actor_id])
-    notifications = relationship("Notification", back_populates="event")
-
-    __table_args__ = (
-        Index("ix_events_event_type", "event_type"),
-        Index("ix_events_created_at", "created_at"),
-    )
 
 
 class Notification(Base):
@@ -55,7 +32,6 @@ class Notification(Base):
     )
 
     user = relationship("User", foreign_keys=[user_id])
-    event = relationship("Event", back_populates="notifications")
     rule = relationship("NotificationRule", foreign_keys=[rule_id])
 
     __table_args__ = (

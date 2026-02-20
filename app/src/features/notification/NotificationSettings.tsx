@@ -12,6 +12,7 @@ interface EventType {
   category: string
   description: string | null
   admin_only: boolean
+  feature: string
 }
 
 interface UserRulePreference {
@@ -124,7 +125,7 @@ export default function NotificationSettings() {
     setLoading(true)
     try {
       const promises: Promise<any>[] = [
-        api.get('/notifications/event-types'),
+        api.get('/events/event-types'),
         api.get('/notifications/rules/my'),
         api.get('/notifications/webhooks/'),
       ]

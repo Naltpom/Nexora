@@ -1,6 +1,9 @@
-import { useState, FormEvent } from 'react'
+import { useState, FormEvent, Suspense, lazy } from 'react'
 import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../core/AuthContext'
+import { useFeature } from '../../core/FeatureContext'
+
+const SSOButtons = lazy(() => import('../sso/SSOButtons'))
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -8,6 +11,7 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
+  const { isActive } = useFeature()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
@@ -17,8 +21,24 @@ export default function Login() {
     setLoading(true)
     try {
       const result = await login(email, password)
-      if (result.must_change_password) {
+      if (result.email_verification_required) {
+        navigate('/verify-email', {
+          state: { email: result.email_verification_email || email, debugCode: result.debug_code || null },
+        })
+      } else if (result.mfa_required) {
+        navigate('/mfa/verify', {
+          state: { mfa_token: result.mfa_token, mfa_methods: result.mfa_methods },
+        })
+      } else if (result.must_change_password) {
         navigate('/change-password')
+      } else if (result.mfa_setup_required) {
+        const expires = result.mfa_grace_period_expires ? new Date(result.mfa_grace_period_expires) : null
+        if (expires && new Date() >= expires) {
+          navigate('/mfa/force-setup')
+        } else {
+          const returnTo = searchParams.get('returnTo')
+          navigate(returnTo || '/')
+        }
       } else {
         const returnTo = searchParams.get('returnTo')
         navigate(returnTo || '/')
@@ -74,6 +94,19 @@ export default function Login() {
             {loading ? 'Connexion...' : 'Se connecter'}
           </button>
         </form>
+
+        {isActive('sso') && (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '16px 0' }}>
+              <div style={{ flex: 1, height: 1, background: 'var(--border-color)' }} />
+              <span style={{ color: 'var(--text-secondary)', fontSize: 13 }}>ou</span>
+              <div style={{ flex: 1, height: 1, background: 'var(--border-color)' }} />
+            </div>
+            <Suspense fallback={null}>
+              <SSOButtons />
+            </Suspense>
+          </>
+        )}
 
         <div style={{ marginTop: 16, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 8 }}>
           <Link to="/forgot-password" style={{ color: 'var(--primary)', fontSize: 14 }}>

@@ -1,7 +1,8 @@
 """Auth endpoints: login, refresh, me, preferences, change-password,
-forgot-password, reset-password, register."""
+forgot-password, reset-password, register, verify-email."""
 
 import json
+import random
 import uuid
 from datetime import datetime, timedelta, timezone
 
@@ -27,11 +28,15 @@ from .schemas import (
     LoginRequest,
     RefreshRequest,
     RegisterRequest,
+    RegisterResponse,
+    ResendVerificationRequest,
     ResetPasswordRequest,
     TokenResponse,
     UserResponse,
+    VerifyEmailRequest,
     VerifyTokenRequest,
 )
+from ...core.events import event_bus
 from .services import authenticate_user
 
 router = APIRouter()
@@ -299,7 +304,11 @@ async def verify_reset_token(
 # ---------------------------------------------------------------------------
 
 
-@router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
+def _generate_verification_code() -> str:
+    return str(random.randint(100000, 999999))
+
+
+@router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register(
     data: RegisterRequest,
     db: AsyncSession = Depends(get_db),
@@ -320,8 +329,82 @@ async def register(
         last_name=data.last_name,
         auth_source="local",
         is_active=True,
+        email_verified=False,
     )
     db.add(user)
+    await db.flush()
+
+    code = _generate_verification_code()
+    user.verification_code_hash = hash_password(code)
+    user.verification_code_expires = datetime.now(timezone.utc) + timedelta(minutes=5)
+    user.verification_code_sent_at = datetime.now(timezone.utc)
+    await db.flush()
+
+    if settings.EMAIL_ENABLED:
+        try:
+            from ..notification.email.services import get_email_sender
+
+            sender = get_email_sender()
+            sender.send_verification_code(
+                to_email=user.email,
+                to_name=user.first_name,
+                verification_code=code,
+            )
+        except Exception:
+            pass
+
+    # Emit event (non-blocking — errors are logged, never propagated)
+    await event_bus.emit(
+        "user.registered",
+        db=db,
+        actor_id=user.id,
+        resource_type="user",
+        resource_id=user.id,
+        payload={
+            "actor_name": f"{user.first_name} {user.last_name}",
+            "user_name": f"{user.first_name} {user.last_name}",
+            "email": user.email,
+        },
+    )
+
+    return RegisterResponse(
+        message="Code de verification envoye par email",
+        email=user.email,
+        email_verification_required=True,
+        debug_code=code if not settings.EMAIL_ENABLED else None,
+    )
+
+
+# ---------------------------------------------------------------------------
+#  Email verification
+# ---------------------------------------------------------------------------
+
+
+@router.post("/verify-email", response_model=TokenResponse)
+async def verify_email(
+    data: VerifyEmailRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Verify email with 6-digit code after registration."""
+    email = data.email.lower()
+    result = await db.execute(select(User).where(User.email == email))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(status_code=400, detail="Utilisateur introuvable")
+    if user.email_verified:
+        raise HTTPException(status_code=400, detail="Email deja verifie")
+    if not user.verification_code_hash:
+        raise HTTPException(status_code=400, detail="Aucun code en attente")
+    if user.verification_code_expires < datetime.now(timezone.utc):
+        raise HTTPException(status_code=400, detail="Le code a expire")
+    if not verify_password(data.code, user.verification_code_hash):
+        raise HTTPException(status_code=400, detail="Code incorrect")
+
+    user.email_verified = True
+    user.verification_code_hash = None
+    user.verification_code_expires = None
+    user.verification_code_sent_at = None
     await db.flush()
 
     token_data = {"sub": str(user.id), "email": user.email}
@@ -329,3 +412,50 @@ async def register(
         access_token=create_access_token(token_data),
         refresh_token=create_refresh_token(token_data),
     )
+
+
+@router.post("/resend-verification")
+async def resend_verification(
+    data: ResendVerificationRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """Resend verification code with 60s cooldown."""
+    email = data.email.lower()
+    result = await db.execute(select(User).where(User.email == email))
+    user = result.scalar_one_or_none()
+
+    if not user or user.email_verified:
+        return {"message": "Si cette adresse necessite une verification, un code a ete envoye."}
+
+    if user.verification_code_sent_at:
+        elapsed = (datetime.now(timezone.utc) - user.verification_code_sent_at).total_seconds()
+        if elapsed < 60:
+            remaining = int(60 - elapsed)
+            raise HTTPException(
+                status_code=429,
+                detail=f"Veuillez attendre {remaining} secondes avant de renvoyer un code",
+            )
+
+    code = _generate_verification_code()
+    user.verification_code_hash = hash_password(code)
+    user.verification_code_expires = datetime.now(timezone.utc) + timedelta(minutes=5)
+    user.verification_code_sent_at = datetime.now(timezone.utc)
+    await db.flush()
+
+    if settings.EMAIL_ENABLED:
+        try:
+            from ..notification.email.services import get_email_sender
+
+            sender = get_email_sender()
+            sender.send_verification_code(
+                to_email=user.email,
+                to_name=user.first_name,
+                verification_code=code,
+            )
+        except Exception:
+            pass
+
+    return {
+        "message": "Si cette adresse necessite une verification, un code a ete envoye.",
+        "debug_code": code if not settings.EMAIL_ENABLED else None,
+    }

@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ...core.config import settings
 from ...core.security import (
     create_access_token,
+    create_mfa_token,
     create_refresh_token,
     hash_password,
     verify_password,
@@ -133,9 +134,70 @@ async def authenticate_user(
                 detail="Email ou mot de passe incorrect",
             )
 
+    # --- Email verification check --------------------------------------------
+    if not user.email_verified:
+        import random
+
+        code = str(random.randint(100000, 999999))
+        user.verification_code_hash = hash_password(code)
+        user.verification_code_expires = datetime.now(timezone.utc) + timedelta(minutes=5)
+        user.verification_code_sent_at = datetime.now(timezone.utc)
+        await db.flush()
+
+        if settings.EMAIL_ENABLED:
+            try:
+                from ..notification.email.services import get_email_sender
+
+                sender = get_email_sender()
+                sender.send_verification_code(
+                    to_email=user.email,
+                    to_name=user.first_name,
+                    verification_code=code,
+                )
+            except Exception:
+                pass
+
+        return {
+            "access_token": "",
+            "refresh_token": "",
+            "must_change_password": False,
+            "preferences": None,
+            "mfa_required": False,
+            "mfa_token": None,
+            "mfa_methods": None,
+            "mfa_setup_required": False,
+            "mfa_grace_period_expires": None,
+            "email_verification_required": True,
+            "email_verification_email": user.email,
+            "debug_code": code if not settings.EMAIL_ENABLED else None,
+        }
+
     # --- Update last login ---------------------------------------------------
     user.last_login = datetime.now(timezone.utc)
     await db.flush()
+
+    # --- Check MFA (only if feature is active) -------------------------------
+    mfa_result: dict = {"mfa_required": False, "available_methods": []}
+    try:
+        from ...core.feature_registry import get_registry
+        registry = get_registry()
+        if registry and registry.is_active("mfa"):
+            from ..mfa.services import is_mfa_required_for_user
+            mfa_result = await is_mfa_required_for_user(db, user)
+    except (ImportError, Exception):
+        pass
+
+    if mfa_result.get("mfa_required"):
+        return {
+            "access_token": "",
+            "refresh_token": "",
+            "must_change_password": False,
+            "preferences": None,
+            "mfa_required": True,
+            "mfa_token": create_mfa_token(user.id, user.email),
+            "mfa_methods": mfa_result.get("available_methods", []),
+            "mfa_setup_required": False,
+        }
 
     # --- Build response ------------------------------------------------------
     token_data = {"sub": str(user.id), "email": user.email}
@@ -146,11 +208,33 @@ async def authenticate_user(
         except (json.JSONDecodeError, TypeError):
             preferences = None
 
+    # --- Compute MFA grace period expiration if setup required ---------------
+    mfa_setup_required = mfa_result.get("mfa_setup_required", False)
+    mfa_grace_period_expires = None
+    if mfa_setup_required:
+        grace_days = mfa_result.get("grace_period_days", 7)
+        # Grace period starts from whichever is more recent: policy update or user creation
+        policy_updated = mfa_result.get("policy_updated_at")
+        if policy_updated:
+            from datetime import datetime as _dt
+            policy_dt = _dt.fromisoformat(policy_updated)
+            start = max(policy_dt, user.created_at) if user.created_at else policy_dt
+        else:
+            start = user.created_at
+        if start:
+            expires = start + timedelta(days=grace_days)
+            mfa_grace_period_expires = expires.isoformat()
+
     return {
         "access_token": create_access_token(token_data),
         "refresh_token": create_refresh_token(token_data),
         "must_change_password": user.must_change_password,
         "preferences": preferences,
+        "mfa_required": False,
+        "mfa_token": None,
+        "mfa_methods": None,
+        "mfa_setup_required": mfa_setup_required,
+        "mfa_grace_period_expires": mfa_grace_period_expires,
     }
 
 
@@ -176,8 +260,15 @@ async def sync_permissions_from_registry(db: AsyncSession, registry) -> None:
                     code=perm_info["code"],
                     feature=perm_info["feature"],
                     label=perm_info.get("label"),
+                    description=perm_info.get("description"),
                 )
             )
+        else:
+            # Update label/description if missing
+            if not existing.label and perm_info.get("label"):
+                existing.label = perm_info["label"]
+            if not existing.description and perm_info.get("description"):
+                existing.description = perm_info["description"]
     await db.flush()
 
 

@@ -5,16 +5,6 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
-# -- Event Types ---------------------------------------------------------------
-
-class EventTypeResponse(BaseModel):
-    event_type: str
-    label: str
-    category: str
-    description: str | None = None
-    admin_only: bool = False
-
-
 # -- Notifications -------------------------------------------------------------
 
 class NotificationResponse(BaseModel):

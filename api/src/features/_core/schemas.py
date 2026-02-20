@@ -13,11 +13,19 @@ class LoginRequest(BaseModel):
 
 
 class TokenResponse(BaseModel):
-    access_token: str
-    refresh_token: str
+    access_token: str = ""
+    refresh_token: str = ""
     token_type: str = "bearer"
     must_change_password: bool = False
     preferences: dict | None = None
+    mfa_required: bool = False
+    mfa_token: str | None = None
+    mfa_methods: list[str] | None = None
+    mfa_setup_required: bool = False
+    mfa_grace_period_expires: str | None = None
+    email_verification_required: bool = False
+    email_verification_email: str | None = None
+    debug_code: str | None = None
 
 
 class RefreshRequest(BaseModel):
@@ -43,6 +51,22 @@ class ForgotPasswordRequest(BaseModel):
 class ResetPasswordRequest(BaseModel):
     token: str
     new_password: str
+
+
+class RegisterResponse(BaseModel):
+    message: str
+    email: str
+    email_verification_required: bool = False
+    debug_code: str | None = None
+
+
+class VerifyEmailRequest(BaseModel):
+    email: EmailStr
+    code: str
+
+
+class ResendVerificationRequest(BaseModel):
+    email: EmailStr
 
 
 class VerifyTokenRequest(BaseModel):
@@ -72,6 +96,7 @@ class UserUpdate(BaseModel):
 
 class UserResponse(BaseModel):
     id: int
+    uuid: str | None = None
     email: str
     first_name: str
     last_name: str
@@ -85,6 +110,41 @@ class UserResponse(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class RoleBasic(BaseModel):
+    id: int
+    name: str
+    description: str | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class ResolvedPermission(BaseModel):
+    permission_id: int
+    code: str
+    label: str | None = None
+    description: str | None = None
+    feature: str
+    effective: bool
+    source: str  # "user" | "role" | "global" | "none"
+    user_override: bool | None = None
+    role_granted: bool | None = None
+    global_granted: bool | None = None
+
+
+class UserDetailResponse(UserResponse):
+    roles: list[RoleBasic] = []
+    resolved_permissions: list[ResolvedPermission] = []
+
+
+class UserRolesUpdateRequest(BaseModel):
+    role_ids: list[int]
+
+
+class UserPermissionOverrideRequest(BaseModel):
+    permission_id: int
+    granted: bool
 
 
 class UserPaginatedResponse(BaseModel):
@@ -142,6 +202,29 @@ class UserPermissionOverride(BaseModel):
 class GlobalPermissionSet(BaseModel):
     permission_id: int
     granted: bool
+
+
+class PermissionWithGranted(BaseModel):
+    id: int
+    code: str
+    feature: str
+    label: str | None = None
+    description: str | None = None
+    granted: bool
+
+    model_config = {"from_attributes": True}
+
+
+class PermissionWithGrantedPaginated(BaseModel):
+    items: list[PermissionWithGranted]
+    total: int
+    page: int
+    per_page: int
+    pages: int
+
+
+class TogglePermissionRequest(BaseModel):
+    permission_id: int
 
 
 # ── Feature ──────────────────────────────────────────────────────────────

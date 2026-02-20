@@ -2,14 +2,31 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import api from '../api'
 import type { User } from '../types'
 
+interface LoginResult {
+  must_change_password: boolean
+  mfa_required: boolean
+  mfa_token: string | null
+  mfa_methods: string[] | null
+  mfa_setup_required: boolean
+  mfa_grace_period_expires: string | null
+  email_verification_required: boolean
+  email_verification_email: string | null
+  debug_code: string | null
+}
+
 interface AuthContextType {
   user: User | null
   loading: boolean
-  login: (email: string, password: string) => Promise<{ must_change_password: boolean }>
+  login: (email: string, password: string) => Promise<LoginResult>
+  loginWithSSO: (accessToken: string, refreshToken: string) => Promise<void>
+  verifyMFA: (mfaToken: string, code: string, method: string) => Promise<{ must_change_password: boolean }>
   logout: () => void
   refreshUser: () => Promise<void>
   getPreference: (key: string, defaultValue?: any) => any
   updatePreference: (key: string, value: any) => Promise<void>
+  isMfaSetupRequired: () => boolean
+  getMfaGraceExpires: () => Date | null
+  clearMfaSetupRequired: () => void
   isImpersonating: boolean
   impersonatedUser: { id: number; name: string } | null
   startImpersonation: (userId: number) => Promise<void>
@@ -72,6 +89,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const merged = { ...userData.preferences, ...local }
         setLocalPreferences(userData.id, merged)
         userData.preferences = merged
+        // Apply theme to DOM (handles SSO/login where pre-render didn't have token yet)
+        if (merged.theme) {
+          document.documentElement.setAttribute('data-theme', merged.theme)
+        }
+        if (merged.backgroundTheme !== undefined) {
+          document.documentElement.setAttribute('data-bg-theme', String(merged.backgroundTheme))
+        }
       }
       setUser(userData)
       await checkImpersonationStatus()
@@ -88,8 +112,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetchUser()
   }, [])
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<LoginResult> => {
     const response = await api.post('/auth/login', { email, password })
+    const { access_token, refresh_token, must_change_password, mfa_required, mfa_token, mfa_methods, mfa_setup_required, mfa_grace_period_expires, email_verification_required, email_verification_email, debug_code } = response.data
+
+    if (email_verification_required) {
+      return { must_change_password: false, mfa_required: false, mfa_token: null, mfa_methods: null, mfa_setup_required: false, mfa_grace_period_expires: null, email_verification_required: true, email_verification_email: email_verification_email || email, debug_code: debug_code || null }
+    }
+
+    if (mfa_required) {
+      return { must_change_password: false, mfa_required: true, mfa_token, mfa_methods, mfa_setup_required: false, mfa_grace_period_expires: null, email_verification_required: false, email_verification_email: null, debug_code: null }
+    }
+
+    localStorage.setItem('access_token', access_token)
+    localStorage.setItem('refresh_token', refresh_token)
+
+    if (mfa_setup_required) {
+      localStorage.setItem('mfa_setup_required', 'true')
+      if (mfa_grace_period_expires) {
+        localStorage.setItem('mfa_grace_period_expires', mfa_grace_period_expires)
+      }
+    }
+
+    await fetchUser()
+    return { must_change_password, mfa_required: false, mfa_token: null, mfa_methods: null, mfa_setup_required: mfa_setup_required || false, mfa_grace_period_expires: mfa_grace_period_expires || null, email_verification_required: false, email_verification_email: null, debug_code: null }
+  }
+
+  const loginWithSSO = async (accessToken: string, refreshToken: string) => {
+    localStorage.setItem('access_token', accessToken)
+    localStorage.setItem('refresh_token', refreshToken)
+    await fetchUser()
+  }
+
+  const verifyMFA = async (mfaToken: string, code: string, method: string) => {
+    const response = await api.post('/mfa/verify', { mfa_token: mfaToken, code, method })
     const { access_token, refresh_token, must_change_password } = response.data
     localStorage.setItem('access_token', access_token)
     localStorage.setItem('refresh_token', refresh_token)
@@ -97,10 +153,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { must_change_password }
   }
 
+  const isMfaSetupRequired = (): boolean => {
+    return localStorage.getItem('mfa_setup_required') === 'true'
+  }
+
+  const getMfaGraceExpires = (): Date | null => {
+    const raw = localStorage.getItem('mfa_grace_period_expires')
+    return raw ? new Date(raw) : null
+  }
+
+  const clearMfaSetupRequired = () => {
+    localStorage.removeItem('mfa_setup_required')
+    localStorage.removeItem('mfa_grace_period_expires')
+  }
+
   const logout = () => {
     localStorage.removeItem('access_token')
     localStorage.removeItem('refresh_token')
     localStorage.removeItem('impersonation_active')
+    localStorage.removeItem('mfa_setup_required')
+    localStorage.removeItem('mfa_grace_period_expires')
     setUser(null)
     setIsImpersonating(false)
     setImpersonatedUser(null)
@@ -169,8 +241,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider value={{
-      user, loading, login, logout, refreshUser,
+      user, loading, login, loginWithSSO, verifyMFA, logout, refreshUser,
       getPreference, updatePreference,
+      isMfaSetupRequired, getMfaGraceExpires, clearMfaSetupRequired,
       isImpersonating, impersonatedUser,
       startImpersonation, stopImpersonation, searchUsersForImpersonation,
     }}>
