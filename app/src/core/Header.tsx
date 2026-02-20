@@ -15,7 +15,8 @@ export default function Header() {
   const location = useLocation()
   const [showAdminMenu, setShowAdminMenu] = useState(false)
 
-  const isMenuActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/')
+  const isMenuActive = (path: string, exact = false) =>
+    exact ? location.pathname === path : location.pathname === path || location.pathname.startsWith(path + '/')
   const adminDropdownRef = useRef<HTMLDivElement>(null)
 
   // Close dropdown when clicking outside
@@ -155,7 +156,7 @@ export default function Header() {
 
                     <Link
                       to="/profile"
-                      className={`header-admin-menu-item${isMenuActive('/profile') ? ' header-admin-menu-item-active' : ''}`}
+                      className={`header-admin-menu-item${isMenuActive('/profile', true) ? ' header-admin-menu-item-active' : ''}`}
                       onClick={() => setShowAdminMenu(false)}
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

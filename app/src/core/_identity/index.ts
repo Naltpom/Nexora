@@ -1,0 +1,129 @@
+import type { FeatureTutorial } from '../../types'
+
+export const manifest = {
+  name: '_identity',
+  featureTutorial: {
+    featureName: '_identity',
+    label: 'Administration',
+    description: 'Decouvrez les outils d\'administration : utilisateurs, roles, features et parametres.',
+    permissionTutorials: [
+      {
+        permission: 'search.global',
+        label: 'Recherche globale',
+        steps: [
+          {
+            target: '.global-search-container',
+            title: 'Recherche globale',
+            description: 'Utilisez cette barre de recherche pour trouver rapidement des utilisateurs, roles ou parametres.',
+            position: 'bottom' as const,
+          },
+        ],
+      },
+      {
+        permission: 'users.read',
+        label: 'Consulter les utilisateurs',
+        steps: [
+          {
+            target: '.unified-search-box',
+            title: 'Recherche d\'utilisateurs',
+            description: 'Filtrez la liste des utilisateurs par email, nom ou prenom.',
+            position: 'bottom' as const,
+            navigateTo: '/admin/users',
+          },
+          {
+            target: '.unified-table',
+            title: 'Liste des utilisateurs',
+            description: 'Consultez tous les utilisateurs, leur statut et leur derniere connexion. Cliquez sur un utilisateur pour voir ses details.',
+            position: 'top' as const,
+            navigateTo: '/admin/users',
+          },
+        ],
+      },
+      {
+        permission: 'users.create',
+        label: 'Creer un utilisateur',
+        steps: [
+          {
+            target: '.btn-unified-primary',
+            title: 'Creer un utilisateur',
+            description: 'Cliquez ici pour ajouter un nouvel utilisateur au systeme.',
+            position: 'bottom' as const,
+            navigateTo: '/admin/users',
+          },
+        ],
+      },
+      {
+        permission: 'roles.read',
+        label: 'Consulter les roles',
+        steps: [
+          {
+            target: '.unified-table',
+            title: 'Liste des roles',
+            description: 'Consultez les roles existants et leurs permissions associees. Cliquez sur le badge de permissions pour voir les details.',
+            position: 'top' as const,
+            navigateTo: '/admin/roles',
+          },
+        ],
+      },
+      {
+        permission: 'roles.create',
+        label: 'Creer un role',
+        steps: [
+          {
+            target: '.btn-unified-primary',
+            title: 'Creer un role',
+            description: 'Cliquez ici pour creer un nouveau role avec des permissions personnalisees.',
+            position: 'bottom' as const,
+            navigateTo: '/admin/roles',
+          },
+        ],
+      },
+      {
+        permission: 'features.read',
+        label: 'Gerer les features',
+        steps: [
+          {
+            target: '.input-search-wide',
+            title: 'Recherche de features',
+            description: 'Recherchez des features par nom ou description.',
+            position: 'bottom' as const,
+            navigateTo: '/admin/features',
+          },
+          {
+            target: '.unified-table',
+            title: 'Liste des features',
+            description: 'Activez ou desactivez les features avec les toggles. Les features enfants dependent de leur parent.',
+            position: 'top' as const,
+            navigateTo: '/admin/features',
+          },
+        ],
+      },
+      {
+        permission: 'settings.read',
+        label: 'Parametres applicatifs',
+        steps: [
+          {
+            target: '.settings-grid',
+            title: 'Parametres de l\'application',
+            description: 'Configurez le nom, la description, le logo et les couleurs de votre application.',
+            position: 'top' as const,
+            navigateTo: '/admin/settings',
+          },
+        ],
+      },
+      {
+        permission: 'impersonation.start',
+        label: 'Impersonation',
+        steps: [
+          {
+            target: '.impersonate-btn',
+            title: 'Impersonation',
+            description: 'Cliquez sur ce bouton pour vous connecter en tant que cet utilisateur. Utile pour diagnostiquer des problemes.',
+            position: 'left' as const,
+            navigateTo: '/admin/users',
+          },
+        ],
+      },
+    ],
+  } satisfies FeatureTutorial,
+}

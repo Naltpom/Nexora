@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026.02.12
+
+### preference.didacticiel — Refonte du systeme de tutoriels
+> [Changelog complet](api/src/core/preference/CHANGELOG.md)
+- Nouveau systeme de tutoriels par feature et par permission (remplace l'ancien systeme par tutorial ID)
+- Navigation multi-page : les tutoriels naviguent automatiquement entre les pages avec MutationObserver
+- Suivi "vu" par permission : les nouveaux tutoriels se declenchent uniquement pour les permissions non vues
+- Toast de notification pour les nouvelles permissions non vues
+- Interface admin drag & drop pour reordonner les features et permissions de tutoriels
+- Nouveau endpoint `GET/PUT /api/preference/didacticiel/ordering` (stockage dans AppSetting)
+- Nouvelle permission `preference.didacticiel.manage`
+- Migration automatique des anciennes donnees `tutorials_seen` vers `permissions_seen`
+- ~18 sous-tutoriels par permission repartis sur 6 features (_identity, notification, event, mfa, preference, sso)
+
 ## 2026.02.11
 
 ### Refactoring : migration CSS → SCSS + extraction des styles inline

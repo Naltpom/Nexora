@@ -433,7 +433,7 @@ export default function Users() {
                           {/* Impersonate button - hidden for super admins */}
                           {!u.is_super_admin ? (
                             <button
-                              className="btn-icon btn-icon-primary"
+                              className="btn-icon btn-icon-primary impersonate-btn"
                               onClick={() => handleImpersonate(u)}
                               title="Se connecter en tant que"
                             >

@@ -234,6 +234,10 @@
 
     [data-theme="dark"] & {
       background: #a78bfa;
+
+      &.read {
+        background: transparent;
+      }
     }
   }
 

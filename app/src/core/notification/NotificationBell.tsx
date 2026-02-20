@@ -39,7 +39,9 @@ export default function NotificationBell() {
 
   const handleBellClick = () => {
     if (pushActive) {
-      setOpen(!open)
+      const opening = !open
+      setOpen(opening)
+      if (opening) fetchNotifications(1)
     } else {
       navigate('/notifications/settings')
     }
@@ -49,8 +51,8 @@ export default function NotificationBell() {
     if (!notif.is_read) markAsRead(notif.id)
     if (notif.link) {
       navigate(notif.link)
-      setOpen(false)
     }
+    setOpen(false)
   }
 
   const handleDelete = (e: React.MouseEvent, id: number) => {

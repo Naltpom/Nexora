@@ -199,7 +199,7 @@ export default function Profile() {
 
         {/* SSO Section */}
         {isActive('sso') && (
-          <div className="unified-card card-padded">
+          <div className="unified-card card-padded sso-profile-section">
             <h2 className="title-sm">Comptes lies</h2>
             <p className="text-secondary">
               Liez vos comptes externes pour vous connecter plus rapidement.

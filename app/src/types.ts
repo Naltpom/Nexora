@@ -57,13 +57,25 @@ export interface TutorialStep {
   title: string
   description: string
   position?: 'top' | 'bottom' | 'left' | 'right' | 'auto'
+  navigateTo?: string
+  delay?: number
 }
 
-export interface TutorialDefinition {
-  id: string
+export interface PermissionTutorial {
+  permission: string
   label: string
   description?: string
-  permission?: string
-  triggerPath?: string
   steps: TutorialStep[]
+}
+
+export interface FeatureTutorial {
+  featureName: string
+  label: string
+  description?: string
+  permissionTutorials: PermissionTutorial[]
+}
+
+export interface TutorialOrdering {
+  feature_order: string[]
+  permission_order: Record<string, string[]>
 }

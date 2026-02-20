@@ -626,11 +626,21 @@
 
 .card-link-item {
   text-decoration: none;
+  color: inherit;
+  display: flex;
 
   .unified-card {
     padding: 16px 20px;
     cursor: pointer;
-    transition: box-shadow 0.2s;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    flex: 1;
+    display: flex;
+    align-items: center;
+
+    &:hover {
+      border-color: var(--primary, #4f46e5);
+      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.15);
+    }
   }
 }
 
@@ -640,21 +650,268 @@
   gap: 12px;
 }
 
-.card-link-item-label {
-  font-weight: 500;
-  color: var(--text-primary);
+.card-link-icon {
+  color: var(--primary, #4f46e5);
+  flex-shrink: 0;
 }
 
-// ── Stat card ──
+.card-link-item-label {
+  font-weight: 500;
+  color: var(--gray-900);
+}
+
+// ── Stat cards ──
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
 
 .stat-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
   padding: 20px 24px;
+  border-radius: 12px;
+  border: 1px solid var(--gray-200);
+  background: #fff;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  animation: stat-card-enter 0.5s ease-out both;
+
+  &:nth-child(1) { animation-delay: 0s; }
+  &:nth-child(2) { animation-delay: 0.1s; }
+  &:nth-child(3) { animation-delay: 0.2s; }
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+  }
+
+  // Gradient accent line at top
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    transition: height 0.25s ease;
+  }
+
+  &:hover::before {
+    height: 4px;
+  }
+
+  // Subtle background shimmer on hover
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    border-radius: 12px;
+  }
+
+  &:hover::after {
+    opacity: 1;
+  }
+
+  &--users {
+    &::before { background: linear-gradient(90deg, #6366f1, #8b5cf6); }
+    &::after { background: linear-gradient(135deg, rgba(99, 102, 241, 0.04), transparent 60%); }
+    &:hover { border-color: rgba(99, 102, 241, 0.3); }
+  }
+
+  &--notifs {
+    &::before { background: linear-gradient(90deg, #f59e0b, #ef4444); }
+    &::after { background: linear-gradient(135deg, rgba(245, 158, 11, 0.04), transparent 60%); }
+    &:hover { border-color: rgba(245, 158, 11, 0.3); }
+  }
+
+  &--invites {
+    &::before { background: linear-gradient(90deg, #10b981, #06b6d4); }
+    &::after { background: linear-gradient(135deg, rgba(16, 185, 129, 0.04), transparent 60%); }
+    &:hover { border-color: rgba(16, 185, 129, 0.3); }
+  }
+}
+
+@keyframes stat-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stat-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+
+  .stat-card:hover & {
+    transform: scale(1.08);
+  }
+
+  .stat-card--users & {
+    background: rgba(99, 102, 241, 0.1);
+    color: #6366f1;
+  }
+
+  .stat-card--users:hover & {
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+  }
+
+  .stat-card--notifs & {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+  }
+
+  .stat-card--notifs:hover & {
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1);
+  }
+
+  .stat-card--invites & {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+  }
+
+  .stat-card--invites:hover & {
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+  }
+}
+
+.stat-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.stat-card-value {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--gray-900);
 }
 
 .stat-card-label {
   font-size: 13px;
   color: var(--gray-500);
-  margin-bottom: 4px;
+  margin-top: 2px;
+}
+
+// Pulse indicator for unread notifications
+.stat-card-pulse {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ef4444;
+  animation: stat-pulse 2s ease-in-out infinite;
+}
+
+@keyframes stat-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+}
+
+// ── Dark theme ──
+
+[data-theme="dark"] {
+  .card-link-item {
+    .unified-card:hover {
+      border-color: #8b5cf6;
+      box-shadow: 0 2px 12px rgba(139, 92, 246, 0.2);
+    }
+  }
+
+  .card-link-item-label {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .card-link-icon {
+    color: #a78bfa;
+  }
+
+  .stat-card {
+    background: #1e1b2e;
+    border-color: rgba(255, 255, 255, 0.08);
+
+    &:hover {
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    &--users {
+      &::after { background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), transparent 60%); }
+      &:hover { border-color: rgba(129, 140, 248, 0.3); }
+    }
+
+    &--notifs {
+      &::after { background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), transparent 60%); }
+      &:hover { border-color: rgba(251, 191, 36, 0.3); }
+    }
+
+    &--invites {
+      &::after { background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), transparent 60%); }
+      &:hover { border-color: rgba(52, 211, 153, 0.3); }
+    }
+  }
+
+  .stat-card-value {
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  .stat-card-label {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .stat-card-icon {
+    .stat-card--users & {
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+    }
+
+    .stat-card--users:hover & {
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+    }
+
+    .stat-card--notifs & {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+    }
+
+    .stat-card--notifs:hover & {
+      box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15);
+    }
+
+    .stat-card--invites & {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+    }
+
+    .stat-card--invites:hover & {
+      box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+    }
+  }
+
+  .title-lg {
+    color: rgba(255, 255, 255, 0.9);
+  }
 }
 
 // ── Settings form ──

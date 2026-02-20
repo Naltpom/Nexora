@@ -6,6 +6,7 @@ import './preference.scss'
 
 const ThemeSection = lazy(() => import('./theme/ThemeSection'))
 const TutorialSection = lazy(() => import('./didacticiel/TutorialSection'))
+const TutorialAdminSection = lazy(() => import('./didacticiel/TutorialAdminSection'))
 
 export default function PreferencePage() {
   const { isActive } = useFeature()
@@ -36,6 +37,12 @@ export default function PreferencePage() {
         {isActive('preference.didacticiel') && (
           <Suspense fallback={null}>
             <TutorialSection />
+          </Suspense>
+        )}
+
+        {isActive('preference.didacticiel') && (
+          <Suspense fallback={null}>
+            <TutorialAdminSection />
           </Suspense>
         )}
       </div>

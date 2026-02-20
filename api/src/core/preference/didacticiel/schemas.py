@@ -3,9 +3,19 @@
 from pydantic import BaseModel
 
 
-class TutorialSeenRequest(BaseModel):
-    tutorial_id: str
+class PermissionSeenRequest(BaseModel):
+    permission: str
 
 
-class TutorialSeenResponse(BaseModel):
-    tutorials_seen: dict[str, str]  # {tutorial_id: iso_timestamp}
+class PermissionSeenResponse(BaseModel):
+    permissions_seen: dict[str, str]  # {permission_code: iso_timestamp}
+
+
+class TutorialOrderingResponse(BaseModel):
+    feature_order: list[str]
+    permission_order: dict[str, list[str]]
+
+
+class TutorialOrderingUpdate(BaseModel):
+    feature_order: list[str]
+    permission_order: dict[str, list[str]]
