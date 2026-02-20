@@ -6,28 +6,30 @@ import ProtectedRoute from './core/ProtectedRoute'
 import MeshBackground from './core/MeshBackground'
 import BackgroundThemePicker from './core/BackgroundThemePicker'
 
-const TutorialWrapper = lazy(() => import('./features/preference/didacticiel/TutorialWrapper'))
+const TutorialWrapper = lazy(() => import('./core/preference/didacticiel/TutorialWrapper'))
 
-// Core pages (always available)
-import LoginPage from './features/_core/LoginPage'
-import RegisterPage from './features/_core/RegisterPage'
-import ForceChangePasswordPage from './features/_core/ForceChangePasswordPage'
-import ResetPasswordPage from './features/_core/ResetPasswordPage'
-import ForgotPasswordPage from './features/_core/ForgotPasswordPage'
-import AcceptInvitationPage from './features/_core/AcceptInvitationPage'
-import VerifyEmailPage from './features/_core/VerifyEmailPage'
-import HomePage from './features/_core/HomePage'
-import ProfilePage from './features/_core/ProfilePage'
-import UsersAdminPage from './features/_core/UsersAdminPage'
-import DatabaseAdminPage from './features/_core/DatabaseAdminPage'
-import RolesAdminPage from './features/_core/RolesAdminPage'
-import PermissionsAdminPage from './features/_core/PermissionsAdminPage'
-import FeaturesAdminPage from './features/_core/FeaturesAdminPage'
-import AppSettingsAdminPage from './features/_core/AppSettingsAdminPage'
-import UserDetailPage from './features/_core/UserDetailPage'
+// Identity pages (always available)
+import LoginPage from './core/_identity/LoginPage'
+import RegisterPage from './core/_identity/RegisterPage'
+import ForceChangePasswordPage from './core/_identity/ForceChangePasswordPage'
+import ResetPasswordPage from './core/_identity/ResetPasswordPage'
+import ForgotPasswordPage from './core/_identity/ForgotPasswordPage'
+import AcceptInvitationPage from './core/_identity/AcceptInvitationPage'
+import VerifyEmailPage from './core/_identity/VerifyEmailPage'
+import HomePage from './core/_identity/HomePage'
+import ProfilePage from './core/_identity/ProfilePage'
+import UsersAdminPage from './core/_identity/UsersAdminPage'
+import DatabaseAdminPage from './core/_identity/DatabaseAdminPage'
+import RolesAdminPage from './core/_identity/RolesAdminPage'
+import PermissionsAdminPage from './core/_identity/PermissionsAdminPage'
+import FeaturesAdminPage from './core/_identity/FeaturesAdminPage'
+import AppSettingsAdminPage from './core/_identity/AppSettingsAdminPage'
+import UserDetailPage from './core/_identity/UserDetailPage'
 
-// Feature manifests (auto-discovered)
-const featureModules = import.meta.glob('./features/*/index.ts', { eager: true }) as Record<string, any>
+// Feature manifests (auto-discovered from core + project features)
+const coreModules = import.meta.glob('./core/*/index.ts', { eager: true }) as Record<string, any>
+const projectModules = import.meta.glob('./features/*/index.ts', { eager: true }) as Record<string, any>
+const featureModules = { ...coreModules, ...projectModules }
 
 function LoadingSpinner() {
   return (

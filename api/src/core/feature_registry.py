@@ -12,8 +12,8 @@ from fastapi import FastAPI, APIRouter, Depends, HTTPException, status
 
 logger = logging.getLogger(__name__)
 
-FEATURES_DIR = Path(__file__).resolve().parent.parent / "features"
-CUSTOM_FEATURES_DIR = Path(__file__).resolve().parent.parent / "custom_features"
+CORE_FEATURES_DIR = Path(__file__).resolve().parent          # api/src/core/ (template features)
+PROJECT_FEATURES_DIR = Path(__file__).resolve().parent.parent / "features"  # api/src/features/ (project features)
 
 
 @dataclass
@@ -84,12 +84,12 @@ class FeatureRegistry:
 
     def discover(self):
         """Scan feature directories for manifest.py files and import them."""
-        for base_dir in [FEATURES_DIR, CUSTOM_FEATURES_DIR]:
+        for base_dir in [CORE_FEATURES_DIR, PROJECT_FEATURES_DIR]:
             if not base_dir.exists():
                 continue
             for manifest_path in base_dir.rglob("manifest.py"):
                 package_dir = manifest_path.parent
-                # Build module path: src.features.xxx.manifest or src.custom_features.xxx.manifest
+                # Build module path: src.core.xxx.manifest or src.features.xxx.manifest
                 rel = manifest_path.relative_to(Path(__file__).resolve().parent.parent)
                 module_name = "src." + str(rel.with_suffix("")).replace("\\", ".").replace("/", ".")
                 try:

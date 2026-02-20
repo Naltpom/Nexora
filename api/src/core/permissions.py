@@ -15,7 +15,7 @@ async def load_user_permissions(db: AsyncSession, user_id: int) -> dict[str, boo
     Resolution order: user_permissions > role_permissions > global_permissions.
     Returns dict of {permission_code: True/False/None}.
     """
-    from ..features._core.models import (
+    from ._identity.models import (
         Permission,
         UserPermission,
         UserRole,
@@ -112,7 +112,7 @@ async def get_user_permission_codes(
 ) -> list[str]:
     """Return list of permission codes the current user has. Used by /auth/me endpoint."""
     if current_user.is_super_admin:
-        from ..features._core.models import Permission
+        from ._identity.models import Permission
 
         result = await db.execute(select(Permission.code))
         return [code for (code,) in result.all()]

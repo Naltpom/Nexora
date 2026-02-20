@@ -31,7 +31,7 @@ def load_feature_states_sync() -> dict[str, bool]:
     states = {}
     try:
         with Session(sync_engine) as session:
-            from .features._core.models import FeatureState
+            from .core._identity.models import FeatureState
 
             # Check if table exists first
             from sqlalchemy import inspect
@@ -50,10 +50,10 @@ def load_feature_states_sync() -> dict[str, bool]:
 def import_all_models():
     """Import all models from all features so Alembic can detect them."""
     import importlib
-    from .core.feature_registry import FEATURES_DIR, CUSTOM_FEATURES_DIR
+    from .core.feature_registry import CORE_FEATURES_DIR, PROJECT_FEATURES_DIR
     from pathlib import Path
 
-    for base_dir in [FEATURES_DIR, CUSTOM_FEATURES_DIR]:
+    for base_dir in [CORE_FEATURES_DIR, PROJECT_FEATURES_DIR]:
         if not base_dir.exists():
             continue
         for models_path in base_dir.rglob("models.py"):
@@ -109,7 +109,7 @@ def create_app() -> FastAPI:
     # ── Startup event: sync permissions ──────────────────────────────
     @application.on_event("startup")
     async def on_startup():
-        from .features._core.services import sync_permissions_from_registry
+        from .core._identity.services import sync_permissions_from_registry
 
         async with async_session() as db:
             try:

@@ -101,7 +101,7 @@ async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security_scheme),
     db: AsyncSession = Depends(get_db),
 ):
-    from ..features._core.models import User, ImpersonationLog
+    from ._identity.models import User, ImpersonationLog
 
     payload = decode_token(credentials.credentials)
     if payload.get("type") != "access":
@@ -147,7 +147,7 @@ async def get_current_super_admin(
     if is_impersonating(current_user):
         original_admin_id = get_original_admin_id(current_user)
         if original_admin_id:
-            from ..features._core.models import User
+            from ._identity.models import User
 
             result = await db.execute(select(User).where(User.id == original_admin_id))
             original_admin = result.scalar_one_or_none()
@@ -180,7 +180,7 @@ async def get_current_user_from_query_token(
     token: str = Query(...),
     db: AsyncSession = Depends(get_db),
 ):
-    from ..features._core.models import User
+    from ._identity.models import User
 
     payload = decode_token(token)
     if payload.get("type") != "access":

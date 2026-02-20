@@ -7,7 +7,7 @@ import { PermissionProvider } from './core/PermissionContext'
 import { FeatureProvider } from './core/FeatureContext'
 import { AppSettingsProvider } from './core/AppSettingsContext'
 import { ConfirmProvider } from './core/ConfirmModal'
-import { NotificationProvider } from './features/notification/NotificationContext'
+import { NotificationProvider } from './core/notification/NotificationContext'
 import './core/styles/global.css'
 
 // Apply theme before render to prevent white flash

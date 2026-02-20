@@ -17,11 +17,11 @@ from src.core.config import settings
 
 
 def import_all_feature_models():
-    """Auto-discover and import all models.py from features/ and custom_features/."""
+    """Auto-discover and import all models.py from core/ and features/."""
     src_dir = Path(__file__).resolve().parent.parent / "src"
     features_dirs = [
+        src_dir / "core",
         src_dir / "features",
-        src_dir / "custom_features",
     ]
     for base_dir in features_dirs:
         if not base_dir.exists():

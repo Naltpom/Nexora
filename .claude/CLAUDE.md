@@ -4,8 +4,8 @@
 
 Architecture modulaire feature-based avec Feature Registry.
 
-- Features template : `api/src/features/` et `app/src/features/`
-- Features projet : `api/src/custom_features/` et `app/src/custom_features/`
+- Features template (core) : `api/src/core/` et `app/src/core/`
+- Features projet : `api/src/features/` et `app/src/features/`
 - Config template : `config.template.yaml` (ecrase a la mise a jour du template)
 - Config projet : `config.custom.yaml` (jamais ecrase)
 - Feature Registry : decouverte automatique des features via `manifest.py`, toggle dynamique, hierarchie parent/children, validation des dependances
@@ -15,16 +15,16 @@ Architecture modulaire feature-based avec Feature Registry.
 MODE: can_both
 
 Valeurs possibles :
-- `template` → les nouvelles features vont dans `features/` (api + app), automatiquement
-- `project` → les nouvelles features vont dans `custom_features/` (api + app), automatiquement
+- `template` → les nouvelles features vont dans `core/` (api + app), automatiquement
+- `project` → les nouvelles features vont dans `features/` (api + app), automatiquement
 - `can_both` → Claude demande a chaque creation de feature si c'est template ou projet
 
 Quand tu crees une feature :
 1. Lire le MODE ci-dessus
 2. Si `can_both`, demander a l'utilisateur : "Template ou Projet ?"
-3. Placer les fichiers backend dans `api/src/features/<name>/` ou `api/src/custom_features/<name>/`
-4. Placer les fichiers frontend dans `app/src/features/<name>/` ou `app/src/custom_features/<name>/`
-5. Les features template ne doivent JAMAIS dependre de features custom
+3. Placer les fichiers backend dans `api/src/core/<name>/` ou `api/src/features/<name>/`
+4. Placer les fichiers frontend dans `app/src/core/<name>/` ou `app/src/features/<name>/`
+5. Les features template ne doivent JAMAIS dependre de features projet
 
 ## Stack
 
@@ -52,11 +52,30 @@ Aucun framework de tests configure. Ne pas en ajouter sauf demande explicite.
 
 CalVer : `YYYY.MM.N` (ex: 2026.02.1, 2026.02.2)
 - Annee.Mois.Increment — le compteur N reset a 1 a chaque nouveau mois
-- Applique a : `config.template.yaml`, `app/package.json`, `api/src/main.py`, chaque `manifest.py`
+
+### Fichiers de version a mettre a jour
+
+A chaque increment de version, mettre a jour **tous** ces fichiers :
+
+| Fichier | Champ | Scope |
+|---------|-------|-------|
+| `config.template.yaml` | `app.version` | Version globale du template |
+| `app/package.json` | `"version"` | Version globale frontend |
+| `api/src/main.py` | `version=` dans `create_app()` | Version globale API |
+| `api/src/core/<name>/manifest.py` | `version=` | Version de chaque feature template modifiee |
+| `api/src/features/<name>/manifest.py` | `version=` | Version de chaque feature projet modifiee |
+
+### Regles de bump
+
+- **Version globale** : toujours = la derniere version du CHANGELOG global
+- **Version manifest** : = la derniere version ou la feature a ete modifiee (pas forcement la globale)
+- Les sous-features (`parent.child`) ont leur propre version dans leur `manifest.py`
+- **Quand tu incrementes** : verifie le N actuel dans `CHANGELOG.md` racine, incremente de 1
+- **Ne jamais oublier** de bump les 3 fichiers globaux + les manifests des features touchees
 
 ## Structure d'une feature
 
-### Backend (`api/src/features/<name>/` ou `api/src/custom_features/<name>/`)
+### Backend template (`api/src/core/<name>/`)
 
 ```
 <name>/
@@ -69,7 +88,11 @@ CalVer : `YYYY.MM.N` (ex: 2026.02.1, 2026.02.2)
   CHANGELOG.md     # Historique des changements de la feature
 ```
 
-### Frontend (`app/src/features/<name>/` ou `app/src/custom_features/<name>/`)
+### Backend projet (`api/src/features/<name>/`)
+
+Meme structure que ci-dessus.
+
+### Frontend template (`app/src/core/<name>/`)
 
 ```
 <name>/
@@ -78,7 +101,28 @@ CalVer : `YYYY.MM.N` (ex: 2026.02.1, 2026.02.2)
   *.css             # Styles
 ```
 
-### Manifest backend minimal
+### Frontend projet (`app/src/features/<name>/`)
+
+Meme structure que ci-dessus.
+
+### Manifest backend minimal (feature template)
+
+```python
+from ..feature_registry import FeatureManifest
+
+manifest = FeatureManifest(
+    name="ma_feature",
+    label="Ma Feature",
+    description="Description courte",
+    version="2026.02.1",
+    permissions=["ma_feature.read", "ma_feature.manage"],
+    router_module="src.core.ma_feature.routes",
+    router_prefix="/api/ma-feature",
+    router_tags=["MaFeature"],
+)
+```
+
+### Manifest backend minimal (feature projet)
 
 ```python
 from ...core.feature_registry import FeatureManifest
@@ -104,7 +148,7 @@ manifest = FeatureManifest(
     parent="parent",
     version="2026.02.1",
     permissions=["parent.child.read"],
-    router_module="src.features.parent.child.routes",
+    router_module="src.core.parent.child.routes",  # ou src.features. pour projet
     router_prefix="/api/parent/child",
     router_tags=["ParentChild"],
 )
@@ -112,17 +156,37 @@ manifest = FeatureManifest(
 
 ## Changelogs
 
+### Fichiers changelog
+
+| Fichier | Quand le modifier |
+|---------|------------------|
+| `CHANGELOG.md` (racine) | **Toujours** — resume de chaque changement, groupe par version |
+| `api/src/core/<name>/CHANGELOG.md` | Quand une feature template est modifiee |
+| `api/src/features/<name>/CHANGELOG.md` | Quand une feature projet est modifiee |
+
+### Regles
+
 - Chaque feature a un `CHANGELOG.md` dans son dossier backend
-- Le `CHANGELOG.md` a la racine du projet pointe vers les changelogs de chaque feature avec un resume
-- Changement specifique a une feature → modifier le CHANGELOG de la feature + ajouter un resume dans le global
+- Le `CHANGELOG.md` racine pointe vers les changelogs de chaque feature avec un resume
+- Changement specifique a une feature → modifier le CHANGELOG de la feature **ET** ajouter un resume dans le global
 - Changement transversal (docker, config, infra) → changelog global uniquement
 - Nouvelle feature → creer son CHANGELOG.md + ajouter une section dans le global
+- **Format** : nouvelle section `## YYYY.MM.N` en haut du fichier, sous-sections `### feature_name`
+
+### Checklist apres chaque modification
+
+1. Incrementer la version N dans `CHANGELOG.md` racine (nouvelle section en haut)
+2. Mettre a jour le `CHANGELOG.md` de chaque feature touchee
+3. Bump `config.template.yaml` → `app.version`
+4. Bump `app/package.json` → `"version"`
+5. Bump `api/src/main.py` → `version=` dans `create_app()`
+6. Bump `manifest.py` de chaque feature modifiee → `version=`
 
 ## Regles de dev
 
 - Toujours supporter dark + light theme
 - Permissions au format `feature.sub.action`
-- Les features template ne doivent pas dependre de features custom
+- Les features template ne doivent pas dependre de features projet
 - Utiliser **Bun** (pas npm/yarn)
 - Ne pas ajouter de tests sauf demande explicite
 - Apres chaque modification, mettre a jour le CHANGELOG concerne

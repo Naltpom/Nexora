@@ -6,12 +6,12 @@ who listens, and features subscribe without modifying core code.
 
 Usage (emitter side — e.g. core routes):
 
-    from ...core.events import event_bus
+    from ..events import event_bus
     await event_bus.emit("user.registered", db=db, actor_id=user.id, ...)
 
 Usage (subscriber side — e.g. notification feature manifest / startup):
 
-    from ...core.events import event_bus
+    from ..events import event_bus
     event_bus.subscribe("user.registered", my_handler)
     # or subscribe to all events:
     event_bus.subscribe("*", my_handler)

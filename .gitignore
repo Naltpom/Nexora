@@ -7,7 +7,7 @@
 config.custom.yaml
 
 # Project-specific features (never touched by template)
-# Note: custom_features/ dirs are tracked but their contents are project-specific
+# Note: features/ dirs (api/src/features/, app/src/features/) are tracked but their contents are project-specific
 
 # Python
 __pycache__/

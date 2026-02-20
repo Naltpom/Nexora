@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .core.database import engine, async_session, Base
 from .core.security import hash_password
-from .features._core.models import User, FeatureState, AppSetting
+from .core._identity.models import User, FeatureState, AppSetting
 
 
 def ago(days: int) -> datetime:

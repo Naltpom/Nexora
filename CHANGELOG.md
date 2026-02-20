@@ -1,15 +1,25 @@
 # Changelog
 
+## 2026.02.10
+
+### Refactoring : renommage des dossiers
+- `features/` → `core/` (features template fusionnees dans le dossier framework existant)
+- `custom_features/` → `features/` (features projet)
+- Feature `_core` → `_identity` (feature systeme d'identite)
+- Mise a jour de tous les imports Python et TypeScript
+- Mise a jour du Feature Registry (`CORE_FEATURES_DIR`, `PROJECT_FEATURES_DIR`)
+- Mise a jour d'Alembic, CLAUDE.md, et de la documentation
+
 ## 2026.02.9
 
 ### event (NEW)
-> [Changelog complet](api/src/features/event/CHANGELOG.md)
+> [Changelog complet](api/src/core/event/CHANGELOG.md)
 - Nouvelle feature `event` : bus d'evenements generique avec persistence
 - Declaration des types d'events dans les manifests des features (`FeatureManifest.events`)
 - Endpoint `GET /api/events/event-types` pour la decouverte dynamique
 - Page admin "Catalogue d'evenements" : liste groupee par feature avec recherche
 
-### _core
+### _identity
 - Emission d'evenements via event bus : `user.registered`, `user.invited`, `user.invitation_accepted`, `user.updated`, `user.deactivated`, `admin.impersonation_started`
 - Lien "Events" dans le menu admin (conditionne par la feature event)
 
@@ -33,7 +43,7 @@
 - Ajout `mfa_grace_period_expires` dans `TokenResponse`
 
 ### preference (NEW)
-> [Changelog complet](api/src/features/preference/CHANGELOG.md)
+> [Changelog complet](api/src/core/preference/CHANGELOG.md)
 - Feature parent "Preferences" avec sous-features `preference.theme` et `preference.didacticiel`
 - Page preferences (`/profile/preferences`) accessible depuis le profil
 - `preference.theme` : section theme (dark/light + fond visuel) dans la page preferences
@@ -45,7 +55,7 @@
 
 ## 2026.02.6
 
-### _core
+### _identity
 - Verification d'email a l'inscription : code 6 chiffres avec expiration 5 min et cooldown 60s
 - Nouveaux endpoints API : `POST /auth/verify-email`, `POST /auth/resend-verification`
 - Page frontend VerifyEmailPage avec saisie du code, renvoi, et redirection automatique
@@ -57,7 +67,7 @@
 
 ## 2026.02.5
 
-### _core
+### _identity
 - Page detail utilisateur par UUID (`/admin/users/:uuid`) avec edition profil, roles, et permissions visuelles (User > Role > Global)
 - Ajout UUID sur les utilisateurs (migration Alembic)
 - Cascade desactivation des features enfants/dependants
@@ -69,7 +79,7 @@
 
 ## 2026.02.4
 
-### _core
+### _identity
 - Refonte page admin Features : layout en tableau compact au lieu de cartes
 - Refonte page admin Roles : panneau lateral split-panel pour la gestion des permissions (pagination, recherche, toggle en temps reel)
 - Ajout endpoints API pour permissions paginées et toggle individuel
@@ -77,19 +87,19 @@
 ## 2026.02.3
 
 ### sso (NEW)
-> [Changelog complet](api/src/features/sso/CHANGELOG.md)
+> [Changelog complet](api/src/core/sso/CHANGELOG.md)
 - Feature SSO (Single Sign-On) avec OAuth2 : Google et GitHub
 - Liaison automatique de comptes, creation d'utilisateur SSO
 - Boutons SSO sur la page de connexion, gestion des comptes lies dans le profil
 
 ### mfa (NEW)
-> [Changelog complet](api/src/features/mfa/CHANGELOG.md)
+> [Changelog complet](api/src/core/mfa/CHANGELOG.md)
 - Feature MFA (Authentification Multi-Facteurs) : TOTP et Email OTP
 - Codes de secours (backup codes)
 - Policy MFA par role avec periode de grace
 - Configuration MFA dans le profil, page admin de gestion des policies
 
-### _core
+### _identity
 - Modification du flow de login pour supporter le MFA (token MFA temporaire en 2 etapes)
 - Extension de `TokenResponse` avec champs MFA
 - Ajout `create_mfa_token()` / `decode_mfa_token()` dans security.py
@@ -97,7 +107,7 @@
 
 ## 2026.02.2
 
-### _core
+### _identity
 - Fix : CORS origins corriges (5472 au lieu de 3020/5462)
 - Fix : bcrypt + passlib compatibilite (monkey-patch `bcrypt.__about__`)
 
@@ -111,24 +121,24 @@
 
 ## 2026.02.1 — Init
 
-### _core
-→ [Changelog complet](api/src/features/_core/CHANGELOG.md)
+### _identity
+→ [Changelog complet](api/src/core/_identity/CHANGELOG.md)
 - Auth JWT + SSO, utilisateurs, roles, permissions granulaires, feature registry, impersonation, app settings, backups, invitations, recherche globale
 
 ### notification
-→ [Changelog complet](api/src/features/notification/CHANGELOG.md)
+→ [Changelog complet](api/src/core/notification/CHANGELOG.md)
 - Notifications in-app avec SSE, moteur de regles event-driven, templates globaux, preferences utilisateur
 
 ### notification.email
-→ [Changelog complet](api/src/features/notification/email/CHANGELOG.md)
+→ [Changelog complet](api/src/core/notification/email/CHANGELOG.md)
 - Envoi SMTP configurable (Office365 par defaut)
 
 ### notification.push
-→ [Changelog complet](api/src/features/notification/push/CHANGELOG.md)
+→ [Changelog complet](api/src/core/notification/push/CHANGELOG.md)
 - Web Push VAPID avec service worker
 
 ### notification.webhook
-→ [Changelog complet](api/src/features/notification/webhook/CHANGELOG.md)
+→ [Changelog complet](api/src/core/notification/webhook/CHANGELOG.md)
 - Webhooks HTTP avec retry, support Slack/Discord/Custom, signature HMAC
 
 ### Infrastructure

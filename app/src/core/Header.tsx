@@ -2,17 +2,20 @@ import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { useAuth } from './AuthContext'
 import { useFeature } from './FeatureContext'
 import { useAppSettings } from './AppSettingsContext'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useLocation } from 'react-router-dom'
 import GlobalSearch from './GlobalSearch'
 
-const NotificationBell = lazy(() => import('../features/notification/NotificationBell'))
+const NotificationBell = lazy(() => import('./notification/NotificationBell'))
 
 export default function Header() {
   const { user, logout, getPreference, updatePreference } = useAuth()
   const { isActive } = useFeature()
   const { settings: appSettings } = useAppSettings()
   const navigate = useNavigate()
+  const location = useLocation()
   const [showAdminMenu, setShowAdminMenu] = useState(false)
+
+  const isMenuActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/')
   const adminDropdownRef = useRef<HTMLDivElement>(null)
 
   // Close dropdown when clicking outside
@@ -153,7 +156,7 @@ export default function Header() {
 
                     <Link
                       to="/profile"
-                      className="header-admin-menu-item"
+                      className={`header-admin-menu-item${isMenuActive('/profile') ? ' header-admin-menu-item-active' : ''}`}
                       onClick={() => setShowAdminMenu(false)}
                       style={{ textDecoration: 'none', color: 'inherit' }}
                     >
@@ -166,7 +169,7 @@ export default function Header() {
                     {isActive('preference') && (
                       <Link
                         to="/profile/preferences"
-                        className="header-admin-menu-item"
+                        className={`header-admin-menu-item${isMenuActive('/profile/preferences') ? ' header-admin-menu-item-active' : ''}`}
                         onClick={() => setShowAdminMenu(false)}
                         style={{ textDecoration: 'none', color: 'inherit' }}
                       >
@@ -183,7 +186,7 @@ export default function Header() {
                     <div className="header-admin-menu-section-label">Administration</div>
                     <Link
                       to="/admin/users"
-                      className="header-admin-menu-item"
+                      className={`header-admin-menu-item${isMenuActive('/admin/users') ? ' header-admin-menu-item-active' : ''}`}
                       onClick={() => setShowAdminMenu(false)}
                       style={{ textDecoration: 'none', color: 'inherit' }}
                     >
@@ -198,7 +201,7 @@ export default function Header() {
                     {isActive('notification') && (
                       <Link
                         to="/notifications/settings"
-                        className="header-admin-menu-item"
+                        className={`header-admin-menu-item${isMenuActive('/notifications/settings') ? ' header-admin-menu-item-active' : ''}`}
                         onClick={() => setShowAdminMenu(false)}
                         style={{ textDecoration: 'none', color: 'inherit' }}
                       >
@@ -211,7 +214,7 @@ export default function Header() {
                     )}
                     <Link
                       to="/admin/roles"
-                      className="header-admin-menu-item"
+                      className={`header-admin-menu-item${isMenuActive('/admin/roles') ? ' header-admin-menu-item-active' : ''}`}
                       onClick={() => setShowAdminMenu(false)}
                       style={{ textDecoration: 'none', color: 'inherit' }}
                     >
@@ -222,7 +225,7 @@ export default function Header() {
                     </Link>
                     <Link
                       to="/admin/permissions"
-                      className="header-admin-menu-item"
+                      className={`header-admin-menu-item${isMenuActive('/admin/permissions') ? ' header-admin-menu-item-active' : ''}`}
                       onClick={() => setShowAdminMenu(false)}
                       style={{ textDecoration: 'none', color: 'inherit' }}
                     >
@@ -234,7 +237,7 @@ export default function Header() {
                     </Link>
                     <Link
                       to="/admin/features"
-                      className="header-admin-menu-item"
+                      className={`header-admin-menu-item${isMenuActive('/admin/features') ? ' header-admin-menu-item-active' : ''}`}
                       onClick={() => setShowAdminMenu(false)}
                       style={{ textDecoration: 'none', color: 'inherit' }}
                     >
@@ -249,7 +252,7 @@ export default function Header() {
                     {isActive('event') && (
                       <Link
                         to="/admin/events"
-                        className="header-admin-menu-item"
+                        className={`header-admin-menu-item${isMenuActive('/admin/events') ? ' header-admin-menu-item-active' : ''}`}
                         onClick={() => setShowAdminMenu(false)}
                         style={{ textDecoration: 'none', color: 'inherit' }}
                       >
@@ -262,7 +265,7 @@ export default function Header() {
                     {isActive('mfa') && (
                       <Link
                         to="/admin/mfa-policy"
-                        className="header-admin-menu-item"
+                        className={`header-admin-menu-item${isMenuActive('/admin/mfa-policy') ? ' header-admin-menu-item-active' : ''}`}
                         onClick={() => setShowAdminMenu(false)}
                         style={{ textDecoration: 'none', color: 'inherit' }}
                       >
@@ -276,7 +279,7 @@ export default function Header() {
                     )}
                     <Link
                       to="/admin/settings"
-                      className="header-admin-menu-item"
+                      className={`header-admin-menu-item${isMenuActive('/admin/settings') ? ' header-admin-menu-item-active' : ''}`}
                       onClick={() => setShowAdminMenu(false)}
                       style={{ textDecoration: 'none', color: 'inherit' }}
                     >
@@ -288,7 +291,7 @@ export default function Header() {
                     </Link>
                     <Link
                       to="/admin/database"
-                      className="header-admin-menu-item"
+                      className={`header-admin-menu-item${isMenuActive('/admin/database') ? ' header-admin-menu-item-active' : ''}`}
                       onClick={() => setShowAdminMenu(false)}
                       style={{ textDecoration: 'none', color: 'inherit' }}
                     >

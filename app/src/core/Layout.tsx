@@ -4,7 +4,7 @@ import Breadcrumb from './Breadcrumb'
 import ImpersonationBanner from './ImpersonationBanner'
 import { useFeature } from './FeatureContext'
 
-const MFASetupBanner = lazy(() => import('../features/mfa/MFASetupBanner'))
+const MFASetupBanner = lazy(() => import('./mfa/MFASetupBanner'))
 
 interface BreadcrumbItem {
   label: string
