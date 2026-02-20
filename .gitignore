@@ -70,3 +70,6 @@ backups/*.dump
 # Plans
 docs/plans
 docs/analyses
+
+!.claude/CLAUDE.md
+.claude/

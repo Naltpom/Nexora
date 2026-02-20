@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sse_starlette.sse import EventSourceResponse
 
-from ...core.security import get_current_user, get_current_super_admin, get_current_user_from_query_token
+from ...core.security import get_current_user, get_current_super_admin, get_current_user_from_query_token, decode_query_token_lightweight
 from ...core.database import get_db
 from ...core.exceptions import EntityNotFoundError, AuthorizationError
 from .models import Event, Notification, NotificationRule, UserRulePreference
@@ -436,9 +436,9 @@ async def resend_webhook_endpoint(
 
 @router.get("/stream")
 async def notification_stream(
-    current_user=Depends(get_current_user_from_query_token),
+    token_data: dict = Depends(decode_query_token_lightweight),
 ):
-    user_id = current_user.id
+    user_id = token_data["user_id"]
 
     async def event_generator():
         queue = await sse_broadcaster.subscribe(user_id)

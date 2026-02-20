@@ -1,5 +1,10 @@
 # _core — Changelog
 
+## 2026.02.2
+
+- Fix : bcrypt + passlib 1.7.4 compatibilite (monkey-patch `bcrypt.__about__` pour bcrypt >= 4.x)
+- Fix : CORS origins corriges pour correspondre au port Docker app (5472)
+
 ## 2026.02.1 — Init
 
 - Auth JWT (access 24h + refresh 7d) avec login local et SSO Kertios Intranet

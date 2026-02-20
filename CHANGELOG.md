@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026.02.2
+
+### _core
+- Fix : CORS origins corriges (5472 au lieu de 3020/5462)
+- Fix : bcrypt + passlib compatibilite (monkey-patch `bcrypt.__about__`)
+
+### notification
+- Fix : SSE stream ne garde plus de connexion DB ouverte (evite QueuePool exhaustion)
+
+### Infrastructure
+- Fix : `docker-compose.yml` suppression attribut `version` obsolete
+- Fix : `package.json` version CalVer corrigee (`2026.02.1` au lieu de `2026.2.1`)
+- Ajout regle CLAUDE.md : toujours utiliser Docker pour les commandes
+
 ## 2026.02.1 — Init
 
 ### _core

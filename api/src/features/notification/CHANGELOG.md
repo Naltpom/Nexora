@@ -1,5 +1,9 @@
 # notification — Changelog
 
+## 2026.02.2
+
+- Fix : SSE `/stream` utilise `decode_query_token_lightweight` au lieu de `get_current_user_from_query_token` — ne garde plus de connexion DB ouverte pendant toute la duree du stream (evite QueuePool exhaustion)
+
 ## 2026.02.1 — Init
 
 - Notifications in-app avec stockage en base et pagination

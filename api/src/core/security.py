@@ -1,5 +1,10 @@
 from datetime import datetime, timedelta, timezone
 
+# Workaround: passlib 1.7.4 expects bcrypt.__about__ removed in bcrypt >= 4.x
+import bcrypt as _bcrypt
+if not hasattr(_bcrypt, "__about__"):
+    _bcrypt.__about__ = type("about", (), {"__version__": _bcrypt.__version__})()
+
 from fastapi import Depends, HTTPException, Query, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
@@ -164,3 +169,18 @@ async def get_current_user_from_query_token(
     if user is None or not user.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Utilisateur introuvable")
     return user
+
+
+def decode_query_token_lightweight(token: str = Query(...)) -> dict:
+    """Decode a JWT query token without opening a DB session.
+
+    Use this for long-lived connections (SSE) to avoid holding a DB
+    connection for the entire stream duration.
+    """
+    payload = decode_token(token)
+    if payload.get("type") != "access":
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide")
+    user_id = payload.get("sub")
+    if user_id is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide")
+    return {"user_id": int(user_id), "email": payload.get("email")}
