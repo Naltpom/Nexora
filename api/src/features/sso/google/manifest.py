@@ -1,0 +1,14 @@
+from ....core.feature_registry import FeatureManifest
+
+manifest = FeatureManifest(
+    name="sso.google",
+    label="Google SSO",
+    description="Connexion avec Google OAuth2",
+    version="2026.02.3",
+    parent="sso",
+    permissions=["sso.google.login"],
+    config_keys=["SSO_GOOGLE_CLIENT_ID", "SSO_GOOGLE_CLIENT_SECRET", "SSO_GOOGLE_REDIRECT_URI"],
+    router_module="src.features.sso.google.routes",
+    router_prefix="/api/sso/google",
+    router_tags=["SSO Google"],
+)

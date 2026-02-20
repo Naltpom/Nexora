@@ -1,0 +1,166 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   SSO Buttons (Login Page)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.sso-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sso-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  border: none;
+  line-height: 1.4;
+}
+
+.sso-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Google */
+.sso-btn-google {
+  background: #fff;
+  border: 1px solid #dadce0;
+  color: #3c4043;
+}
+
+.sso-btn-google:hover:not(:disabled) {
+  background: #f7f8f8;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* GitHub */
+.sso-btn-github {
+  background: #24292e;
+  color: #fff;
+}
+
+.sso-btn-github:hover:not(:disabled) {
+  background: #2f363d;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SSO Callback Page
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.sso-callback-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+}
+
+.sso-callback-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 32px 20px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SSO Spinner
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.sso-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: sso-spin 0.7s linear infinite;
+}
+
+.sso-spinner-small {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(128, 128, 128, 0.3);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: sso-spin 0.7s linear infinite;
+}
+
+@keyframes sso-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SSO Account Links (Profile Page)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.sso-accounts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sso-account-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  gap: 12px;
+  transition: border-color 0.15s;
+}
+
+.sso-account-item:hover {
+  border-color: var(--primary);
+}
+
+.sso-provider-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Dark Theme
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Google button in dark mode */
+[data-theme="dark"] .sso-btn-google {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="dark"] .sso-btn-google:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: none;
+}
+
+/* GitHub button in dark mode */
+[data-theme="dark"] .sso-btn-github {
+  background: #f0f0f0;
+  color: #24292e;
+}
+
+[data-theme="dark"] .sso-btn-github:hover:not(:disabled) {
+  background: #e0e0e0;
+}
+
+/* Account item in dark mode */
+[data-theme="dark"] .sso-account-item {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .sso-account-item:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}

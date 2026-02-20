@@ -1,0 +1,694 @@
+/* ======================================================================
+   MFA Feature Styles
+   ====================================================================== */
+
+/* ── Verify Page ── */
+
+.mfa-verify-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+
+.mfa-verify-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  padding: 40px;
+  width: 100%;
+  max-width: 420px;
+}
+
+/* ── Method Tabs ── */
+
+.mfa-methods-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--gray-100);
+  border-radius: 10px;
+  margin-bottom: 24px;
+}
+
+.mfa-method-tab {
+  flex: 1;
+  padding: 7px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-500);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.mfa-method-tab:hover {
+  color: var(--gray-700);
+}
+
+.mfa-method-tab.active {
+  background: white;
+  color: var(--gray-900);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* ── Code Inputs ── */
+
+.mfa-code-input {
+  text-align: center;
+  font-size: 24px;
+  letter-spacing: 8px;
+  font-weight: 600;
+  padding: 12px 16px !important;
+  font-family: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', monospace;
+}
+
+.mfa-backup-input {
+  text-align: center;
+  font-size: 18px;
+  letter-spacing: 2px;
+  font-weight: 500;
+  padding: 12px 16px !important;
+  font-family: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', monospace;
+}
+
+/* ── Attempts Hint ── */
+
+.mfa-attempts-hint {
+  text-align: center;
+  font-size: 12px;
+  color: var(--warning);
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+/* ── Email Prompt ── */
+
+.mfa-email-prompt {
+  text-align: center;
+  padding: 16px 0;
+}
+
+.mfa-email-prompt p {
+  color: var(--gray-500);
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+/* ── Resend Button ── */
+
+.mfa-resend-btn {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 8px;
+  border: none;
+  background: transparent;
+  color: var(--primary-light);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.mfa-resend-btn:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.mfa-resend-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+/* ── Back Link ── */
+
+.mfa-back-link {
+  text-align: center;
+  margin-top: 16px;
+}
+
+.mfa-link-btn {
+  border: none;
+  background: transparent;
+  color: var(--primary-light);
+  font-size: 14px;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.mfa-link-btn:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+/* ======================================================================
+   Setup Page
+   ====================================================================== */
+
+.mfa-setup-section {
+  overflow: hidden;
+}
+
+.mfa-setup-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.mfa-setup-section-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.mfa-setup-section-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(59, 130, 246, 0.08);
+  color: var(--primary-light);
+}
+
+.mfa-setup-section-info h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin: 0 0 2px 0;
+}
+
+.mfa-setup-section-desc {
+  font-size: 13px;
+  color: var(--gray-500);
+  line-height: 1.4;
+}
+
+.mfa-setup-section-body {
+  padding: 18px 24px;
+}
+
+.mfa-setup-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* ── QR Code ── */
+
+.mfa-qr-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.mfa-qr-image {
+  width: 200px;
+  height: 200px;
+  border-radius: 8px;
+  border: 1px solid var(--gray-200);
+  padding: 8px;
+  background: white;
+}
+
+/* ── Secret Code ── */
+
+.mfa-secret-container {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.mfa-secret-code {
+  display: inline-block;
+  padding: 8px 16px;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', monospace;
+  letter-spacing: 1px;
+  color: var(--gray-700);
+  word-break: break-all;
+  user-select: all;
+}
+
+/* ── TOTP Setup Flow ── */
+
+.mfa-totp-setup {
+  padding-top: 4px;
+}
+
+/* ======================================================================
+   Backup Codes
+   ====================================================================== */
+
+.mfa-backup-container {
+  padding: 20px 24px;
+}
+
+.mfa-backup-warning {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: rgba(217, 119, 6, 0.08);
+  border: 1px solid rgba(217, 119, 6, 0.2);
+  border-radius: 8px;
+  margin-bottom: 16px;
+  color: var(--warning);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.mfa-backup-warning svg {
+  flex-shrink: 0;
+}
+
+.mfa-backup-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.mfa-backup-code {
+  padding: 10px 14px;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: 6px;
+  font-family: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', monospace;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-800);
+  text-align: center;
+  letter-spacing: 1px;
+  user-select: all;
+}
+
+.mfa-backup-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.mfa-backup-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ======================================================================
+   Status Badge
+   ====================================================================== */
+
+.mfa-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.mfa-badge-active {
+  background: rgba(5, 150, 105, 0.1);
+  color: var(--success);
+}
+
+.mfa-badge-inactive {
+  background: var(--gray-100);
+  color: var(--gray-500);
+}
+
+.mfa-badge-required {
+  background: rgba(217, 119, 6, 0.1);
+  color: var(--warning);
+}
+
+/* ======================================================================
+   Admin Policy Page
+   ====================================================================== */
+
+.mfa-policy-table-wrapper {
+  overflow-x: auto;
+}
+
+.mfa-policy-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.mfa-policy-table thead th {
+  text-align: left;
+  padding: 10px 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--gray-500);
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--gray-200);
+  white-space: nowrap;
+}
+
+.mfa-policy-table tbody td {
+  padding: 14px 20px;
+  font-size: 13px;
+  color: var(--gray-700);
+  border-bottom: 1px solid var(--gray-100);
+  vertical-align: middle;
+}
+
+.mfa-policy-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.mfa-policy-table tbody tr:hover td {
+  background: var(--gray-50);
+}
+
+.mfa-policy-role-name {
+  font-weight: 600;
+  color: var(--gray-800);
+  font-size: 14px;
+}
+
+.mfa-policy-role-desc {
+  font-size: 12px;
+  color: var(--gray-500);
+  margin-top: 2px;
+}
+
+.mfa-policy-empty {
+  text-align: center;
+  color: var(--gray-400);
+  padding: 32px 20px !important;
+}
+
+/* ── Toggle Switch ── */
+
+.mfa-toggle {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+}
+
+.mfa-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.mfa-toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--gray-300);
+  border-radius: 10px;
+  transition: background-color 0.2s;
+}
+
+.mfa-toggle-slider::before {
+  content: '';
+  position: absolute;
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  bottom: 2px;
+  background-color: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.mfa-toggle input:checked + .mfa-toggle-slider {
+  background-color: var(--success);
+}
+
+.mfa-toggle input:checked + .mfa-toggle-slider::before {
+  transform: translateX(16px);
+}
+
+/* ── Policy Methods Checkboxes ── */
+
+.mfa-policy-methods {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mfa-policy-method-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--gray-700);
+  cursor: pointer;
+}
+
+.mfa-policy-method-checkbox input[type="checkbox"] {
+  accent-color: var(--primary-light);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+/* ── Grace Period Input ── */
+
+.mfa-policy-grace-input {
+  width: 80px;
+  padding: 6px 10px;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius);
+  font-size: 13px;
+  text-align: center;
+  transition: border-color 0.15s;
+}
+
+.mfa-policy-grace-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+}
+
+/* ── Policy Actions ── */
+
+.mfa-policy-actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* ======================================================================
+   Dark Theme
+   ====================================================================== */
+
+/* ── Verify Page ── */
+
+[data-theme="dark"] .mfa-verify-container {
+  background: transparent;
+}
+
+[data-theme="dark"] .mfa-verify-card {
+  background: rgba(30, 27, 46, 0.85);
+  backdrop-filter: blur(20px);
+}
+
+[data-theme="dark"] .mfa-methods-tabs {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .mfa-method-tab {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+[data-theme="dark"] .mfa-method-tab:hover {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+[data-theme="dark"] .mfa-method-tab.active {
+  background: rgba(30, 27, 46, 0.9);
+  color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .mfa-attempts-hint {
+  color: #fbbf24;
+}
+
+[data-theme="dark"] .mfa-email-prompt p {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+[data-theme="dark"] .mfa-resend-btn {
+  color: #93c5fd;
+}
+
+[data-theme="dark"] .mfa-resend-btn:hover {
+  color: #bfdbfe;
+}
+
+[data-theme="dark"] .mfa-link-btn {
+  color: #93c5fd;
+}
+
+[data-theme="dark"] .mfa-link-btn:hover {
+  color: #bfdbfe;
+}
+
+/* ── Setup Page ── */
+
+[data-theme="dark"] .mfa-setup-section-header {
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .mfa-setup-section-icon {
+  background: rgba(59, 130, 246, 0.12);
+  color: #93c5fd;
+}
+
+[data-theme="dark"] .mfa-setup-section-info h3 {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="dark"] .mfa-setup-section-desc {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+[data-theme="dark"] .mfa-qr-image {
+  border-color: rgba(255, 255, 255, 0.1);
+  /* Keep QR code background white for contrast */
+  background: white;
+}
+
+[data-theme="dark"] .mfa-secret-code {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* ── Backup Codes ── */
+
+[data-theme="dark"] .mfa-backup-warning {
+  background: rgba(217, 119, 6, 0.1);
+  border-color: rgba(217, 119, 6, 0.25);
+  color: #fbbf24;
+}
+
+[data-theme="dark"] .mfa-backup-code {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* ── Status Badge ── */
+
+[data-theme="dark"] .mfa-badge-active {
+  background: rgba(5, 150, 105, 0.15);
+  color: #34d399;
+}
+
+[data-theme="dark"] .mfa-badge-inactive {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.4);
+}
+
+[data-theme="dark"] .mfa-badge-required {
+  background: rgba(217, 119, 6, 0.15);
+  color: #fbbf24;
+}
+
+/* ── Admin Policy Table ── */
+
+[data-theme="dark"] .mfa-policy-table thead th {
+  background: #12121f;
+  color: rgba(255, 255, 255, 0.4);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .mfa-policy-table tbody td {
+  color: rgba(255, 255, 255, 0.8);
+  border-bottom-color: rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="dark"] .mfa-policy-table tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="dark"] .mfa-policy-role-name {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="dark"] .mfa-policy-role-desc {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+[data-theme="dark"] .mfa-policy-empty {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+[data-theme="dark"] .mfa-policy-method-checkbox {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+[data-theme="dark"] .mfa-policy-grace-input {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="dark"] .mfa-policy-grace-input:focus {
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+[data-theme="dark"] .mfa-toggle-slider {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* ======================================================================
+   Responsive
+   ====================================================================== */
+
+@media (max-width: 640px) {
+  .mfa-verify-card {
+    margin: 16px;
+    padding: 28px 24px;
+  }
+
+  .mfa-backup-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mfa-setup-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .mfa-policy-table-wrapper {
+    margin: 0 -1px;
+  }
+
+  .mfa-setup-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
