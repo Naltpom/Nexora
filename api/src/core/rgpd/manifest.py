@@ -4,7 +4,7 @@ manifest = FeatureManifest(
     name="rgpd",
     label="RGPD & Conformite",
     description="Gestion de la conformite RGPD : consentement, droits, export, pages legales, audit",
-    version="2026.02.24",
+    version="2026.02.26",
     children=[
         "rgpd.consentement",
         "rgpd.registre",

@@ -9,8 +9,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sse_starlette.sse import EventSourceResponse
 
-from ..security import get_current_user, get_current_super_admin, get_current_user_from_query_token, decode_query_token_lightweight
+from ..security import get_current_user, get_current_user_from_query_token, decode_query_token_lightweight
 from ..database import get_db
+from ..permissions import require_permission
 from ..events import event_bus
 from ..exceptions import EntityNotFoundError, AuthorizationError
 from ..event.models import Event
@@ -140,7 +141,11 @@ async def _build_rule_response_from_entity(
 # -- Notifications In-App ------------------------------------------------------
 
 
-@router.get("/", response_model=NotificationListResponse)
+@router.get(
+    "/",
+    response_model=NotificationListResponse,
+    dependencies=[Depends(require_permission("notification.read"))],
+)
 async def list_notifications_endpoint(
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
@@ -192,7 +197,11 @@ async def get_unread_count_endpoint(
     return UnreadCountResponse(count=count)
 
 
-@router.get("/admin", response_model=AdminNotificationListResponse)
+@router.get(
+    "/admin",
+    response_model=AdminNotificationListResponse,
+    dependencies=[Depends(require_permission("notification.admin"))],
+)
 async def list_all_notifications(
     page: int = Query(1, ge=1),
     per_page: int = Query(25, ge=1, le=100),
@@ -201,7 +210,7 @@ async def list_all_notifications(
     include_deleted: bool = Query(False),
     sort_by: str = Query("created_at"),
     sort_dir: str = Query("desc"),
-    current_user=Depends(get_current_super_admin),
+    current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     user_id = current_user.id if my_only else None
@@ -315,7 +324,11 @@ async def mark_read_by_token(
     return {"ok": True, "link": link}
 
 
-@router.delete("/{notification_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{notification_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_permission("notification.delete"))],
+)
 async def delete_notification_endpoint(
     notification_id: int,
     current_user=Depends(get_current_user),
@@ -329,10 +342,13 @@ async def delete_notification_endpoint(
 # -- Resend --------------------------------------------------------------------
 
 
-@router.post("/{notification_id}/resend-email")
+@router.post(
+    "/{notification_id}/resend-email",
+    dependencies=[Depends(require_permission("notification.admin"))],
+)
 async def resend_email(
     notification_id: int,
-    current_user=Depends(get_current_super_admin),
+    current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     from .._identity.models import User
@@ -368,10 +384,13 @@ async def resend_email(
     return {"ok": True, "message": f"Email renvoye a {user.email}"}
 
 
-@router.post("/{notification_id}/resend-webhook")
+@router.post(
+    "/{notification_id}/resend-webhook",
+    dependencies=[Depends(require_permission("notification.admin"))],
+)
 async def resend_webhook_endpoint(
     notification_id: int,
-    current_user=Depends(get_current_super_admin),
+    current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     from .webhook.models import Webhook
@@ -457,19 +476,27 @@ async def notification_stream(
 # -- Rules: Super Admin --------------------------------------------------------
 
 
-@router.get("/rules", response_model=list[NotificationRuleResponse])
+@router.get(
+    "/rules",
+    response_model=list[NotificationRuleResponse],
+    dependencies=[Depends(require_permission("notification.rules.read"))],
+)
 async def list_all_rules_endpoint(
-    current_user=Depends(get_current_super_admin),
     db: AsyncSession = Depends(get_db),
 ):
     dicts = await svc_list_all_rules(db)
     return [_rule_dict_to_response(d) for d in dicts]
 
 
-@router.post("/rules", response_model=NotificationRuleResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/rules",
+    response_model=NotificationRuleResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("notification.rules.create"))],
+)
 async def create_rule(
     data: NotificationRuleCreate,
-    current_user=Depends(get_current_super_admin),
+    current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     rule = NotificationRule(
@@ -507,7 +534,11 @@ async def create_rule(
     return await _build_rule_response_from_entity(rule, db)
 
 
-@router.put("/rules/{rule_id}", response_model=NotificationRuleResponse)
+@router.put(
+    "/rules/{rule_id}",
+    response_model=NotificationRuleResponse,
+    dependencies=[Depends(require_permission("notification.rules.update"))],
+)
 async def update_rule(
     rule_id: int,
     data: NotificationRuleUpdate,
@@ -530,7 +561,11 @@ async def update_rule(
     return await _build_rule_response_from_entity(rule, db)
 
 
-@router.delete("/rules/{rule_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/rules/{rule_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_permission("notification.rules.delete"))],
+)
 async def delete_rule(
     rule_id: int,
     current_user=Depends(get_current_user),

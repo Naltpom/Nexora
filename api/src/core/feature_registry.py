@@ -8,7 +8,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Any
 
-from fastapi import FastAPI, APIRouter, Depends, HTTPException, status
+from fastapi import FastAPI, APIRouter
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request as StarletteRequest
+from starlette.responses import JSONResponse
 
 logger = logging.getLogger(__name__)
 
@@ -76,6 +79,7 @@ class FeatureRegistry:
         global _registry_instance
         self._manifests: dict[str, FeatureManifest] = {}
         self._states: dict[str, bool] = {}
+        self._prefix_to_feature: list[tuple[str, str]] = []  # (prefix, feature_name) sorted longest first
         _registry_instance = self
 
     @property
@@ -142,8 +146,14 @@ class FeatureRegistry:
     def get_active_manifests(self) -> list[FeatureManifest]:
         return [m for m in self._manifests.values() if self.is_active(m.name)]
 
-    def register_routes(self, app: FastAPI, *, dev_mode: bool = False):
-        """Register feature routers on the FastAPI app."""
+    def register_routes(self, app: FastAPI):
+        """Register all feature routers and build the prefix-to-feature map.
+
+        The ``FeatureGateMiddleware`` uses the prefix map to reject requests
+        to disabled features at runtime (404).
+        """
+        prefix_map: list[tuple[str, str]] = []
+
         for manifest in self._manifests.values():
             routers_to_register = []
 
@@ -159,51 +169,36 @@ class FeatureRegistry:
             for extra in manifest.extra_routers:
                 routers_to_register.append(extra)
 
-            for router_info in routers_to_register:
-                if not dev_mode and not self.is_active(manifest.name):
-                    continue
+            # Skip core features (always active) for the prefix map
+            if not manifest.is_core:
+                for router_info in routers_to_register:
+                    prefix = router_info.get("prefix", "")
+                    if prefix:
+                        prefix_map.append((prefix, manifest.name))
 
+            for router_info in routers_to_register:
                 try:
                     module = importlib.import_module(router_info["module"])
                     router: APIRouter = module.router
 
-                    if dev_mode and not self.is_active(manifest.name):
-                        # Wrap with feature gate that returns 503
-                        gated_router = self._create_gated_router(router, router_info, manifest.name)
-                        app.include_router(gated_router)
-                    else:
-                        app.include_router(
-                            router,
-                            prefix=router_info.get("prefix", ""),
-                            tags=router_info.get("tags", []),
-                        )
+                    # Always register all routes (the middleware handles gating)
+                    app.include_router(
+                        router,
+                        prefix=router_info.get("prefix", ""),
+                        tags=router_info.get("tags", []),
+                    )
                 except Exception as e:
                     logger.error(f"Failed to register router for feature '{manifest.name}': {e}")
+
+        # Sort longest prefix first for correct matching
+        prefix_map.sort(key=lambda t: len(t[0]), reverse=True)
+        self._prefix_to_feature = prefix_map
 
     def register_middleware(self, app: FastAPI):
         """Register middleware from active features."""
         for manifest in self.get_active_manifests():
             for mw_class in manifest.middleware:
                 app.add_middleware(mw_class)
-
-    def _create_gated_router(self, original: APIRouter, info: dict, feature_name: str) -> APIRouter:
-        """Create a router that returns 503 for disabled features in dev mode."""
-        gated = APIRouter(prefix=info.get("prefix", ""), tags=info.get("tags", []))
-
-        for route in original.routes:
-            path = getattr(route, "path", "")
-            methods = getattr(route, "methods", {"GET"})
-
-            async def gated_endpoint(fname=feature_name):
-                raise HTTPException(
-                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                    detail=f"Feature '{fname}' is disabled",
-                )
-
-            for method in methods:
-                gated.add_api_route(path, gated_endpoint, methods=[method])
-
-        return gated
 
     def can_toggle(self, feature_name: str, activate: bool) -> tuple[bool, str]:
         """Check if a feature can be toggled. Returns (ok, reason)."""
@@ -289,6 +284,13 @@ class FeatureRegistry:
                 events.append({**evt, "feature": manifest.name})
         return events
 
+    def get_feature_for_path(self, path: str) -> str | None:
+        """Return the feature name that owns the given request path, or None."""
+        for prefix, feature_name in self._prefix_to_feature:
+            if path == prefix or path.startswith(prefix + "/"):
+                return feature_name
+        return None
+
     def get_manifest_data_for_frontend(self) -> list[dict]:
         """Return feature data for the frontend manifest endpoint."""
         result = []
@@ -307,3 +309,18 @@ class FeatureRegistry:
                 "has_routes": manifest.router_module is not None or len(manifest.extra_routers) > 0,
             })
         return result
+
+
+class FeatureGateMiddleware(BaseHTTPMiddleware):
+    """Reject requests to disabled features with 404 at runtime."""
+
+    async def dispatch(self, request: StarletteRequest, call_next):
+        registry: FeatureRegistry | None = getattr(request.app.state, "feature_registry", None)
+        if registry:
+            feature = registry.get_feature_for_path(request.url.path)
+            if feature and not registry.is_active(feature):
+                return JSONResponse(
+                    status_code=404,
+                    content={"detail": f"Feature '{feature}' is disabled"},
+                )
+        return await call_next(request)

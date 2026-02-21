@@ -6,9 +6,8 @@ Architecture modulaire feature-based avec Feature Registry.
 
 - Features template (core) : `api/src/core/` et `app/src/core/`
 - Features projet : `api/src/features/` et `app/src/features/`
-- Config template : `config.template.yaml` (ecrase a la mise a jour du template)
-- Config projet : `config.custom.yaml` (jamais ecrase)
-- Feature Registry : decouverte automatique des features via `manifest.py`, toggle dynamique, hierarchie parent/children, validation des dependances
+- Feature Registry : decouverte automatique des features via `manifest.py`, toggle dynamique (DB + admin UI), hierarchie parent/children, validation des dependances, middleware de gating (404 si feature desactivee)
+- Config : `.env` + `Settings` (pydantic) dans `api/src/core/config.py`
 
 ## Mode de developpement
 
@@ -60,7 +59,6 @@ A chaque increment de version, mettre a jour **tous** ces fichiers :
 
 | Fichier | Champ | Scope |
 |---------|-------|-------|
-| `config.template.yaml` | `app.version` | Version globale du template |
 | `app/package.json` | `"version"` | Version globale frontend |
 | `api/src/main.py` | `version=` dans `create_app()` | Version globale API |
 | `api/src/core/<name>/manifest.py` | `version=` | Version de chaque feature template modifiee |
@@ -73,7 +71,7 @@ A chaque increment de version, mettre a jour **tous** ces fichiers :
 - **Version manifest** : = la derniere version ou la feature a ete modifiee (pas forcement la globale)
 - Les sous-features (`parent.child`) ont leur propre version dans leur `manifest.py`
 - **Quand tu incrementes** : verifie le N actuel dans `CHANGELOG.md` racine, incremente de 1
-- **Ne jamais oublier** de bump les 3 fichiers globaux + les manifests des features touchees
+- **Ne jamais oublier** de bump les 2 fichiers globaux + les manifests des features touchees
 
 ## Structure d'une feature
 
@@ -179,10 +177,9 @@ manifest = FeatureManifest(
 
 1. Incrementer la version N dans `CHANGELOG.md` racine (nouvelle section en haut)
 2. Mettre a jour le `CHANGELOG.md` de chaque feature touchee
-3. Bump `config.template.yaml` → `app.version`
-4. Bump `app/package.json` → `"version"`
-5. Bump `api/src/main.py` → `version=` dans `create_app()`
-6. Bump `manifest.py` de chaque feature modifiee → `version=`
+3. Bump `app/package.json` → `"version"`
+4. Bump `api/src/main.py` → `version=` dans `create_app()`
+5. Bump `manifest.py` de chaque feature modifiee → `version=`
 
 ## RGPD & Consentement (localStorage/sessionStorage)
 

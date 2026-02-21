@@ -1,5 +1,11 @@
 # notification.webhook — Changelog
 
+## 2026.02.26
+
+- Ajout permissions `notification.webhook.global.update` et `notification.webhook.global.delete`
+- Migration de toutes les routes vers `require_permission()` (user + global webhooks)
+- Frontend NotificationSettings : migration `isSuperAdmin` vers `can()` pour sections globales
+
 ## 2026.02.19
 
 - `webhooks.user_id` → `ondelete="SET NULL"` (W2)

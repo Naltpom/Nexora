@@ -1,5 +1,5 @@
 import { Suspense, lazy, useState, useEffect, useMemo, useRef, useCallback } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import Layout from '../../core/Layout'
 import { useFeature } from '../../core/FeatureContext'
 import { usePermission } from '../../core/PermissionContext'
@@ -47,6 +47,7 @@ function PreferencePageInner() {
   const { hasChanges, getChanges, saveAll, discardAll } = useDraftPreference()
   const navigate = useNavigate()
   const location = useLocation()
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const hasChangesRef = useRef(hasChanges)
   hasChangesRef.current = hasChanges
@@ -59,7 +60,24 @@ function PreferencePageInner() {
     [isActive, can],
   )
 
-  const [activeTab, setActiveTab] = useState(() => visibleTabs[0]?.id || '')
+  // Read initial tab from URL query param
+  const tabParam = searchParams.get('tab')
+  const initialTab = visibleTabs.find(t => t.id === tabParam)?.id || visibleTabs[0]?.id || ''
+  const [activeTab, setActiveTabState] = useState(initialTab)
+
+  // Sync tab from URL when searchParams change (tutorial navigation)
+  useEffect(() => {
+    const urlTab = searchParams.get('tab')
+    if (urlTab && visibleTabs.find(t => t.id === urlTab) && urlTab !== activeTab) {
+      setActiveTabState(urlTab)
+    }
+  }, [searchParams])
+
+  // Update URL when tab changes
+  const setActiveTab = useCallback((tabId: string) => {
+    setActiveTabState(tabId)
+    setSearchParams({ tab: tabId }, { replace: true })
+  }, [setSearchParams])
 
   // If current tab is no longer visible, fallback to first
   useEffect(() => {

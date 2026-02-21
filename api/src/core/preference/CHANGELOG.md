@@ -1,5 +1,9 @@
 # Preference — Changelog
 
+## 2026.02.26
+
+- Ajout 8 didacticiels frontend : `preference.theme.read`, `preference.couleur.read`, `preference.font.read`, `preference.layout.read`, `preference.composants.read`, `preference.accessibilite.read`, `preference.didacticiel.read`, `preference.didacticiel.manage`
+
 ## 2026.02.25
 
 ### preference.font — Personnalisation typographique

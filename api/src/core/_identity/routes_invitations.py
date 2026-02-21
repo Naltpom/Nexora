@@ -13,7 +13,7 @@ from ..permissions import require_permission
 from ..security import (
     create_access_token,
     create_refresh_token,
-    get_current_super_admin,
+    get_current_user,
     hash_password,
     verify_password,
 )
@@ -54,7 +54,7 @@ def _generate_verification_code() -> str:
 )
 async def create_invitation(
     data: InvitationCreate,
-    current_user=Depends(get_current_super_admin),
+    current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Create an invitation and send email to the invitee."""
@@ -164,7 +164,7 @@ async def list_invitations(
 @router.delete(
     "/invitations/{invitation_id}",
     status_code=204,
-    dependencies=[Depends(require_permission("invitations.create"))],
+    dependencies=[Depends(require_permission("invitations.delete"))],
 )
 async def cancel_invitation(
     invitation_id: int,

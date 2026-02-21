@@ -1,5 +1,9 @@
 # notification.push — Changelog
 
+## 2026.02.26
+
+- Ajout `require_permission()` sur routes subscribe (`notification.push.subscribe`) et status (`notification.push.read`)
+
 ## 2026.02.17
 
 - Nouvelle commande `notification.push.cleanup_stale` : purge subscriptions inactives > PUSH_SUBSCRIPTION_RETENTION_DAYS jours

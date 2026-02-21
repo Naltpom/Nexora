@@ -74,6 +74,34 @@ export const manifest = {
         ],
       },
       {
+        permission: 'notification.webhook.create',
+        label: 'Creer un webhook',
+        description: 'Configurez des webhooks pour recevoir des notifications HTTP.',
+        steps: [
+          {
+            target: '.notif-section-header .btn-primary',
+            title: 'Ajouter un webhook',
+            description: 'Cliquez ici pour creer un nouveau webhook. Choisissez le format (custom, Slack, Discord) et configurez l\'URL.',
+            position: 'bottom' as const,
+            navigateTo: '/notifications/settings?tab=webhooks',
+          },
+        ],
+      },
+      {
+        permission: 'notification.webhook.read',
+        label: 'Configurer des webhooks',
+        description: 'Consultez et gerez vos webhooks de notification.',
+        steps: [
+          {
+            target: '.notif-section',
+            title: 'Vos webhooks',
+            description: 'Retrouvez ici la liste de vos webhooks personnels et globaux. Testez, modifiez ou supprimez-les.',
+            position: 'top' as const,
+            navigateTo: '/notifications/settings?tab=webhooks',
+          },
+        ],
+      },
+      {
         permission: 'notification.admin',
         label: 'Administration des notifications',
         description: 'Gerez les regles globales et parametres admin.',
@@ -83,6 +111,34 @@ export const manifest = {
             title: 'Section administration',
             description: 'En tant qu\'admin, vous pouvez gerer les regles globales qui s\'appliquent a tous les utilisateurs.',
             position: 'top' as const,
+            navigateTo: '/notifications/settings',
+          },
+        ],
+      },
+      {
+        permission: 'notification.rules.update',
+        label: 'Modifier une regle',
+        description: 'Modifiez les parametres d\'une regle de notification existante.',
+        steps: [
+          {
+            target: '.btn-icon-secondary',
+            title: 'Modifier',
+            description: 'Cliquez sur l\'icone de modification pour editer les evenements, canaux et parametres d\'une regle.',
+            position: 'left' as const,
+            navigateTo: '/notifications/settings',
+          },
+        ],
+      },
+      {
+        permission: 'notification.rules.delete',
+        label: 'Supprimer une regle',
+        description: 'Supprimez une regle de notification que vous ne souhaitez plus.',
+        steps: [
+          {
+            target: '.btn-icon-danger',
+            title: 'Supprimer',
+            description: 'Cliquez sur l\'icone de suppression pour retirer une regle. Cette action est irreversible.',
+            position: 'left' as const,
             navigateTo: '/notifications/settings',
           },
         ],

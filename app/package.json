@@ -1,7 +1,7 @@
 {
   "name": "kertios-template",
   "private": true,
-  "version": "2026.02.25",
+  "version": "2026.02.26",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -1,5 +1,9 @@
 # event — Changelog
 
+## 2026.02.26
+
+- Ajout `require_permission("event.read")` sur la route GET `/event-types`
+
 ## 2026.02.19
 
 - Index sur `events.actor_id` et `events.resource_id` pour accelerer les lookups (W1)

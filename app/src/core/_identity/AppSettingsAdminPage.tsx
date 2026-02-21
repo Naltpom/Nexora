@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, FormEvent } from 'react'
 import './_identity.scss'
 import Layout from '../../core/Layout'
+import { usePermission } from '../PermissionContext'
 import api from '../../api'
 
 interface AppSetting {
@@ -19,6 +20,7 @@ const SETTING_LABELS: Record<string, { label: string; description: string; type:
 }
 
 export default function AppSettingsAdminPage() {
+  const { can } = usePermission()
   const [settings, setSettings] = useState<AppSetting[]>([])
   const [form, setForm] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
@@ -198,25 +200,27 @@ export default function AppSettingsAdminPage() {
                       placeholder="/logo_full.svg"
                       className="mb-8"
                     />
-                    <label
-                      className="btn btn-secondary cursor-pointer flex-center text-sm"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                        <polyline points="17 8 12 3 7 8" />
-                        <line x1="12" y1="3" x2="12" y2="15" />
-                      </svg>
-                      {uploading ? 'Upload...' : 'Uploader un logo'}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden-input"
-                        onChange={(e) => {
-                          const f = e.target.files?.[0]
-                          if (f) handleLogoUpload(f)
-                        }}
-                      />
-                    </label>
+                    {can('settings.manage') && (
+                      <label
+                        className="btn btn-secondary cursor-pointer flex-center text-sm"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                          <polyline points="17 8 12 3 7 8" />
+                          <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                        {uploading ? 'Upload...' : 'Uploader un logo'}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden-input"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0]
+                            if (f) handleLogoUpload(f)
+                          }}
+                        />
+                      </label>
+                    )}
                   </div>
                 </div>
               </div>
@@ -264,25 +268,27 @@ export default function AppSettingsAdminPage() {
                     placeholder="/favicon.ico"
                     className="mb-8"
                   />
-                  <label
-                    className="btn btn-secondary cursor-pointer flex-center text-sm"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                      <polyline points="17 8 12 3 7 8" />
-                      <line x1="12" y1="3" x2="12" y2="15" />
-                    </svg>
-                    {uploadingFavicon ? 'Upload...' : 'Uploader un favicon'}
-                    <input
-                      type="file"
-                      accept=".ico,.png,.svg,image/x-icon,image/png,image/svg+xml"
-                      className="hidden-input"
-                      onChange={(e) => {
-                        const f = e.target.files?.[0]
-                        if (f) handleFaviconUpload(f)
-                      }}
-                    />
-                  </label>
+                  {can('settings.manage') && (
+                    <label
+                      className="btn btn-secondary cursor-pointer flex-center text-sm"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                      </svg>
+                      {uploadingFavicon ? 'Upload...' : 'Uploader un favicon'}
+                      <input
+                        type="file"
+                        accept=".ico,.png,.svg,image/x-icon,image/png,image/svg+xml"
+                        className="hidden-input"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0]
+                          if (f) handleFaviconUpload(f)
+                        }}
+                      />
+                    </label>
+                  )}
                 </div>
               </div>
             </div>
@@ -308,12 +314,13 @@ export default function AppSettingsAdminPage() {
             </div>
           )}
 
-          {/* Save button */}
-          <div className="flex-end pt-8">
-            <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? 'Enregistrement...' : 'Enregistrer les parametres'}
-            </button>
-          </div>
+          {can('settings.manage') && (
+            <div className="flex-end pt-8">
+              <button type="submit" className="btn btn-primary" disabled={saving}>
+                {saving ? 'Enregistrement...' : 'Enregistrer les parametres'}
+              </button>
+            </div>
+          )}
         </form>
       )}
     </Layout>

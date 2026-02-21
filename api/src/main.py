@@ -10,7 +10,7 @@ from sqlalchemy import select
 
 from .core.config import settings
 from .core.database import engine, async_session, Base
-from .core.feature_registry import FeatureRegistry
+from .core.feature_registry import FeatureRegistry, FeatureGateMiddleware
 from .core.command_registry import CommandRegistry
 
 logger = logging.getLogger(__name__)
@@ -70,7 +70,7 @@ def create_app() -> FastAPI:
     application = FastAPI(
         title="Kertios Template",
         description="Feature-based modular application template",
-        version="2026.02.25",
+        version="2026.02.26",
         docs_url="/api/docs",
         openapi_url="/api/openapi.json",
     )
@@ -95,11 +95,14 @@ def create_app() -> FastAPI:
     registry.load_states(db_states)
     registry.validate()
 
+    # ── Feature gate middleware (rejects requests to disabled features) ─
+    application.add_middleware(FeatureGateMiddleware)
+
     # ── Register feature middleware ──────────────────────────────────
     registry.register_middleware(application)
 
     # ── Register feature routes ──────────────────────────────────────
-    registry.register_routes(application, dev_mode=settings.is_dev)
+    registry.register_routes(application)
 
     # ── Static files ─────────────────────────────────────────────────
     application.mount("/api/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")

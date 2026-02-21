@@ -1,5 +1,9 @@
 # notification.email — Changelog
 
+## 2026.02.26
+
+- Suppression permission morte `notification.email.send`
+
 ## 2026.02.2
 
 - Ajout fonction factory `get_email_sender()` pour instancier `SmtpEmailSender`

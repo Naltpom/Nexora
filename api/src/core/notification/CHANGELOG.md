@@ -1,5 +1,10 @@
 # notification — Changelog
 
+## 2026.02.26
+
+- Migration des routes vers `require_permission()` : `notification.read`, `notification.delete`, `notification.admin`, `notification.rules.*`
+- Ajout didacticiels frontend : `notification.push.subscribe`, `notification.webhook.create`, `notification.webhook.read`, `notification.rules.update`, `notification.rules.delete`
+
 ## 2026.02.19
 
 - `notifications.user_id` → `ondelete="CASCADE"` (W2)

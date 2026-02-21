@@ -1,5 +1,9 @@
 # SSO Feature Changelog
 
+## 2026.02.26
+
+- Suppression permission morte `sso.manage`
+
 ## 2026.02.1 (2026-02-20)
 - Implementation initiale
 - Provider Google OAuth2

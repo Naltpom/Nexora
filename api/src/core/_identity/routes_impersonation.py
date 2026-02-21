@@ -12,11 +12,11 @@ from ..security import (
     create_access_token,
     create_impersonation_token,
     create_refresh_token,
-    get_current_super_admin,
     get_current_user,
     get_original_admin_id,
     is_impersonating,
 )
+from ..permissions import require_permission
 from .models import ImpersonationLog, User
 from .schemas import (
     ImpersonationLogResponse,
@@ -35,11 +35,15 @@ router = APIRouter()
 # ---------------------------------------------------------------------------
 
 
-@router.post("/start/{target_user_id}", response_model=ImpersonationStartResponse)
+@router.post(
+    "/start/{target_user_id}",
+    response_model=ImpersonationStartResponse,
+    dependencies=[Depends(require_permission("impersonation.start"))],
+)
 async def start_impersonation(
     target_user_id: int,
     request: Request,
-    current_admin=Depends(get_current_super_admin),
+    current_admin=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     if is_impersonating(current_admin):
@@ -286,10 +290,14 @@ async def get_impersonation_status(
 # ---------------------------------------------------------------------------
 
 
-@router.get("/search-users", response_model=list[UserSearchResult])
+@router.get(
+    "/search-users",
+    response_model=list[UserSearchResult],
+    dependencies=[Depends(require_permission("impersonation.read"))],
+)
 async def search_users_for_impersonation(
     q: str = Query(..., min_length=2, description="Search query"),
-    current_admin=Depends(get_current_super_admin),
+    current_admin=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     like = f"%{q}%"
@@ -326,11 +334,15 @@ async def search_users_for_impersonation(
 # ---------------------------------------------------------------------------
 
 
-@router.get("/logs", response_model=list[ImpersonationLogResponse])
+@router.get(
+    "/logs",
+    response_model=list[ImpersonationLogResponse],
+    dependencies=[Depends(require_permission("impersonation.read"))],
+)
 async def get_impersonation_logs(
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
-    current_admin=Depends(get_current_super_admin),
+    current_admin=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     offset = (page - 1) * per_page

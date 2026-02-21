@@ -1,5 +1,16 @@
 # _identity — Changelog
 
+## 2026.02.26
+
+- Ajout permission `invitations.delete` + correction route DELETE invitations
+- Migration routes impersonation vers `require_permission()` (`impersonation.start`, `impersonation.read`)
+- Frontend : migration `requireSuperAdmin` vers `permission="xxx"` sur toutes les routes admin (App.tsx)
+- Frontend : migration navItems `requireSuperAdmin` vers `permission` dans `_identity/index.ts`
+- Frontend : ajout `can()` sur 8 pages admin (users, roles, permissions, features, settings, database, commands)
+- Ajout 8 didacticiels : `users.update`, `users.delete`, `roles.update`, `roles.delete`, `permissions.read`, `permissions.manage`, `invitations.read`, `invitations.create`
+- Correction selecteurs tutoriels : `roles.update`/`roles.delete` → `.unified-table`, `permissions.manage` → `.toggle-switch`, invitations `navigateTo` avec `?tab=invitations`
+- Frontend : nouvel onglet Invitations dans UsersAdminPage (table, invitation par email, suppression)
+
 ## 2026.02.19
 
 - FK `impersonation_actions.session_id` → `impersonation_logs.session_id` avec `ondelete="CASCADE"` (W3)

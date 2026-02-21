@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Layout from '../../core/Layout'
 import { useConfirm } from '../../core/ConfirmModal'
+import { usePermission } from '../PermissionContext'
 import api from '../../api'
 import './_identity.scss'
 
@@ -28,6 +29,7 @@ interface Feature {
 
 export default function FeaturesAdminPage() {
   const { confirm } = useConfirm()
+  const { can } = usePermission()
   const [features, setFeatures] = useState<Feature[]>([])
   const [loading, setLoading] = useState(true)
   const [toggling, setToggling] = useState<string | null>(null)
@@ -299,7 +301,7 @@ export default function FeaturesAdminPage() {
                               type="checkbox"
                               checked={feature.active}
                               onChange={() => handleToggle(feature)}
-                              disabled={toggling === feature.name}
+                              disabled={toggling === feature.name || !can('features.manage')}
                             />
                             <span className="toggle-slider" />
                           </label>

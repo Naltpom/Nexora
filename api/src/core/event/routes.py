@@ -4,12 +4,17 @@ from fastapi import APIRouter, Depends
 
 from ..feature_registry import get_registry
 from ..security import get_current_user
+from ..permissions import require_permission
 from .schemas import EventTypeResponse
 
 router = APIRouter()
 
 
-@router.get("/event-types", response_model=list[EventTypeResponse])
+@router.get(
+    "/event-types",
+    response_model=list[EventTypeResponse],
+    dependencies=[Depends(require_permission("event.read"))],
+)
 async def list_event_types(
     current_user=Depends(get_current_user),
 ):

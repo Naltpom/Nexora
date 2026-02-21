@@ -5,7 +5,7 @@ manifest = FeatureManifest(
     name="_identity",
     label="Identity",
     description="Authentication, users, roles, permissions, feature management",
-    version="2026.02.22",
+    version="2026.02.26",
     is_core=True,
     permissions=[
         "users.read", "users.create", "users.update", "users.delete",
@@ -13,7 +13,7 @@ manifest = FeatureManifest(
         "permissions.read", "permissions.manage",
         "features.read", "features.manage",
         "settings.read", "settings.manage",
-        "invitations.create", "invitations.read",
+        "invitations.create", "invitations.read", "invitations.delete",
         "impersonation.start", "impersonation.read",
         "backups.create", "backups.restore", "backups.read",
         "search.global",

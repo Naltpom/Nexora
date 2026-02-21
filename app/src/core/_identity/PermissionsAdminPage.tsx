@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import './_identity.scss'
 import Layout from '../../core/Layout'
+import { usePermission } from '../PermissionContext'
 import api from '../../api'
 
 /* ------------------------------------------------------------------ */
@@ -25,6 +26,7 @@ interface GlobalPermission {
 /* ------------------------------------------------------------------ */
 
 export default function PermissionsAdminPage() {
+  const { can } = usePermission()
   const [permissions, setPermissions] = useState<Permission[]>([])
   const [globalPermissions, setGlobalPermissions] = useState<GlobalPermission[]>([])
   const [loading, setLoading] = useState(true)
@@ -226,6 +228,7 @@ export default function PermissionsAdminPage() {
                             onClick={() => toggleGlobalPermission(perm.id)}
                             className={`toggle-switch ${granted ? 'toggle-switch--on' : 'toggle-switch--off'}`}
                             title={granted ? 'Desactiver' : 'Activer'}
+                            disabled={!can('permissions.manage')}
                           >
                             <span
                               className={`toggle-switch-knob ${granted ? 'toggle-switch-knob--on' : 'toggle-switch-knob--off'}`}
@@ -239,11 +242,13 @@ export default function PermissionsAdminPage() {
               </div>
             ))}
 
-            <div className="flex-end mt-8">
-              <button className="btn btn-primary" onClick={saveGlobalPermissions} disabled={savingGlobal}>
-                {savingGlobal ? 'Enregistrement...' : 'Enregistrer les permissions globales'}
-              </button>
-            </div>
+            {can('permissions.manage') && (
+              <div className="flex-end mt-8">
+                <button className="btn btn-primary" onClick={saveGlobalPermissions} disabled={savingGlobal}>
+                  {savingGlobal ? 'Enregistrement...' : 'Enregistrer les permissions globales'}
+                </button>
+              </div>
+            )}
           </>
         )
       )}

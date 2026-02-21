@@ -100,15 +100,15 @@ export default function App() {
       {/* Core protected routes */}
       <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
       <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-      <Route path="/admin/users" element={<ProtectedRoute requireSuperAdmin><UsersAdminPage /></ProtectedRoute>} />
-      <Route path="/admin/users/:uuid" element={<ProtectedRoute requireSuperAdmin><UserDetailPage /></ProtectedRoute>} />
-      <Route path="/admin/database" element={<ProtectedRoute requireSuperAdmin><DatabaseAdminPage /></ProtectedRoute>} />
-      <Route path="/admin/roles" element={<ProtectedRoute requireSuperAdmin><RolesAdminPage /></ProtectedRoute>} />
-      <Route path="/admin/permissions" element={<ProtectedRoute requireSuperAdmin><PermissionsAdminPage /></ProtectedRoute>} />
-      <Route path="/admin/features" element={<ProtectedRoute requireSuperAdmin><FeaturesAdminPage /></ProtectedRoute>} />
-      <Route path="/admin/settings" element={<ProtectedRoute requireSuperAdmin><AppSettingsAdminPage /></ProtectedRoute>} />
-      <Route path="/admin/commands" element={<ProtectedRoute requireSuperAdmin><CommandsAdminPage /></ProtectedRoute>} />
-      <Route path="/admin/commands/history" element={<ProtectedRoute requireSuperAdmin><CommandHistoryPage /></ProtectedRoute>} />
+      <Route path="/admin/users" element={<ProtectedRoute permission="users.read"><UsersAdminPage /></ProtectedRoute>} />
+      <Route path="/admin/users/:uuid" element={<ProtectedRoute permission="users.read"><UserDetailPage /></ProtectedRoute>} />
+      <Route path="/admin/database" element={<ProtectedRoute permission="backups.read"><DatabaseAdminPage /></ProtectedRoute>} />
+      <Route path="/admin/roles" element={<ProtectedRoute permission="roles.read"><RolesAdminPage /></ProtectedRoute>} />
+      <Route path="/admin/permissions" element={<ProtectedRoute permission="permissions.read"><PermissionsAdminPage /></ProtectedRoute>} />
+      <Route path="/admin/features" element={<ProtectedRoute permission="features.read"><FeaturesAdminPage /></ProtectedRoute>} />
+      <Route path="/admin/settings" element={<ProtectedRoute permission="settings.read"><AppSettingsAdminPage /></ProtectedRoute>} />
+      <Route path="/admin/commands" element={<ProtectedRoute permission="commands.read"><CommandsAdminPage /></ProtectedRoute>} />
+      <Route path="/admin/commands/history" element={<ProtectedRoute permission="commands.read"><CommandHistoryPage /></ProtectedRoute>} />
 
       {/* Dynamic feature routes */}
       {featureRoutes.map((route) => (

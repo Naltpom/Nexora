@@ -118,8 +118,9 @@ export default function TutorialEngine() {
     setTargetRect(null)
 
     const resolveStep = async () => {
-      // Navigate if needed
-      if (currentStep.navigateTo && location.pathname !== currentStep.navigateTo) {
+      // Navigate if needed (compare full URL including query params for tab switching)
+      const currentUrl = location.pathname + location.search
+      if (currentStep.navigateTo && currentUrl !== currentStep.navigateTo) {
         setWaiting(true)
         setElementNotFound(false)
         navigate(currentStep.navigateTo)

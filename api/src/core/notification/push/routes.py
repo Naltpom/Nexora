@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ...config import settings
 from ...security import get_current_user
 from ...database import get_db
+from ...permissions import require_permission
 from .models import PushSubscription
 from .schemas import (
     PushSubscribeRequest,
@@ -28,7 +29,12 @@ async def get_vapid_public_key(
     return VapidKeyResponse(vapid_public_key=settings.VAPID_PUBLIC_KEY)
 
 
-@router.post("/subscribe", response_model=PushSubscriptionResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/subscribe",
+    response_model=PushSubscriptionResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("notification.push.subscribe"))],
+)
 async def push_subscribe(
     data: PushSubscribeRequest,
     current_user=Depends(get_current_user),
@@ -92,7 +98,11 @@ async def push_unsubscribe(
         await db.flush()
 
 
-@router.get("/status", response_model=PushStatusResponse)
+@router.get(
+    "/status",
+    response_model=PushStatusResponse,
+    dependencies=[Depends(require_permission("notification.push.read"))],
+)
 async def push_status(
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),

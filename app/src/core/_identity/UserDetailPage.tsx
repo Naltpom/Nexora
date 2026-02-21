@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Layout from '../../core/Layout'
+import { usePermission } from '../PermissionContext'
 import api from '../../api'
 import './_identity.scss'
 
@@ -50,6 +51,7 @@ interface UserDetail {
 export default function UserDetailPage() {
   const { uuid } = useParams<{ uuid: string }>()
   const navigate = useNavigate()
+  const { can } = usePermission()
 
   const [user, setUser] = useState<UserDetail | null>(null)
   const [allRoles, setAllRoles] = useState<RoleBasic[]>([])
@@ -297,9 +299,11 @@ export default function UserDetailPage() {
                 </label>
               </label>
             </div>
-            <button className="btn btn-primary ud-save-btn" onClick={handleSaveProfile} disabled={saving}>
-              {saving ? 'Sauvegarde...' : 'Sauvegarder'}
-            </button>
+            {can('users.update') && (
+              <button className="btn btn-primary ud-save-btn" onClick={handleSaveProfile} disabled={saving}>
+                {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+              </button>
+            )}
           </div>
         </div>
 
@@ -316,6 +320,7 @@ export default function UserDetailPage() {
                     checked={assigned}
                     onChange={() => handleToggleRole(role.id)}
                     className="accent-blue"
+                    disabled={!can('users.update')}
                   />
                   <div>
                     <div className="font-medium">{role.name}</div>
@@ -393,6 +398,7 @@ export default function UserDetailPage() {
                         onClick={() => handlePermissionCycle(perm)}
                         className={`perm-indicator perm-indicator--btn ${perm.user_override === true ? 'perm-indicator--user-granted' : perm.user_override === false ? 'perm-indicator--user-denied' : 'perm-indicator--none'}`}
                         title={perm.user_override === true ? 'Autorise (clic: bloquer)' : perm.user_override === false ? 'Bloque (clic: retirer)' : 'Non defini (clic: autoriser)'}
+                        disabled={!can('permissions.manage')}
                       >
                         {perm.user_override === true ? '\u2713' : perm.user_override === false ? '\u2717' : '\u2014'}
                       </button>

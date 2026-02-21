@@ -1,5 +1,9 @@
 # MFA Feature Changelog
 
+## 2026.02.26
+
+- Implementation `mfa.bypass` : les utilisateurs avec cette permission sautent entierement le MFA
+
 ## 2026.02.19
 
 - Chiffrement Fernet du secret TOTP avant stockage, dechiffrement avant verification (W6/T4)

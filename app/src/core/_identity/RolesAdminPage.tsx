@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, FormEvent } from 'react'
 import Layout from '../../core/Layout'
 import { useConfirm } from '../../core/ConfirmModal'
+import { usePermission } from '../PermissionContext'
 import api from '../../api'
 import './_identity.scss'
 
@@ -40,6 +41,7 @@ interface PermsPaginated {
 
 export default function RolesAdminPage() {
   const { confirm } = useConfirm()
+  const { can } = usePermission()
   const [roles, setRoles] = useState<Role[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -323,12 +325,14 @@ export default function RolesAdminPage() {
             <p>Creez et gerez les roles et leurs permissions</p>
           </div>
           <div className="unified-page-header-actions">
-            <button className="btn-unified-primary" onClick={openCreate}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 5v14M5 12h14" />
-              </svg>
-              Nouveau role
-            </button>
+            {can('roles.create') && (
+              <button className="btn-unified-primary" onClick={openCreate}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+                Nouveau role
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -418,26 +422,30 @@ export default function RolesAdminPage() {
                                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                                 </svg>
                               </button>
-                              <button
-                                className="btn-icon btn-icon-primary"
-                                onClick={() => openEdit(role)}
-                                title="Modifier"
-                              >
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                                </svg>
-                              </button>
-                              <button
-                                className="btn-icon btn-icon-danger"
-                                onClick={() => handleDelete(role)}
-                                title="Supprimer"
-                              >
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <polyline points="3 6 5 6 21 6" />
-                                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                                </svg>
-                              </button>
+                              {can('roles.update') && (
+                                <button
+                                  className="btn-icon btn-icon-primary"
+                                  onClick={() => openEdit(role)}
+                                  title="Modifier"
+                                >
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                  </svg>
+                                </button>
+                              )}
+                              {can('roles.delete') && (
+                                <button
+                                  className="btn-icon btn-icon-danger"
+                                  onClick={() => handleDelete(role)}
+                                  title="Supprimer"
+                                >
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="3 6 5 6 21 6" />
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                  </svg>
+                                </button>
+                              )}
                             </div>
                           )}
                         </td>
@@ -528,7 +536,7 @@ export default function RolesAdminPage() {
                                   type="checkbox"
                                   checked={perm.granted}
                                   onChange={() => handleTogglePerm(perm)}
-                                  disabled={togglingPermId === perm.id}
+                                  disabled={togglingPermId === perm.id || !can('roles.update')}
                                 />
                                 <span className="toggle-slider" />
                               </label>

@@ -1,38 +1,4 @@
-from pathlib import Path
-
-import yaml
 from pydantic_settings import BaseSettings
-
-
-def _deep_merge(base: dict, override: dict) -> dict:
-    """Deep merge override into base. Override values take precedence."""
-    result = base.copy()
-    for key, value in override.items():
-        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
-            result[key] = _deep_merge(result[key], value)
-        else:
-            result[key] = value
-    return result
-
-
-def load_yaml_config() -> dict:
-    """Load and merge config.template.yaml + config.custom.yaml."""
-    root = Path(__file__).resolve().parents[3]  # api/src/core -> project root
-    template_path = root / "config.template.yaml"
-    custom_path = root / "config.custom.yaml"
-
-    template = {}
-    custom = {}
-
-    if template_path.exists():
-        template = yaml.safe_load(template_path.read_text(encoding="utf-8")) or {}
-    if custom_path.exists():
-        custom = yaml.safe_load(custom_path.read_text(encoding="utf-8")) or {}
-
-    return _deep_merge(template, custom)
-
-
-yaml_config = load_yaml_config()
 
 
 class Settings(BaseSettings):

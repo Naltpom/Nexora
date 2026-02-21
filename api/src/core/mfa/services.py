@@ -15,10 +15,17 @@ async def is_mfa_required_for_user(db: AsyncSession, user) -> dict:
     If not, check role policies -> return mfa_setup_required if policy requires MFA but not configured.
 
     Only returns methods whose sub-feature is active (mfa.totp, mfa.email).
+    Users with the mfa.bypass permission skip MFA entirely.
     """
     from .models import UserMFA, MFARolePolicy
     from .._identity.models import UserRole
     from ..feature_registry import get_registry
+    from ..permissions import load_user_permissions
+
+    # Check mfa.bypass permission
+    user_perms = await load_user_permissions(db, user.id)
+    if user_perms.get("mfa.bypass") is True:
+        return {"mfa_required": False, "available_methods": [], "mfa_bypassed": True}
 
     # Determine which MFA methods are available based on active sub-features
     registry = get_registry()

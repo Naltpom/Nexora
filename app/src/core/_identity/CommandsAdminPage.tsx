@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import Layout from '../../core/Layout'
 import { useConfirm } from '../../core/ConfirmModal'
+import { usePermission } from '../PermissionContext'
 import api from '../../api'
 import './_identity.scss'
 
@@ -25,6 +26,7 @@ interface Command {
 
 export default function CommandsAdminPage() {
   const { confirm } = useConfirm()
+  const { can } = usePermission()
   const [commands, setCommands] = useState<Command[]>([])
   const [loading, setLoading] = useState(true)
   const [toggling, setToggling] = useState<string | null>(null)
@@ -227,33 +229,41 @@ export default function CommandsAdminPage() {
 
                       {/* Toggle */}
                       <td className="text-center">
-                        <label className="toggle" style={{ cursor: toggling === cmd.name ? 'wait' : 'pointer' }}>
-                          <input
-                            type="checkbox"
-                            checked={cmd.enabled}
-                            onChange={() => handleToggle(cmd)}
-                            disabled={toggling === cmd.name}
-                          />
-                          <span className="toggle-slider" />
-                        </label>
+                        {can('commands.manage') ? (
+                          <label className="toggle" style={{ cursor: toggling === cmd.name ? 'wait' : 'pointer' }}>
+                            <input
+                              type="checkbox"
+                              checked={cmd.enabled}
+                              onChange={() => handleToggle(cmd)}
+                              disabled={toggling === cmd.name}
+                            />
+                            <span className="toggle-slider" />
+                          </label>
+                        ) : (
+                          <span className={`badge ${cmd.enabled ? 'badge-success' : 'badge-warning'} text-xs`}>
+                            {cmd.enabled ? 'Actif' : 'Inactif'}
+                          </span>
+                        )}
                       </td>
 
                       {/* Actions */}
                       <td className="text-center">
-                        <button
-                          className="btn btn-sm btn-primary"
-                          onClick={() => handleRun(cmd)}
-                          disabled={!cmd.enabled || running === cmd.name}
-                          title={!cmd.enabled ? 'Commande desactivee' : 'Executer la commande'}
-                        >
-                          {running === cmd.name ? (
-                            <span className="spinner-sm" />
-                          ) : (
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-                              <polygon points="5 3 19 12 5 21 5 3" />
-                            </svg>
-                          )}
-                        </button>
+                        {can('commands.manage') && (
+                          <button
+                            className="btn btn-sm btn-primary"
+                            onClick={() => handleRun(cmd)}
+                            disabled={!cmd.enabled || running === cmd.name}
+                            title={!cmd.enabled ? 'Commande desactivee' : 'Executer la commande'}
+                          >
+                            {running === cmd.name ? (
+                              <span className="spinner-sm" />
+                            ) : (
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                                <polygon points="5 3 19 12 5 21 5 3" />
+                              </svg>
+                            )}
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))

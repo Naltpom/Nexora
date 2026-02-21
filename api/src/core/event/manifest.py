@@ -7,7 +7,7 @@ manifest = FeatureManifest(
     name="event",
     label="Events",
     description="Event bus persistence and event type catalog",
-    version="2026.02.22",
+    version="2026.02.26",
     permissions=[
         "event.read",
     ],

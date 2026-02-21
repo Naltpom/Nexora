@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import Layout from '../Layout'
 import { usePermission } from '../PermissionContext'
 import api from '../../api'
 import './rgpd.scss'
 
 type Tab = 'registre' | 'droits' | 'audit' | 'pages'
+const VALID_TABS: Tab[] = ['registre', 'droits', 'audit', 'pages']
 
 interface RegisterEntry {
   id: number
@@ -73,16 +75,34 @@ const STATUS_LABELS: Record<string, { label: string; className: string }> = {
 
 export default function AdminRGPDPage() {
   const { can } = usePermission()
-  const [activeTab, setActiveTab] = useState<Tab>('registre')
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const tabs: { key: Tab; label: string; permission?: string }[] = [
     { key: 'registre', label: 'Registre', permission: 'rgpd.registre.read' },
-    { key: 'droits', label: 'Demandes de droits', permission: 'rgpd.droits.manage' },
+    { key: 'droits', label: 'Demandes de droits', permission: 'rgpd.droits.read' },
     { key: 'audit', label: 'Audit', permission: 'rgpd.audit.read' },
-    { key: 'pages', label: 'Pages legales', permission: 'rgpd.politique.manage' },
+    { key: 'pages', label: 'Pages legales', permission: 'rgpd.politique.read' },
   ]
 
   const visibleTabs = tabs.filter(t => !t.permission || can(t.permission))
+
+  const tabParam = searchParams.get('tab') as Tab | null
+  const initialTab = tabParam && VALID_TABS.includes(tabParam) && visibleTabs.find(t => t.key === tabParam)
+    ? tabParam : (visibleTabs[0]?.key || 'registre')
+  const [activeTab, setActiveTabState] = useState<Tab>(initialTab)
+
+  // Sync tab from URL when searchParams change (tutorial navigation)
+  useEffect(() => {
+    const urlTab = searchParams.get('tab') as Tab | null
+    if (urlTab && VALID_TABS.includes(urlTab) && visibleTabs.find(t => t.key === urlTab) && urlTab !== activeTab) {
+      setActiveTabState(urlTab)
+    }
+  }, [searchParams])
+
+  const setActiveTab = useCallback((tab: Tab) => {
+    setActiveTabState(tab)
+    setSearchParams({ tab }, { replace: true })
+  }, [setSearchParams])
 
   return (
     <Layout
@@ -121,6 +141,7 @@ export default function AdminRGPDPage() {
 /* ---- Register Tab ---- */
 
 function RegisterTab() {
+  const { can } = usePermission()
   const [entries, setEntries] = useState<RegisterEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -182,9 +203,11 @@ function RegisterTab() {
     <div>
       <div className="rgpd-section-header">
         <h2>Registre des traitements (Article 30)</h2>
-        <button className="btn btn-primary btn-sm" onClick={() => { resetForm(); setShowForm(true) }}>
-          Ajouter un traitement
-        </button>
+        {can('rgpd.registre.manage') && (
+          <button className="btn btn-primary btn-sm" onClick={() => { resetForm(); setShowForm(true) }}>
+            Ajouter un traitement
+          </button>
+        )}
       </div>
 
       {showForm && (
@@ -248,14 +271,16 @@ function RegisterTab() {
             <div key={entry.id} className="unified-card rgpd-register-item">
               <div className="rgpd-register-item-header">
                 <h3>{entry.name}</h3>
-                <div className="rgpd-register-actions">
-                  <button className="btn-icon btn-icon-secondary" onClick={() => handleEdit(entry)} title="Modifier">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                  </button>
-                  <button className="btn-icon btn-icon-danger" onClick={() => handleDelete(entry.id)} title="Supprimer">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                  </button>
-                </div>
+                {can('rgpd.registre.manage') && (
+                  <div className="rgpd-register-actions">
+                    <button className="btn-icon btn-icon-secondary" onClick={() => handleEdit(entry)} title="Modifier">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    <button className="btn-icon btn-icon-danger" onClick={() => handleDelete(entry.id)} title="Supprimer">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
+                  </div>
+                )}
               </div>
               <div className="rgpd-register-item-details">
                 <div><strong>Finalite :</strong> {entry.purpose}</div>
@@ -276,6 +301,7 @@ function RegisterTab() {
 /* ---- Rights Tab ---- */
 
 function RightsTab() {
+  const { can } = usePermission()
   const [requests, setRequests] = useState<RightsRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [total, setTotal] = useState(0)
@@ -332,7 +358,7 @@ function RightsTab() {
                 {req.admin_response && (
                   <div className="rgpd-request-response"><strong>Reponse :</strong> {req.admin_response}</div>
                 )}
-                {req.status === 'pending' || req.status === 'processing' ? (
+                {can('rgpd.droits.manage') && (req.status === 'pending' || req.status === 'processing') ? (
                   processingId === req.id ? (
                     <div className="rgpd-process-form">
                       <div className="form-group">
@@ -439,6 +465,7 @@ function AuditTab() {
 /* ---- Legal Pages Tab ---- */
 
 function LegalPagesTab() {
+  const { can } = usePermission()
   const [pages, setPages] = useState<LegalPageItem[]>([])
   const [loading, setLoading] = useState(true)
   const [editingSlug, setEditingSlug] = useState<string | null>(null)
@@ -557,9 +584,11 @@ function LegalPagesTab() {
                 <button className="btn btn-secondary btn-sm" onClick={() => handleShowVersions(page.slug)}>
                   Historique
                 </button>
-                <button className="btn btn-secondary btn-sm" onClick={() => handleEdit(page)}>
-                  Editer
-                </button>
+                {can('rgpd.politique.manage') && (
+                  <button className="btn btn-secondary btn-sm" onClick={() => handleEdit(page)}>
+                    Editer
+                  </button>
+                )}
               </div>
             </div>
 

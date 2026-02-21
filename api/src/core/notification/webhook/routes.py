@@ -6,8 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...security import get_current_user, get_current_super_admin
+from ...security import get_current_user
 from ...database import get_db
+from ...permissions import require_permission
 from ...exceptions import EntityNotFoundError, AuthorizationError
 from .models import Webhook
 from .schemas import WebhookCreate, WebhookUpdate, WebhookResponse
@@ -38,7 +39,11 @@ def _webhook_to_response(w: Webhook) -> WebhookResponse:
 # -- User Webhooks -------------------------------------------------------------
 
 
-@router.get("/", response_model=list[WebhookResponse])
+@router.get(
+    "/",
+    response_model=list[WebhookResponse],
+    dependencies=[Depends(require_permission("notification.webhook.read"))],
+)
 async def list_my_webhooks(
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -54,7 +59,12 @@ async def list_my_webhooks(
     return [_webhook_to_response(w) for w in webhooks]
 
 
-@router.post("/", response_model=WebhookResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    response_model=WebhookResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("notification.webhook.create"))],
+)
 async def create_webhook(
     data: WebhookCreate,
     current_user=Depends(get_current_user),
@@ -78,7 +88,11 @@ async def create_webhook(
     return _webhook_to_response(webhook)
 
 
-@router.put("/{webhook_id}", response_model=WebhookResponse)
+@router.put(
+    "/{webhook_id}",
+    response_model=WebhookResponse,
+    dependencies=[Depends(require_permission("notification.webhook.update"))],
+)
 async def update_webhook(
     webhook_id: int,
     data: WebhookUpdate,
@@ -103,7 +117,11 @@ async def update_webhook(
     return _webhook_to_response(webhook)
 
 
-@router.delete("/{webhook_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{webhook_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_permission("notification.webhook.delete"))],
+)
 async def delete_webhook(
     webhook_id: int,
     current_user=Depends(get_current_user),
@@ -120,7 +138,10 @@ async def delete_webhook(
     await db.flush()
 
 
-@router.post("/{webhook_id}/test")
+@router.post(
+    "/{webhook_id}/test",
+    dependencies=[Depends(require_permission("notification.webhook.test"))],
+)
 async def test_webhook(
     webhook_id: int,
     current_user=Depends(get_current_user),
@@ -175,9 +196,12 @@ async def test_webhook(
 # -- Global Webhooks (Super Admin) --------------------------------------------
 
 
-@router.get("/global", response_model=list[WebhookResponse])
+@router.get(
+    "/global",
+    response_model=list[WebhookResponse],
+    dependencies=[Depends(require_permission("notification.webhook.global.read"))],
+)
 async def list_global_webhooks(
-    current_user=Depends(get_current_super_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """Liste les webhooks globaux."""
@@ -188,10 +212,15 @@ async def list_global_webhooks(
     return [_webhook_to_response(w) for w in webhooks]
 
 
-@router.post("/global", response_model=WebhookResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/global",
+    response_model=WebhookResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("notification.webhook.global.create"))],
+)
 async def create_global_webhook(
     data: WebhookCreate,
-    current_user=Depends(get_current_super_admin),
+    current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Creer un webhook global."""
@@ -212,11 +241,14 @@ async def create_global_webhook(
     return _webhook_to_response(webhook)
 
 
-@router.put("/global/{webhook_id}", response_model=WebhookResponse)
+@router.put(
+    "/global/{webhook_id}",
+    response_model=WebhookResponse,
+    dependencies=[Depends(require_permission("notification.webhook.global.update"))],
+)
 async def update_global_webhook(
     webhook_id: int,
     data: WebhookUpdate,
-    current_user=Depends(get_current_super_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """Modifier un webhook global."""
@@ -235,10 +267,13 @@ async def update_global_webhook(
     return _webhook_to_response(webhook)
 
 
-@router.delete("/global/{webhook_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/global/{webhook_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_permission("notification.webhook.global.delete"))],
+)
 async def delete_global_webhook(
     webhook_id: int,
-    current_user=Depends(get_current_super_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """Supprimer un webhook global."""

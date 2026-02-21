@@ -1,5 +1,68 @@
 # Changelog
 
+## 2026.02.26
+
+### Enforcement des permissions (backend + frontend)
+
+- **notification** : toutes les routes migrees vers `require_permission()` (notification.read, .delete, .admin, .rules.*)
+- **notification.webhook** : ajout permissions `notification.webhook.global.update` et `.global.delete`, toutes les routes migrees vers `require_permission()`
+- **notification.push** : ajout `require_permission()` sur subscribe et status
+- **notification.email** : suppression permission morte `notification.email.send`
+- **event** : ajout `require_permission("event.read")` sur la route `/event-types`
+- **_identity** : ajout permission `invitations.delete`, correction route DELETE invitations, migration routes impersonation vers `require_permission()`
+- **rgpd** : routes admin droits GET migrees de `.manage` vers `.read`, boutons CRUD frontend proteges par `can()`
+- **sso** : suppression permission morte `sso.manage`
+- **mfa** : implementation `mfa.bypass` — les utilisateurs avec cette permission sautent le MFA
+
+### Migration frontend requireSuperAdmin → permissions granulaires
+
+- **App.tsx** : 9 routes admin migrees de `requireSuperAdmin` vers `permission="xxx"`
+- **_identity/index.ts** : 7 navItems admin migres vers `permission`
+- **NotificationSettings** : sections globales migrees de `isSuperAdmin` vers `can()`
+- **AdminRGPDPage** : onglets droits/pages proteges par `.read`, boutons CRUD par `.manage`
+- **8 pages admin** : ajout `can()` pour proteger boutons CRUD (UsersAdmin, UserDetail, RolesAdmin, PermissionsAdmin, FeaturesAdmin, AppSettings, Database, Commands)
+
+### Didacticiels (29 nouveaux tutoriels)
+
+- **preference** (8) : theme, couleur, font, layout, composants, accessibilite, didacticiel.read, didacticiel.manage
+- **rgpd** (8) : consentement.read, export.read, droits.read, consentement.manage, droits.manage, politique.manage, audit.read, registre.manage
+- **notification** (5) : push.subscribe, webhook.create, webhook.read, rules.update, rules.delete
+- **_identity** (8) : users.update, users.delete, roles.update, roles.delete, permissions.read, permissions.manage, invitations.read, invitations.create
+
+### Feature gate middleware
+
+- Nouveau `FeatureGateMiddleware` : toutes les routes de features non-core sont verifiees en temps reel. Feature desactivee → 404 immediat, sans restart serveur
+- Toutes les routes sont desormais enregistrees au demarrage (plus de skip conditionnel), le middleware gere le gating
+- Cascade correcte : desactiver une feature parente desactive automatiquement ses enfants et dependants
+
+### Roles et permissions globales
+
+- 21 permissions globales configurees (preferences, notifications perso, MFA, SSO, RGPD perso, recherche)
+- 4 nouveaux roles : Utilisateur (14 perms), Moderateur (30), Auditeur RGPD (22), Gestionnaire contenu (19)
+- Role `super_admin` mis a jour avec toutes les permissions (73)
+- Nettoyage DB : permissions mortes `sso.manage` et `notification.email.send` supprimees
+
+### Corrections tutoriels + onglet Invitations
+
+- **TutorialEngine** : comparaison URL complete (pathname + search) pour naviguer correctement vers les onglets `?tab=xxx`
+- **PreferencePage** : support `?tab=theme|couleur|font|layout|composants|accessibilite` via `useSearchParams`
+- **AdminRGPDPage** : support `?tab=registre|droits|audit|pages` via `useSearchParams`
+- **NotificationSettings** : support `?tab=rules|webhooks` via `useSearchParams`
+- **preference/index.ts** : 6 tutoriels corriges avec `navigateTo` incluant `?tab=`
+- **rgpd/index.ts** : 4 tutoriels corriges avec `?tab=`, selecteurs simplifies vers elements stables
+- **notification/index.ts** : tutoriel `push.subscribe` supprime (push combine avec in-app), webhook tutorials corriges
+- **_identity/index.ts** : selecteurs corriges (`roles.update`, `roles.delete` → `.unified-table`, `permissions.manage` → `.toggle-switch`), invitations `navigateTo` avec `?tab=invitations`
+- **UsersAdminPage** : nouvel onglet Invitations (table, modale d'invitation par email, suppression) utilisant les endpoints API existants
+
+### Nettoyage code mort
+
+- Suppression `config.template.yaml` et `config.custom.yaml` (jamais lus par le code)
+- Suppression `_deep_merge()`, `load_yaml_config()` et `yaml_config` dans `config.py`
+- Suppression `_create_gated_router()` dans `feature_registry.py` (remplace par le middleware)
+- Nettoyage imports inutilises (`Depends`, `HTTPException`, `status`) dans `feature_registry.py`
+- Suppression parametre `dev_mode` de `register_routes()` (toutes les routes enregistrees, le middleware gate)
+- Mise a jour `CLAUDE.md` : retrait references a `config.template.yaml`
+
 ## 2026.02.25
 
 ### preference.font — Personnalisation typographique

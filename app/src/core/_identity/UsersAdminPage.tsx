@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef, FormEvent } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useState, useEffect, useRef, useCallback, FormEvent } from 'react'
+import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import Layout from '../../core/Layout'
 import { useAuth } from '../../core/AuthContext'
 import { useConfirm } from '../../core/ConfirmModal'
+import { usePermission } from '../PermissionContext'
 import api from '../../api'
 import './_identity.scss'
 
@@ -19,13 +20,101 @@ interface User {
   last_active: string | null
 }
 
+interface Invitation {
+  id: number
+  email: string
+  invited_by_name: string | null
+  created_at: string
+  expires_at: string
+}
+
 type FieldChanges = Record<string, any>
 type PendingChanges = Record<number, FieldChanges>
+
+type UsersTab = 'users' | 'invitations'
 
 export default function Users() {
   const navigate = useNavigate()
   const { startImpersonation } = useAuth()
   const { confirm, alert } = useConfirm()
+  const { can } = usePermission()
+
+  // Tab state synced with URL
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tabParam = searchParams.get('tab') as UsersTab | null
+  const showInvitationsTab = can('invitations.read')
+  const initialTab: UsersTab = tabParam === 'invitations' && showInvitationsTab ? 'invitations' : 'users'
+  const [activeTab, setActiveTabState] = useState<UsersTab>(initialTab)
+
+  useEffect(() => {
+    const urlTab = searchParams.get('tab') as UsersTab | null
+    if (urlTab === 'invitations' && showInvitationsTab && activeTab !== 'invitations') setActiveTabState('invitations')
+    else if (urlTab === 'users' && activeTab !== 'users') setActiveTabState('users')
+  }, [searchParams])
+
+  const setActiveTab = useCallback((tab: UsersTab) => {
+    setActiveTabState(tab)
+    setSearchParams({ tab }, { replace: true })
+  }, [setSearchParams])
+
+  // Invitations state
+  const [invitations, setInvitations] = useState<Invitation[]>([])
+  const [invitationsLoading, setInvitationsLoading] = useState(false)
+  const [showInviteModal, setShowInviteModal] = useState(false)
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteError, setInviteError] = useState('')
+  const [inviteSaving, setInviteSaving] = useState(false)
+
+  const loadInvitations = useCallback(async () => {
+    setInvitationsLoading(true)
+    try {
+      const res = await api.get('/identity/invitations')
+      setInvitations(res.data || [])
+    } catch { /* */ } finally {
+      setInvitationsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (activeTab === 'invitations' && invitations.length === 0 && !invitationsLoading) {
+      loadInvitations()
+    }
+  }, [activeTab])
+
+  const handleInvite = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!inviteEmail.trim()) return
+    setInviteSaving(true)
+    setInviteError('')
+    try {
+      await api.post('/identity/invite', { email: inviteEmail })
+      setShowInviteModal(false)
+      setInviteEmail('')
+      loadInvitations()
+    } catch (err: any) {
+      setInviteError(err.response?.data?.detail || 'Erreur lors de l\'envoi')
+    } finally {
+      setInviteSaving(false)
+    }
+  }
+
+  const handleDeleteInvitation = async (id: number) => {
+    const confirmed = await confirm({
+      title: 'Annuler l\'invitation',
+      message: 'Etes-vous sur de vouloir annuler cette invitation ?',
+      confirmText: 'Annuler l\'invitation',
+      variant: 'danger',
+    })
+    if (!confirmed) return
+    try {
+      await api.delete(`/identity/invitations/${id}`)
+      loadInvitations()
+    } catch (err: any) {
+      await alert({ message: err.response?.data?.detail || 'Erreur', variant: 'danger' })
+    }
+  }
+
+  // Users state
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [pendingChanges, setPendingChanges] = useState<PendingChanges>({})
@@ -305,37 +394,173 @@ export default function Users() {
         <div className="unified-page-header">
           <div className="unified-page-header-info">
             <h1>Gestion des utilisateurs</h1>
-            <p>Gerez les comptes et acces des utilisateurs</p>
-          </div>
-          <div className="unified-page-header-actions">
-            <label className="unified-filter-checkbox">
-              <input
-                type="checkbox"
-                checked={showInactive}
-                onChange={handleToggleInactive}
-              />
-              Afficher les inactifs
-            </label>
-            <div className="unified-search-box">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
-              </svg>
-              <input
-                type="text"
-                placeholder="Rechercher..."
-                value={search}
-                onChange={(e) => handleSearchChange(e.target.value)}
-              />
-            </div>
-            <button className="btn-unified-primary" onClick={openCreate}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 5v14M5 12h14" />
-              </svg>
-              Nouvel utilisateur
-            </button>
+            <p>Gerez les comptes, acces et invitations des utilisateurs</p>
           </div>
         </div>
       </div>
+
+      {showInvitationsTab && (
+        <div className="tab-bar">
+          <button
+            className={`tab-button ${activeTab === 'users' ? 'tab-button--active' : 'tab-button--inactive'}`}
+            onClick={() => setActiveTab('users')}
+            type="button"
+          >
+            Utilisateurs
+          </button>
+          <button
+            className={`tab-button ${activeTab === 'invitations' ? 'tab-button--active' : 'tab-button--inactive'}`}
+            onClick={() => setActiveTab('invitations')}
+            type="button"
+          >
+            Invitations
+          </button>
+        </div>
+      )}
+
+      {activeTab === 'invitations' && showInvitationsTab ? (
+        <>
+          <div className="unified-card page-header-card">
+            <div className="unified-page-header">
+              <div className="unified-page-header-info">
+                <h2>Invitations en attente</h2>
+              </div>
+              <div className="unified-page-header-actions">
+                {can('invitations.create') && (
+                  <button className="btn-unified-primary" onClick={() => { setInviteEmail(''); setInviteError(''); setShowInviteModal(true) }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 5v14M5 12h14" />
+                    </svg>
+                    Inviter
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {invitationsLoading ? (
+            <div className="spinner" />
+          ) : (
+            <div className="unified-card full-width-breakout card-table">
+              <div className="table-container">
+                <table className="unified-table invitations-table">
+                  <thead>
+                    <tr>
+                      <th>Email</th>
+                      <th>Invite par</th>
+                      <th>Envoyee le</th>
+                      <th>Expire le</th>
+                      <th>Statut</th>
+                      {can('invitations.delete') && <th>Actions</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {invitations.length === 0 ? (
+                      <tr><td colSpan={can('invitations.delete') ? 6 : 5} className="text-center text-secondary">Aucune invitation en attente</td></tr>
+                    ) : invitations.map(inv => {
+                      const isExpired = new Date(inv.expires_at) < new Date()
+                      return (
+                        <tr key={inv.id}>
+                          <td>{inv.email}</td>
+                          <td>{inv.invited_by_name || '\u2014'}</td>
+                          <td className="nowrap">{new Date(inv.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+                          <td className="nowrap">{new Date(inv.expires_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+                          <td>
+                            <span className={`badge-status ${isExpired ? 'badge-status-offline' : 'badge-status-online'}`}>
+                              {isExpired ? 'Expiree' : 'En attente'}
+                            </span>
+                          </td>
+                          {can('invitations.delete') && (
+                            <td>
+                              <button
+                                className="btn-icon btn-icon-danger"
+                                onClick={() => handleDeleteInvitation(inv.id)}
+                                title="Annuler l'invitation"
+                              >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                </svg>
+                              </button>
+                            </td>
+                          )}
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Invite Modal */}
+          {showInviteModal && (
+            <div className="modal-overlay" onClick={() => setShowInviteModal(false)}>
+              <div className="modal" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h2>Inviter un utilisateur</h2>
+                  <button className="modal-close" onClick={() => setShowInviteModal(false)}>&times;</button>
+                </div>
+                <form onSubmit={handleInvite}>
+                  <div className="modal-body">
+                    {inviteError && <div className="alert alert-error">{inviteError}</div>}
+                    <div className="form-group">
+                      <label>Adresse email</label>
+                      <input
+                        type="email"
+                        value={inviteEmail}
+                        onChange={(e) => setInviteEmail(e.target.value)}
+                        placeholder="utilisateur@example.com"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="modal-footer">
+                    <button type="button" className="btn btn-secondary" onClick={() => setShowInviteModal(false)}>Annuler</button>
+                    <button type="submit" className="btn btn-primary" disabled={inviteSaving}>
+                      {inviteSaving ? 'Envoi...' : 'Envoyer l\'invitation'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          {/* Users tab header actions */}
+          <div className="unified-card page-header-card">
+            <div className="unified-page-header">
+              <div className="unified-page-header-actions">
+                <label className="unified-filter-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={showInactive}
+                    onChange={handleToggleInactive}
+                  />
+                  Afficher les inactifs
+                </label>
+                <div className="unified-search-box">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+                  </svg>
+                  <input
+                    type="text"
+                    placeholder="Rechercher..."
+                    value={search}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                  />
+                </div>
+                {can('users.create') && (
+                  <button className="btn-unified-primary" onClick={openCreate}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 5v14M5 12h14" />
+                    </svg>
+                    Nouvel utilisateur
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
 
       {loading ? (
         <div className="spinner" />
@@ -390,6 +615,7 @@ export default function Users() {
                         <button
                           className={`badge-admin ${getEffectiveValue(u, 'is_super_admin') ? 'badge-admin-on' : 'badge-admin-off'}`}
                           onClick={() => setFieldChange(u.id, 'is_super_admin', !getEffectiveValue(u, 'is_super_admin'))}
+                          disabled={!can('users.update')}
                         >
                           {getEffectiveValue(u, 'is_super_admin') ? 'Admin' : 'Non'}
                         </button>
@@ -398,6 +624,7 @@ export default function Users() {
                         <button
                           className={`badge-active ${getEffectiveValue(u, 'is_active') ? 'badge-active-on' : 'badge-active-off'}`}
                           onClick={() => setFieldChange(u.id, 'is_active', !getEffectiveValue(u, 'is_active'))}
+                          disabled={!can('users.update')}
                         >
                           {getEffectiveValue(u, 'is_active') ? 'Actif' : 'Inactif'}
                         </button>
@@ -431,7 +658,7 @@ export default function Users() {
                           </Link>
 
                           {/* Impersonate button - hidden for super admins */}
-                          {!u.is_super_admin ? (
+                          {can('impersonation.start') && !u.is_super_admin ? (
                             <button
                               className="btn-icon btn-icon-primary impersonate-btn"
                               onClick={() => handleImpersonate(u)}
@@ -448,27 +675,29 @@ export default function Users() {
                             <div className="spacer-32" />
                           )}
 
-                          {/* Reset password button */}
-                          <button
-                            className="btn-icon btn-icon-warning"
-                            onClick={() => handleResetPassword(u)}
-                            title="Reset mot de passe"
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                            </svg>
-                          </button>
+                          {can('users.update') && (
+                            <button
+                              className="btn-icon btn-icon-warning"
+                              onClick={() => handleResetPassword(u)}
+                              title="Reset mot de passe"
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                              </svg>
+                            </button>
+                          )}
 
-                          {/* Delete button */}
-                          <button
-                            className="btn-icon btn-icon-danger"
-                            onClick={() => handleDelete(u.id)}
-                            title="Supprimer"
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                            </svg>
-                          </button>
+                          {can('users.delete') && (
+                            <button
+                              className="btn-icon btn-icon-danger"
+                              onClick={() => handleDelete(u.id)}
+                              title="Supprimer"
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                              </svg>
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -671,6 +900,8 @@ export default function Users() {
             </div>
           </div>
         </div>
+      )}
+        </>
       )}
     </Layout>
   )

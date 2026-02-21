@@ -1,5 +1,12 @@
 # Changelog — rgpd
 
+## 2026.02.26
+
+- Backend : routes admin droits GET migrees de `rgpd.droits.manage` vers `rgpd.droits.read`
+- Frontend AdminRGPDPage : onglets droits/pages protegees par `.read` au lieu de `.manage`
+- Frontend : boutons CRUD proteges par `can()` (registre, droits, pages legales)
+- Ajout 8 didacticiels : `rgpd.consentement.read`, `rgpd.export.read`, `rgpd.droits.read`, `rgpd.consentement.manage`, `rgpd.droits.manage`, `rgpd.politique.manage`, `rgpd.audit.read`, `rgpd.registre.manage`
+
 ## 2026.02.24
 
 ### Ameliorations AcceptLegalPage

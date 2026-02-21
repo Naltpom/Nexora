@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../core/AuthContext'
+import { usePermission } from '../../core/PermissionContext'
 import Layout from '../../core/Layout'
 import api from '../../api'
 import '../_identity/_identity.scss'
@@ -91,6 +93,7 @@ const emptyRuleForm: RuleForm = {
 
 export default function NotificationSettings() {
   const { user } = useAuth()
+  const { can } = usePermission()
   const isSuperAdmin = user?.is_super_admin ?? false
   // Data
   const [eventTypes, setEventTypes] = useState<EventType[]>([])
@@ -113,8 +116,23 @@ export default function NotificationSettings() {
   const [editingWebhook, setEditingWebhook] = useState<Webhook | null>(null)
   const [webhookForm, setWebhookForm] = useState({ name: '', url: '', secret: '', format: 'custom', prefix: '', is_global: false })
 
-  // Active tab
-  const [activeTab, setActiveTab] = useState<'rules' | 'webhooks'>('rules')
+  // Active tab (synced with URL ?tab=)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tabParam = searchParams.get('tab')
+  const initialNotifTab = tabParam === 'webhooks' ? 'webhooks' as const : 'rules' as const
+  const [activeTab, setActiveTabState] = useState<'rules' | 'webhooks'>(initialNotifTab)
+
+  // Sync tab from URL when searchParams change (tutorial navigation)
+  useEffect(() => {
+    const urlTab = searchParams.get('tab')
+    if (urlTab === 'webhooks' && activeTab !== 'webhooks') setActiveTabState('webhooks')
+    else if (urlTab === 'rules' && activeTab !== 'rules') setActiveTabState('rules')
+  }, [searchParams])
+
+  const setActiveTab = useCallback((tab: 'rules' | 'webhooks') => {
+    setActiveTabState(tab)
+    setSearchParams({ tab }, { replace: true })
+  }, [setSearchParams])
 
   // Webhook multi-select dropdown
   const [openWebhookDropdown, setOpenWebhookDropdown] = useState<number | null>(null)
@@ -814,7 +832,7 @@ export default function NotificationSettings() {
           </div>
 
           {/* Section 2: Global Rules */}
-          {isSuperAdmin && (
+          {can('notification.admin') && (
             <div className="unified-card notif-section">
               <div className="notif-section-header">
                 <div>
@@ -824,12 +842,14 @@ export default function NotificationSettings() {
                   </div>
                   <div className="notif-section-desc">Regles a portee globale. Les templates s'appliquent a tous les utilisateurs existants et futurs.</div>
                 </div>
-                <button className="btn btn-sm btn-primary" onClick={() => openCreateRule('global')}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-                  </svg>
-                  Ajouter
-                </button>
+                {can('notification.rules.create') && (
+                  <button className="btn btn-sm btn-primary" onClick={() => openCreateRule('global')}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    Ajouter
+                  </button>
+                )}
               </div>
               {renderRulesTable(allRules, 'global')}
             </div>
@@ -866,7 +886,7 @@ export default function NotificationSettings() {
           </div>
 
           {/* Global Webhooks */}
-          {isSuperAdmin && (
+          {can('notification.webhook.global.read') && (
             <div className="unified-card notif-section">
               <div className="notif-section-header">
                 <div>
@@ -876,12 +896,14 @@ export default function NotificationSettings() {
                   </div>
                   <div className="notif-section-desc">Webhooks recevant tous les events de la plateforme</div>
                 </div>
-                <button className="btn btn-sm btn-primary" onClick={() => openCreateWebhook(true)}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-                  </svg>
-                  Ajouter
-                </button>
+                {can('notification.webhook.global.create') && (
+                  <button className="btn btn-sm btn-primary" onClick={() => openCreateWebhook(true)}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    Ajouter
+                  </button>
+                )}
               </div>
               {globalWebhooks.length === 0 ? (
                 <div className="notif-webhook-empty">Aucun webhook global</div>

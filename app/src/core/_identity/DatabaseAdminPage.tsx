@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import './_identity.scss'
 import Layout from '../../core/Layout'
+import { usePermission } from '../PermissionContext'
 import api from '../../api'
 
 /* ------------------------------------------------------------------ */
@@ -29,6 +30,7 @@ interface Job {
 const isDev = import.meta.env.VITE_ENV === 'dev'
 
 export default function DatabaseAdminPage() {
+  const { can } = usePermission()
   const [backups, setBackups] = useState<BackupFile[]>([])
   const [demos, setDemos] = useState<BackupFile[]>([])
   const [loading, setLoading] = useState(true)
@@ -164,14 +166,16 @@ export default function DatabaseAdminPage() {
                 <td>{formatDate(b.created_at)}</td>
                 <td>
                   <div className="flex-row-xs">
-                    <button className="btn btn-secondary btn-sm" onClick={() => setRestoreTarget({ filename: b.filename, source })} disabled={isBusy} title="Restaurer cette sauvegarde">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" /></svg>
-                      Restaurer
-                    </button>
-                    {source === 'backups' && isDev && (
+                    {can('backups.restore') && (
+                      <button className="btn btn-secondary btn-sm" onClick={() => setRestoreTarget({ filename: b.filename, source })} disabled={isBusy} title="Restaurer cette sauvegarde">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" /></svg>
+                        Restaurer
+                      </button>
+                    )}
+                    {source === 'backups' && isDev && can('backups.create') && (
                       <button className="btn btn-sm badge-tag db-badge--active" onClick={() => handleCopyToDemo(b.filename)} disabled={isBusy} title="Copier vers les démos">Vers démo</button>
                     )}
-                    {source === 'demos' && (
+                    {source === 'demos' && can('backups.restore') && (
                       <button className="btn btn-sm badge-tag db-badge--highlight" onClick={() => handleCopyToInitial(b.filename)} disabled={isBusy} title="Définir comme backup initial">Vers initial</button>
                     )}
                   </div>
@@ -192,11 +196,13 @@ export default function DatabaseAdminPage() {
             <h1>Base de données</h1>
             <p>Gérez les sauvegardes et restaurations de la base de données</p>
           </div>
-          <div className="flex-row-sm">
-            <button className="btn btn-primary" onClick={handleCreateBackup} disabled={isBusy}>
-              {creating ? (<><span className="spinner spinner-sm" /> Sauvegarde en cours...</>) : (<><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg> Nouvelle sauvegarde</>)}
-            </button>
-          </div>
+          {can('backups.create') && (
+            <div className="flex-row-sm">
+              <button className="btn btn-primary" onClick={handleCreateBackup} disabled={isBusy}>
+                {creating ? (<><span className="spinner spinner-sm" /> Sauvegarde en cours...</>) : (<><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg> Nouvelle sauvegarde</>)}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -241,8 +247,12 @@ export default function DatabaseAdminPage() {
             </div>
             <div className="modal-footer flex-end flex-row-sm">
               <button className="btn btn-secondary btn-sm" onClick={() => setRestoreTarget(null)}>Annuler</button>
-              <button className="btn btn-warning btn-sm" onClick={() => handleRestore(restoreTarget.filename, restoreTarget.source, false)}>Restaurer directement</button>
-              <button className="btn btn-primary btn-sm" onClick={() => handleRestore(restoreTarget.filename, restoreTarget.source, true)}>Sauvegarder puis restaurer</button>
+              {can('backups.restore') && (
+                <button className="btn btn-warning btn-sm" onClick={() => handleRestore(restoreTarget.filename, restoreTarget.source, false)}>Restaurer directement</button>
+              )}
+              {can('backups.restore') && (
+                <button className="btn btn-primary btn-sm" onClick={() => handleRestore(restoreTarget.filename, restoreTarget.source, true)}>Sauvegarder puis restaurer</button>
+              )}
             </div>
           </div>
         </div>
