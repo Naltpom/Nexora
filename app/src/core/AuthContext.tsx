@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import api from '../api'
 import type { User } from '../types'
+import { hasConsent } from './rgpd/consentManager'
 
 interface LoginResult {
   must_change_password: boolean
@@ -43,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [impersonatedUser, setImpersonatedUser] = useState<{ id: number; name: string } | null>(null)
 
   const getLocalPreferences = (userId: number): Record<string, any> => {
+    if (!hasConsent('functional')) return {}
     try {
       const raw = localStorage.getItem(`preferences_${userId}`)
       return raw ? JSON.parse(raw) : {}
@@ -52,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const setLocalPreferences = (userId: number, prefs: Record<string, any>) => {
+    if (!hasConsent('functional')) return
     localStorage.setItem(`preferences_${userId}`, JSON.stringify(prefs))
   }
 

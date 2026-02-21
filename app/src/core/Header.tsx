@@ -179,6 +179,19 @@ export default function Header() {
                         Preferences
                       </Link>
                     )}
+                    {isActive('rgpd') && (
+                      <Link
+                        to="/rgpd/my-data"
+                        className={`header-admin-menu-item${isMenuActive('/rgpd') ? ' header-admin-menu-item-active' : ''}`}
+                        onClick={() => setShowAdminMenu(false)}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                          <path d="M9 12l2 2 4-4" />
+                        </svg>
+                        Mes donnees
+                      </Link>
+                    )}
 
                     <div className="header-admin-menu-separator" />
 
@@ -303,6 +316,19 @@ export default function Header() {
                       </svg>
                       Commandes
                     </Link>
+                    {isActive('rgpd') && (
+                      <Link
+                        to="/admin/rgpd"
+                        className={`header-admin-menu-item${isMenuActive('/admin/rgpd') ? ' header-admin-menu-item-active' : ''}`}
+                        onClick={() => setShowAdminMenu(false)}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                          <path d="M9 12l2 2 4-4" />
+                        </svg>
+                        RGPD
+                      </Link>
+                    )}
 
                     <div className="header-admin-menu-separator" />
 

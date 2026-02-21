@@ -68,7 +68,9 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
   const [seenLoaded, setSeenLoaded] = useState(false)
   const [ordering, setOrdering] = useState<TutorialOrdering | null>(null)
   const [pendingNewPermissions, setPendingNewPermissions] = useState<string[]>([])
-  const [pendingDismissed, setPendingDismissed] = useState(false)
+  const [pendingDismissed, setPendingDismissed] = useState(
+    () => sessionStorage.getItem('tutorial_pending_dismissed') === 'true'
+  )
 
   // Collect feature tutorials from active feature manifests
   const rawFeatureTutorials: FeatureTutorial[] = useMemo(() => {
@@ -414,6 +416,7 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
   const resetAll = useCallback(async () => {
     setPermissionsSeen({})
     setPendingDismissed(false)
+    sessionStorage.removeItem('tutorial_pending_dismissed')
     try {
       await api.delete('/preference/didacticiel/seen')
     } catch {
@@ -424,6 +427,7 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
   const dismissPending = useCallback(() => {
     setPendingDismissed(true)
     setPendingNewPermissions([])
+    sessionStorage.setItem('tutorial_pending_dismissed', 'true')
   }, [])
 
   return (

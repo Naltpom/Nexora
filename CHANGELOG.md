@@ -1,6 +1,59 @@
 # Changelog
 
+## 2026.02.21
 
+### rgpd.consentement
+- Enforcement du consentement RGPD : les preferences (theme, langue) ne sont plus stockees en localStorage si le consentement fonctionnel n'est pas accorde
+- Nettoyage automatique du storage local lors de la revocation du consentement fonctionnel (banniere + page consentement)
+- Guard dans main.tsx pour ne pas lire le cache preferences sans consentement (flash theme acceptable)
+- Guard dans AuthContext pour empecher lecture/ecriture localStorage sans consentement
+- Nouveau module `consentManager.ts` : utilitaire pur TS pour verifier/appliquer le consentement
+- Wording CNIL : "cookies" remplace par "cookies et traceurs" dans banniere, page consentement, pages legales, tutoriels
+
+## 2026.02.20
+
+### Nouvelle feature : RGPD & Conformite
+
+Feature parent `rgpd` avec 6 sous-features pour la conformite RGPD.
+
+#### rgpd.consentement
+- Banniere de consentement cookies (anonymous + authenticated)
+- Enregistrement et historique des choix de consentement par categorie
+- 4 categories : strictement necessaires, fonctionnels, analytiques, marketing
+- Endpoint public POST pour visiteurs anonymes
+
+#### rgpd.registre
+- Registre des traitements de donnees personnelles (Article 30 RGPD)
+- CRUD admin : nom, finalite, base legale, categories de donnees, duree de conservation
+- 6 bases legales supportees (consentement, contrat, obligation legale, etc.)
+
+#### rgpd.droits
+- Exercice des droits RGPD : acces, rectification, effacement, portabilite, opposition, limitation
+- Formulaire utilisateur pour soumettre une demande
+- Interface admin pour traiter les demandes (statuts: en attente, en cours, traitee, refusee)
+
+#### rgpd.export
+- Export des donnees personnelles en JSON et CSV (Article 20 — portabilite)
+- Apercu des donnees collectees avant export
+- Collecte de toutes les donnees : profil, roles, permissions, sessions, notifications, evenements, consentements
+
+#### rgpd.politique
+- Pages legales editables par l'admin : politique de confidentialite, CGU, mentions legales, politique cookies
+- Endpoints publics (pas d'authentification requise)
+- Versioning automatique des pages
+
+#### rgpd.audit
+- Journal d'audit des acces aux donnees personnelles
+- Filtrage par action, type de ressource, utilisateur cible
+- Vue admin paginee
+
+#### Infrastructure
+- 5 tables : `consent_records`, `data_processing_register`, `rights_requests`, `data_access_logs`, `legal_pages`
+- 2 commandes de maintenance : purge audit logs > 365j, purge consentements > 3 ans
+- 12 permissions RGPD
+- Banniere cookies en headerComponent (frontend)
+- Page admin RGPD avec 4 onglets (registre, droits, audit, pages legales)
+- Support dark + light theme complet
 
 ## 2026.02.19
 

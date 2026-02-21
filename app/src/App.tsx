@@ -7,6 +7,7 @@ import MeshBackground from './core/MeshBackground'
 import BackgroundThemePicker from './core/BackgroundThemePicker'
 
 const TutorialWrapper = lazy(() => import('./core/preference/didacticiel/TutorialWrapper'))
+const CookieBanner = lazy(() => import('./core/rgpd/CookieBanner'))
 
 // Identity pages (always available)
 import LoginPage from './core/_identity/LoginPage'
@@ -136,6 +137,11 @@ export default function App() {
           <TutorialWrapper>{routes}</TutorialWrapper>
         ) : routes}
       </Suspense>
+      {isActive('rgpd.consentement') && (
+        <Suspense fallback={null}>
+          <CookieBanner />
+        </Suspense>
+      )}
     </>
   )
 }

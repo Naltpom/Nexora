@@ -8,11 +8,14 @@ import { FeatureProvider } from './core/FeatureContext'
 import { AppSettingsProvider } from './core/AppSettingsContext'
 import { ConfirmProvider } from './core/ConfirmModal'
 import { NotificationProvider } from './core/notification/NotificationContext'
+import { hasConsent } from './core/rgpd/consentManager'
 import './core/styles/global.scss'
 import './core/styles/animations.scss'
 
 // Apply theme before render to prevent white flash
+// RGPD: skip if functional consent not granted (preferences not cached)
 ;(() => {
+  if (!hasConsent('functional')) return
   const token = localStorage.getItem('access_token')
   if (token) {
     try {

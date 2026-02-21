@@ -5,7 +5,7 @@
 
 app:
   name: "Kertios Template"
-  version: "2026.02.19"
+  version: "2026.02.21"
 
 # Default feature states (true = active by default)
 features:
@@ -23,6 +23,13 @@ features:
   preference.theme: true
   preference.didacticiel: true
   preference.couleur: true
+  rgpd: true
+  rgpd.consentement: true
+  rgpd.registre: true
+  rgpd.droits: true
+  rgpd.export: true
+  rgpd.politique: true
+  rgpd.audit: true
 
 # Feature-specific configuration defaults
 notification.email:

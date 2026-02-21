@@ -183,6 +183,30 @@ manifest = FeatureManifest(
 5. Bump `api/src/main.py` → `version=` dans `create_app()`
 6. Bump `manifest.py` de chaque feature modifiee → `version=`
 
+## RGPD & Consentement (localStorage/sessionStorage)
+
+L'application applique le consentement RGPD sur le stockage navigateur. **Toute ecriture en localStorage ou sessionStorage doit respecter les categories de consentement.**
+
+### Categories de stockage
+
+| Categorie | Consentement requis | Exemples |
+|-----------|-------------------|----------|
+| **Necessaire** | Non (toujours autorise) | `access_token`, `refresh_token`, `mfa_*`, `rgpd_consent_given` |
+| **Fonctionnel** | Oui (`hasConsent('functional')`) | `preferences_{userId}`, `push_prompt_dismissed`, `tutorial_*`, `mfa_banner_dismissed` |
+| **Analytique** | Oui (`hasConsent('analytics')`) | Aucun actuellement |
+| **Marketing** | Oui (`hasConsent('marketing')`) | Aucun actuellement |
+
+### Regles pour les developpeurs
+
+1. **Avant d'ecrire en localStorage/sessionStorage** : verifier si la donnee est strictement necessaire au fonctionnement. Si c'est une preference utilisateur ou un etat d'UI, c'est "fonctionnel" → utiliser `hasConsent('functional')` avant d'ecrire.
+2. **Utiliser `consentManager.ts`** (`app/src/core/rgpd/consentManager.ts`) :
+   - `hasConsent('functional')` : verifie si le consentement fonctionnel est accorde
+   - `cleanupFunctionalStorage()` : purge toutes les cles fonctionnelles
+3. **Nouvelle cle fonctionnelle** : si tu ajoutes une cle localStorage/sessionStorage fonctionnelle, **ajoute-la aussi dans `cleanupFunctionalStorage()`** dans `consentManager.ts` pour qu'elle soit nettoyee lors de la revocation.
+4. **AuthContext** : `getLocalPreferences()` et `setLocalPreferences()` sont deja proteges. Utiliser `getPreference()` / `updatePreference()` pour les preferences utilisateur — le consentement est gere automatiquement.
+5. **Les donnees en DB ne sont pas concernees** : le consentement RGPD porte sur le stockage local (terminal de l'utilisateur). Les preferences sont toujours sauvegardees en DB via l'API, et chargees depuis la DB a chaque session. Seul le cache localStorage est conditionne au consentement.
+6. **Wording CNIL** : utiliser "cookies et traceurs" (pas juste "cookies") dans toute l'UI liee au consentement.
+
 ## Regles de dev
 
 - Toujours supporter dark + light theme
