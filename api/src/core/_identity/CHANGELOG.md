@@ -1,5 +1,10 @@
 # _core — Changelog
 
+## 2026.02.14
+
+- Nouvelles permissions `commands.read` et `commands.manage`
+- Nouveau router `routes_commands.py` : endpoints admin pour le Command Registry
+
 ## 2026.02.9
 
 - Emission d'evenements via event bus depuis les routes :

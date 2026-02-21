@@ -121,6 +121,7 @@ interface NotificationContextType {
   loading: boolean
   fetchNotifications: (page?: number) => Promise<void>
   markAsRead: (id: number) => Promise<void>
+  markAsUnread: (id: number) => Promise<void>
   markAllAsRead: () => Promise<void>
   deleteNotification: (id: number) => Promise<void>
   hasMore: boolean
@@ -190,6 +191,18 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         prev.map(n => n.id === id ? { ...n, is_read: true } : n)
       )
       setUnreadCount(prev => Math.max(0, prev - 1))
+    } catch {
+      // silently ignore
+    }
+  }, [])
+
+  const markAsUnread = useCallback(async (id: number) => {
+    try {
+      await api.patch(`/notifications/${id}/unread`)
+      setNotifications(prev =>
+        prev.map(n => n.id === id ? { ...n, is_read: false } : n)
+      )
+      setUnreadCount(prev => prev + 1)
     } catch {
       // silently ignore
     }
@@ -371,6 +384,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       loading,
       fetchNotifications,
       markAsRead,
+      markAsUnread,
       markAllAsRead,
       deleteNotification,
       hasMore,

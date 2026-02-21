@@ -20,7 +20,7 @@ function timeAgo(dateStr: string): string {
 }
 
 export default function NotificationBell() {
-  const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotifications()
+  const { notifications, unreadCount, markAsRead, markAsUnread, markAllAsRead, deleteNotification } = useNotifications()
   const { isActive } = useFeature()
   const pushActive = isActive('notification.push')
   const [open, setOpen] = useState(false)
@@ -115,6 +115,17 @@ export default function NotificationBell() {
                     )}
                     <div className="notification-item-time">{timeAgo(notif.created_at)}</div>
                   </div>
+                  {notif.is_read && (
+                    <button
+                      className="notification-item-unread-btn"
+                      onClick={(e) => { e.stopPropagation(); markAsUnread(notif.id) }}
+                      title="Marquer comme non lu"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="5" />
+                      </svg>
+                    </button>
+                  )}
                   <button
                     className="notification-item-delete"
                     onClick={(e) => handleDelete(e, notif.id)}

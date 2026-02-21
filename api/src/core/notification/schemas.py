@@ -41,6 +41,7 @@ class AdminNotificationResponse(BaseModel):
     email_sent_at: datetime | None = None
     webhook_sent_at: datetime | None = None
     push_sent_at: datetime | None = None
+    deleted_at: datetime | None = None
     created_at: datetime
 
 

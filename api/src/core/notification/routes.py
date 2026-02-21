@@ -32,6 +32,7 @@ from .services import (
     list_notifications as svc_list_notifications,
     get_unread_count as svc_get_unread_count,
     mark_notification_read as svc_mark_notification_read,
+    mark_notification_unread as svc_mark_notification_unread,
     mark_all_notifications_read as svc_mark_all_notifications_read,
     delete_notification as svc_delete_notification,
     list_all_rules as svc_list_all_rules,
@@ -197,6 +198,7 @@ async def list_all_notifications(
     per_page: int = Query(25, ge=1, le=100),
     search: str = Query(""),
     my_only: bool = Query(True),
+    include_deleted: bool = Query(False),
     sort_by: str = Query("created_at"),
     sort_dir: str = Query("desc"),
     current_user=Depends(get_current_super_admin),
@@ -206,6 +208,7 @@ async def list_all_notifications(
     rows, total = await svc_list_notifications(
         db,
         user_id=user_id,
+        include_deleted=include_deleted,
         search=search,
         sort_by=sort_by,
         sort_dir=sort_dir,
@@ -228,6 +231,7 @@ async def list_all_notifications(
             email_sent_at=row.get("email_sent_at"),
             webhook_sent_at=row.get("webhook_sent_at"),
             push_sent_at=row.get("push_sent_at"),
+            deleted_at=row.get("deleted_at"),
             created_at=row["created_at"],
         )
         for row in rows
@@ -246,6 +250,18 @@ async def mark_as_read(
     db: AsyncSession = Depends(get_db),
 ):
     found = await svc_mark_notification_read(db, notification_id, current_user.id)
+    if not found:
+        raise HTTPException(status_code=404, detail="Notification introuvable")
+    return {"ok": True}
+
+
+@router.patch("/{notification_id}/unread")
+async def mark_as_unread(
+    notification_id: int,
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    found = await svc_mark_notification_unread(db, notification_id, current_user.id)
     if not found:
         raise HTTPException(status_code=404, detail="Notification introuvable")
     return {"ok": True}
@@ -279,6 +295,7 @@ async def mark_read_by_token(
         select(Notification).where(
             Notification.event_id == event.id,
             Notification.user_id == current_user.id,
+            Notification.deleted_at.is_(None),
         )
     )
     notif = result.scalar_one_or_none()

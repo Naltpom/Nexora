@@ -97,6 +97,9 @@ class Settings(BaseSettings):
     BACKUP_DIR: str = "/app/backups"
     ENV: str = "production"
 
+    # Notification purge
+    NOTIFICATION_PURGE_DAYS: int = 90  # Hard-delete soft-deleted notifications older than N days
+
     # Frontend URL (for reset password links)
     FRONTEND_URL: str = "http://localhost:5472"
 

@@ -11,6 +11,7 @@ from sqlalchemy import select
 from .core.config import settings
 from .core.database import engine, async_session, Base
 from .core.feature_registry import FeatureRegistry
+from .core.command_registry import CommandRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +70,7 @@ def create_app() -> FastAPI:
     application = FastAPI(
         title="Kertios Template",
         description="Feature-based modular application template",
-        version="2026.02.12",
+        version="2026.02.14",
         docs_url="/api/docs",
         openapi_url="/api/openapi.json",
     )
@@ -103,8 +104,13 @@ def create_app() -> FastAPI:
     # ── Static files ─────────────────────────────────────────────────
     application.mount("/api/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
 
-    # ── Store registry in app state ──────────────────────────────────
+    # ── Command discovery ────────────────────────────────────────────
+    command_registry = CommandRegistry()
+    command_registry.discover()
+
+    # ── Store registries in app state ────────────────────────────────
     application.state.feature_registry = registry
+    application.state.command_registry = command_registry
 
     # ── Startup event: sync permissions ──────────────────────────────
     @application.on_event("startup")

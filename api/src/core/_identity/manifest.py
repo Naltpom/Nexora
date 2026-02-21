@@ -5,7 +5,7 @@ manifest = FeatureManifest(
     name="_identity",
     label="Identity",
     description="Authentication, users, roles, permissions, feature management",
-    version="2026.02.9",
+    version="2026.02.14",
     is_core=True,
     permissions=[
         "users.read", "users.create", "users.update", "users.delete",
@@ -17,6 +17,7 @@ manifest = FeatureManifest(
         "impersonation.start", "impersonation.read",
         "backups.create", "backups.restore", "backups.read",
         "search.global",
+        "commands.read", "commands.manage",
     ],
     events=[
         {"event_type": "user.registered", "label": "Utilisateur inscrit", "category": "Utilisateurs", "description": "Un nouvel utilisateur s'est inscrit"},
@@ -39,5 +40,6 @@ manifest = FeatureManifest(
         {"module": "src.core._identity.routes_impersonation", "prefix": "/api/impersonation", "tags": ["Impersonation"]},
         {"module": "src.core._identity.routes_invitations", "prefix": "/api", "tags": ["Invitations"]},
         {"module": "src.core._identity.routes_backups", "prefix": "/api/backups", "tags": ["Backups"]},
+        {"module": "src.core._identity.routes_commands", "prefix": "/api/commands", "tags": ["Commands"]},
     ],
 )

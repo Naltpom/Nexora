@@ -1,5 +1,27 @@
 # notification — Changelog
 
+## 2026.02.14
+
+- Migration `purge_notifications.py` vers `commands.py` (Command Registry)
+- Declaration `CommandDefinition` avec schedule cron et config keys
+
+## 2026.02.13
+
+- Nouveau endpoint `PATCH /notifications/{id}/unread` pour remettre une notification en non lu
+- Nouveau service `mark_notification_unread()` (inverse de `mark_notification_read`)
+- Soft delete : `delete_notification()` set `deleted_at` au lieu de supprimer en base
+- Filtre `deleted_at IS NULL` ajoute a toutes les requetes utilisateur (list, count, mark_all_read, delete, SSE)
+- Parametre `include_deleted` sur l'endpoint admin pour afficher les notifications supprimees
+- Champ `deleted_at` ajoute au schema `AdminNotificationResponse`
+- Migration Alembic : ajout colonne `deleted_at` (DateTime timezone-aware, nullable)
+- Frontend : bouton "Marquer comme non lu" dans le dropdown bell (pour les notifs lues)
+- Frontend : toggle read/unread dans la page notifications (vue user et admin)
+- Frontend : checkbox "Voir les supprimees" dans la vue admin avec lignes rouges
+- `markAsUnread()` ajoute au `NotificationContext`
+- Script cron `purge_notifications.py` : hard-delete des notifications soft-deleted > N jours
+- Config `NOTIFICATION_PURGE_DAYS` ajoutee dans Settings, `.env`, `.env.example`
+- Seed : notifications de demo (read, unread, soft-deleted) pour Nathan, Alice, Bob, Charlie
+
 ## 2026.02.9
 
 - Cablage event bus : ecoute `event.persisted` via `event_handlers.py` pour le moteur de regles

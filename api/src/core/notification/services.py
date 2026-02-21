@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from sqlalchemy import select, func, desc, asc, or_
@@ -355,6 +355,7 @@ async def list_notifications(
     *,
     user_id: int | None = None,
     unread_only: bool = False,
+    include_deleted: bool = False,
     search: str = "",
     sort_by: str = "created_at",
     sort_dir: str = "desc",
@@ -370,6 +371,9 @@ async def list_notifications(
     ).join(
         User, Notification.user_id == User.id
     )
+
+    if not include_deleted:
+        query = query.where(Notification.deleted_at.is_(None))
 
     if user_id is not None:
         query = query.where(Notification.user_id == user_id)
@@ -411,6 +415,7 @@ async def list_notifications(
             "email_sent_at": notif.email_sent_at,
             "webhook_sent_at": notif.webhook_sent_at,
             "push_sent_at": notif.push_sent_at,
+            "deleted_at": notif.deleted_at,
             "created_at": notif.created_at,
         }
         if include_admin_fields:
@@ -428,6 +433,7 @@ async def get_unread_count(db: AsyncSession, user_id: int) -> int:
         select(func.count()).select_from(Notification).where(
             Notification.user_id == user_id,
             Notification.is_read.is_(False),
+            Notification.deleted_at.is_(None),
         )
     )
     return result.scalar() or 0
@@ -450,12 +456,30 @@ async def mark_notification_read(db: AsyncSession, notification_id: int, user_id
     return True
 
 
+async def mark_notification_unread(db: AsyncSession, notification_id: int, user_id: int) -> bool:
+    """Mark a single notification as unread. Returns True if found and updated."""
+    result = await db.execute(
+        select(Notification).where(
+            Notification.id == notification_id,
+            Notification.user_id == user_id,
+        )
+    )
+    notif = result.scalar_one_or_none()
+    if not notif:
+        return False
+    notif.is_read = False
+    notif.read_at = None
+    await db.flush()
+    return True
+
+
 async def mark_all_notifications_read(db: AsyncSession, user_id: int) -> None:
     """Mark all unread notifications as read for a user."""
     result = await db.execute(
         select(Notification).where(
             Notification.user_id == user_id,
             Notification.is_read.is_(False),
+            Notification.deleted_at.is_(None),
         )
     )
     now = datetime.now(timezone.utc)
@@ -466,19 +490,38 @@ async def mark_all_notifications_read(db: AsyncSession, user_id: int) -> None:
 
 
 async def delete_notification(db: AsyncSession, notification_id: int, user_id: int) -> bool:
-    """Delete a notification. Returns True if found and deleted."""
+    """Soft-delete a notification. Returns True if found and deleted."""
     result = await db.execute(
         select(Notification).where(
             Notification.id == notification_id,
             Notification.user_id == user_id,
+            Notification.deleted_at.is_(None),
         )
     )
     notif = result.scalar_one_or_none()
     if not notif:
         return False
-    await db.delete(notif)
+    notif.deleted_at = datetime.now(timezone.utc)
     await db.flush()
     return True
+
+
+async def purge_deleted_notifications(db: AsyncSession, days: int) -> int:
+    """Hard-delete notifications that were soft-deleted more than `days` days ago.
+    Returns the number of purged rows."""
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    result = await db.execute(
+        select(Notification).where(
+            Notification.deleted_at.isnot(None),
+            Notification.deleted_at < cutoff,
+        )
+    )
+    rows = result.scalars().all()
+    count = len(rows)
+    for notif in rows:
+        await db.delete(notif)
+    await db.flush()
+    return count
 
 
 # ---------------------------------------------------------------------------

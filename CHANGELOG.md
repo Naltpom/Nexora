@@ -2,6 +2,31 @@
 
 
 
+## 2026.02.14
+
+### Infrastructure — Command Registry
+
+- Nouveau systeme de commandes de maintenance par feature (`CommandRegistry`)
+- Decouverte automatique des `commands.py` dans `core/` et `features/` (meme pattern que `manifest.py`)
+- CLI runner : `python -m src.run_command <name>` et `--list` (pour cron)
+- Endpoints admin : `GET /api/commands` + `POST /api/commands/{name}/run`
+- Permissions `commands.read` et `commands.manage` ajoutees a `_identity`
+- Migration du script `purge_notifications.py` vers `notification/commands.py`
+- Suppression de `api/src/purge_notifications.py` (remplace par le Command Registry)
+
+## 2026.02.13
+
+### notification
+
+> [Changelog complet](api/src/core/notification/CHANGELOG.md)
+
+- Bouton "Marquer comme non lu" dans le dropdown bell et la page notifications (user + admin)
+- Soft delete des notifications (`deleted_at` au lieu de suppression definitive)
+- Filtre admin "Voir les supprimees" avec affichage rouge des lignes supprimees
+- Script cron `purge_notifications.py` : suppression definitive des notifications soft-deleted apres N jours (configurable via `NOTIFICATION_PURGE_DAYS` dans `.env`, defaut 90 jours)
+- Migration Alembic : ajout colonne `deleted_at` sur la table `notifications`
+- Seed : notifications de demo pour tous les utilisateurs (read, unread, soft-deleted)
+
 ## 2026.02.12
 
 ### preference.didacticiel — Refonte du systeme de tutoriels

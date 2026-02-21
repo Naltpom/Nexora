@@ -50,6 +50,7 @@ interface AdminNotificationItem extends NotificationItem {
   user_id: number
   user_email: string
   user_name: string
+  deleted_at: string | null
 }
 
 // -- Main Component --
@@ -135,6 +136,16 @@ function UserNotificationList() {
     }
   }
 
+  const handleMarkAsUnread = async (id: number) => {
+    try {
+      await api.patch(`/notifications/${id}/unread`)
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: false } : n))
+      refreshBell()
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   const handleClick = (notif: NotificationItem) => {
     if (!notif.is_read) handleMarkAsRead(notif.id)
     if (notif.link) navigate(notif.link)
@@ -197,7 +208,7 @@ function UserNotificationList() {
                   </div>
                 </div>
                 <div className="notification-list-card-actions">
-                  {!notif.is_read && (
+                  {!notif.is_read ? (
                     <button
                       className="btn-icon btn-icon-secondary"
                       title="Marquer comme lu"
@@ -205,6 +216,16 @@ function UserNotificationList() {
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    </button>
+                  ) : (
+                    <button
+                      className="btn-icon btn-icon-secondary"
+                      title="Marquer comme non lu"
+                      onClick={(e) => { e.stopPropagation(); handleMarkAsUnread(notif.id) }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="5" />
                       </svg>
                     </button>
                   )}
@@ -250,12 +271,13 @@ function AdminNotificationList() {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
   const [search, setSearch] = useState('')
   const [myOnly, setMyOnly] = useState(true)
+  const [includeDeleted, setIncludeDeleted] = useState(false)
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { confirm, alert } = useConfirm()
   const { fetchNotifications: refreshBell } = useNotifications()
 
   const loadData = async (
-    p?: number, s?: string, pp?: number, sb?: string, sd?: string, mine?: boolean
+    p?: number, s?: string, pp?: number, sb?: string, sd?: string, mine?: boolean, deleted?: boolean
   ) => {
     const currentPage = p ?? page
     const currentSearch = s ?? search
@@ -263,6 +285,7 @@ function AdminNotificationList() {
     const currentSortBy = sb ?? sortBy
     const currentSortDir = sd ?? sortDir
     const currentMyOnly = mine ?? myOnly
+    const currentIncludeDeleted = deleted ?? includeDeleted
 
     try {
       const res = await api.get('/notifications/admin', {
@@ -271,6 +294,7 @@ function AdminNotificationList() {
           per_page: currentPerPage,
           search: currentSearch,
           my_only: currentMyOnly,
+          include_deleted: currentIncludeDeleted,
           sort_by: currentSortBy,
           sort_dir: currentSortDir,
         },
@@ -316,10 +340,27 @@ function AdminNotificationList() {
     loadData(1, undefined, undefined, undefined, undefined, next)
   }
 
+  const handleToggleIncludeDeleted = () => {
+    const next = !includeDeleted
+    setIncludeDeleted(next)
+    setPage(1)
+    loadData(1, undefined, undefined, undefined, undefined, undefined, next)
+  }
+
   const handleMarkAsRead = async (id: number) => {
     try {
       await api.patch(`/notifications/${id}/read`)
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n))
+      refreshBell()
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const handleMarkAsUnread = async (id: number) => {
+    try {
+      await api.patch(`/notifications/${id}/unread`)
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: false } : n))
       refreshBell()
     } catch (err) {
       console.error(err)
@@ -402,6 +443,14 @@ function AdminNotificationList() {
               />
               Toutes les notifications
             </label>
+            <label className="unified-filter-checkbox notif-filter-deleted">
+              <input
+                type="checkbox"
+                checked={includeDeleted}
+                onChange={handleToggleIncludeDeleted}
+              />
+              Voir les supprimees
+            </label>
             <div className="unified-search-box">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
@@ -450,7 +499,7 @@ function AdminNotificationList() {
                     </tr>
                   ) : (
                     notifications.map(notif => (
-                      <tr key={notif.id}>
+                      <tr key={notif.id} className={notif.deleted_at ? 'notif-row-deleted' : ''}>
                         {!myOnly && (
                           <td>
                             <div className="notif-user-name">{notif.user_name}</div>
@@ -510,7 +559,7 @@ function AdminNotificationList() {
                         </td>
                         <td>
                           <div className="notif-actions-wrap">
-                            {!notif.is_read && (
+                            {!notif.is_read ? (
                               <button
                                 className="btn-icon btn-icon-secondary"
                                 title="Marquer comme lu"
@@ -518,6 +567,16 @@ function AdminNotificationList() {
                               >
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                   <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                              </button>
+                            ) : (
+                              <button
+                                className="btn-icon btn-icon-secondary"
+                                title="Marquer comme non lu"
+                                onClick={() => handleMarkAsUnread(notif.id)}
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <circle cx="12" cy="12" r="5" />
                                 </svg>
                               </button>
                             )}
