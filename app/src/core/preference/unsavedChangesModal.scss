@@ -1,0 +1,118 @@
+// ─── Unsaved Changes Modal ───
+
+.unsaved-modal {
+  max-width: 520px;
+  width: 90vw;
+  animation: modal-spring-in 0.35s ease-out;
+}
+
+.unsaved-modal__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 24px 12px;
+  color: var(--warning, #D97706);
+
+  h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--gray-900);
+  }
+}
+
+.unsaved-modal__body {
+  padding: 0 24px 16px;
+
+  > p {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    margin: 0 0 16px;
+  }
+}
+
+.unsaved-modal__changes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.unsaved-modal__change-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: var(--radius, 8px);
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+}
+
+.unsaved-modal__change-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--gray-700);
+}
+
+.unsaved-modal__change-values {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.unsaved-modal__old-value {
+  font-size: 0.8125rem;
+  color: var(--gray-400);
+  text-decoration: line-through;
+}
+
+.unsaved-modal__arrow {
+  flex-shrink: 0;
+  color: var(--gray-400);
+}
+
+.unsaved-modal__new-value {
+  font-size: 0.8125rem;
+  color: var(--primary);
+  font-weight: 500;
+}
+
+.unsaved-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 24px 20px;
+}
+
+// ─── Dark theme ───
+
+[data-theme="dark"] {
+  .unsaved-modal__header h3 {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .unsaved-modal__body > p {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .unsaved-modal__change-item {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .unsaved-modal__change-label {
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  .unsaved-modal__old-value {
+    color: rgba(255, 255, 255, 0.35);
+  }
+
+  .unsaved-modal__arrow {
+    color: rgba(255, 255, 255, 0.3);
+  }
+
+  .unsaved-modal__new-value {
+    color: var(--primary-light);
+  }
+}

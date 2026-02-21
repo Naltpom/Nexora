@@ -1,19 +1,19 @@
 import { useState, useEffect, useRef } from 'react'
-import { useAuth } from '../../../core/AuthContext'
+import { useDraftPreference } from '../DraftPreferenceContext'
 import { applyCustomColors, clearCustomColors } from './applyCustomColors'
 import { COLOR_GROUPS, LIGHT_DEFAULTS, DARK_DEFAULTS } from './colorDefaults'
 import './couleur.scss'
 
 export default function ColorSection() {
-  const { getPreference, updatePreference } = useAuth()
-  const currentTheme = getPreference('theme', 'light') as string
+  const { getDraftPreference, setDraftPreference, resetVersion } = useDraftPreference()
+  const currentTheme = getDraftPreference('theme', 'light') as string
   const activeThemeKey = currentTheme === 'dark' ? 'dark' : 'light'
 
   const [editingTheme, setEditingTheme] = useState<'light' | 'dark'>(activeThemeKey)
 
-  // Local state for fast preview — decoupled from AuthContext
+  // Local state for fast preview — decoupled from draft context
   const [localColors, setLocalColors] = useState<Record<string, Record<string, string>>>(() => {
-    const saved = getPreference('customColors', null)
+    const saved = getDraftPreference('customColors', null)
     return saved && typeof saved === 'object' ? saved : {}
   })
 
@@ -21,13 +21,11 @@ export default function ColorSection() {
   const localColorsRef = useRef(localColors)
   localColorsRef.current = localColors
 
-  // Sync from preferences if they change externally
+  // Re-sync when draft is discarded
   useEffect(() => {
-    const saved = getPreference('customColors', null)
-    if (saved && typeof saved === 'object') {
-      setLocalColors(saved)
-    }
-  }, [])
+    const saved = getDraftPreference('customColors', null)
+    setLocalColors(saved && typeof saved === 'object' ? saved : {})
+  }, [resetVersion])
 
   const defaults = editingTheme === 'dark' ? DARK_DEFAULTS : LIGHT_DEFAULTS
 
@@ -52,7 +50,7 @@ export default function ColorSection() {
     )
   }
 
-  // onChange: local state + DOM only (no AuthContext setState)
+  // onChange: local state + DOM only (no save)
   const handleColorChange = (varName: string, value: string) => {
     const updated = { ...localColors }
     if (!updated[editingTheme]) updated[editingTheme] = {}
@@ -63,9 +61,9 @@ export default function ColorSection() {
     }
   }
 
-  // onBlur: persist to AuthContext + API (once per interaction)
+  // onBlur: persist to draft context
   const handleColorCommit = () => {
-    updatePreference('customColors', localColorsRef.current)
+    setDraftPreference('customColors', localColorsRef.current)
   }
 
   const handleResetVar = (varName: string) => {
@@ -79,7 +77,7 @@ export default function ColorSection() {
       }
     }
     setLocalColors(updated)
-    updatePreference('customColors', updated)
+    setDraftPreference('customColors', updated)
     if (editingTheme === activeThemeKey) {
       applyCustomColors(updated, currentTheme)
     }
@@ -89,7 +87,7 @@ export default function ColorSection() {
     const updated = { ...localColors }
     delete updated[editingTheme]
     setLocalColors(updated)
-    updatePreference('customColors', updated)
+    setDraftPreference('customColors', updated)
     if (editingTheme === activeThemeKey) {
       applyCustomColors(updated, currentTheme)
     }
@@ -97,7 +95,7 @@ export default function ColorSection() {
 
   const handleResetAll = () => {
     setLocalColors({})
-    updatePreference('customColors', {})
+    setDraftPreference('customColors', {})
     clearCustomColors()
   }
 

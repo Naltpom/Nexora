@@ -1,0 +1,141 @@
+.a11y-section {
+  &__active-count {
+    margin-left: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--primary);
+    background: var(--primary-light, rgba(79, 70, 229, 0.1));
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 16px;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--gray-50);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background 0.15s;
+
+    &:hover {
+      background: var(--gray-100);
+    }
+  }
+
+  &__item-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__item-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--gray-700);
+  }
+
+  &__item-desc {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+  }
+
+  &__actions {
+    display: flex;
+    gap: 12px;
+  }
+}
+
+/* === Accessibility classes applied to <html> === */
+
+/* High contrast */
+.a11y-high-contrast {
+  --gray-500: #374151;
+  --gray-600: #1F2937;
+  --gray-700: #111827;
+
+  &[data-theme="dark"] {
+    --gray-400: #D1D5DB;
+    --gray-500: #E5E7EB;
+  }
+}
+
+/* Reduce motion */
+.a11y-reduce-motion,
+.a11y-reduce-motion * {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Dyslexia font */
+.a11y-dyslexia {
+  --font-family: "OpenDyslexic", sans-serif;
+
+  body,
+  input,
+  select,
+  textarea,
+  button {
+    font-family: var(--font-family) !important;
+  }
+}
+
+/* Enhanced focus */
+.a11y-focus-visible {
+  *:focus-visible {
+    outline: 3px solid var(--primary) !important;
+    outline-offset: 2px !important;
+  }
+}
+
+/* Underline links */
+.a11y-underline-links {
+  a {
+    text-decoration: underline !important;
+  }
+}
+
+/* Large touch targets */
+.a11y-large-targets {
+  a,
+  button,
+  [role="button"],
+  input[type="checkbox"],
+  input[type="radio"],
+  .toggle {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* === Dark theme === */
+
+[data-theme="dark"] {
+  .a11y-section__item {
+    background: #252540;
+
+    &:hover {
+      background: #2a2a4a;
+    }
+  }
+
+  .a11y-section__item-label {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .a11y-section__item-desc {
+    color: rgba(255, 255, 255, 0.5);
+  }
+}

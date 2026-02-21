@@ -7,7 +7,7 @@
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--section-gap, 24px);
 }
 
 .page-wide {
@@ -129,7 +129,7 @@
 // ── Cards / Sections ──
 
 .card-padded {
-  padding: 24px;
+  padding: var(--density-card-padding, 24px);
 }
 
 .card-padded-sm {
@@ -164,63 +164,63 @@
 // ── Typography ──
 
 .title-lg {
-  font-size: 28px;
+  font-size: 1.75rem;
   font-weight: 700;
   margin-bottom: 4px;
 }
 
 .title-md {
-  font-size: 22px;
+  font-size: 1.375rem;
   font-weight: 700;
   margin-bottom: 4px;
 }
 
 .title-sm {
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 600;
   margin-bottom: 16px;
 }
 
 .title-section {
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
 }
 
 .title-section-lg {
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 600;
   margin: 0;
 }
 
 .text-secondary {
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: 0.875rem;
   margin-bottom: 16px;
 }
 
 .text-muted {
   color: var(--gray-400);
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 
 .text-muted-sm {
   color: var(--gray-400);
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 .text-gray-500 {
   color: var(--gray-500);
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .text-gray-500-sm {
   color: var(--gray-500);
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 .text-mono {
   font-family: monospace;
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 .font-medium {
@@ -228,11 +228,11 @@
 }
 
 .text-xs {
-  font-size: 11px;
+  font-size: 0.6875rem;
 }
 
 .text-sm {
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 // ── Alerts ──
@@ -277,7 +277,7 @@
 
 .link-primary {
   color: var(--primary);
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .login-footer {
@@ -310,7 +310,7 @@
 
 .login-divider-text {
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 // ── Empty State ──
@@ -338,7 +338,7 @@
 .input-styled {
   width: 100%;
   padding: 8px 12px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   border: 1px solid var(--gray-200);
   border-radius: 8px;
   background: var(--gray-50);
@@ -347,7 +347,7 @@
 
 .input-filter {
   padding: 6px 12px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   border: 1px solid var(--gray-200);
   border-radius: 8px;
   background: var(--gray-50);
@@ -359,7 +359,7 @@
   width: 100%;
   max-width: 320px;
   padding: 8px 12px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   border: 1px solid var(--gray-200);
   border-radius: 8px;
   background: var(--gray-50);
@@ -378,7 +378,7 @@
   justify-content: center;
   color: #fff;
   font-weight: 700;
-  font-size: 20px;
+  font-size: 1.25rem;
   flex-shrink: 0;
 }
 
@@ -403,7 +403,7 @@
   justify-content: center;
   color: white;
   font-weight: 700;
-  font-size: 20px;
+  font-size: 1.25rem;
   margin: 0 auto 16px;
 }
 
@@ -412,7 +412,7 @@
 .badge-tag {
   padding: 2px 6px;
   border-radius: 4px;
-  font-size: 11px;
+  font-size: 0.6875rem;
 
   &--purple {
     background-color: var(--primary-dark);
@@ -439,7 +439,7 @@
     padding: 2px 6px;
     border-radius: 4px;
     font-family: monospace;
-    font-size: 12px;
+    font-size: 0.75rem;
   }
 
   &--mono-sm {
@@ -447,7 +447,7 @@
     padding: 1px 4px;
     border-radius: 3px;
     color: var(--gray-500);
-    font-size: 11px;
+    font-size: 0.6875rem;
   }
 }
 
@@ -465,7 +465,7 @@
   border: none;
   background-color: transparent;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 0.875rem;
   margin-bottom: -2px;
   transition: all 0.15s;
 
@@ -532,7 +532,7 @@
   width: 28px;
   height: 24px;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
 
   &--user-granted {
@@ -595,7 +595,7 @@
 // ── Section title (uppercase category) ──
 
 .section-category-title {
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 600;
   text-transform: uppercase;
   color: var(--gray-500);
@@ -618,7 +618,7 @@
   display: flex;
   gap: 24px;
   margin-top: 12px;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--gray-400);
 }
 
@@ -800,7 +800,7 @@
 }
 
 .stat-card-value {
-  font-size: 28px;
+  font-size: 1.75rem;
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.02em;
@@ -808,7 +808,7 @@
 }
 
 .stat-card-label {
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--gray-500);
   margin-top: 2px;
 }
@@ -922,7 +922,7 @@
 }
 
 .settings-section-title {
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 600;
   margin-bottom: 20px;
   color: var(--gray-700);
@@ -945,7 +945,7 @@
 
 .verify-code-input {
   text-align: center;
-  font-size: 24px;
+  font-size: 1.5rem;
   letter-spacing: 8px;
   font-weight: 600;
 }
@@ -953,7 +953,7 @@
 .verify-resend-btn {
   background: none;
   border: none;
-  font-size: 14px;
+  font-size: 0.875rem;
 
   &--active {
     color: var(--primary);
@@ -976,13 +976,13 @@
 }
 
 .verify-debug-label {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #92400E;
   font-weight: 600;
 }
 
 .verify-debug-code {
-  font-size: 20px;
+  font-size: 1.25rem;
   font-weight: 700;
   letter-spacing: 4px;
   color: #92400E;
@@ -1022,7 +1022,7 @@
 
 .sso-error-alert {
   margin-bottom: 4px;
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 // ── Modal max-width ──
@@ -1110,7 +1110,7 @@
 
 .ud-name {
   font-weight: 600;
-  font-size: 18px;
+  font-size: 1.125rem;
 }
 
 .ud-badges {
@@ -1134,7 +1134,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   cursor: pointer;
 }
 
@@ -1148,18 +1148,18 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 .ud-save-btn {
   align-self: flex-start;
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 .ud-legend {
   display: flex;
   gap: 8px;
-  font-size: 11px;
+  font-size: 0.6875rem;
 }
 
 .accent-blue {
@@ -1200,19 +1200,19 @@
 
 .feature-child-arrow {
   color: var(--gray-300);
-  font-size: 14px;
+  font-size: 0.875rem;
   margin-left: -20px;
   margin-right: 4px;
 }
 
 .feature-desc-col {
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--gray-500);
   max-width: 300px;
 }
 
 .feature-locked {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--gray-400);
   font-style: italic;
 }
@@ -1224,13 +1224,13 @@
 }
 
 .detail-item-label {
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 500;
   margin-bottom: 2px;
 }
 
 .detail-item-desc {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--gray-400);
   margin-top: 4px;
 }
@@ -1242,18 +1242,18 @@
 }
 
 .text-gray-500-code {
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: var(--gray-500);
 }
 
 .text-gray-400-code {
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: var(--gray-400);
 }
 
 .font-medium-sm {
   font-weight: 500;
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 // ── Additional modal ──
@@ -1349,7 +1349,7 @@
   border: 1px solid var(--gray-200);
   border-radius: 8px;
   padding: 12px;
-  font-size: 12px;
+  font-size: 0.75rem;
   line-height: 1.5;
   overflow-x: auto;
   white-space: pre-wrap;
@@ -1377,7 +1377,7 @@
   border: 1px solid var(--gray-200);
   background: white;
   color: var(--gray-700);
-  font-size: 13px;
+  font-size: 0.8125rem;
   min-width: 150px;
 }
 
@@ -1389,6 +1389,6 @@
 
 .btn-xs {
   padding: 2px 8px;
-  font-size: 11px;
+  font-size: 0.6875rem;
   border-radius: 6px;
 }

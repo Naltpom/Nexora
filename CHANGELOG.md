@@ -1,5 +1,45 @@
 # Changelog
 
+## 2026.02.25
+
+### preference.font — Personnalisation typographique
+
+- Nouvelle sous-feature `preference.font` : choix de police (System, Inter, Roboto, Open Sans, Atkinson Hyperlegible, OpenDyslexic), echelle de texte (85-125%), interligne (1.2-2.0), epaisseur (300-700)
+- L'echelle de texte applique un % sur `<html>` : tous les textes (titres, boutons, labels, etc.) scalent proportionnellement
+- Conversion de toutes les `font-size` du codebase de `px` vers `rem` (180+ declarations dans 15 fichiers SCSS)
+- Google Fonts charges dans `index.html` (Inter, Roboto, Open Sans, Atkinson Hyperlegible)
+
+### preference.layout — Mise en page
+
+- Nouvelle sous-feature `preference.layout` : densite d'affichage (compact/normal/airy), border-radius (0-16px), largeur du contenu (narrow/normal/wide/full), espacement des sections (8-32px)
+- Preview visuel du border-radius en temps reel
+- Variables CSS de densite appliquees aux composants globaux : `.btn`, `.form-group input`, `.unified-table`, `.unified-card-header`, `.card-padded`, `.page-narrow`
+- Variables : `--density-padding`, `--density-gap`, `--density-row-height`, `--density-btn-padding`, `--density-input-padding`, `--density-card-padding`, `--content-max-width`, `--section-gap`
+
+### preference.composants — Style des composants
+
+- Nouvelle sous-feature `preference.composants` : style des cards (flat/elevated/bordered), style des boutons (rounded/square/pill), animation des modals (none/fade/slide/scale), bandes alternees dans les tables, separateurs de listes
+- Preview en temps reel avec une card et un bouton exemples
+- CSS global via `data-card-style`, `data-btn-style`, `data-modal-anim` et classes utilitaires
+
+### preference.accessibilite — Accessibilite
+
+- Nouvelle sous-feature `preference.accessibilite` : contraste eleve, reduction des animations, police dyslexie (OpenDyslexic), focus renforce, soulignement des liens, cibles agrandies (44px min)
+- Badge compteur d'options actives dans le titre de la section
+- Classes CSS globales `a11y-*` appliquees sur `<html>`
+
+### Infra preference
+
+- Pre-render des 4 nouvelles preferences dans `main.tsx` IIFE (anti-flash)
+- Application des preferences au login dans `AuthContext.tsx`
+- `global.scss` : body utilise les CSS variables `--font-family`, `--line-height`, `--font-weight`, font-size en `1rem`
+- `.main-content` utilise `--content-max-width` et `--density-padding`
+- 4 feature flags ajoutes dans `config.template.yaml`
+- `DraftPreferenceContext` : brouillon des preferences avant sauvegarde, modale de changements non sauvegardes
+- PreferencePage refactorisee avec onglets (tabs) par sous-feature
+- CLAUDE.md enrichi : regles SCSS (rem, var(--radius), variables de densite), regle versioning (1 version = 1 commit/merge)
+- ROADMAP.md : Phase 2.2 marquee terminee, details techniques mis a jour
+
 ## 2026.02.24
 
 ### preference.didacticiel — Page Aide + corrections tutoriels

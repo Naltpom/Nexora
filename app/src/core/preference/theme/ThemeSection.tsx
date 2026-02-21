@@ -1,20 +1,24 @@
 import { useState } from 'react'
 import { useAuth } from '../../../core/AuthContext'
+import { useDraftPreference } from '../DraftPreferenceContext'
 import BackgroundThemePicker from '../../../core/BackgroundThemePicker'
-import { applyCustomColors } from '../couleur/applyCustomColors'
 import '../../_identity/_identity.scss'
 import '../preference.scss'
 
 export default function ThemeSection() {
-  const { getPreference, updatePreference } = useAuth()
-  const currentTheme = getPreference('theme', 'light') as string
+  const { getDraftPreference, setDraftPreference } = useDraftPreference()
+  const { updatePreference, getPreference } = useAuth()
+  const currentTheme = getDraftPreference('theme', 'light') as string
   const [showBgPicker, setShowBgPicker] = useState(false)
 
   const handleThemeChange = (theme: string) => {
-    updatePreference('theme', theme)
-    document.documentElement.setAttribute('data-theme', theme)
-    const customColors = getPreference('customColors', null)
-    applyCustomColors(customColors, theme)
+    setDraftPreference('theme', theme)
+  }
+
+  // BackgroundThemePicker saves immediately (not part of draft system)
+  const handleBgSelect = (bgTheme: number) => {
+    updatePreference('backgroundTheme', bgTheme)
+    document.documentElement.setAttribute('data-bg-theme', String(bgTheme))
   }
 
   return (

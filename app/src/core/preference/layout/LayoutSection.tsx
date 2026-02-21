@@ -1,0 +1,144 @@
+import { useState, useEffect } from 'react'
+import { useDraftPreference } from '../DraftPreferenceContext'
+import { applyLayoutPrefs, type LayoutPrefs } from '../applyPreferences'
+import './layout.scss'
+
+const DENSITY_OPTIONS = [
+  { value: 'compact', label: 'Compact' },
+  { value: 'normal', label: 'Normal' },
+  { value: 'airy', label: 'Aere' },
+]
+
+const WIDTH_OPTIONS = [
+  { value: 'narrow', label: 'Etroit (720px)' },
+  { value: 'normal', label: 'Normal (960px)' },
+  { value: 'wide', label: 'Large (1200px)' },
+  { value: 'full', label: 'Pleine largeur' },
+]
+
+const DEFAULTS: LayoutPrefs = { density: 'normal', radius: 8, maxWidth: 'normal', sectionGap: 16 }
+
+export default function LayoutSection() {
+  const { getDraftPreference, setDraftPreference, resetVersion } = useDraftPreference()
+
+  const [prefs, setPrefs] = useState<LayoutPrefs>(() => {
+    const saved = getDraftPreference('layout', null)
+    return saved && typeof saved === 'object' ? saved : { ...DEFAULTS }
+  })
+
+  // Re-sync when draft is discarded
+  useEffect(() => {
+    const saved = getDraftPreference('layout', null)
+    setPrefs(saved && typeof saved === 'object' ? saved : { ...DEFAULTS })
+  }, [resetVersion])
+
+  useEffect(() => {
+    applyLayoutPrefs(prefs)
+  }, [prefs])
+
+  const update = (partial: Partial<LayoutPrefs>) => {
+    const next = { ...prefs, ...partial }
+    setPrefs(next)
+    setDraftPreference('layout', next)
+  }
+
+  const isModified = JSON.stringify(prefs) !== JSON.stringify(DEFAULTS)
+
+  const handleReset = () => {
+    setPrefs({ ...DEFAULTS })
+    setDraftPreference('layout', DEFAULTS)
+    applyLayoutPrefs(null)
+  }
+
+  return (
+    <div className="unified-card card-padded">
+      <h2 className="title-sm">Mise en page</h2>
+      <p className="text-secondary">Ajustez la densite, les arrondis et la largeur du contenu.</p>
+
+      <div className="layout-section__grid">
+        <div className="layout-section__field">
+          <label className="layout-section__label">Densite</label>
+          <div className="layout-section__radio-group">
+            {DENSITY_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                className={`layout-section__radio-btn${prefs.density === opt.value ? ' layout-section__radio-btn--active' : ''}`}
+                onClick={() => update({ density: opt.value })}
+                type="button"
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="layout-section__field">
+          <label className="layout-section__label">
+            Border-radius
+            <span className="layout-section__value">{prefs.radius ?? 8}px</span>
+          </label>
+          <input
+            type="range"
+            className="layout-section__slider"
+            min={0}
+            max={16}
+            step={1}
+            value={prefs.radius ?? 8}
+            onChange={(e) => update({ radius: Number(e.target.value) })}
+          />
+          <div className="layout-section__range-labels">
+            <span>0px</span>
+            <span>16px</span>
+          </div>
+          <div className="layout-section__radius-preview">
+            <div
+              className="layout-section__radius-box"
+              style={{ borderRadius: `${prefs.radius ?? 8}px` }}
+            />
+          </div>
+        </div>
+
+        <div className="layout-section__field">
+          <label className="layout-section__label">Largeur max du contenu</label>
+          <select
+            className="input"
+            value={prefs.maxWidth || 'normal'}
+            onChange={(e) => update({ maxWidth: e.target.value })}
+          >
+            {WIDTH_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="layout-section__field">
+          <label className="layout-section__label">
+            Espacement sections
+            <span className="layout-section__value">{prefs.sectionGap ?? 16}px</span>
+          </label>
+          <input
+            type="range"
+            className="layout-section__slider"
+            min={8}
+            max={32}
+            step={2}
+            value={prefs.sectionGap ?? 16}
+            onChange={(e) => update({ sectionGap: Number(e.target.value) })}
+          />
+          <div className="layout-section__range-labels">
+            <span>8px</span>
+            <span>32px</span>
+          </div>
+        </div>
+      </div>
+
+      {isModified && (
+        <div className="layout-section__actions">
+          <button className="btn btn-secondary" onClick={handleReset} type="button">
+            Reinitialiser
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}

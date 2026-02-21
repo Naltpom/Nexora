@@ -68,6 +68,7 @@ A chaque increment de version, mettre a jour **tous** ces fichiers :
 
 ### Regles de bump
 
+- **1 version = 1 commit/merge sur master** : ne pas incrementer la version en cours de travail. Toutes les modifications faites avant un commit/merge sur master sont groupees sous une seule version. Si l'utilisateur demande plusieurs changements avant de commit, ils partagent la meme version.
 - **Version globale** : toujours = la derniere version du CHANGELOG global
 - **Version manifest** : = la derniere version ou la feature a ete modifiee (pas forcement la globale)
 - Les sous-features (`parent.child`) ont leur propre version dans leur `manifest.py`
@@ -206,6 +207,48 @@ L'application applique le consentement RGPD sur le stockage navigateur. **Toute 
 4. **AuthContext** : `getLocalPreferences()` et `setLocalPreferences()` sont deja proteges. Utiliser `getPreference()` / `updatePreference()` pour les preferences utilisateur — le consentement est gere automatiquement.
 5. **Les donnees en DB ne sont pas concernees** : le consentement RGPD porte sur le stockage local (terminal de l'utilisateur). Les preferences sont toujours sauvegardees en DB via l'API, et chargees depuis la DB a chaque session. Seul le cache localStorage est conditionne au consentement.
 6. **Wording CNIL** : utiliser "cookies et traceurs" (pas juste "cookies") dans toute l'UI liee au consentement.
+
+## Preferences utilisateur & CSS
+
+Les preferences de personnalisation s'appliquent a **l'ensemble de l'interface**. Tout nouveau style ou composant doit respecter les variables CSS de preference.
+
+### Regles obligatoires pour les SCSS
+
+1. **`font-size` en `rem`, jamais en `px`** — L'echelle de texte (`html font-size: X%`) propage via `rem`. Utiliser la table de conversion :
+   - 10px=0.625rem, 11px=0.6875rem, 12px=0.75rem, 13px=0.8125rem, 14px=0.875rem, 15px=0.9375rem, 16px=1rem, 18px=1.125rem, 20px=1.25rem, 24px=1.5rem, 28px=1.75rem
+2. **`border-radius: var(--radius)`** — Toujours utiliser la variable, jamais un px fixe (sauf cercles `50%`)
+3. **Padding des composants interactifs** — Utiliser les variables de densite :
+   - Boutons : `padding: var(--density-btn-padding, 8px 16px)`
+   - Inputs : `padding: var(--density-input-padding, 8px 12px)`
+   - Cellules de table : `padding: var(--density-padding, 12px 20px)`
+   - Cards : `padding: var(--density-card-padding, 24px)`
+4. **Gaps entre sections** — `gap: var(--section-gap, 24px)` pour les conteneurs de page
+5. **Largeur du contenu** — `max-width: var(--content-max-width, 1200px)` pour les conteneurs principaux
+6. **`font-family`** — Ne pas definir explicitement sauf pour du code (`monospace`). Le body propage `var(--font-family)` a tous les elements via heritage CSS.
+7. **Accessibilite** — Ne pas utiliser `!important` sur `transition`, `outline`, `font-family` car les classes `a11y-*` globales peuvent les surcharger.
+
+### Variables CSS de preference disponibles
+
+| Variable | Defaut | Source |
+|----------|--------|--------|
+| `--font-family` | system stack | preference.font |
+| `--line-height` | 1.5 | preference.font |
+| `--font-weight` | 400 | preference.font |
+| `--radius` | 8px | preference.layout |
+| `--density-padding` | 12px 16px | preference.layout (compact/normal/airy) |
+| `--density-gap` | 12px | preference.layout |
+| `--density-btn-padding` | 8px 16px | preference.layout |
+| `--density-input-padding` | 8px 12px | preference.layout |
+| `--density-card-padding` | 24px | preference.layout |
+| `--content-max-width` | 1200px | preference.layout |
+| `--section-gap` | 24px | preference.layout |
+
+### Pre-render & application
+
+- `main.tsx` IIFE : applique les preferences avant le rendu React (anti-flash)
+- `AuthContext.tsx` : re-applique apres login/SSO
+- Utilitaire : `app/src/core/preference/applyPreferences.ts`
+- Chaque section appelle son `apply*Prefs()` au changement + `updatePreference()` pour persister
 
 ## Regles de dev
 

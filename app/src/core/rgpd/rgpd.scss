@@ -36,13 +36,13 @@
   strong {
     display: block;
     margin-bottom: 4px;
-    font-size: 14px;
+    font-size: 0.875rem;
     color: var(--gray-900);
   }
 
   p {
     margin: 0;
-    font-size: 13px;
+    font-size: 0.8125rem;
     color: var(--gray-600);
     line-height: 1.5;
   }
@@ -92,7 +92,7 @@
 
   h3 {
     margin: 0;
-    font-size: 15px;
+    font-size: 0.9375rem;
     font-weight: 600;
     color: var(--gray-900);
   }
@@ -100,7 +100,7 @@
 
 .rgpd-consent-item-info p {
   margin: 0;
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--gray-500);
   line-height: 1.4;
 }
@@ -164,7 +164,7 @@
   display: inline-block;
   padding: 2px 8px;
   border-radius: 10px;
-  font-size: 11px;
+  font-size: 0.6875rem;
   font-weight: 600;
   background: var(--gray-100);
   color: var(--gray-600);
@@ -191,7 +191,7 @@
   display: inline-block;
   padding: 3px 10px;
   border-radius: 12px;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
 }
 
@@ -236,7 +236,7 @@
 
   h3 {
     margin: 0;
-    font-size: 15px;
+    font-size: 0.9375rem;
     font-weight: 600;
     color: var(--gray-900);
   }
@@ -253,7 +253,7 @@
   padding: 2px 8px;
   background: var(--gray-100);
   border-radius: 4px;
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: var(--gray-600);
   font-family: monospace;
 }
@@ -266,13 +266,13 @@
 
   h3 {
     margin: 0 0 8px;
-    font-size: 16px;
+    font-size: 1rem;
     color: var(--gray-900);
   }
 
   p {
     margin: 0 0 16px;
-    font-size: 13px;
+    font-size: 0.8125rem;
     color: var(--gray-500);
     line-height: 1.5;
   }
@@ -300,19 +300,19 @@
 
   h3 {
     margin: 0;
-    font-size: 15px;
+    font-size: 0.9375rem;
     font-weight: 600;
     color: var(--gray-900);
   }
 }
 
 .rgpd-request-date {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--gray-400);
 }
 
 .rgpd-request-description {
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--gray-600);
   margin: 8px 0;
   line-height: 1.4;
@@ -323,7 +323,7 @@
   padding: 10px 12px;
   background: var(--gray-50);
   border-radius: var(--radius);
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--gray-700);
 
   strong {
@@ -345,7 +345,7 @@
 
   h3 {
     margin: 0 0 16px;
-    font-size: 16px;
+    font-size: 1rem;
     color: var(--gray-900);
   }
 }
@@ -370,7 +370,7 @@
   border: none;
   background: none;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 500;
   color: var(--gray-500);
   border-bottom: 2px solid transparent;
@@ -397,7 +397,7 @@
 
   h2 {
     margin: 0;
-    font-size: 18px;
+    font-size: 1.125rem;
     color: var(--gray-900);
   }
 }
@@ -422,7 +422,7 @@
 
   h3 {
     margin: 0;
-    font-size: 15px;
+    font-size: 0.9375rem;
     font-weight: 600;
     color: var(--gray-900);
   }
@@ -437,7 +437,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 6px 16px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--gray-600);
 
   strong {
@@ -454,7 +454,7 @@
   th, td {
     padding: 10px 12px;
     text-align: left;
-    font-size: 13px;
+    font-size: 0.8125rem;
     border-bottom: 1px solid var(--gray-100);
   }
 
@@ -488,7 +488,7 @@
 
   h3 {
     margin: 0;
-    font-size: 15px;
+    font-size: 0.9375rem;
     font-weight: 600;
     color: var(--gray-900);
   }
@@ -502,7 +502,7 @@
 
 .rgpd-html-editor {
   font-family: monospace;
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 .rgpd-checkbox-label {
@@ -510,7 +510,7 @@
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 /* --- Legal Page (public) --- */
@@ -533,24 +533,24 @@
 
   h1 {
     margin: 0 0 8px;
-    font-size: 24px;
+    font-size: 1.5rem;
     color: var(--gray-900);
   }
 }
 
 .rgpd-legal-meta {
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--gray-400);
   margin-bottom: 24px;
 }
 
 .rgpd-legal-content {
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1.7;
   color: var(--gray-700);
 
-  h2 { font-size: 18px; margin: 24px 0 12px; color: var(--gray-900); }
-  h3 { font-size: 16px; margin: 20px 0 8px; color: var(--gray-800); }
+  h2 { font-size: 1.125rem; margin: 24px 0 12px; color: var(--gray-900); }
+  h3 { font-size: 1rem; margin: 20px 0 8px; color: var(--gray-800); }
   p { margin: 0 0 12px; }
   ul, ol { margin: 0 0 12px; padding-left: 20px; }
   li { margin-bottom: 4px; }
@@ -599,13 +599,13 @@
 
   h3 {
     margin: 0 0 4px;
-    font-size: 16px;
+    font-size: 1rem;
     font-weight: 600;
     color: var(--gray-900);
   }
 
   .text-secondary {
-    font-size: 12px;
+    font-size: 0.75rem;
   }
 }
 
@@ -616,12 +616,12 @@
   background: var(--gray-100);
   border-radius: var(--radius);
   margin-bottom: 12px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.6;
   color: var(--gray-700);
 
-  h2 { font-size: 16px; margin: 16px 0 8px; color: var(--gray-900); }
-  h3 { font-size: 14px; margin: 12px 0 6px; color: var(--gray-800); }
+  h2 { font-size: 1rem; margin: 16px 0 8px; color: var(--gray-900); }
+  h3 { font-size: 0.875rem; margin: 12px 0 6px; color: var(--gray-800); }
   p { margin: 0 0 8px; }
   ul, ol { margin: 0 0 8px; padding-left: 20px; }
   li { margin-bottom: 2px; }
@@ -633,7 +633,7 @@
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 500;
   color: var(--gray-800);
 
@@ -656,7 +656,7 @@
 .legal-scroll-hint {
   margin: 0 0 8px;
   padding: 6px 12px;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--warning);
   background: rgba(234, 179, 8, 0.08);
   border-radius: var(--radius);
@@ -667,7 +667,7 @@
   display: inline-block;
   margin-top: 8px;
   padding: 4px 12px;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--primary);
   background: rgba(59, 130, 246, 0.1);
@@ -732,7 +732,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 /* --- Pagination --- */
@@ -743,7 +743,7 @@
   justify-content: center;
   gap: 16px;
   margin-top: 16px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--gray-500);
 }
 

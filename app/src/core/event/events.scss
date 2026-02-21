@@ -13,7 +13,7 @@
 }
 
 .events-badge-sm {
-  font-size: 11px;
+  font-size: 0.6875rem;
 }
 
 .events-cell-label {
@@ -21,7 +21,7 @@
 }
 
 .events-cell-desc {
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--gray-500);
   max-width: 300px;
 }
@@ -38,13 +38,13 @@
   gap: 2px;
 
   &-value {
-    font-size: 20px;
+    font-size: 1.25rem;
     font-weight: 600;
     color: var(--text-primary, var(--gray-700));
   }
 
   &-label {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: var(--gray-400);
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -113,7 +113,7 @@
 
 .events-feature-name {
   font-weight: 600;
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--text-primary, var(--gray-700));
 }
 
@@ -128,7 +128,7 @@
 }
 
 .events-code {
-  font-size: 12px;
+  font-size: 0.75rem;
   padding: 2px 8px;
   border-radius: 4px;
   background: var(--gray-50);
@@ -156,7 +156,7 @@
   width: 100%;
   max-width: 320px;
   padding: 8px 12px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   border: 1px solid var(--gray-200);
   border-radius: 8px;
   background: var(--gray-50);

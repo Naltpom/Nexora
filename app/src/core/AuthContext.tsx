@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import api from '../api'
 import type { User } from '../types'
 import { hasConsent } from './rgpd/consentManager'
+import { applyAllPreferences } from './preference/applyPreferences'
 
 interface LoginResult {
   must_change_password: boolean
@@ -109,6 +110,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
           }
         }
+        // Apply font, layout, composants, accessibilite preferences
+        applyAllPreferences(merged)
       }
       setUser(userData)
       await checkImpersonationStatus()
