@@ -4,6 +4,7 @@ import './_identity.scss'
 import Layout from '../../core/Layout'
 import { useAuth } from '../../core/AuthContext'
 import { useFeature } from '../../core/FeatureContext'
+import { useScrollReveal } from '../../core/hooks'
 import api from '../../api'
 
 const SSOAccountLinks = lazy(() => import('../sso/SSOAccountLinks'))
@@ -12,6 +13,12 @@ const MFAStatusBadge = lazy(() => import('../mfa/MFAStatusBadge'))
 export default function Profile() {
   const { user, refreshUser, getPreference, updatePreference } = useAuth()
   const { isActive } = useFeature()
+
+  const infoRef = useScrollReveal<HTMLDivElement>()
+  const passwordRef = useScrollReveal<HTMLDivElement>()
+  const mfaRef = useScrollReveal<HTMLDivElement>()
+  const ssoRef = useScrollReveal<HTMLDivElement>()
+  const prefsRef = useScrollReveal<HTMLDivElement>()
 
   // User info
   const [firstName, setFirstName] = useState(user?.first_name || '')
@@ -92,7 +99,7 @@ export default function Profile() {
     <Layout breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Mon profil' }]} title="Mon profil">
       <div className="page-narrow">
         {/* User Info Section */}
-        <div className="unified-card card-padded">
+        <div className="unified-card card-padded reveal-up" ref={infoRef}>
           <h2 className="title-sm">Informations personnelles</h2>
           <form onSubmit={handleSaveInfo}>
             {infoError && <div className="alert alert-error alert-spaced">{infoError}</div>}
@@ -136,7 +143,7 @@ export default function Profile() {
         </div>
 
         {/* Password Section */}
-        <div className="unified-card card-padded">
+        <div className="unified-card card-padded reveal-up" ref={passwordRef}>
           <h2 className="title-sm">Changer le mot de passe</h2>
           <form onSubmit={handleChangePassword}>
             {pwdError && <div className="alert alert-error alert-spaced">{pwdError}</div>}
@@ -181,7 +188,7 @@ export default function Profile() {
 
         {/* MFA Section */}
         {isActive('mfa') && (
-          <div className="unified-card card-padded">
+          <div className="unified-card card-padded reveal-up" ref={mfaRef}>
             <div className="flex-between mb-16">
               <h2 className="title-sm mb-0">Authentification multi-facteurs (MFA)</h2>
               <Suspense fallback={null}>
@@ -199,7 +206,7 @@ export default function Profile() {
 
         {/* SSO Section */}
         {isActive('sso') && (
-          <div className="unified-card card-padded sso-profile-section">
+          <div className="unified-card card-padded sso-profile-section reveal-up" ref={ssoRef}>
             <h2 className="title-sm">Comptes lies</h2>
             <p className="text-secondary">
               Liez vos comptes externes pour vous connecter plus rapidement.
@@ -212,7 +219,7 @@ export default function Profile() {
 
         {/* Preferences Section */}
         {isActive('preference') ? (
-          <div className="unified-card card-padded">
+          <div className="unified-card card-padded reveal-up" ref={prefsRef}>
             <h2 className="title-sm">Preferences</h2>
             <p className="text-secondary">
               Gerez vos preferences de theme, tutoriels, et plus.
@@ -222,7 +229,7 @@ export default function Profile() {
             </Link>
           </div>
         ) : (
-          <div className="unified-card card-padded">
+          <div className="unified-card card-padded reveal-up" ref={prefsRef}>
             <h2 className="title-sm">Preferences</h2>
             <div className="form-group">
               <label>Theme</label>

@@ -1,5 +1,15 @@
 # _core — Changelog
 
+## 2026.02.15
+
+- Endpoint `POST /settings/favicon` : upload de favicon (.ico, .png, .svg, max 1 Mo)
+- Frontend : bouton upload favicon + preview dans la page Parametres > Apparence
+- Fix color picker etire a 100% (ajout `!important` sur width)
+- Reorganisation section Apparence : logo + couleur en grid, favicon en full-width row
+- Animations : scroll-reveal sur profil, compteurs animes + stagger sur homepage, page-enter transition
+- Nouveaux hooks : `useScrollReveal`, `useCountUp` dans `app/src/core/hooks/`
+- Nouveau fichier `app/src/core/styles/animations.scss` : animations CSS completes
+
 ## 2026.02.14
 
 - Nouvelles permissions `commands.read` et `commands.manage`

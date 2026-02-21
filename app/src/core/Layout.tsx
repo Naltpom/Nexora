@@ -35,7 +35,7 @@ export default function Layout({ children, breadcrumb, fullWidth, title }: Props
           <MFASetupBanner />
         </Suspense>
       )}
-      <main className={`main-content${fullWidth ? ' main-content-full' : ''}`}>
+      <main className={`main-content page-enter${fullWidth ? ' main-content-full' : ''}`}>
         {breadcrumb && breadcrumb.length > 0 && <Breadcrumb items={breadcrumb} />}
         {children}
       </main>

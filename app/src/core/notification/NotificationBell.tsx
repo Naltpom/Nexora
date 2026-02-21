@@ -24,6 +24,7 @@ export default function NotificationBell() {
   const { isActive } = useFeature()
   const pushActive = isActive('notification.push')
   const [open, setOpen] = useState(false)
+  const [wiggle, setWiggle] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
 
@@ -36,6 +37,14 @@ export default function NotificationBell() {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
+
+  useEffect(() => {
+    if (unreadCount > 0) {
+      setWiggle(true)
+      const timer = setTimeout(() => setWiggle(false), 700)
+      return () => clearTimeout(timer)
+    }
+  }, [unreadCount])
 
   const handleBellClick = () => {
     if (pushActive) {
@@ -61,7 +70,7 @@ export default function NotificationBell() {
   }
 
   return (
-    <div className="notification-bell" ref={dropdownRef}>
+    <div className={`notification-bell${wiggle ? ' notification-bell-wiggle' : ''}`} ref={dropdownRef}>
       <button
         className="notification-bell-btn"
         onClick={handleBellClick}

@@ -162,3 +162,52 @@ async def upload_logo(
     await db.flush()
 
     return {"logo_url": logo_url}
+
+
+# ---------------------------------------------------------------------------
+#  Admin: upload favicon
+# ---------------------------------------------------------------------------
+
+
+@router.post(
+    "/favicon",
+    dependencies=[Depends(require_permission("settings.manage"))],
+)
+async def upload_favicon(
+    file: UploadFile = File(...),
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Upload a new app favicon."""
+    allowed_types = ["image/x-icon", "image/vnd.microsoft.icon", "image/png", "image/svg+xml"]
+    if not file.content_type or file.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="Le fichier doit etre un favicon (.ico, .png, .svg)")
+
+    if file.size and file.size > 1 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Le fichier ne doit pas depasser 1 Mo")
+
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+    ext = os.path.splitext(file.filename or "favicon.ico")[1] or ".ico"
+    filename = f"favicon_{uuid.uuid4().hex[:8]}{ext}"
+    filepath = os.path.join(UPLOAD_DIR, filename)
+
+    with open(filepath, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+
+    favicon_url = f"/uploads/settings/{filename}"
+
+    # Update setting
+    now = datetime.now(timezone.utc)
+    result = await db.execute(select(AppSetting).where(AppSetting.key == "app_favicon"))
+    existing = result.scalar_one_or_none()
+    if existing:
+        existing.value = favicon_url
+        existing.updated_at = now
+        existing.updated_by = current_user.id
+    else:
+        db.add(AppSetting(key="app_favicon", value=favicon_url, updated_at=now, updated_by=current_user.id))
+
+    await db.flush()
+
+    return {"favicon_url": favicon_url}

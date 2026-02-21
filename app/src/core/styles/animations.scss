@@ -1,0 +1,423 @@
+// ============================================
+// Animation System — animations.scss
+// Pure SCSS animations. GPU-accelerated (transform/opacity only).
+// All animations respect prefers-reduced-motion.
+// ============================================
+
+// ── Global reduced-motion override ──
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+// ============================================
+// 1. Page mount animation
+// ============================================
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-enter {
+  animation: page-enter 0.4s ease-out both;
+}
+
+// ============================================
+// 2. Scroll-triggered reveal animations
+// ============================================
+
+.reveal {
+  opacity: 0;
+  will-change: transform, opacity;
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+
+  &.revealed {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.reveal-up {
+  @extend .reveal;
+  transform: translateY(30px);
+}
+
+.reveal-left {
+  @extend .reveal;
+  transform: translateX(-30px);
+}
+
+.reveal-right {
+  @extend .reveal;
+  transform: translateX(30px);
+}
+
+.reveal-scale {
+  @extend .reveal;
+  transform: scale(0.92);
+}
+
+// Stagger support
+.reveal-stagger > .reveal-child {
+  opacity: 0;
+  transform: translateY(20px);
+  will-change: transform, opacity;
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  transition-delay: calc(var(--reveal-index, 0) * 0.08s);
+}
+
+.reveal-stagger.revealed > .reveal-child {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+// ============================================
+// 3. Enhanced card hover effects
+// ============================================
+
+.card-hover-lift {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow:
+      0 12px 28px rgba(0, 0, 0, 0.08),
+      0 4px 10px rgba(0, 0, 0, 0.04);
+  }
+}
+
+[data-theme="dark"] .card-hover-lift:hover {
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.3),
+    0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+// Stat card glow per type
+.stat-card--users.stat-glow:hover {
+  box-shadow:
+    0 8px 24px rgba(99, 102, 241, 0.15),
+    0 0 0 1px rgba(99, 102, 241, 0.1);
+}
+
+.stat-card--notifs.stat-glow:hover {
+  box-shadow:
+    0 8px 24px rgba(245, 158, 11, 0.15),
+    0 0 0 1px rgba(245, 158, 11, 0.1);
+}
+
+.stat-card--invites.stat-glow:hover {
+  box-shadow:
+    0 8px 24px rgba(16, 185, 129, 0.15),
+    0 0 0 1px rgba(16, 185, 129, 0.1);
+}
+
+[data-theme="dark"] {
+  .stat-card--users.stat-glow:hover {
+    box-shadow:
+      0 8px 32px rgba(99, 102, 241, 0.25),
+      0 0 0 1px rgba(129, 140, 248, 0.2);
+  }
+
+  .stat-card--notifs.stat-glow:hover {
+    box-shadow:
+      0 8px 32px rgba(245, 158, 11, 0.25),
+      0 0 0 1px rgba(251, 191, 36, 0.2);
+  }
+
+  .stat-card--invites.stat-glow:hover {
+    box-shadow:
+      0 8px 32px rgba(16, 185, 129, 0.25),
+      0 0 0 1px rgba(52, 211, 153, 0.2);
+  }
+}
+
+// Quick access card hover
+.card-link-item .unified-card {
+  transition: box-shadow 0.3s ease,
+              border-color 0.3s ease,
+              transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.card-link-item .unified-card:hover {
+  transform: translateY(-2px);
+}
+
+// ============================================
+// 4. Button micro-interactions
+// ============================================
+
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.25);
+}
+
+.btn-danger:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+}
+
+.btn-success:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+}
+
+[data-theme="dark"] {
+  .btn-primary:hover:not(:disabled) {
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+  }
+
+  .btn-success:hover:not(:disabled) {
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+  }
+}
+
+// ============================================
+// 5. Enhanced modal/dropdown animations
+// ============================================
+
+@keyframes overlay-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-overlay {
+  animation: overlay-fade-in 0.2s ease-out both;
+}
+
+@keyframes modal-spring-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-24px) scale(0.92);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(4px) scale(1.01);
+  }
+  80% {
+    transform: translateY(-2px) scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.confirm-modal {
+  animation: modal-spring-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes dropdown-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.notification-dropdown {
+  animation: dropdown-slide-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  transform-origin: top right;
+}
+
+.header-admin-menu {
+  animation: dropdown-slide-in 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  transform-origin: top right;
+}
+
+// ============================================
+// 6. Login card entrance
+// ============================================
+
+@keyframes login-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.login-card-enter {
+  animation: login-card-enter 0.5s ease-out both;
+}
+
+// ============================================
+// 7. Header micro-animations
+// ============================================
+
+// Nav link hover underline
+.header-admin-menu-item {
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 16px;
+    right: 16px;
+    height: 2px;
+    background: var(--primary);
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform 0.25s ease;
+    border-radius: 1px;
+  }
+
+  &:hover::after {
+    transform: scaleX(1);
+  }
+}
+
+[data-theme="dark"] .header-admin-menu-item::after {
+  background: #8b5cf6;
+}
+
+// Notification bell wiggle
+@keyframes bell-wiggle {
+  0% { transform: rotate(0); }
+  15% { transform: rotate(12deg); }
+  30% { transform: rotate(-10deg); }
+  45% { transform: rotate(6deg); }
+  60% { transform: rotate(-3deg); }
+  75% { transform: rotate(1deg); }
+  100% { transform: rotate(0); }
+}
+
+.notification-bell-wiggle .notification-bell-btn {
+  animation: bell-wiggle 0.6s ease-in-out;
+}
+
+// Badge pop-in
+@keyframes badge-pop {
+  0% { transform: scale(0); }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+.notification-bell-badge {
+  animation: badge-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+// Avatar hover
+.header-avatar {
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: scale(1.08);
+  }
+}
+
+// Theme toggle spin
+.header-theme-toggle {
+  transition: transform 0.3s ease;
+
+  &:active {
+    transform: rotate(180deg);
+  }
+}
+
+// Logo hover
+.header-logo {
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 0.85;
+  }
+}
+
+// ============================================
+// 8. Skeleton shimmer loading
+// ============================================
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--gray-100) 25%,
+    var(--gray-50) 50%,
+    var(--gray-100) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius);
+}
+
+.skeleton-text {
+  @extend .skeleton;
+  height: 14px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+
+  &:last-child {
+    width: 60%;
+  }
+}
+
+.skeleton-title {
+  @extend .skeleton;
+  height: 24px;
+  width: 40%;
+  margin-bottom: 12px;
+  border-radius: 6px;
+}
+
+.skeleton-card {
+  @extend .skeleton;
+  height: 100px;
+  border-radius: 12px;
+}
+
+.skeleton-avatar {
+  @extend .skeleton;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+[data-theme="dark"] {
+  .skeleton,
+  .skeleton-text,
+  .skeleton-title,
+  .skeleton-card,
+  .skeleton-avatar {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.04) 25%,
+      rgba(255, 255, 255, 0.08) 50%,
+      rgba(255, 255, 255, 0.04) 75%
+    );
+    background-size: 200% 100%;
+  }
+}

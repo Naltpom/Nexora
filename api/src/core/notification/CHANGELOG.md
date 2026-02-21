@@ -1,5 +1,10 @@
 # notification — Changelog
 
+## 2026.02.15
+
+- Animation wiggle sur la cloche quand `unreadCount > 0` (classe `notification-bell-wiggle`)
+- Animation `badge-pop` sur le badge de notification
+
 ## 2026.02.14
 
 - Migration `purge_notifications.py` vers `commands.py` (Command Registry)

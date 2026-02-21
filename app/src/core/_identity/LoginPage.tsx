@@ -53,7 +53,7 @@ export default function Login() {
 
   return (
     <div className="login-container">
-      <div className="login-card">
+      <div className="login-card login-card-enter">
         <div className="login-header">
           <svg width="48" height="48" viewBox="0 0 32 32" fill="none">
             <rect width="32" height="32" rx="6" fill="#1E40AF" />

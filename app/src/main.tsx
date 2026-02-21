@@ -9,6 +9,7 @@ import { AppSettingsProvider } from './core/AppSettingsContext'
 import { ConfirmProvider } from './core/ConfirmModal'
 import { NotificationProvider } from './core/notification/NotificationContext'
 import './core/styles/global.scss'
+import './core/styles/animations.scss'
 
 // Apply theme before render to prevent white flash
 ;(() => {

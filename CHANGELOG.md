@@ -2,6 +2,28 @@
 
 
 
+## 2026.02.15
+
+### Animations modernes + ameliorations UI
+
+- Nouveau systeme d'animations CSS GPU-accelerated (`animations.scss`) : scroll-reveal, page transitions, hover effects, micro-interactions boutons, modals spring, skeleton shimmer
+- Hook `useScrollReveal` : IntersectionObserver callback-ref pour reveler les elements au scroll (stagger support)
+- Hook `useCountUp` : compteur anime (0 → valeur) avec easing cubic et IntersectionObserver
+- Homepage : stat cards avec compteurs animes + stagger reveal + glow au hover, acces rapide avec reveal + lift
+- Profil : sections revelees au scroll (`reveal-up`)
+- Login : animation d'entree de la card (`login-card-enter`)
+- Notification bell : wiggle quand notifications non lues + badge pop
+- Page entree : fade-in + translateY sur le `<main>` (`page-enter`)
+- Respect `prefers-reduced-motion` (CSS + JS)
+- Dark/light theme : glows et shadows adaptes
+
+### \_identity — Parametres admin
+
+- Endpoint `POST /settings/favicon` : upload de favicon (.ico, .png, .svg, max 1 Mo)
+- Frontend : bouton upload favicon + preview dans la page Apparence
+- Fix color picker etire (specificity `!important`)
+- Reorganisation layout section Apparence (logo + couleur en grid, favicon en full-width)
+
 ## 2026.02.14
 
 ### Infrastructure — Command Registry
