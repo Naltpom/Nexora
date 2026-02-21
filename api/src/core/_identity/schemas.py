@@ -340,6 +340,25 @@ class ImpersonationLogResponse(BaseModel):
     duration_minutes: int | None
 
 
+# ── Command Execution ───────────────────────────────────────────────────
+
+class CommandExecutionResponse(BaseModel):
+    id: int
+    command_name: str
+    command_label: str
+    feature: str
+    status: str
+    result: dict | None = None
+    error_message: str | None = None
+    duration_seconds: float
+    source: str
+    executed_by: int | None = None
+    executed_by_name: str | None = None
+    executed_at: datetime
+
+
+# ── Search ──────────────────────────────────────────────────────────────
+
 class UserSearchResult(BaseModel):
     id: int
     email: str

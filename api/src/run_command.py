@@ -86,7 +86,7 @@ def main():
 async def _execute(registry: CommandRegistry, command_name: str):
     async with async_session() as db:
         try:
-            result = await registry.run_command(command_name, db)
+            result = await registry.run_command(command_name, db, source="cli")
             await db.commit()
         except Exception as e:
             await db.rollback()

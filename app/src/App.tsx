@@ -25,6 +25,8 @@ import PermissionsAdminPage from './core/_identity/PermissionsAdminPage'
 import FeaturesAdminPage from './core/_identity/FeaturesAdminPage'
 import AppSettingsAdminPage from './core/_identity/AppSettingsAdminPage'
 import UserDetailPage from './core/_identity/UserDetailPage'
+import CommandsAdminPage from './core/_identity/CommandsAdminPage'
+import CommandHistoryPage from './core/_identity/CommandHistoryPage'
 
 // Feature manifests (auto-discovered from core + project features)
 const coreModules = import.meta.glob('./core/*/index.ts', { eager: true }) as Record<string, any>
@@ -102,6 +104,8 @@ export default function App() {
       <Route path="/admin/permissions" element={<ProtectedRoute requireSuperAdmin><PermissionsAdminPage /></ProtectedRoute>} />
       <Route path="/admin/features" element={<ProtectedRoute requireSuperAdmin><FeaturesAdminPage /></ProtectedRoute>} />
       <Route path="/admin/settings" element={<ProtectedRoute requireSuperAdmin><AppSettingsAdminPage /></ProtectedRoute>} />
+      <Route path="/admin/commands" element={<ProtectedRoute requireSuperAdmin><CommandsAdminPage /></ProtectedRoute>} />
+      <Route path="/admin/commands/history" element={<ProtectedRoute requireSuperAdmin><CommandHistoryPage /></ProtectedRoute>} />
 
       {/* Dynamic feature routes */}
       {featureRoutes.map((route) => (

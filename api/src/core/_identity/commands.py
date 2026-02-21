@@ -6,7 +6,7 @@ from sqlalchemy import delete, select
 
 from ..command_registry import CommandDefinition
 from ..config import settings
-from .models import ImpersonationAction, ImpersonationLog, SecurityToken
+from .models import CommandExecution, ImpersonationAction, ImpersonationLog, SecurityToken
 from .services import run_pg_dump
 
 
@@ -70,6 +70,23 @@ async def _backup_database(db):
     }
 
 
+async def _purge_command_logs(db):
+    """Delete command execution logs older than N days."""
+    days = settings.COMMAND_LOG_RETENTION_DAYS
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+
+    result = await db.execute(
+        delete(CommandExecution).where(CommandExecution.executed_at < cutoff)
+    )
+    count = result.rowcount
+
+    return {
+        "purged": count,
+        "retention_days": days,
+        "message": f"{count} log(s) d'execution purge(s)." if count else "Aucun log a purger.",
+    }
+
+
 commands = [
     CommandDefinition(
         name="_identity.purge_expired_tokens",
@@ -92,5 +109,13 @@ commands = [
         description="Execute pg_dump avec nettoyage automatique des anciens backups (7 jours)",
         handler=_backup_database,
         schedule="0 6 * * *",
+    ),
+    CommandDefinition(
+        name="_identity.purge_command_logs",
+        label="Purge des logs de commandes",
+        description="Supprime les logs d'execution de commandes plus anciens que N jours",
+        handler=_purge_command_logs,
+        schedule="0 3 1 * *",
+        config_keys=["COMMAND_LOG_RETENTION_DAYS"],
     ),
 ]

@@ -2,6 +2,26 @@
 
 
 
+## 2026.02.18
+
+### \_identity — Page admin Commandes de maintenance + historique
+
+- Nouvelle table `command_states` : persistance de l'etat enable/disable des commandes de maintenance
+- Endpoint `PATCH /api/commands/{name}` : active/desactive une commande avec persistance en DB
+- `CommandRegistry.load_states_from_db_sync()` : chargement des etats depuis la DB au startup
+- `CommandRegistry.set_command_enabled()` : mise a jour de l'etat en memoire
+- Page admin `/admin/commands` : liste des commandes avec toggle enable/disable et bouton executer
+- Lien "Commandes" dans le menu admin du Header (icone terminal)
+- Migration Alembic : creation table `command_states`
+- Nouvelle table `command_executions` : historique d'execution avec resultat JSON, duree, source, utilisateur
+- Logging automatique dans `CommandRegistry.run_command()` (API + CLI)
+- Endpoint `GET /api/commands/history` : historique pagine avec filtres (commande, statut)
+- Page admin `/admin/commands/history` : tableau historique avec modal detail, pagination, filtres
+- Bouton "Historique" dans la page Commandes
+- Commande `_identity.purge_command_logs` : purge mensuelle des logs > 90 jours
+- Config `COMMAND_LOG_RETENTION_DAYS` (default 90)
+- Styles badge-success, badge-warning, badge-error, badge-info ajoutes au theme global
+
 ## 2026.02.17
 
 ### \_identity — Table SecurityToken + commandes maintenance

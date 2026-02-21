@@ -70,7 +70,7 @@ def create_app() -> FastAPI:
     application = FastAPI(
         title="Kertios Template",
         description="Feature-based modular application template",
-        version="2026.02.17",
+        version="2026.02.18",
         docs_url="/api/docs",
         openapi_url="/api/openapi.json",
     )
@@ -107,6 +107,7 @@ def create_app() -> FastAPI:
     # ── Command discovery ────────────────────────────────────────────
     command_registry = CommandRegistry()
     command_registry.discover()
+    command_registry.load_states_from_db_sync()
 
     # ── Store registries in app state ────────────────────────────────
     application.state.feature_registry = registry

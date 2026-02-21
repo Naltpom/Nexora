@@ -109,6 +109,9 @@ class Settings(BaseSettings):
     # Impersonation log retention
     IMPERSONATION_LOG_RETENTION_DAYS: int = 180  # Delete impersonation logs older than N days
 
+    # Command execution log retention
+    COMMAND_LOG_RETENTION_DAYS: int = 90  # Delete command execution logs older than N days
+
     # Frontend URL (for reset password links)
     FRONTEND_URL: str = "http://localhost:5472"
 

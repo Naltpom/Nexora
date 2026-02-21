@@ -5,7 +5,7 @@ import hashlib
 
 import uuid as uuid_mod
 
-from sqlalchemy import String, Boolean, Integer, ForeignKey, DateTime, Text, Index
+from sqlalchemy import String, Boolean, Integer, Float, ForeignKey, DateTime, Text, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 
@@ -145,6 +145,43 @@ class FeatureState(Base):
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
     updated_by: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"), nullable=True)
+
+
+# ── Command State ───────────────────────────────────────────────────────
+
+class CommandState(Base):
+    __tablename__ = "command_states"
+
+    name: Mapped[str] = mapped_column(String(100), primary_key=True)
+    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+    updated_by: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"), nullable=True)
+
+
+# ── Command Execution Log ────────────────────────────────────────────────
+
+class CommandExecution(Base):
+    __tablename__ = "command_executions"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    command_name: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    command_label: Mapped[str] = mapped_column(String(200), nullable=False)
+    feature: Mapped[str] = mapped_column(String(100), nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False)  # "success" | "error"
+    result: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    duration_seconds: Mapped[float] = mapped_column(Float, nullable=False)
+    source: Mapped[str] = mapped_column(String(20), nullable=False, default="api")
+    executed_by: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    executed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True
+    )
+
+    executed_by_user = relationship("User", foreign_keys=[executed_by])
 
 
 # ── Invitations ──────────────────────────────────────────────────────────

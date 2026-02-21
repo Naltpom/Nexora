@@ -1,5 +1,23 @@
 # _identity — Changelog
 
+## 2026.02.18
+
+- Table `command_states` pour persister l'etat enable/disable des commandes
+- Endpoint `PATCH /api/commands/{name}` avec upsert en DB et mise a jour en memoire
+- `CommandRegistry` : methodes `load_states_from_db_sync()` et `set_command_enabled()`
+- Chargement des etats commandes au startup dans `main.py`
+- Page admin `CommandsAdminPage` : table avec toggle, bouton executer, recherche
+- Route `/admin/commands` et lien dans le menu admin Header
+- Migration Alembic `c3d4e5f6a7b8` : create table `command_states`
+- Table `command_executions` : historique d'execution (resultat JSONB, duree, source, user)
+- Logging automatique dans `CommandRegistry.run_command()` pour API et CLI
+- Endpoint `GET /api/commands/history` avec pagination et filtres (command_name, status)
+- Page `CommandHistoryPage` : tableau historique avec modal detail JSON
+- Bouton "Historique" dans `CommandsAdminPage`
+- Commande `_identity.purge_command_logs` (mensuel, retention 90 jours)
+- Config `COMMAND_LOG_RETENTION_DAYS`
+- Migration Alembic `d4e5f6a7b8c9` : create table `command_executions`
+
 ## 2026.02.17
 
 - Nouvelle table `security_tokens` avec hash SHA256 et indexes optimises

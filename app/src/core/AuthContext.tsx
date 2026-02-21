@@ -1,7 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import api from '../api'
 import type { User } from '../types'
-import { applyCustomColors } from './preference/couleur/applyCustomColors'
 
 interface LoginResult {
   must_change_password: boolean
@@ -97,7 +96,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (merged.backgroundTheme !== undefined) {
           document.documentElement.setAttribute('data-bg-theme', String(merged.backgroundTheme))
         }
-        applyCustomColors(merged.customColors, merged.theme || 'light')
+        // Apply custom colors
+        if (merged.customColors) {
+          const themeKey = (merged.theme || 'light') === 'dark' ? 'dark' : 'light'
+          const colors = merged.customColors[themeKey]
+          if (colors) {
+            for (const [k, v] of Object.entries(colors)) {
+              if (v) document.documentElement.style.setProperty(`--${k}`, v as string)
+            }
+          }
+        }
       }
       setUser(userData)
       await checkImpersonationStatus()
