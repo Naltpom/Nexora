@@ -141,7 +141,7 @@
       }
 
       [data-theme="dark"] & {
-        color: #a78bfa;
+        color: var(--primary-light);
       }
     }
   }
@@ -163,7 +163,7 @@
   }
 
   [data-theme="dark"] & {
-    color: #a78bfa;
+    color: var(--primary-light);
 
     &:hover {
       background: rgba(139, 92, 246, 0.12);
@@ -234,7 +234,7 @@
     }
 
     [data-theme="dark"] & {
-      background: #a78bfa;
+      background: var(--primary-light);
 
       &.read {
         background: transparent;
@@ -305,7 +305,7 @@
     [data-theme="dark"] & {
       &:hover {
         background: rgba(139, 92, 246, 0.15);
-        color: #a78bfa;
+        color: var(--primary-light);
       }
     }
   }
@@ -561,7 +561,7 @@
 
 .notif-rule-status-badge {
   background: rgba(16, 185, 129, 0.1);
-  color: #059669;
+  color: var(--success);
   text-transform: none;
 
   [data-theme="dark"] & {
@@ -655,7 +655,7 @@
 
   &.push.active {
     background: rgba(139, 92, 246, 0.1);
-    color: #7c3aed;
+    color: var(--primary-dark);
   }
 
   [data-theme="dark"] & {
@@ -664,7 +664,7 @@
 
     &.push.active {
       background: rgba(139, 92, 246, 0.15);
-      color: #a78bfa;
+      color: var(--primary-light);
     }
 
     &:hover {
@@ -924,7 +924,7 @@
   }
 
   [data-theme="dark"] & {
-    color: #a78bfa;
+    color: var(--primary-light);
   }
 }
 
@@ -952,11 +952,11 @@
 
 .notif-rule-admin-badge {
   background: rgba(139, 92, 246, 0.1) !important;
-  color: #7c3aed !important;
+  color: var(--primary-dark) !important;
 
   [data-theme="dark"] & {
     background: rgba(139, 92, 246, 0.15) !important;
-    color: #a78bfa !important;
+    color: var(--primary-light) !important;
   }
 }
 
@@ -1150,7 +1150,7 @@
 
     &.unread {
       background: rgba(139, 92, 246, 0.06);
-      border-left-color: #a78bfa;
+      border-left-color: var(--primary-light);
     }
   }
 
@@ -1236,8 +1236,8 @@
     color: rgba(255, 255, 255, 0.6);
 
     &:hover {
-      border-color: #a78bfa;
-      color: #a78bfa;
+      border-color: var(--primary-light);
+      color: var(--primary-light);
       background: rgba(139, 92, 246, 0.1);
     }
   }
@@ -1291,11 +1291,11 @@
     height: 48px;
     border-radius: 12px;
     background: rgba(139, 92, 246, 0.1);
-    color: #7c3aed;
+    color: var(--primary-dark);
 
     [data-theme="dark"] & {
       background: rgba(139, 92, 246, 0.15);
-      color: #a78bfa;
+      color: var(--primary-light);
     }
   }
 
@@ -1342,7 +1342,7 @@
     transition: all 0.15s;
 
     &-primary {
-      background: #7c3aed;
+      background: var(--primary-dark);
       color: white;
 
       &:hover {
@@ -1350,7 +1350,7 @@
       }
 
       [data-theme="dark"] & {
-        background: #7c3aed;
+        background: var(--primary-dark);
 
         &:hover {
           background: #6d28d9;

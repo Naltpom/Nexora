@@ -4,7 +4,7 @@ manifest = FeatureManifest(
     name="preference",
     label="Preferences",
     description="Gestion des preferences utilisateur (theme, tutoriels, etc.)",
-    version="2026.02.7",
-    children=["preference.theme", "preference.didacticiel"],
+    version="2026.02.16",
+    children=["preference.theme", "preference.didacticiel", "preference.couleur"],
     permissions=["preference.read"],
 )

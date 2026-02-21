@@ -4,6 +4,7 @@ import { useFeature } from './FeatureContext'
 import { useAppSettings } from './AppSettingsContext'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
 import GlobalSearch from './GlobalSearch'
+import { applyCustomColors } from './preference/couleur/applyCustomColors'
 
 const NotificationBell = lazy(() => import('./notification/NotificationBell'))
 
@@ -41,10 +42,11 @@ export default function Header() {
     const newTheme = theme === 'dark' ? 'light' : 'dark'
     document.documentElement.setAttribute('data-theme', newTheme)
     updatePreference('theme', newTheme)
+    const customColors = getPreference('customColors', null)
+    applyCustomColors(customColors, newTheme)
   }
 
   const avatarInitial = user?.first_name?.charAt(0).toUpperCase() || '?'
-  const avatarColor = '#3B82F6'
 
   return (
     <header className="header">
@@ -124,7 +126,6 @@ export default function Header() {
                 >
                   <div
                     className="header-avatar"
-                    style={{ backgroundColor: avatarColor }}
                   >
                     {avatarInitial}
                   </div>

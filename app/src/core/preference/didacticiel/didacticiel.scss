@@ -611,6 +611,6 @@
 
   // Highlight ring in dark mode
   .tutorial-highlight {
-    box-shadow: 0 0 0 3px #8b5cf6, 0 0 12px rgba(139, 92, 246, 0.5);
+    box-shadow: 0 0 0 3px var(--primary), 0 0 12px rgba(139, 92, 246, 0.5);
   }
 }

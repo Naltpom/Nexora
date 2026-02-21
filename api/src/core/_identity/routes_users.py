@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..permissions import require_permission
 from ..security import get_current_super_admin, hash_password
+from .services import create_security_token
 from .models import (
     GlobalPermission,
     Permission,
@@ -259,9 +260,7 @@ async def trigger_reset_password(
         )
 
     token = str(uuid.uuid4())
-    user.password_reset_token = hash_password(token)
-    user.password_reset_expires = datetime.now(timezone.utc) + timedelta(minutes=30)
-    await db.flush()
+    await create_security_token(db, user.id, "password_reset", token, expires_minutes=30)
 
     try:
         from ..notification.email.services import get_email_sender

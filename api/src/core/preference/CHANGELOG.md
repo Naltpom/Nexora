@@ -1,5 +1,17 @@
 # Preference — Changelog
 
+## 2026.02.16
+
+### preference.couleur — Personnalisation des couleurs
+- Creation de la sous-feature `preference.couleur`
+- Personnalisation de 16 variables CSS (primary, success, warning, danger, gray scale)
+- Variantes independantes pour le theme clair et le theme sombre
+- Stockage dans `User.preferences.customColors` via l'endpoint existant `PUT /auth/me/preferences`
+- Application pre-render dans `main.tsx` IIFE pour eviter le flash de couleurs
+- Re-application automatique lors du changement de theme
+- Composant `ColorSection` avec color pickers groupes et previsualisation en temps reel
+- Bouton de reinitialisation aux couleurs par defaut
+
 ## 2026.02.12
 
 ### preference.didacticiel — Refonte du systeme de tutoriels

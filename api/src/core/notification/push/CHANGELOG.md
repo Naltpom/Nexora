@@ -1,5 +1,10 @@
 # notification.push — Changelog
 
+## 2026.02.17
+
+- Nouvelle commande `notification.push.cleanup_stale` : purge subscriptions inactives > PUSH_SUBSCRIPTION_RETENTION_DAYS jours
+- Config `PUSH_SUBSCRIPTION_RETENTION_DAYS` (default 90)
+
 ## 2026.02.1 — Init
 
 - Web Push notifications via protocole VAPID (ECDSA P-256)

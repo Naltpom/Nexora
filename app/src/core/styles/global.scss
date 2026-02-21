@@ -168,6 +168,7 @@ a.header-user-name {
   width: 32px;
   height: 32px;
   border-radius: 50%;
+  background-color: var(--primary-light);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1201,7 +1202,7 @@ tr:hover {
 }
 
 [data-theme="dark"] .unified-table thead th {
-  background: #12121f;
+  background: var(--gray-100);
   color: rgba(255,255,255,0.4);
   border-bottom-color: rgba(255,255,255,0.08);
 }
@@ -1225,14 +1226,14 @@ tr:hover {
 }
 
 [data-theme="dark"] .unified-table td .inline-input:focus {
-  border-color: #8b5cf6;
+  border-color: var(--primary);
   background: rgba(255,255,255,0.05);
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
 }
 
 [data-theme="dark"] .unified-table .cell-modified {
   background: rgba(139, 92, 246, 0.1) !important;
-  border-left-color: #8b5cf6 !important;
+  border-left-color: var(--primary) !important;
 }
 
 [data-theme="dark"] .unified-table .drag-handle {
@@ -1244,7 +1245,7 @@ tr:hover {
 }
 
 [data-theme="dark"] .unified-add-row {
-  background: #12121f;
+  background: var(--gray-100);
   border-top-color: rgba(255,255,255,0.08);
 }
 
@@ -1255,7 +1256,7 @@ tr:hover {
 }
 
 [data-theme="dark"] .unified-add-row .inline-input:focus {
-  border-color: #8b5cf6;
+  border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
 }
 
@@ -1266,11 +1267,11 @@ tr:hover {
 }
 
 [data-theme="dark"] .unified-changes-bar-text {
-  color: #a78bfa;
+  color: var(--primary-light);
 }
 
 [data-theme="dark"] .unified-changes-bar-dot {
-  background: #8b5cf6;
+  background: var(--primary);
 }
 
 [data-theme="dark"] .unified-page-header-info h1 {
@@ -1282,11 +1283,11 @@ tr:hover {
 }
 
 [data-theme="dark"] .btn-unified-primary {
-  background: #8b5cf6;
+  background: var(--primary);
 }
 
 [data-theme="dark"] .btn-unified-primary:hover:not(:disabled) {
-  background: #7c3aed;
+  background: var(--primary-dark);
   box-shadow: 0 4px 12px rgba(139, 92, 246, 0.35);
 }
 
@@ -1610,8 +1611,8 @@ tr:hover {
 }
 
 [data-theme="dark"] .unified-pagination-btn.active {
-  background: #8b5cf6;
-  border-color: #8b5cf6;
+  background: var(--primary);
+  border-color: var(--primary);
   color: white;
 }
 
@@ -1629,7 +1630,7 @@ tr:hover {
 }
 
 [data-theme="dark"] .unified-search-box:focus-within {
-  border-color: #8b5cf6;
+  border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
 }
 
@@ -1884,7 +1885,7 @@ td input[type="color"]:focus {
 
 .badge-admin-on {
   background: #DBEAFE;
-  color: #1E40AF;
+  color: var(--primary);
 }
 
 .badge-admin-on:hover {
@@ -2130,7 +2131,7 @@ td input[type="color"]:focus {
 }
 
 .btn-warning:hover:not(:disabled) {
-  background: #D97706;
+  background: var(--warning);
 }
 
 /* Icon buttons */
@@ -2167,7 +2168,7 @@ td input[type="color"]:focus {
 
 .btn-icon-warning:hover {
   background: #FEF3C7;
-  color: #D97706;
+  color: var(--warning);
 }
 
 .btn-icon-danger {
@@ -2203,7 +2204,7 @@ td input[type="color"]:focus {
 }
 
 [data-theme="dark"] .home-search-input:focus {
-  border-color: #8b5cf6;
+  border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
 }
 
@@ -2650,7 +2651,7 @@ td input[type="color"]:focus {
 [data-theme="dark"] .form-group input,
 [data-theme="dark"] .form-group select,
 [data-theme="dark"] .form-group textarea {
-  background: #12121f;
+  background: var(--gray-100);
   color: rgba(255,255,255,0.9);
   border-color: rgba(255,255,255,0.15);
 }
@@ -2658,17 +2659,17 @@ td input[type="color"]:focus {
 [data-theme="dark"] .form-group input:focus,
 [data-theme="dark"] .form-group select:focus,
 [data-theme="dark"] .form-group textarea:focus {
-  border-color: #8b5cf6;
+  border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
 }
 
 [data-theme="dark"] .search-box {
-  background: #12121f;
+  background: var(--gray-100);
   border-color: rgba(255,255,255,0.15);
 }
 
 [data-theme="dark"] .search-box:focus-within {
-  border-color: #8b5cf6;
+  border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
 }
 
@@ -2695,14 +2696,14 @@ td input[type="color"]:focus {
 }
 
 [data-theme="dark"] td .inline-input:focus {
-  border-color: #8b5cf6;
+  border-color: var(--primary);
   background: rgba(255,255,255,0.05);
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
 }
 
 [data-theme="dark"] .cell-modified {
   background: rgba(139, 92, 246, 0.1) !important;
-  border-left-color: #8b5cf6 !important;
+  border-left-color: var(--primary) !important;
 }
 
 [data-theme="dark"] td input[type="color"]:hover {
@@ -2710,7 +2711,7 @@ td input[type="color"]:focus {
 }
 
 [data-theme="dark"] td input[type="color"]:focus {
-  border-color: #8b5cf6;
+  border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
 }
 
@@ -2745,7 +2746,7 @@ td input[type="color"]:focus {
 }
 
 [data-theme="dark"] .rich-text-toolbar {
-  background: #12121f;
+  background: var(--gray-100);
   border-color: rgba(255,255,255,0.08);
 }
 
@@ -2758,7 +2759,7 @@ td input[type="color"]:focus {
 }
 
 [data-theme="dark"] .rich-text-toolbar button.is-active {
-  background: #8b5cf6;
+  background: var(--primary);
   color: white;
 }
 
@@ -2768,7 +2769,7 @@ td input[type="color"]:focus {
 
 [data-theme="dark"] .mention {
   background: rgba(139, 92, 246, 0.2);
-  color: #a78bfa;
+  color: var(--primary-light);
 }
 
 [data-theme="dark"] .mention-suggestion {
@@ -2800,7 +2801,7 @@ td input[type="color"]:focus {
 }
 
 [data-theme="dark"] .changes-bar-text {
-  color: #a78bfa;
+  color: var(--primary-light);
 }
 
 /* Dark mode: Theme toggle */
@@ -2852,12 +2853,12 @@ td input[type="color"]:focus {
 
 /* Global search dark */
 [data-theme="dark"] .global-search-input-wrapper {
-  background: #12121f;
+  background: var(--gray-100);
   border-color: rgba(255,255,255,0.15);
 }
 
 [data-theme="dark"] .global-search-input-wrapper:focus-within {
-  border-color: #8b5cf6;
+  border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
 }
 
@@ -3021,7 +3022,7 @@ td input[type="color"]:focus {
   gap: 6px;
   padding: 6px 14px;
   background: rgba(255, 255, 255, 0.95);
-  color: #DC2626;
+  color: var(--danger);
   border: 2px solid rgba(255, 255, 255, 0.4);
   border-radius: 6px;
   font-size: 14px;
@@ -3044,18 +3045,18 @@ td input[type="color"]:focus {
 
 /* Impersonation button in admin table */
 .btn-icon-primary {
-  background: #3B82F6;
+  background: var(--primary-light);
   color: white;
 }
 
 .btn-icon-primary:hover {
-  background: #2563EB;
+  background: var(--primary);
 }
 
 /* Dark theme support */
 [data-theme="dark"] .impersonation-search-dropdown {
-  background: #1F2937;
-  border-color: #374151;
+  background: var(--gray-800);
+  border-color: var(--gray-700);
 }
 
 [data-theme="dark"] .impersonation-search-item {
@@ -3324,8 +3325,8 @@ td input[type="color"]:focus {
 
 [data-theme="dark"] .bg-theme-option.active {
   background: rgba(139, 92, 246, 0.15);
-  border-color: #8b5cf6;
-  color: #a78bfa;
+  border-color: var(--primary);
+  color: var(--primary-light);
 }
 
 /* Logo Remove Button */
@@ -3797,8 +3798,8 @@ td input[type="color"]:focus {
 }
 
 [data-theme="dark"] .evolution-tab.active {
-  color: #8b5cf6;
-  border-bottom-color: #8b5cf6;
+  color: var(--primary);
+  border-bottom-color: var(--primary);
 }
 
 /* Summary Grid */
@@ -3939,7 +3940,7 @@ td input[type="color"]:focus {
 }
 
 [data-theme="dark"] .evolution-summary-value {
-  color: #8b5cf6;
+  color: var(--primary);
 }
 
 [data-theme="dark"] .evolution-summary-label {
@@ -3957,12 +3958,12 @@ td input[type="color"]:focus {
 }
 
 [data-theme="dark"] .evolution-date-field input[type="date"]:focus {
-  border-color: #8b5cf6;
+  border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
 }
 
 [data-theme="dark"] .evolution-modifications-detail {
-  background: #12121f;
+  background: var(--gray-100);
   border-top-color: rgba(255,255,255,0.06);
 }
 
@@ -4009,7 +4010,7 @@ td input[type="color"]:focus {
   color: #065F46;
 }
 .badge-status-online::before {
-  background: #059669;
+  background: var(--success);
   animation: pulse-status 2s ease-in-out infinite;
 }
 
@@ -4018,7 +4019,7 @@ td input[type="color"]:focus {
   color: #92400E;
 }
 .badge-status-away::before {
-  background: #D97706;
+  background: var(--warning);
 }
 
 .badge-status-offline {

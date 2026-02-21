@@ -293,7 +293,7 @@
 }
 
 [data-theme="dark"] .header-admin-menu-item::after {
-  background: #8b5cf6;
+  background: var(--primary);
 }
 
 // Notification bell wiggle

@@ -17,7 +17,7 @@ class Notification(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
-    event_id: Mapped[int] = mapped_column(Integer, ForeignKey("events.id"), nullable=False)
+    event_id: Mapped[int] = mapped_column(Integer, ForeignKey("events.id", ondelete="CASCADE"), nullable=False)
     rule_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("notification_rules.id", ondelete="SET NULL"), nullable=True)
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     body: Mapped[str | None] = mapped_column(Text, nullable=True)

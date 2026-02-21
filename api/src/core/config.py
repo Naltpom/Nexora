@@ -100,6 +100,15 @@ class Settings(BaseSettings):
     # Notification purge
     NOTIFICATION_PURGE_DAYS: int = 90  # Hard-delete soft-deleted notifications older than N days
 
+    # Event purge
+    EVENT_RETENTION_DAYS: int = 180  # Delete events older than N days
+
+    # Push subscription cleanup
+    PUSH_SUBSCRIPTION_RETENTION_DAYS: int = 90  # Delete inactive subscriptions older than N days
+
+    # Impersonation log retention
+    IMPERSONATION_LOG_RETENTION_DAYS: int = 180  # Delete impersonation logs older than N days
+
     # Frontend URL (for reset password links)
     FRONTEND_URL: str = "http://localhost:5472"
 

@@ -1,0 +1,152 @@
+// --- Color Section ---
+
+.couleur-description {
+  margin-bottom: 16px;
+}
+
+.couleur-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--gray-200);
+}
+
+.couleur-tab {
+  padding: 8px 20px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--gray-500);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.2s, border-color 0.2s;
+
+  &:hover {
+    color: var(--gray-700);
+  }
+
+  &--active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+  }
+}
+
+.couleur-group {
+  margin-bottom: 24px;
+}
+
+.couleur-group__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+
+.couleur-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+}
+
+.couleur-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--gray-200);
+  transition: border-color 0.2s;
+
+  &--modified {
+    border-color: var(--primary-light);
+  }
+}
+
+.couleur-item__label {
+  font-size: 13px;
+  color: var(--gray-700);
+  flex-shrink: 0;
+}
+
+.couleur-item__controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.couleur-item__picker {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--gray-300);
+  border-radius: 4px;
+  padding: 2px;
+  cursor: pointer;
+  background: none;
+
+  &::-webkit-color-swatch-wrapper {
+    padding: 0;
+  }
+
+  &::-webkit-color-swatch {
+    border: none;
+    border-radius: 2px;
+  }
+}
+
+.couleur-item__hex {
+  font-size: 11px;
+  font-family: monospace;
+  color: var(--gray-400);
+  min-width: 60px;
+}
+
+.couleur-item__reset {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--gray-400);
+  font-size: 16px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: color 0.2s;
+
+  &:hover {
+    color: var(--danger);
+  }
+}
+
+.couleur-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+// Dark theme overrides
+[data-theme="dark"] {
+  .couleur-tab {
+    color: var(--gray-400);
+
+    &:hover {
+      color: rgba(255, 255, 255, 0.8);
+    }
+  }
+
+  .couleur-item {
+    border-color: rgba(255, 255, 255, 0.1);
+
+    &--modified {
+      border-color: var(--primary-light);
+    }
+  }
+
+  .couleur-item__label {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .couleur-item__picker {
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+}

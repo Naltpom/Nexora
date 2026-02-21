@@ -1,6 +1,7 @@
-"""Core models: User, Role, Permission, FeatureState, Invitation, Impersonation."""
+"""Core models: User, Role, Permission, FeatureState, Invitation, Impersonation, SecurityToken."""
 
 from datetime import datetime, timezone, timedelta
+import hashlib
 
 import uuid as uuid_mod
 
@@ -27,14 +28,9 @@ class User(Base):
     auth_source: Mapped[str] = mapped_column(String(20), nullable=False, default="local")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     email_verified: Mapped[bool] = mapped_column(Boolean, default=True)
-    verification_code_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    verification_code_expires: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    verification_code_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     is_super_admin: Mapped[bool] = mapped_column(Boolean, default=False)
     must_change_password: Mapped[bool] = mapped_column(Boolean, default=False)
     preferences: Mapped[str | None] = mapped_column(Text, nullable=True)
-    password_reset_token: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    password_reset_expires: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     last_login: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     last_active: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
@@ -45,6 +41,36 @@ class User(Base):
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
+
+
+# ── Security Tokens ──────────────────────────────────────────────────────
+
+class SecurityToken(Base):
+    __tablename__ = "security_tokens"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    uuid: Mapped[uuid_mod.UUID] = mapped_column(
+        UUID(as_uuid=True), unique=True, nullable=False, default=uuid_mod.uuid4, index=True
+    )
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    token_type: Mapped[str] = mapped_column(String(30), nullable=False)
+    token_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+    __table_args__ = (
+        Index("ix_security_tokens_user_type", "user_id", "token_type"),
+        Index("ix_security_tokens_type_expires", "token_type", "expires_at"),
+        Index("ix_security_tokens_hash_type", "token_hash", "token_type"),
+    )
+
+    @staticmethod
+    def hash_value(raw_value: str) -> str:
+        """SHA256 hash for token storage and lookup."""
+        return hashlib.sha256(raw_value.encode()).hexdigest()
 
 
 # ── Roles & Permissions ─────────────────────────────────────────────────
@@ -130,9 +156,6 @@ class Invitation(Base):
     invited_by_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     token_hash: Mapped[str] = mapped_column(String(255), nullable=False)
-    verification_code_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    code_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    code_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     user_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)

@@ -1,4 +1,17 @@
-# _core — Changelog
+# _identity — Changelog
+
+## 2026.02.17
+
+- Nouvelle table `security_tokens` avec hash SHA256 et indexes optimises
+- Helpers : `create_security_token`, `verify_security_token`, `consume_security_token`, `get_latest_security_token`
+- Migration de tous les flows auth vers SecurityToken : register, verify_email, resend_verification, forgot_password, reset_password, verify_reset_token, authenticate_user
+- Migration des flows invitation vers SecurityToken : accept_invitation, resend_verification_code, verify_invitation_code
+- Migration `trigger_reset_password` (admin) vers SecurityToken
+- Suppression des colonnes User : `verification_code_hash`, `verification_code_expires`, `verification_code_sent_at`, `password_reset_token`, `password_reset_expires`
+- Suppression des colonnes Invitation : `verification_code_hash`, `code_expires_at`, `code_sent_at`
+- Commande `_identity.purge_expired_tokens` : purge quotidienne des tokens expires
+- Commande `_identity.purge_impersonation_logs` : purge mensuelle des logs > 180 jours
+- Commande `_identity.backup_database` : backup quotidien pg_dump avec retention 7 jours
 
 ## 2026.02.15
 

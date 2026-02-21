@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../../../core/AuthContext'
 import BackgroundThemePicker from '../../../core/BackgroundThemePicker'
+import { applyCustomColors } from '../couleur/applyCustomColors'
 import '../../_identity/_identity.scss'
 import '../preference.scss'
 
@@ -12,6 +13,8 @@ export default function ThemeSection() {
   const handleThemeChange = (theme: string) => {
     updatePreference('theme', theme)
     document.documentElement.setAttribute('data-theme', theme)
+    const customColors = getPreference('customColors', null)
+    applyCustomColors(customColors, theme)
   }
 
   return (

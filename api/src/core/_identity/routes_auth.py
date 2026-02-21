@@ -37,7 +37,13 @@ from .schemas import (
     VerifyTokenRequest,
 )
 from ..events import event_bus
-from .services import authenticate_user
+from .services import (
+    authenticate_user,
+    create_security_token,
+    verify_security_token,
+    consume_security_token,
+    get_latest_security_token,
+)
 
 router = APIRouter()
 
@@ -201,12 +207,8 @@ async def forgot_password(
 
     if user and user.auth_source == "local":
         token = str(uuid.uuid4())
-        user.password_reset_token = hash_password(token)
-        user.password_reset_expires = datetime.now(timezone.utc) + timedelta(minutes=30)
-        await db.flush()
+        await create_security_token(db, user.id, "password_reset", token, expires_minutes=30)
 
-        # Email sending is optional; import dynamically to avoid hard
-        # dependency on the notification feature.
         try:
             from ..notification.email.services import get_email_sender
 
@@ -236,67 +238,43 @@ async def reset_password(
             detail="Le mot de passe doit contenir au moins 6 caracteres",
         )
 
-    result = await db.execute(
-        select(User).where(User.password_reset_token.isnot(None))
-    )
-    users = result.scalars().all()
+    token = await verify_security_token(db, request.token, "password_reset")
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Token de reinitialisation invalide ou expire",
+        )
 
-    target_user = None
-    for u in users:
-        if verify_password(request.token, u.password_reset_token):
-            target_user = u
-            break
-
+    result = await db.execute(select(User).where(User.id == token.user_id))
+    target_user = result.scalar_one_or_none()
     if not target_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Token de reinitialisation invalide",
-        )
-
-    if target_user.password_reset_expires < datetime.now(timezone.utc):
-        target_user.password_reset_token = None
-        target_user.password_reset_expires = None
-        await db.flush()
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Le lien de reinitialisation a expire",
+            detail="Utilisateur introuvable",
         )
 
     target_user.password_hash = hash_password(request.new_password)
-    target_user.password_reset_token = None
-    target_user.password_reset_expires = None
     target_user.must_change_password = False
-    await db.flush()
+    await consume_security_token(db, token)
     return {"message": "Mot de passe modifie avec succes"}
 
 
 @router.post("/verify-reset-token")
-async def verify_reset_token(
+async def verify_reset_token_endpoint(
     request: VerifyTokenRequest,
     db: AsyncSession = Depends(get_db),
 ):
     """Public endpoint -- verifies if a reset token is valid without consuming it."""
-    result = await db.execute(
-        select(User).where(User.password_reset_token.isnot(None))
-    )
-    users = result.scalars().all()
+    token = await verify_security_token(db, request.token, "password_reset")
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Token de reinitialisation invalide ou expire",
+        )
 
-    for u in users:
-        if verify_password(request.token, u.password_reset_token):
-            if u.password_reset_expires < datetime.now(timezone.utc):
-                u.password_reset_token = None
-                u.password_reset_expires = None
-                await db.flush()
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Le lien de reinitialisation a expire",
-                )
-            return {"valid": True, "email": u.email}
-
-    raise HTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        detail="Token de reinitialisation invalide",
-    )
+    result = await db.execute(select(User).where(User.id == token.user_id))
+    user = result.scalar_one_or_none()
+    return {"valid": True, "email": user.email if user else None}
 
 
 # ---------------------------------------------------------------------------
@@ -335,10 +313,7 @@ async def register(
     await db.flush()
 
     code = _generate_verification_code()
-    user.verification_code_hash = hash_password(code)
-    user.verification_code_expires = datetime.now(timezone.utc) + timedelta(minutes=5)
-    user.verification_code_sent_at = datetime.now(timezone.utc)
-    await db.flush()
+    await create_security_token(db, user.id, "email_verification", code, expires_minutes=5)
 
     if settings.EMAIL_ENABLED:
         try:
@@ -394,18 +369,13 @@ async def verify_email(
         raise HTTPException(status_code=400, detail="Utilisateur introuvable")
     if user.email_verified:
         raise HTTPException(status_code=400, detail="Email deja verifie")
-    if not user.verification_code_hash:
-        raise HTTPException(status_code=400, detail="Aucun code en attente")
-    if user.verification_code_expires < datetime.now(timezone.utc):
-        raise HTTPException(status_code=400, detail="Le code a expire")
-    if not verify_password(data.code, user.verification_code_hash):
-        raise HTTPException(status_code=400, detail="Code incorrect")
+
+    token = await verify_security_token(db, data.code, "email_verification", user_id=user.id)
+    if not token:
+        raise HTTPException(status_code=400, detail="Code incorrect ou expire")
 
     user.email_verified = True
-    user.verification_code_hash = None
-    user.verification_code_expires = None
-    user.verification_code_sent_at = None
-    await db.flush()
+    await consume_security_token(db, token)
 
     token_data = {"sub": str(user.id), "email": user.email}
     return TokenResponse(
@@ -427,8 +397,10 @@ async def resend_verification(
     if not user or user.email_verified:
         return {"message": "Si cette adresse necessite une verification, un code a ete envoye."}
 
-    if user.verification_code_sent_at:
-        elapsed = (datetime.now(timezone.utc) - user.verification_code_sent_at).total_seconds()
+    # Cooldown check
+    latest = await get_latest_security_token(db, user.id, "email_verification")
+    if latest:
+        elapsed = (datetime.now(timezone.utc) - latest.created_at).total_seconds()
         if elapsed < 60:
             remaining = int(60 - elapsed)
             raise HTTPException(
@@ -437,10 +409,7 @@ async def resend_verification(
             )
 
     code = _generate_verification_code()
-    user.verification_code_hash = hash_password(code)
-    user.verification_code_expires = datetime.now(timezone.utc) + timedelta(minutes=5)
-    user.verification_code_sent_at = datetime.now(timezone.utc)
-    await db.flush()
+    await create_security_token(db, user.id, "email_verification", code, expires_minutes=5)
 
     if settings.EMAIL_ENABLED:
         try:

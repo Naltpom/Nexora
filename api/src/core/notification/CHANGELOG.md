@@ -1,5 +1,9 @@
 # notification — Changelog
 
+## 2026.02.17
+
+- FK `notifications.event_id` mise a jour avec `ondelete='CASCADE'` (permet purge events)
+
 ## 2026.02.15
 
 - Animation wiggle sur la cloche quand `unreadCount > 0` (classe `notification-bell-wiggle`)

@@ -70,7 +70,7 @@ def create_app() -> FastAPI:
     application = FastAPI(
         title="Kertios Template",
         description="Feature-based modular application template",
-        version="2026.02.15",
+        version="2026.02.17",
         docs_url="/api/docs",
         openapi_url="/api/openapi.json",
     )

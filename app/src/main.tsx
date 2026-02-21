@@ -28,6 +28,16 @@ import './core/styles/animations.scss'
           if (prefs.backgroundTheme) {
             document.documentElement.setAttribute('data-bg-theme', String(prefs.backgroundTheme))
           }
+          if (prefs.customColors) {
+            const theme = prefs.theme === 'dark' ? 'dark' : 'light'
+            const colors = prefs.customColors[theme]
+            if (colors) {
+              const el = document.documentElement.style
+              for (const [k, v] of Object.entries(colors)) {
+                if (v) el.setProperty(`--${k}`, v as string)
+              }
+            }
+          }
         }
       }
     } catch {

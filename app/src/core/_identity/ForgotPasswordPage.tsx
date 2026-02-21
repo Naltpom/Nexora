@@ -30,7 +30,7 @@ export default function ForgotPassword() {
         <div className="reset-password-card">
           <div className="reset-password-header">
             <svg width="48" height="48" viewBox="0 0 32 32" fill="none">
-              <rect width="32" height="32" rx="6" fill="#059669" />
+              <rect width="32" height="32" rx="6" fill="var(--success)" />
               <text x="16" y="22" textAnchor="middle" fill="white" fontSize="18" fontWeight="bold">&#10003;</text>
             </svg>
             <h1>Demande envoyee</h1>
@@ -49,7 +49,7 @@ export default function ForgotPassword() {
       <div className="reset-password-card">
         <div className="reset-password-header">
           <svg width="48" height="48" viewBox="0 0 32 32" fill="none">
-            <rect width="32" height="32" rx="6" fill="#1E40AF" />
+            <rect width="32" height="32" rx="6" fill="var(--primary)" />
             <text x="16" y="22" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold">K</text>
           </svg>
           <h1>Mot de passe oublie</h1>

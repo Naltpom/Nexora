@@ -21,9 +21,102 @@ from ..security import (
     hash_password,
     verify_password,
 )
-from .models import Permission, User
+from .models import Permission, SecurityToken, User
 
 logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+#  Security Token helpers
+# ---------------------------------------------------------------------------
+
+
+async def create_security_token(
+    db: AsyncSession,
+    user_id: int,
+    token_type: str,
+    raw_value: str,
+    expires_minutes: int = 5,
+) -> SecurityToken:
+    """Create a SecurityToken. Invalidates any existing unused token of the same type for this user."""
+    now = datetime.now(timezone.utc)
+
+    # Invalidate previous unused tokens of same type for this user
+    result = await db.execute(
+        select(SecurityToken).where(
+            SecurityToken.user_id == user_id,
+            SecurityToken.token_type == token_type,
+            SecurityToken.used_at.is_(None),
+        )
+    )
+    for old_token in result.scalars().all():
+        old_token.used_at = now  # mark as consumed
+
+    token = SecurityToken(
+        user_id=user_id,
+        token_type=token_type,
+        token_hash=SecurityToken.hash_value(raw_value),
+        expires_at=now + timedelta(minutes=expires_minutes),
+    )
+    db.add(token)
+    await db.flush()
+    return token
+
+
+async def verify_security_token(
+    db: AsyncSession,
+    raw_value: str,
+    token_type: str,
+    user_id: int | None = None,
+) -> SecurityToken | None:
+    """Find and verify a security token. Returns the token if valid, None otherwise.
+
+    For verification codes (6-digit): pass user_id to scope the lookup.
+    For reset tokens (UUID): hash-based direct lookup (no user_id needed).
+    """
+    now = datetime.now(timezone.utc)
+    token_hash = SecurityToken.hash_value(raw_value)
+
+    query = select(SecurityToken).where(
+        SecurityToken.token_hash == token_hash,
+        SecurityToken.token_type == token_type,
+        SecurityToken.used_at.is_(None),
+    )
+    if user_id is not None:
+        query = query.where(SecurityToken.user_id == user_id)
+
+    result = await db.execute(query)
+    token = result.scalar_one_or_none()
+
+    if not token:
+        return None
+    if token.expires_at < now:
+        return None
+    return token
+
+
+async def consume_security_token(db: AsyncSession, token: SecurityToken):
+    """Mark a security token as used."""
+    token.used_at = datetime.now(timezone.utc)
+    await db.flush()
+
+
+async def get_latest_security_token(
+    db: AsyncSession,
+    user_id: int,
+    token_type: str,
+) -> SecurityToken | None:
+    """Get the most recent token for cooldown checks."""
+    result = await db.execute(
+        select(SecurityToken)
+        .where(
+            SecurityToken.user_id == user_id,
+            SecurityToken.token_type == token_type,
+        )
+        .order_by(SecurityToken.created_at.desc())
+        .limit(1)
+    )
+    return result.scalar_one_or_none()
 
 
 # ---------------------------------------------------------------------------
@@ -139,10 +232,7 @@ async def authenticate_user(
         import random
 
         code = str(random.randint(100000, 999999))
-        user.verification_code_hash = hash_password(code)
-        user.verification_code_expires = datetime.now(timezone.utc) + timedelta(minutes=5)
-        user.verification_code_sent_at = datetime.now(timezone.utc)
-        await db.flush()
+        await create_security_token(db, user.id, "email_verification", code, expires_minutes=5)
 
         if settings.EMAIL_ENABLED:
             try:

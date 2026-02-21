@@ -2,6 +2,46 @@
 
 
 
+## 2026.02.17
+
+### \_identity — Table SecurityToken + commandes maintenance
+
+- Nouvelle table `security_tokens` : stockage dedie des codes de verification email, tokens de reset password et codes d'invitation
+- Hash SHA256 pour lookup O(1) au lieu de scanner tous les users (bcrypt)
+- Invalidation automatique des anciens tokens non utilises a chaque creation
+- Suppression des colonnes obsoletes de `users` (`verification_code_hash`, `password_reset_token`, etc.)
+- Suppression des colonnes obsoletes de `invitations` (`verification_code_hash`, `code_expires_at`, etc.)
+- Migration Alembic : creation table + drop colonnes + FK cascade notifications→events
+- 3 nouvelles commandes maintenance :
+  - `_identity.purge_expired_tokens` (daily minuit) — purge tokens expires/consommes
+  - `_identity.purge_impersonation_logs` (mensuel) — purge logs > 6 mois
+  - `_identity.backup_database` (daily 6h) — pg_dump avec auto-cleanup 7 jours
+
+### event — Commande purge
+
+- Nouvelle commande `event.purge_old_events` (daily 4h) — supprime events > 180 jours (cascade notifications)
+- FK `notifications.event_id` modifiee avec `ondelete CASCADE`
+- Config `EVENT_RETENTION_DAYS` ajoutee
+
+### notification — FK cascade
+
+- FK `notifications.event_id` mise a jour avec `ondelete='CASCADE'` pour permettre la purge des events
+
+### notification.push — Commande cleanup
+
+- Nouvelle commande `notification.push.cleanup_stale` (hebdo dimanche 5h) — purge subscriptions inactives > 90 jours
+- Config `PUSH_SUBSCRIPTION_RETENTION_DAYS` ajoutee
+
+## 2026.02.16
+
+### preference.couleur — Personnalisation des couleurs
+
+- Nouvelle sous-feature `preference.couleur` sous `preference`
+- Personnalisation de toutes les couleurs de l'application (primary, status, gray scale)
+- Variantes separees pour les themes clair et sombre
+- Application pre-render pour eviter le flash de couleurs
+- Composant ColorSection avec pickers et reinitialisation
+
 ## 2026.02.15
 
 ### Animations modernes + ameliorations UI

@@ -5,6 +5,7 @@ import Layout from '../../core/Layout'
 import { useAuth } from '../../core/AuthContext'
 import { useFeature } from '../../core/FeatureContext'
 import { useScrollReveal } from '../../core/hooks'
+import { applyCustomColors } from '../preference/couleur/applyCustomColors'
 import api from '../../api'
 
 const SSOAccountLinks = lazy(() => import('../sso/SSOAccountLinks'))
@@ -93,6 +94,8 @@ export default function Profile() {
   const handleThemeChange = (theme: string) => {
     updatePreference('theme', theme)
     document.documentElement.setAttribute('data-theme', theme)
+    const customColors = getPreference('customColors', null)
+    applyCustomColors(customColors, theme)
   }
 
   return (

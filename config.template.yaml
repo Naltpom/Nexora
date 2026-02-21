@@ -5,7 +5,7 @@
 
 app:
   name: "Kertios Template"
-  version: "2026.02.15"
+  version: "2026.02.17"
 
 # Default feature states (true = active by default)
 features:
@@ -22,6 +22,7 @@ features:
   preference: true
   preference.theme: true
   preference.didacticiel: true
+  preference.couleur: true
 
 # Feature-specific configuration defaults
 notification.email:

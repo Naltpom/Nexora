@@ -1,5 +1,10 @@
 # event — Changelog
 
+## 2026.02.17
+
+- Nouvelle commande `event.purge_old_events` : supprime les events > EVENT_RETENTION_DAYS jours (cascade notifications)
+- Config `EVENT_RETENTION_DAYS` (default 180)
+
 ## 2026.02.9
 
 - Page admin frontend "Catalogue d'evenements" groupee par feature avec recherche

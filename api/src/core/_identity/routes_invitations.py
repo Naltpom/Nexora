@@ -26,7 +26,13 @@ from .schemas import (
     InvitationValidateResponse,
     InvitationVerify,
 )
-from .services import find_pending_invitation
+from .services import (
+    find_pending_invitation,
+    create_security_token,
+    verify_security_token,
+    consume_security_token,
+    get_latest_security_token,
+)
 from ..events import event_bus
 
 router = APIRouter()
@@ -242,11 +248,9 @@ async def accept_invitation(
 
     # Generate and send verification code
     code = _generate_verification_code()
-    inv.verification_code_hash = hash_password(code)
-    inv.code_expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
-    inv.code_sent_at = datetime.now(timezone.utc)
     inv.user_id = user.id
     await db.flush()
+    await create_security_token(db, user.id, "invitation_verification", code, expires_minutes=5)
 
     try:
         from ..notification.email.services import get_email_sender
@@ -271,8 +275,13 @@ async def resend_verification_code(
     """Resend verification code (with 60s cooldown)."""
     inv = await find_pending_invitation(db, token)
 
-    if inv.code_sent_at:
-        elapsed = (datetime.now(timezone.utc) - inv.code_sent_at).total_seconds()
+    if not inv.user_id:
+        raise HTTPException(status_code=400, detail="Aucun utilisateur associe a cette invitation")
+
+    # Cooldown check via SecurityToken
+    latest = await get_latest_security_token(db, inv.user_id, "invitation_verification")
+    if latest:
+        elapsed = (datetime.now(timezone.utc) - latest.created_at).total_seconds()
         if elapsed < 60:
             remaining = int(60 - elapsed)
             raise HTTPException(
@@ -281,18 +290,14 @@ async def resend_verification_code(
             )
 
     code = _generate_verification_code()
-    inv.verification_code_hash = hash_password(code)
-    inv.code_expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
-    inv.code_sent_at = datetime.now(timezone.utc)
-    await db.flush()
+    await create_security_token(db, inv.user_id, "invitation_verification", code, expires_minutes=5)
 
     # Get user name for the email
     user_name = ""
-    if inv.user_id:
-        result = await db.execute(select(User).where(User.id == inv.user_id))
-        user = result.scalar_one_or_none()
-        if user:
-            user_name = user.first_name
+    result = await db.execute(select(User).where(User.id == inv.user_id))
+    user = result.scalar_one_or_none()
+    if user:
+        user_name = user.first_name
 
     try:
         from ..notification.email.services import get_email_sender
@@ -318,12 +323,12 @@ async def verify_invitation_code(
     """Verify code and finalize invitation acceptance."""
     inv = await find_pending_invitation(db, token)
 
-    if not inv.verification_code_hash:
-        raise HTTPException(status_code=400, detail="Aucun code en attente")
-    if inv.code_expires_at < datetime.now(timezone.utc):
-        raise HTTPException(status_code=400, detail="Le code a expire")
-    if not verify_password(data.code, inv.verification_code_hash):
-        raise HTTPException(status_code=400, detail="Code incorrect")
+    if not inv.user_id:
+        raise HTTPException(status_code=400, detail="Aucun utilisateur associe a cette invitation")
+
+    sec_token = await verify_security_token(db, data.code, "invitation_verification", user_id=inv.user_id)
+    if not sec_token:
+        raise HTTPException(status_code=400, detail="Code incorrect ou expire")
 
     result = await db.execute(select(User).where(User.id == inv.user_id))
     user = result.scalar_one_or_none()
@@ -333,6 +338,7 @@ async def verify_invitation_code(
     if not user.is_active:
         user.is_active = True
 
+    await consume_security_token(db, sec_token)
     inv.consumed_at = datetime.now(timezone.utc)
     await db.flush()
 
