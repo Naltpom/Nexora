@@ -241,7 +241,7 @@
   transform-origin: top right;
 }
 
-.header-admin-menu {
+.user-menu-dropdown {
   animation: dropdown-slide-in 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   transform-origin: top right;
 }
@@ -270,7 +270,7 @@
 // ============================================
 
 // Nav link hover underline
-.header-admin-menu-item {
+.user-menu-item {
   position: relative;
 
   &::after {
@@ -292,7 +292,7 @@
   }
 }
 
-[data-theme="dark"] .header-admin-menu-item::after {
+[data-theme="dark"] .user-menu-item::after {
   background: var(--primary);
 }
 
@@ -323,7 +323,7 @@
 }
 
 // Avatar hover
-.header-avatar {
+.user-menu-avatar {
   transition: transform 0.2s ease;
 
   &:hover {

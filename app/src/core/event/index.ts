@@ -10,7 +10,9 @@ export const manifest = {
       permission: 'event.read',
     },
   ],
-  navItems: [],
+  navItems: [
+    { label: 'Events', path: '/admin/events', icon: 'zap', section: 'admin', adminGroup: 'securite', permission: 'event.read', order: 10 },
+  ],
   featureTutorial: {
     featureName: 'event',
     label: 'Evenements',

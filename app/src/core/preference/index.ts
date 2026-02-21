@@ -9,7 +9,9 @@ export const manifest = {
       component: lazy(() => import('./PreferencePage')),
     },
   ],
-  navItems: [],
+  navItems: [
+    { label: 'Preferences', path: '/profile/preferences', icon: 'settings', section: 'user', order: 20 },
+  ],
   featureTutorial: {
     featureName: 'preference',
     label: 'Preferences',

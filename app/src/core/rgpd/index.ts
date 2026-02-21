@@ -11,8 +11,8 @@ export const manifest = {
     { path: '/admin/rgpd', component: lazy(() => import('./AdminRGPDPage')), permission: 'rgpd.registre.read' },
   ],
   navItems: [
-    { label: 'Mes donnees', path: '/rgpd/my-data', icon: 'database' },
-    { label: 'Consentement', path: '/rgpd/consent', icon: 'shield' },
+    { label: 'Mes donnees', path: '/rgpd/my-data', icon: 'shield-check', section: 'user', permission: 'rgpd.read', order: 50 },
+    { label: 'RGPD', path: '/admin/rgpd', icon: 'shield-check', section: 'admin', adminGroup: 'securite', permission: 'rgpd.registre.read', order: 30 },
   ],
   headerComponents: [lazy(() => import('./CookieBanner'))],
   featureTutorial: {

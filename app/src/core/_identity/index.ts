@@ -2,6 +2,16 @@ import type { FeatureTutorial } from '../../types'
 
 export const manifest = {
   name: '_identity',
+  navItems: [
+    { label: 'Mon profil', path: '/profile', icon: 'user', section: 'user', order: 10 },
+    { label: 'Utilisateurs', path: '/admin/users', icon: 'users', section: 'admin', adminGroup: 'gestion', requireSuperAdmin: true, order: 10 },
+    { label: 'Roles', path: '/admin/roles', icon: 'shield', section: 'admin', adminGroup: 'gestion', requireSuperAdmin: true, order: 20 },
+    { label: 'Permissions', path: '/admin/permissions', icon: 'lock', section: 'admin', adminGroup: 'gestion', requireSuperAdmin: true, order: 30 },
+    { label: 'Features', path: '/admin/features', icon: 'grid', section: 'admin', adminGroup: 'systeme', requireSuperAdmin: true, order: 10 },
+    { label: 'Parametres', path: '/admin/settings', icon: 'sliders', section: 'admin', adminGroup: 'systeme', requireSuperAdmin: true, order: 20 },
+    { label: 'Base de donnees', path: '/admin/database', icon: 'database', section: 'admin', adminGroup: 'systeme', requireSuperAdmin: true, order: 30 },
+    { label: 'Commandes', path: '/admin/commands', icon: 'terminal', section: 'admin', adminGroup: 'systeme', requireSuperAdmin: true, order: 40 },
+  ],
   featureTutorial: {
     featureName: '_identity',
     label: 'Administration',

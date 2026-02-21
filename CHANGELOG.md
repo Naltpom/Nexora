@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026.02.22
+
+### Navigation — Menu dynamique user + admin
+
+- Nouveau module `navigation` : menu dropdown dynamique depuis les manifests de features
+- Les utilisateurs non-admin obtiennent un menu dropdown avec avatar (au lieu d'un simple lien profil + bouton logout)
+- Les items du menu sont declares dans les `navItems` des manifests frontend et filtres par permissions/features actives
+- Section admin organisee en sous-groupes thematiques : Gestion (users, roles, permissions), Systeme (features, parametres, BDD, commandes, notifications), Securite & Conformite (events, MFA, RGPD)
+- Les sous-groupes vides ne s'affichent pas
+- Registre d'icones SVG centralise (`icons.tsx`) — suppression des SVG inline du Header
+- Hook `useNavigationItems` : collecte, filtre et trie les items via `import.meta.glob` (meme pattern que App.tsx et TutorialContext)
+- Header.tsx reduit de ~355 lignes a ~80 lignes
+- Ajout de `navItems` dans les manifests : `_identity`, `preference`, `mfa`, `notification`, `rgpd`, `event`
+- Support dark + light theme complet
+
 ## 2026.02.21
 
 ### rgpd.consentement

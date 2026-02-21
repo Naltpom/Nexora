@@ -9,7 +9,8 @@ export const manifest = {
     { path: '/notifications/redirect/:token', component: lazy(() => import('./NotificationRedirect')) },
   ],
   navItems: [
-    { label: 'Notifications', path: '/notifications', icon: 'bell' },
+    { label: 'Notifications', path: '/notifications', icon: 'bell', section: 'user', permission: 'notification.read', order: 40 },
+    { label: 'Notifications', path: '/notifications/settings', icon: 'bell', section: 'admin', adminGroup: 'systeme', permission: 'notification.read', order: 15 },
   ],
   headerComponents: [lazy(() => import('./NotificationBell'))],
   featureTutorial: {

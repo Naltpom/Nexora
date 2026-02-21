@@ -25,7 +25,10 @@ export const manifest = {
       permission: 'mfa.manage',
     },
   ],
-  navItems: [],
+  navItems: [
+    { label: 'Securite MFA', path: '/profile/mfa', icon: 'lock', section: 'user', permission: 'mfa.setup', order: 30 },
+    { label: 'Politique MFA', path: '/admin/mfa-policy', icon: 'lock-keyhole', section: 'admin', adminGroup: 'securite', permission: 'mfa.manage', order: 20 },
+  ],
   featureTutorial: {
     featureName: 'mfa',
     label: 'Authentification multi-facteurs',
