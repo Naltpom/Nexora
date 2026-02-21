@@ -43,6 +43,11 @@ export default function ProtectedRoute({ children, requireSuperAdmin = false, pe
     return <Navigate to="/change-password" replace />
   }
 
+  // Legal documents acceptance
+  if (user.pending_legal_acceptances?.length) {
+    return <Navigate to="/accept-legal" replace />
+  }
+
   // MFA setup enforcement after grace period
   if (localStorage.getItem('mfa_setup_required') === 'true') {
     const raw = localStorage.getItem('mfa_grace_period_expires')

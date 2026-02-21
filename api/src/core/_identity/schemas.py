@@ -4,6 +4,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, EmailStr
 
+from ..rgpd.schemas import PendingLegalAcceptance
+
 
 # ── Auth ─────────────────────────────────────────────────────────────────
 
@@ -108,6 +110,8 @@ class UserResponse(BaseModel):
     last_login: datetime | None = None
     last_active: datetime | None = None
     created_at: datetime
+    pending_legal_acceptances: list[PendingLegalAcceptance] = []
+    has_previous_acceptances: bool = False
 
     model_config = {"from_attributes": True}
 

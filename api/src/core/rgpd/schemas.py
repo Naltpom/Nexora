@@ -146,6 +146,7 @@ class LegalPageUpdate(BaseModel):
     title: str
     content_html: str
     is_published: bool = True
+    requires_acceptance: bool = False
 
 
 class LegalPageResponse(BaseModel):
@@ -154,12 +155,36 @@ class LegalPageResponse(BaseModel):
     title: str
     content_html: str
     is_published: bool
+    requires_acceptance: bool
     version: int
     updated_at: datetime
 
 
 class LegalPageListResponse(BaseModel):
     items: list[LegalPageResponse]
+
+
+class PendingLegalAcceptance(BaseModel):
+    slug: str
+    title: str
+    version: int
+    updated_at: datetime
+    content_html: str
+
+
+class LegalAcceptanceInput(BaseModel):
+    slugs: list[str]
+
+
+class CheckPendingResponse(BaseModel):
+    pending: bool
+
+
+class LegalPageVersionResponse(BaseModel):
+    version: int
+    title: str
+    content_html: str
+    created_at: datetime
 
 
 # --- Audit Logs ---

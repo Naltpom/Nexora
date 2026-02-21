@@ -17,9 +17,16 @@ const ADMIN_GROUP_LABELS: Record<AdminGroup, string> = {
   securite: 'Securite & Conformite',
 }
 
+const ADMIN_GROUP_ICONS: Record<AdminGroup, string> = {
+  gestion: 'users',
+  systeme: 'sliders',
+  securite: 'shield-check',
+}
+
 export interface AdminGroupData {
   key: AdminGroup
   label: string
+  icon: string
   items: NavItem[]
 }
 
@@ -57,6 +64,7 @@ export function useNavigationItems() {
       .map(key => ({
         key,
         label: ADMIN_GROUP_LABELS[key],
+        icon: ADMIN_GROUP_ICONS[key],
         items: adminItems
           .filter(i => i.adminGroup === key)
           .sort((a, b) => (a.order ?? 100) - (b.order ?? 100)),

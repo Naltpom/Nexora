@@ -1,5 +1,18 @@
 # Preference — Changelog
 
+## 2026.02.24
+
+### preference.didacticiel — Page Aide + corrections
+
+- Nouvelle page `/aide` avec TutorialSection et TutorialAdminSection (deplaces depuis PreferencePage)
+- Cards de statistiques : etapes de tuto, permissions avec/sans tutoriel
+- Affichage du nombre d'etapes et du code permission par tutoriel
+- Descriptions ajoutees aux 8 permission tutorials `_identity`
+- Icone `help-circle` dans le registre de navigation
+- Correction : `closeTutorial` (croix + overlay) ferme sans marquer comme vu
+- Correction : `skipAll` ne passe que la feature courante
+- Correction : `flag_modified(user, "preferences")` pour persistance JSONB en DB
+
 ## 2026.02.16
 
 ### preference.couleur — Personnalisation des couleurs

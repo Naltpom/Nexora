@@ -148,7 +148,13 @@ async def refresh_token(
 async def get_me(
     current_user=Depends(get_current_user),
     permission_codes: list[str] = Depends(get_user_permission_codes),
+    db: AsyncSession = Depends(get_db),
 ):
+    from ..rgpd.routes_politique import get_pending_acceptances_for_user
+
+    pending, has_previous = await get_pending_acceptances_for_user(
+        db, current_user.id, user_created_at=current_user.created_at,
+    )
     return UserResponse(
         id=current_user.id,
         email=current_user.email,
@@ -162,6 +168,8 @@ async def get_me(
         last_login=current_user.last_login,
         last_active=current_user.last_active,
         created_at=current_user.created_at,
+        pending_legal_acceptances=pending,
+        has_previous_acceptances=has_previous,
     )
 
 
@@ -190,9 +198,11 @@ async def update_preferences(
 ):
     result = await db.execute(select(User).where(User.id == current_user.id))
     user = result.scalar_one_or_none()
+    from sqlalchemy.orm.attributes import flag_modified
     existing: dict = user.preferences or {}
     existing.update(prefs)
     user.preferences = existing
+    flag_modified(user, "preferences")
     await db.flush()
     return existing
 
@@ -542,3 +552,39 @@ async def revoke_all_sessions(
         .values(is_revoked=True)
     )
     await db.flush()
+
+
+# ---------------------------------------------------------------------------
+#  Account self-deletion (soft delete with reactivation window)
+# ---------------------------------------------------------------------------
+
+
+@router.delete("/me/account")
+async def delete_my_account(
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Soft-delete the current user's account.
+
+    The account is deactivated but not purged. If the user logs in again
+    within the reactivation window (default 30 days), the account is
+    automatically reactivated. After that period, the scheduled purge
+    command hard-deletes the data.
+    """
+    now = datetime.now(timezone.utc)
+    current_user.deleted_at = now
+    current_user.is_active = False
+    # Do NOT anonymize email — allow reactivation by login
+    # Email anonymization happens on hard-delete (purge command)
+
+    # Revoke all sessions
+    await db.execute(
+        update(UserSession)
+        .where(UserSession.user_id == current_user.id, UserSession.is_revoked.is_(False))
+        .values(is_revoked=True)
+    )
+    await db.flush()
+
+    return {
+        "message": "Votre compte a ete desactive. Vous pouvez le reactiver en vous reconnectant dans les 30 jours.",
+    }

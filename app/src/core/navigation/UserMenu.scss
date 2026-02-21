@@ -62,7 +62,7 @@
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
   min-width: 220px;
   padding: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .user-menu-header {
@@ -79,15 +79,6 @@
   height: 1px;
   background: var(--gray-200);
   margin: 0;
-}
-
-.user-menu-group-label {
-  padding: 8px 16px 4px;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--gray-400);
 }
 
 .user-menu-item {
@@ -133,6 +124,48 @@
   color: var(--danger);
 }
 
+/* Flyout admin groups */
+.user-menu-flyout {
+  position: relative;
+}
+
+.user-menu-group-trigger {
+  justify-content: flex-start;
+}
+
+.user-menu-group-trigger-label {
+  flex: 1;
+}
+
+.user-menu-group-trigger-active {
+  color: var(--primary, #1E40AF);
+  font-weight: 500;
+}
+
+.user-menu-group-trigger-active svg {
+  color: var(--primary, #1E40AF);
+}
+
+.user-menu-flyout-chevron {
+  color: var(--gray-400);
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.user-menu-flyout-panel {
+  position: absolute;
+  top: 0;
+  right: calc(100% + 6px);
+  z-index: 201;
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  min-width: 190px;
+  padding: 4px 0;
+  overflow: hidden;
+}
+
 /* Dark theme */
 [data-theme="dark"] .user-menu-trigger:hover {
   background: rgba(255, 255, 255, 0.08);
@@ -158,10 +191,6 @@
 
 [data-theme="dark"] .user-menu-separator {
   background: rgba(255, 255, 255, 0.08);
-}
-
-[data-theme="dark"] .user-menu-group-label {
-  color: rgba(255, 255, 255, 0.35);
 }
 
 [data-theme="dark"] .user-menu-item {
@@ -195,4 +224,22 @@
 
 [data-theme="dark"] .user-menu-item-danger svg {
   color: #FCA5A5;
+}
+
+[data-theme="dark"] .user-menu-group-trigger-active {
+  color: #93C5FD;
+}
+
+[data-theme="dark"] .user-menu-group-trigger-active svg {
+  color: #93C5FD;
+}
+
+[data-theme="dark"] .user-menu-flyout-chevron {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+[data-theme="dark"] .user-menu-flyout-panel {
+  background: #1e1b2e;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
 }

@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm.attributes import flag_modified
 
 from ...database import get_db
 from ...permissions import require_permission
@@ -61,6 +62,7 @@ async def get_seen_permissions(
         prefs["permissions_seen"] = permissions_seen
         prefs.pop("tutorials_seen", None)
         user.preferences = prefs
+        flag_modified(user, "preferences")
         await db.flush()
 
     return PermissionSeenResponse(permissions_seen=permissions_seen)
@@ -82,6 +84,7 @@ async def mark_permission_seen(
     existing["permissions_seen"] = permissions_seen
     existing.pop("tutorials_seen", None)
     user.preferences = existing
+    flag_modified(user, "preferences")
     await db.flush()
     return {"ok": True}
 
@@ -99,6 +102,7 @@ async def reset_all_tutorials(
     existing.pop("permissions_seen", None)
     existing.pop("tutorials_seen", None)
     user.preferences = existing
+    flag_modified(user, "preferences")
     await db.flush()
     return {"ok": True}
 

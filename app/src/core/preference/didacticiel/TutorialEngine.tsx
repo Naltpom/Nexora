@@ -77,6 +77,7 @@ export default function TutorialEngine() {
     prevStep,
     skipCurrent,
     skipAll,
+    closeTutorial,
   } = useTutorial()
 
   const navigate = useNavigate()
@@ -183,6 +184,7 @@ export default function TutorialEngine() {
     }
   }, [updatePosition, active, ready])
 
+  if (location.pathname === '/accept-legal' || location.pathname === '/change-password') return null
   if (!active || !currentStep) return null
 
   // Show only the dark overlay while loading (no tooltip, no highlight)
@@ -286,7 +288,7 @@ export default function TutorialEngine() {
     <div
       className="tutorial-overlay"
       onClick={(e) => {
-        if (e.target === e.currentTarget) skipCurrent()
+        if (e.target === e.currentTarget) closeTutorial()
       }}
     >
       {/* SVG mask overlay */}
@@ -346,7 +348,7 @@ export default function TutorialEngine() {
           )}
           <button
             className="tutorial-tooltip-close"
-            onClick={skipCurrent}
+            onClick={closeTutorial}
             type="button"
           >
             &times;

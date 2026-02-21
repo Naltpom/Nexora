@@ -20,6 +20,7 @@ export const manifest = {
       {
         permission: 'search.global',
         label: 'Recherche globale',
+        description: 'Trouvez rapidement utilisateurs, roles et parametres depuis la barre de recherche.',
         steps: [
           {
             target: '.global-search-container',
@@ -32,6 +33,7 @@ export const manifest = {
       {
         permission: 'users.read',
         label: 'Consulter les utilisateurs',
+        description: 'Consultez la liste des utilisateurs, leur statut et leur derniere connexion.',
         steps: [
           {
             target: '.unified-search-box',
@@ -52,6 +54,7 @@ export const manifest = {
       {
         permission: 'users.create',
         label: 'Creer un utilisateur',
+        description: 'Ajoutez de nouveaux utilisateurs au systeme.',
         steps: [
           {
             target: '.btn-unified-primary',
@@ -65,6 +68,7 @@ export const manifest = {
       {
         permission: 'roles.read',
         label: 'Consulter les roles',
+        description: 'Consultez les roles existants et leurs permissions associees.',
         steps: [
           {
             target: '.unified-table',
@@ -78,6 +82,7 @@ export const manifest = {
       {
         permission: 'roles.create',
         label: 'Creer un role',
+        description: 'Creez de nouveaux roles avec des permissions personnalisees.',
         steps: [
           {
             target: '.btn-unified-primary',
@@ -91,6 +96,7 @@ export const manifest = {
       {
         permission: 'features.read',
         label: 'Gerer les features',
+        description: 'Activez ou desactivez les modules de l\'application.',
         steps: [
           {
             target: '.input-search-wide',
@@ -111,6 +117,7 @@ export const manifest = {
       {
         permission: 'settings.read',
         label: 'Parametres applicatifs',
+        description: 'Configurez le nom, la description, le logo et les couleurs de l\'application.',
         steps: [
           {
             target: '.settings-grid',
@@ -124,6 +131,7 @@ export const manifest = {
       {
         permission: 'impersonation.start',
         label: 'Impersonation',
+        description: 'Connectez-vous en tant qu\'un autre utilisateur pour diagnostiquer des problemes.',
         steps: [
           {
             target: '.impersonate-btn',

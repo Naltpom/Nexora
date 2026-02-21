@@ -28,6 +28,25 @@
     font-size: 14px;
   }
 
+  &__step-count {
+    font-weight: 400;
+    font-size: 12px;
+    color: var(--gray-400);
+    margin-left: 8px;
+  }
+
+  &__permission-code {
+    display: inline-block;
+    font-weight: 400;
+    font-size: 11px;
+    color: var(--gray-400);
+    background: var(--gray-100);
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
+    font-family: monospace;
+  }
+
   &__item-desc {
     font-size: 12px;
     color: var(--gray-500);
@@ -100,6 +119,38 @@
     flex-direction: column;
     gap: 1px;
     padding: 8px;
+  }
+}
+
+/* ===== Aide stats cards ===== */
+
+.aide-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+
+  &__card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 12px;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    gap: 4px;
+  }
+
+  &__value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary, #4f46e5);
+  }
+
+  &__label {
+    font-size: 12px;
+    color: var(--gray-500);
+    text-align: center;
   }
 }
 
@@ -483,6 +534,10 @@
   .tutorial-admin__sub-list {
     padding-left: 20px;
   }
+
+  .aide-stats {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ===== Dark theme ===== */
@@ -561,6 +616,24 @@
     &__item-desc {
       color: rgba(255, 255, 255, 0.5);
     }
+
+    &__step-count {
+      color: rgba(255, 255, 255, 0.35);
+    }
+
+    &__permission-code {
+      color: rgba(255, 255, 255, 0.4);
+      background: rgba(255, 255, 255, 0.06);
+    }
+  }
+
+  .aide-stats__card {
+    background: #252540;
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .aide-stats__label {
+    color: rgba(255, 255, 255, 0.5);
   }
 
   // Notification toast

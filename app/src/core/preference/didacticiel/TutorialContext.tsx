@@ -49,6 +49,7 @@ interface TutorialContextType {
   prevStep: () => void
   skipCurrent: () => void
   skipAll: () => void
+  closeTutorial: () => void
   markPermissionSeen: (permission: string) => Promise<void>
   resetAll: () => Promise<void>
   pendingNewPermissions: string[]
@@ -401,17 +402,19 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
   }, [active, currentPermissionTutorial, currentFeatureTutorial, featureTutorials, permissionsSeen, markPermissionSeen])
 
   const skipAll = useCallback(() => {
-    if (!active) return
-    // Mark all remaining unseen as seen
-    for (const ft of featureTutorials) {
-      for (const pt of ft.permissionTutorials) {
-        if (!permissionsSeen[pt.permission]) {
-          markPermissionSeen(pt.permission)
-        }
+    if (!active || !currentFeatureTutorial) return
+    // Mark all remaining unseen permissions in the CURRENT feature as seen
+    for (const pt of currentFeatureTutorial.permissionTutorials) {
+      if (!permissionsSeen[pt.permission]) {
+        markPermissionSeen(pt.permission)
       }
     }
     setActive(null)
-  }, [active, featureTutorials, permissionsSeen, markPermissionSeen])
+  }, [active, currentFeatureTutorial, permissionsSeen, markPermissionSeen])
+
+  const closeTutorial = useCallback(() => {
+    setActive(null)
+  }, [])
 
   const resetAll = useCallback(async () => {
     setPermissionsSeen({})
@@ -449,6 +452,7 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
         prevStep,
         skipCurrent,
         skipAll,
+        closeTutorial,
         markPermissionSeen,
         resetAll,
         pendingNewPermissions,

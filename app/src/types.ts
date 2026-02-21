@@ -1,3 +1,11 @@
+export interface PendingLegalAcceptance {
+  slug: string
+  title: string
+  version: number
+  updated_at: string
+  content_html: string
+}
+
 export interface User {
   id: number
   email: string
@@ -11,6 +19,8 @@ export interface User {
   last_login?: string | null
   last_active?: string | null
   created_at: string
+  pending_legal_acceptances?: PendingLegalAcceptance[]
+  has_previous_acceptances?: boolean
 }
 
 export interface PaginatedResponse<T> {

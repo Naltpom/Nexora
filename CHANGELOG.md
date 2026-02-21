@@ -1,5 +1,44 @@
 # Changelog
 
+## 2026.02.24
+
+### preference.didacticiel — Page Aide + corrections tutoriels
+
+- Nouvelle page `/aide` : tutoriels interactifs deplaces depuis les Preferences vers une page dediee
+- Cards de statistiques : nombre d'etapes de tuto, permissions avec/sans tutoriel
+- Affichage du nombre d'etapes et du code permission pour chaque tutoriel dans la liste
+- Descriptions ajoutees aux 8 tutoriels `_identity` (recherche, users, roles, features, settings, impersonation)
+- Icone `help-circle` ajoutee au registre d'icones de navigation
+- Correction : la croix (X) ferme le tutoriel sans marquer comme vu (re-affichage au F5)
+- Correction : "Tout passer" ne passe que la section courante (pas toutes les features)
+- Correction : persistance des tutoriels vus en DB (`flag_modified` pour JSONB)
+- Correction : le clic sur l'overlay ferme le tutoriel proprement
+
+### rgpd.politique — Ameliorations AcceptLegalPage
+
+- Deux modes d'affichage : pas-a-pas pour comptes existants, compact pour nouvelles inscriptions
+- Scroll-to-bottom obligatoire avant de pouvoir cocher "J'ai lu et j'accepte"
+- Detection compte existant via anciennete du compte (> 5 min) ou acceptations precedentes
+- Reset du scroll entre les documents en mode pas-a-pas
+- Blocage du tutoriel et de la notification sur `/accept-legal` et `/change-password`
+
+## 2026.02.23
+
+### rgpd.politique — Acceptation obligatoire des documents legaux
+
+- Nouveau champ `requires_acceptance` sur les pages legales : l'admin peut marquer un document comme obligatoire
+- Nouvelle table `legal_page_acceptances` : tracking des acceptations par utilisateur/version
+- Nouvelle table `legal_page_versions` : historique des contenus precedents
+- Page bloquante `/accept-legal` : l'utilisateur doit accepter tous les documents obligatoires avant d'acceder au site
+- Quand un document obligatoire est mis a jour, toutes les acceptations sont invalidees
+- Refuser → deconnexion forcee avec message explicatif sur la page login
+- Option "Supprimer mon compte" avec modal de confirmation → soft delete 30 jours avec reactivation possible
+- Reactivation automatique du compte si l'utilisateur se reconnecte dans les 30 jours
+- Polling mid-session (2 min) pour detecter les mises a jour de documents en cours de session
+- Admin : toggle "Acceptation obligatoire", historique des versions, warning de modification
+- CGU et Politique de confidentialite marques obligatoires par defaut (seed migration)
+- Endpoint `DELETE /auth/me/account` : suppression self-service du compte
+
 ## 2026.02.22
 
 ### Navigation — Menu dynamique user + admin

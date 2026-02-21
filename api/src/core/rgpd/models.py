@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..database import Base
@@ -122,6 +122,7 @@ class LegalPage(Base):
     title: Mapped[str] = mapped_column(String(300), nullable=False)
     content_html: Mapped[str] = mapped_column(Text, default="", nullable=False)
     is_published: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    requires_acceptance: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     updated_by_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
@@ -136,3 +137,57 @@ class LegalPage(Base):
     )
 
     updated_by = relationship("User", foreign_keys=[updated_by_id])
+
+
+class LegalPageVersion(Base):
+    """Archived content for each legal page version."""
+
+    __tablename__ = "legal_page_versions"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    legal_page_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("legal_pages.id", ondelete="CASCADE"), nullable=False
+    )
+    version: Mapped[int] = mapped_column(Integer, nullable=False)
+    title: Mapped[str] = mapped_column(String(300), nullable=False)
+    content_html: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    created_by_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
+    legal_page = relationship("LegalPage", foreign_keys=[legal_page_id])
+    created_by = relationship("User", foreign_keys=[created_by_id])
+
+    __table_args__ = (
+        UniqueConstraint("legal_page_id", "version", name="uq_legal_page_versions_page_version"),
+    )
+
+
+class LegalPageAcceptance(Base):
+    """Tracks which users accepted which legal page version."""
+
+    __tablename__ = "legal_page_acceptances"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    legal_page_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("legal_pages.id", ondelete="CASCADE"), nullable=False
+    )
+    version_accepted: Mapped[int] = mapped_column(Integer, nullable=False)
+    ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
+    user_agent: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    accepted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
+    user = relationship("User", foreign_keys=[user_id])
+    legal_page = relationship("LegalPage", foreign_keys=[legal_page_id])
+
+    __table_args__ = (
+        Index("ix_legal_acceptances_user_page", "user_id", "legal_page_id"),
+    )

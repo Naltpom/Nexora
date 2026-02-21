@@ -125,6 +125,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetchUser()
   }, [])
 
+  // Poll for legal document updates every 2 minutes (mid-session detection)
+  useEffect(() => {
+    if (!user) return
+    const interval = setInterval(async () => {
+      try {
+        const res = await api.get('/rgpd/legal/acceptance/check')
+        if (res.data.pending) await fetchUser()
+      } catch { /* ignore */ }
+    }, 120_000)
+    return () => clearInterval(interval)
+  }, [user?.id])
+
   const login = async (email: string, password: string): Promise<LoginResult> => {
     const response = await api.post('/auth/login', { email, password })
     const { access_token, refresh_token, must_change_password, mfa_required, mfa_token, mfa_methods, mfa_setup_required, mfa_grace_period_expires, email_verification_required, email_verification_email, debug_code } = response.data

@@ -1,10 +1,15 @@
+import { useLocation } from 'react-router-dom'
 import { useTutorial } from './TutorialContext'
 import './didacticiel.scss'
+
+const BLOCKED_PATHS = ['/accept-legal', '/change-password']
 
 export default function TutorialNotification() {
   const { pendingNewPermissions, startUnseenTutorials, dismissPending, active } =
     useTutorial()
+  const location = useLocation()
 
+  if (BLOCKED_PATHS.includes(location.pathname)) return null
   if (pendingNewPermissions.length === 0 || active) return null
 
   return (

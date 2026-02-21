@@ -80,6 +80,12 @@ export default function TutorialSection() {
                             <div>
                               <div className="tutorial-section__item-label">
                                 {pt.label}
+                                <span className="tutorial-section__step-count">
+                                  {pt.steps.length} {pt.steps.length > 1 ? 'etapes' : 'etape'}
+                                </span>
+                                <span className="tutorial-section__permission-code">
+                                  {pt.permission}
+                                </span>
                               </div>
                               {pt.description && (
                                 <div className="tutorial-section__item-desc">

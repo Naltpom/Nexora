@@ -214,6 +214,24 @@ async def authenticate_user(
             select(User).where(User.email == email, User.deleted_at.is_(None))
         )
         user = result.scalar_one_or_none()
+
+        # Check for soft-deleted account eligible for reactivation (30 days)
+        if not user:
+            cutoff = datetime.now(timezone.utc) - timedelta(days=30)
+            result = await db.execute(
+                select(User).where(
+                    User.email == email,
+                    User.deleted_at.isnot(None),
+                    User.deleted_at > cutoff,
+                )
+            )
+            soft_deleted = result.scalar_one_or_none()
+            if soft_deleted and soft_deleted.password_hash and verify_password(password, soft_deleted.password_hash):
+                soft_deleted.deleted_at = None
+                soft_deleted.is_active = True
+                await db.flush()
+                user = soft_deleted
+
         if not user or not user.password_hash:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

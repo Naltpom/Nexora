@@ -64,6 +64,16 @@ export default function Login() {
         </div>
 
         <form onSubmit={handleSubmit}>
+          {searchParams.get('legal_refused') && (
+            <div className="alert alert-warning mb-16">
+              Vous avez refuse les conditions d&apos;utilisation. L&apos;acces au service necessite l&apos;acceptation des documents legaux.
+            </div>
+          )}
+          {searchParams.get('account_deleted') && (
+            <div className="alert alert-info mb-16">
+              Votre compte a ete desactive. Si vous vous reconnectez dans les 30 jours, il sera automatiquement reactive.
+            </div>
+          )}
           {error && <div className="alert alert-error">{error}</div>}
 
           <div className="form-group">

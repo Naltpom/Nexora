@@ -46,9 +46,17 @@ interface LegalPageItem {
   slug: string
   title: string
   is_published: boolean
+  requires_acceptance: boolean
   version: number
   content_html: string
   updated_at: string
+}
+
+interface LegalPageVersionItem {
+  version: number
+  title: string
+  content_html: string
+  created_at: string
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -434,8 +442,11 @@ function LegalPagesTab() {
   const [pages, setPages] = useState<LegalPageItem[]>([])
   const [loading, setLoading] = useState(true)
   const [editingSlug, setEditingSlug] = useState<string | null>(null)
-  const [form, setForm] = useState({ title: '', content_html: '', is_published: false })
+  const [form, setForm] = useState({ title: '', content_html: '', is_published: false, requires_acceptance: false })
   const [saving, setSaving] = useState(false)
+  const [versionsSlug, setVersionsSlug] = useState<string | null>(null)
+  const [versions, setVersions] = useState<LegalPageVersionItem[]>([])
+  const [loadingVersions, setLoadingVersions] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -447,7 +458,7 @@ function LegalPagesTab() {
   useEffect(() => { load() }, [load])
 
   const handleEdit = (page: LegalPageItem) => {
-    setForm({ title: page.title, content_html: page.content_html, is_published: page.is_published })
+    setForm({ title: page.title, content_html: page.content_html, is_published: page.is_published, requires_acceptance: page.requires_acceptance })
     setEditingSlug(page.slug)
   }
 
@@ -461,6 +472,29 @@ function LegalPagesTab() {
     } catch { /* */ } finally { setSaving(false) }
   }
 
+  const handleShowVersions = async (slug: string) => {
+    if (versionsSlug === slug) {
+      setVersionsSlug(null)
+      return
+    }
+    setVersionsSlug(slug)
+    setLoadingVersions(true)
+    try {
+      const res = await api.get(`/rgpd/legal/${slug}/versions`)
+      setVersions(res.data || [])
+    } catch { setVersions([]) } finally { setLoadingVersions(false) }
+  }
+
+  const formatDate = (dateStr: string) => {
+    try {
+      return new Date(dateStr).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+    } catch { return dateStr }
+  }
+
+  // Check if current edit is modifying a requires_acceptance document
+  const editingPage = editingSlug ? pages.find(p => p.slug === editingSlug) : null
+  const showUpdateWarning = editingPage && editingPage.requires_acceptance && editingPage.version > 0
+
   if (loading) return <div className="text-center loading-pad-lg"><div className="spinner" /></div>
 
   return (
@@ -470,6 +504,11 @@ function LegalPagesTab() {
       {editingSlug && (
         <div className="unified-card rgpd-legal-form">
           <h3>Editer : {editingSlug}</h3>
+          {showUpdateWarning && (
+            <div className="alert alert-warning mb-16">
+              Attention : la modification de ce document invalidera toutes les acceptations existantes. Tous les utilisateurs devront re-accepter.
+            </div>
+          )}
           <div className="form-group">
             <label>Titre</label>
             <input type="text" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} />
@@ -483,6 +522,13 @@ function LegalPagesTab() {
               <input type="checkbox" checked={form.is_published} onChange={e => setForm(p => ({ ...p, is_published: e.target.checked }))} />
               Publiee
             </label>
+          </div>
+          <div className="form-group">
+            <label className="rgpd-checkbox-label">
+              <input type="checkbox" checked={form.requires_acceptance} onChange={e => setForm(p => ({ ...p, requires_acceptance: e.target.checked }))} />
+              Acceptation obligatoire
+            </label>
+            <p className="text-secondary text-sm">Si active, les utilisateurs devront accepter ce document pour acceder au site.</p>
           </div>
           <div className="form-actions">
             <button className="btn btn-secondary" onClick={() => setEditingSlug(null)}>Annuler</button>
@@ -499,17 +545,45 @@ function LegalPagesTab() {
             <div className="rgpd-legal-item-header">
               <div>
                 <h3>{page.title}</h3>
-                <span className="text-secondary">{page.slug}</span>
+                <span className="text-secondary">{page.slug} — v{page.version}</span>
               </div>
               <div className="rgpd-legal-item-actions">
+                {page.requires_acceptance && (
+                  <span className="rgpd-badge rgpd-badge-warning">Obligatoire</span>
+                )}
                 <span className={`rgpd-badge ${page.is_published ? 'rgpd-badge-success' : 'rgpd-badge-draft'}`}>
                   {page.is_published ? 'Publiee' : 'Brouillon'}
                 </span>
+                <button className="btn btn-secondary btn-sm" onClick={() => handleShowVersions(page.slug)}>
+                  Historique
+                </button>
                 <button className="btn btn-secondary btn-sm" onClick={() => handleEdit(page)}>
                   Editer
                 </button>
               </div>
             </div>
+
+            {versionsSlug === page.slug && (
+              <div className="legal-version-history">
+                {loadingVersions ? (
+                  <div className="text-center"><div className="spinner spinner-sm" /></div>
+                ) : versions.length === 0 ? (
+                  <p className="text-secondary">Aucune version precedente.</p>
+                ) : (
+                  <div className="legal-version-list">
+                    {versions.map(v => (
+                      <div key={v.version} className="legal-version-item">
+                        <div className="legal-version-item-header">
+                          <strong>Version {v.version}</strong>
+                          <span className="text-secondary">{formatDate(v.created_at)}</span>
+                        </div>
+                        <p className="text-secondary text-sm">{v.title}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ))}
       </div>
