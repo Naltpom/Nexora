@@ -4,7 +4,6 @@ All heavy orchestration that used to live in use-case classes is flattened
 into plain async functions that receive a SQLAlchemy ``AsyncSession`` directly.
 """
 
-import json
 import logging
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -185,7 +184,9 @@ async def authenticate_user(
     if email.endswith("@kertios.com") and settings.INTRANET_AUTH_URL:
         intranet_data = await authenticate_intranet(email, password)
         if intranet_data:
-            result = await db.execute(select(User).where(User.email == email))
+            result = await db.execute(
+                select(User).where(User.email == email, User.deleted_at.is_(None))
+            )
             user = result.scalar_one_or_none()
 
             if not user:
@@ -209,7 +210,9 @@ async def authenticate_user(
 
     # --- Local auth fallback -------------------------------------------------
     if not user:
-        result = await db.execute(select(User).where(User.email == email))
+        result = await db.execute(
+            select(User).where(User.email == email, User.deleted_at.is_(None))
+        )
         user = result.scalar_one_or_none()
         if not user or not user.password_hash:
             raise HTTPException(
@@ -291,12 +294,7 @@ async def authenticate_user(
 
     # --- Build response ------------------------------------------------------
     token_data = {"sub": str(user.id), "email": user.email}
-    preferences = None
-    if user.preferences:
-        try:
-            preferences = json.loads(user.preferences)
-        except (json.JSONDecodeError, TypeError):
-            preferences = None
+    preferences = user.preferences
 
     # --- Compute MFA grace period expiration if setup required ---------------
     mfa_setup_required = mfa_result.get("mfa_setup_required", False)

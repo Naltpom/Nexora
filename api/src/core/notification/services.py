@@ -304,6 +304,13 @@ async def process_notifications(
 
     # Send webhooks
     if (webhook_rule_ids or explicit_webhook_ids) and webhook_sender:
+        from ..encryption import decrypt_value, is_encrypted
+
+        def _decrypt_secret(secret: str | None) -> str | None:
+            if secret and is_encrypted(secret):
+                return decrypt_value(secret)
+            return secret
+
         webhook_result = await db.execute(
             select(Webhook).where(Webhook.is_active.is_(True))
         )
@@ -318,7 +325,10 @@ async def process_notifications(
                 sent_ids.add(webhook.id)
                 payload = build_webhook_payload(webhook.format, event, webhook.prefix)
                 try:
-                    await webhook_sender.send(webhook.url, payload, secret=webhook.secret)
+                    await webhook_sender.send(
+                        webhook.url, payload, secret=_decrypt_secret(webhook.secret),
+                        webhook_id=webhook.id, event_id=event.id, db=db,
+                    )
                 except Exception:
                     logger.exception("Webhook failed: url=%s", webhook.url)
                 continue

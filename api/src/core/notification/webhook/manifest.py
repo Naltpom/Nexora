@@ -4,7 +4,7 @@ manifest = FeatureManifest(
     name="notification.webhook",
     label="Webhook Notifications",
     description="HTTP webhook delivery channel",
-    version="2026.02.1",
+    version="2026.02.19",
     parent="notification",
     permissions=[
         "notification.webhook.read", "notification.webhook.create",

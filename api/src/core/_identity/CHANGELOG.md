@@ -1,5 +1,19 @@
 # _identity — Changelog
 
+## 2026.02.19
+
+- FK `impersonation_actions.session_id` → `impersonation_logs.session_id` avec `ondelete="CASCADE"` (W3)
+- `User.preferences` converti de `Text` a `JSONB` — suppression json.loads/json.dumps (W4)
+- `SecurityToken.hash_value` migre de SHA-256 vers HMAC-SHA256 (T3)
+- Nouvelle table `user_sessions` : suivi des refresh tokens avec IP, user-agent, revocation (W5)
+- Login cree une session, refresh revoque + recree, detection reutilisation de token
+- Endpoints `GET /me/sessions`, `DELETE /me/sessions/{id}`, `DELETE /me/sessions`
+- Soft delete User via `deleted_at` — email anonymise, filtre dans authenticate\_user et get\_current\_user (T6)
+- `get_current_super_admin` verifie role RBAC `super_admin` avec fallback legacy (T2)
+- Commande `_identity.purge_expired_sessions` (daily)
+- Commande `_identity.purge_soft_deleted_users` (RGPD, mensuel, 30 jours)
+- Config `SESSION_RETENTION_DAYS` (default 90)
+
 ## 2026.02.18
 
 - Table `command_states` pour persister l'etat enable/disable des commandes

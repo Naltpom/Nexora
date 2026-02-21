@@ -67,7 +67,7 @@ async def list_users(
     sort_dir: str = Query("asc", description="Sort direction: asc or desc"),
     db: AsyncSession = Depends(get_db),
 ):
-    query = select(User)
+    query = select(User).where(User.deleted_at.is_(None))
 
     if active_only:
         query = query.where(User.is_active.is_(True))
@@ -231,12 +231,14 @@ async def delete_user(
     if user_id == current_user.id:
         raise HTTPException(status_code=400, detail="Impossible de supprimer votre propre compte")
 
-    result = await db.execute(select(User).where(User.id == user_id))
+    result = await db.execute(select(User).where(User.id == user_id, User.deleted_at.is_(None)))
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="Utilisateur introuvable")
 
-    await db.delete(user)
+    user.deleted_at = datetime.now(timezone.utc)
+    user.is_active = False
+    user.email = f"deleted_{user.id}_{user.email}"
     await db.flush()
 
 

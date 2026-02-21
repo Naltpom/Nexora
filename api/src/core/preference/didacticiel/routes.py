@@ -29,12 +29,7 @@ _MIGRATION_MAP = {
 
 
 def _parse_prefs(user) -> dict:
-    if user.preferences:
-        try:
-            return json.loads(user.preferences)
-        except (json.JSONDecodeError, TypeError):
-            pass
-    return {}
+    return user.preferences or {}
 
 
 def _migrate_legacy(prefs: dict) -> dict[str, str]:
@@ -65,7 +60,7 @@ async def get_seen_permissions(
     if prefs.get("tutorials_seen") and permissions_seen:
         prefs["permissions_seen"] = permissions_seen
         prefs.pop("tutorials_seen", None)
-        user.preferences = json.dumps(prefs)
+        user.preferences = prefs
         await db.flush()
 
     return PermissionSeenResponse(permissions_seen=permissions_seen)
@@ -86,7 +81,7 @@ async def mark_permission_seen(
     permissions_seen[request.permission] = datetime.now(timezone.utc).isoformat()
     existing["permissions_seen"] = permissions_seen
     existing.pop("tutorials_seen", None)
-    user.preferences = json.dumps(existing)
+    user.preferences = existing
     await db.flush()
     return {"ok": True}
 
@@ -103,7 +98,7 @@ async def reset_all_tutorials(
     existing = _parse_prefs(user)
     existing.pop("permissions_seen", None)
     existing.pop("tutorials_seen", None)
-    user.preferences = json.dumps(existing)
+    user.preferences = existing
     await db.flush()
     return {"ok": True}
 

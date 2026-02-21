@@ -1,13 +1,12 @@
 """Auth endpoints: login, refresh, me, preferences, change-password,
 forgot-password, reset-password, register, verify-email."""
 
-import json
 import random
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Body, Depends, HTTPException, status
-from sqlalchemy import select
+from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config import settings
@@ -19,9 +18,10 @@ from ..security import (
     decode_token,
     get_current_user,
     hash_password,
+    hash_refresh_token,
     verify_password,
 )
-from .models import User
+from .models import User, UserSession
 from .schemas import (
     ChangePasswordRequest,
     ForgotPasswordRequest,
@@ -48,37 +48,94 @@ from .services import (
 router = APIRouter()
 
 
+async def _create_session(
+    db: AsyncSession,
+    user_id: int,
+    refresh_token: str,
+    req: Request | None = None,
+) -> None:
+    """Create a user session record for refresh token tracking."""
+    session = UserSession(
+        user_id=user_id,
+        refresh_token_hash=hash_refresh_token(refresh_token),
+        ip_address=req.client.host if req and req.client else None,
+        user_agent=(req.headers.get("user-agent", "")[:500]) if req else None,
+        expires_at=datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
+    )
+    db.add(session)
+
+
 # ---------------------------------------------------------------------------
 #  Login / Refresh
 # ---------------------------------------------------------------------------
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(request: LoginRequest, db: AsyncSession = Depends(get_db)):
+async def login(request: LoginRequest, req: Request, db: AsyncSession = Depends(get_db)):
     result = await authenticate_user(db, request.email, request.password)
+    # Create session if tokens were issued
+    if result.get("refresh_token"):
+        token_payload = decode_token(result["access_token"])
+        user_id = int(token_payload.get("sub", 0))
+        if user_id:
+            await _create_session(db, user_id, result["refresh_token"], req)
+            await db.flush()
     return TokenResponse(**result)
 
 
 @router.post("/refresh", response_model=TokenResponse)
-async def refresh_token(request: RefreshRequest, db: AsyncSession = Depends(get_db)):
+async def refresh_token(
+    request: RefreshRequest, req: Request, db: AsyncSession = Depends(get_db),
+):
     payload = decode_token(request.refresh_token)
     if payload.get("type") != "refresh":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token de rafraichissement invalide",
         )
-    user_id = payload.get("sub")
-    result = await db.execute(select(User).where(User.id == int(user_id)))
+    user_id = int(payload.get("sub", 0))
+
+    # Look up session by token hash
+    old_hash = hash_refresh_token(request.refresh_token)
+    sess_result = await db.execute(
+        select(UserSession).where(UserSession.refresh_token_hash == old_hash)
+    )
+    old_session = sess_result.scalar_one_or_none()
+
+    if old_session:
+        if old_session.is_revoked:
+            # Token reuse detected — revoke ALL sessions for this user
+            await db.execute(
+                update(UserSession)
+                .where(UserSession.user_id == old_session.user_id, UserSession.is_revoked.is_(False))
+                .values(is_revoked=True)
+            )
+            await db.flush()
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token reutilise — toutes les sessions ont ete revoquees",
+            )
+        # Revoke the old session
+        old_session.is_revoked = True
+
+    result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
-    if not user or not user.is_active:
+    if not user or not user.is_active or user.deleted_at is not None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Utilisateur introuvable",
         )
+
     token_data = {"sub": str(user.id), "email": user.email}
+    new_refresh = create_refresh_token(token_data)
+
+    # Create new session
+    await _create_session(db, user.id, new_refresh, req)
+    await db.flush()
+
     return TokenResponse(
         access_token=create_access_token(token_data),
-        refresh_token=create_refresh_token(token_data),
+        refresh_token=new_refresh,
     )
 
 
@@ -92,13 +149,6 @@ async def get_me(
     current_user=Depends(get_current_user),
     permission_codes: list[str] = Depends(get_user_permission_codes),
 ):
-    preferences = None
-    if current_user.preferences:
-        try:
-            preferences = json.loads(current_user.preferences)
-        except (json.JSONDecodeError, TypeError):
-            preferences = None
-
     return UserResponse(
         id=current_user.id,
         email=current_user.email,
@@ -108,7 +158,7 @@ async def get_me(
         is_active=current_user.is_active,
         is_super_admin=current_user.is_super_admin,
         must_change_password=current_user.must_change_password,
-        preferences=preferences,
+        preferences=current_user.preferences,
         last_login=current_user.last_login,
         last_active=current_user.last_active,
         created_at=current_user.created_at,
@@ -129,12 +179,7 @@ async def get_my_permissions(
 
 @router.get("/me/preferences")
 async def get_preferences(current_user=Depends(get_current_user)):
-    if current_user.preferences:
-        try:
-            return json.loads(current_user.preferences)
-        except (json.JSONDecodeError, TypeError):
-            return {}
-    return {}
+    return current_user.preferences or {}
 
 
 @router.put("/me/preferences")
@@ -145,14 +190,9 @@ async def update_preferences(
 ):
     result = await db.execute(select(User).where(User.id == current_user.id))
     user = result.scalar_one_or_none()
-    existing: dict = {}
-    if user.preferences:
-        try:
-            existing = json.loads(user.preferences)
-        except (json.JSONDecodeError, TypeError):
-            existing = {}
+    existing: dict = user.preferences or {}
     existing.update(prefs)
-    user.preferences = json.dumps(existing)
+    user.preferences = existing
     await db.flush()
     return existing
 
@@ -358,6 +398,7 @@ async def register(
 @router.post("/verify-email", response_model=TokenResponse)
 async def verify_email(
     data: VerifyEmailRequest,
+    req: Request,
     db: AsyncSession = Depends(get_db),
 ):
     """Verify email with 6-digit code after registration."""
@@ -378,9 +419,13 @@ async def verify_email(
     await consume_security_token(db, token)
 
     token_data = {"sub": str(user.id), "email": user.email}
+    refresh = create_refresh_token(token_data)
+    await _create_session(db, user.id, refresh, req)
+    await db.flush()
+
     return TokenResponse(
         access_token=create_access_token(token_data),
-        refresh_token=create_refresh_token(token_data),
+        refresh_token=refresh,
     )
 
 
@@ -428,3 +473,72 @@ async def resend_verification(
         "message": "Si cette adresse necessite une verification, un code a ete envoye.",
         "debug_code": code if not settings.EMAIL_ENABLED else None,
     }
+
+
+# ---------------------------------------------------------------------------
+#  Session management
+# ---------------------------------------------------------------------------
+
+
+@router.get("/me/sessions")
+async def list_my_sessions(
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """List active (non-revoked, non-expired) sessions for the current user."""
+    now = datetime.now(timezone.utc)
+    result = await db.execute(
+        select(UserSession)
+        .where(
+            UserSession.user_id == current_user.id,
+            UserSession.is_revoked.is_(False),
+            UserSession.expires_at > now,
+        )
+        .order_by(UserSession.last_used_at.desc())
+    )
+    sessions = result.scalars().all()
+    return [
+        {
+            "id": s.id,
+            "ip_address": s.ip_address,
+            "user_agent": s.user_agent,
+            "created_at": s.created_at.isoformat() if s.created_at else None,
+            "last_used_at": s.last_used_at.isoformat() if s.last_used_at else None,
+            "expires_at": s.expires_at.isoformat() if s.expires_at else None,
+        }
+        for s in sessions
+    ]
+
+
+@router.delete("/me/sessions/{session_id}", status_code=204)
+async def revoke_session(
+    session_id: int,
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Revoke a specific session."""
+    result = await db.execute(
+        select(UserSession).where(
+            UserSession.id == session_id,
+            UserSession.user_id == current_user.id,
+        )
+    )
+    session = result.scalar_one_or_none()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session introuvable")
+    session.is_revoked = True
+    await db.flush()
+
+
+@router.delete("/me/sessions", status_code=204)
+async def revoke_all_sessions(
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Revoke all sessions for the current user."""
+    await db.execute(
+        update(UserSession)
+        .where(UserSession.user_id == current_user.id, UserSession.is_revoked.is_(False))
+        .values(is_revoked=True)
+    )
+    await db.flush()

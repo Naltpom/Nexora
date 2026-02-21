@@ -50,4 +50,6 @@ async def verify_totp_code(db, user_id: int, code: str) -> bool:
     mfa = result.scalar_one_or_none()
     if not mfa or not mfa.totp_secret_encrypted:
         return False
-    return verify_totp(mfa.totp_secret_encrypted, code)
+    from ...encryption import decrypt_value, is_encrypted
+    secret = decrypt_value(mfa.totp_secret_encrypted) if is_encrypted(mfa.totp_secret_encrypted) else mfa.totp_secret_encrypted
+    return verify_totp(secret, code)

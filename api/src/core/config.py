@@ -49,6 +49,9 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24h
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
+    # Encryption (Fernet key for secrets at rest)
+    ENCRYPTION_KEY: str = ""
+
     # Upload
     UPLOAD_DIR: str = "/app/uploads"
     MAX_UPLOAD_SIZE_MB: int = 50
@@ -111,6 +114,12 @@ class Settings(BaseSettings):
 
     # Command execution log retention
     COMMAND_LOG_RETENTION_DAYS: int = 90  # Delete command execution logs older than N days
+
+    # User session retention
+    SESSION_RETENTION_DAYS: int = 90  # Delete revoked/expired sessions older than N days
+
+    # Webhook delivery log retention
+    DELIVERY_LOG_RETENTION_DAYS: int = 90  # Delete webhook delivery logs older than N days
 
     # Frontend URL (for reset password links)
     FRONTEND_URL: str = "http://localhost:5472"

@@ -3,6 +3,13 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  css: {
+    preprocessorOptions: {
+      scss: {
+        api: 'modern',
+      },
+    },
+  },
   define: {
     'import.meta.env.VITE_ENV': JSON.stringify(process.env.VITE_ENV || 'production'),
   },

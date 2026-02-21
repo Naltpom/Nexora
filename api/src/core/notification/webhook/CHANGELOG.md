@@ -1,5 +1,15 @@
 # notification.webhook — Changelog
 
+## 2026.02.19
+
+- `webhooks.user_id` → `ondelete="SET NULL"` (W2)
+- Chiffrement Fernet des secrets webhook a la creation/mise a jour, dechiffrement avant envoi (W6/T4)
+- Nouvelle table `webhook_delivery_logs` : logging automatique des livraisons (W7)
+- Commande `notification.webhook.purge_delivery_logs` (daily, retention configurable)
+- CHECK constraints JSONB sur event\_types et notification\_rule\_ids (T7)
+- Index GIN sur `webhooks.event_types`
+- Config `DELIVERY_LOG_RETENTION_DAYS` (default 90)
+
 ## 2026.02.1 — Init
 
 - Webhooks HTTP POST avec retry automatique (configurable)

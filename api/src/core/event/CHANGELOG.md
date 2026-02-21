@@ -1,5 +1,9 @@
 # event — Changelog
 
+## 2026.02.19
+
+- Index sur `events.actor_id` et `events.resource_id` pour accelerer les lookups (W1)
+
 ## 2026.02.17
 
 - Nouvelle commande `event.purge_old_events` : supprime les events > EVENT_RETENTION_DAYS jours (cascade notifications)

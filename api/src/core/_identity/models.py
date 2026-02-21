@@ -30,7 +30,7 @@ class User(Base):
     email_verified: Mapped[bool] = mapped_column(Boolean, default=True)
     is_super_admin: Mapped[bool] = mapped_column(Boolean, default=False)
     must_change_password: Mapped[bool] = mapped_column(Boolean, default=False)
-    preferences: Mapped[str | None] = mapped_column(Text, nullable=True)
+    preferences: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     last_login: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     last_active: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
@@ -41,6 +41,7 @@ class User(Base):
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 # ── Security Tokens ──────────────────────────────────────────────────────
@@ -69,8 +70,14 @@ class SecurityToken(Base):
 
     @staticmethod
     def hash_value(raw_value: str) -> str:
-        """SHA256 hash for token storage and lookup."""
-        return hashlib.sha256(raw_value.encode()).hexdigest()
+        """HMAC-SHA256 hash for token storage and lookup."""
+        import hmac
+        from ..config import settings
+        return hmac.new(
+            settings.SECRET_KEY.encode(),
+            raw_value.encode(),
+            hashlib.sha256,
+        ).hexdigest()
 
 
 # ── Roles & Permissions ─────────────────────────────────────────────────
@@ -245,7 +252,10 @@ class ImpersonationAction(Base):
     __tablename__ = "impersonation_actions"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    session_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
+    session_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("impersonation_logs.session_id", ondelete="CASCADE"),
+        nullable=False, index=True
+    )
     action_type: Mapped[str] = mapped_column(String(50), nullable=False)
     resource_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
     resource_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
@@ -253,3 +263,31 @@ class ImpersonationAction(Base):
     http_method: Mapped[str | None] = mapped_column(String(10), nullable=True)
     request_data: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+
+# ── User Sessions ──────────────────────────────────────────────────────
+
+class UserSession(Base):
+    __tablename__ = "user_sessions"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    refresh_token_hash: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
+    ip_address: Mapped[str | None] = mapped_column(String(45), nullable=True)
+    user_agent: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    is_revoked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+    last_used_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+    user = relationship("User", foreign_keys=[user_id])
+
+    __table_args__ = (
+        Index("ix_user_sessions_user_active", "user_id", "is_revoked"),
+    )

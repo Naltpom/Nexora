@@ -6,7 +6,7 @@ from sqlalchemy import delete, select
 
 from ..command_registry import CommandDefinition
 from ..config import settings
-from .models import CommandExecution, ImpersonationAction, ImpersonationLog, SecurityToken
+from .models import CommandExecution, ImpersonationAction, ImpersonationLog, SecurityToken, UserSession
 from .services import run_pg_dump
 
 
@@ -87,6 +87,56 @@ async def _purge_command_logs(db):
     }
 
 
+async def _purge_expired_sessions(db):
+    """Delete revoked or expired user sessions older than N days."""
+    from sqlalchemy import or_
+
+    days = settings.SESSION_RETENTION_DAYS
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+
+    result = await db.execute(
+        delete(UserSession).where(
+            or_(
+                UserSession.is_revoked.is_(True),
+                UserSession.expires_at < datetime.now(timezone.utc),
+            ),
+            UserSession.created_at < cutoff,
+        )
+    )
+    count = result.rowcount
+
+    return {
+        "purged": count,
+        "retention_days": days,
+        "message": f"{count} session(s) purgee(s)." if count else "Aucune session a purger.",
+    }
+
+
+async def _purge_soft_deleted_users(db):
+    """Hard-delete users soft-deleted more than 30 days ago (RGPD compliance)."""
+    from .models import User
+
+    cutoff = datetime.now(timezone.utc) - timedelta(days=30)
+
+    result = await db.execute(
+        select(User).where(
+            User.deleted_at.isnot(None),
+            User.deleted_at < cutoff,
+        )
+    )
+    users = result.scalars().all()
+    count = 0
+    for user in users:
+        await db.delete(user)
+        count += 1
+
+    return {
+        "purged": count,
+        "retention_days": 30,
+        "message": f"{count} utilisateur(s) supprime(s) definitivement." if count else "Aucun utilisateur a purger.",
+    }
+
+
 commands = [
     CommandDefinition(
         name="_identity.purge_expired_tokens",
@@ -117,5 +167,20 @@ commands = [
         handler=_purge_command_logs,
         schedule="0 3 1 * *",
         config_keys=["COMMAND_LOG_RETENTION_DAYS"],
+    ),
+    CommandDefinition(
+        name="_identity.purge_expired_sessions",
+        label="Purge des sessions expirees",
+        description="Supprime les sessions revoquees ou expirees plus anciennes que N jours",
+        handler=_purge_expired_sessions,
+        schedule="0 2 * * *",
+        config_keys=["SESSION_RETENTION_DAYS"],
+    ),
+    CommandDefinition(
+        name="_identity.purge_soft_deleted_users",
+        label="Purge RGPD des utilisateurs supprimes",
+        description="Supprime definitivement les utilisateurs soft-deleted depuis plus de 30 jours",
+        handler=_purge_soft_deleted_users,
+        schedule="0 5 1 * *",
     ),
 ]

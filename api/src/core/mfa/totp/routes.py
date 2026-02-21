@@ -51,15 +51,18 @@ async def totp_setup(
     )
     mfa_record = result.scalar_one_or_none()
 
+    from ...encryption import encrypt_value
+    encrypted_secret = encrypt_value(secret)
+
     if mfa_record:
-        mfa_record.totp_secret_encrypted = secret
+        mfa_record.totp_secret_encrypted = encrypted_secret
         mfa_record.totp_verified = False
         mfa_record.is_enabled = False
     else:
         mfa_record = UserMFA(
             user_id=current_user.id,
             method="totp",
-            totp_secret_encrypted=secret,
+            totp_secret_encrypted=encrypted_secret,
             totp_verified=False,
             is_enabled=False,
         )
@@ -103,7 +106,9 @@ async def totp_verify_setup(
         )
 
     # Verify code against stored secret
-    if not verify_totp(mfa_record.totp_secret_encrypted, request.code):
+    from ...encryption import decrypt_value, is_encrypted
+    stored_secret = decrypt_value(mfa_record.totp_secret_encrypted) if is_encrypted(mfa_record.totp_secret_encrypted) else mfa_record.totp_secret_encrypted
+    if not verify_totp(stored_secret, request.code):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Code TOTP invalide. Verifiez votre application authenticator.",

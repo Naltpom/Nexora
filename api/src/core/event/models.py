@@ -18,9 +18,9 @@ class Event(Base):
         String(36), default=lambda: str(uuid.uuid4()), unique=True, nullable=False
     )
     event_type: Mapped[str] = mapped_column(String(100), nullable=False)
-    actor_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    actor_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     resource_type: Mapped[str] = mapped_column(String(50), nullable=False)
-    resource_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    resource_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     payload: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)

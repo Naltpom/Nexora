@@ -61,12 +61,13 @@ async def create_webhook(
     db: AsyncSession = Depends(get_db),
 ):
     """Creer un webhook personnel."""
+    from ...encryption import encrypt_value
     webhook = Webhook(
         user_id=current_user.id,
         is_global=False,
         name=data.name,
         url=data.url,
-        secret=data.secret,
+        secret=encrypt_value(data.secret) if data.secret else None,
         format=data.format,
         prefix=data.prefix,
         event_types=data.event_types,
@@ -93,6 +94,9 @@ async def update_webhook(
         raise HTTPException(status_code=403, detail="Acces refuse")
 
     provided = data.model_dump(exclude_unset=True)
+    if "secret" in provided and provided["secret"]:
+        from ...encryption import encrypt_value
+        provided["secret"] = encrypt_value(provided["secret"])
     for field, value in provided.items():
         setattr(webhook, field, value)
     await db.flush()
@@ -157,9 +161,12 @@ async def test_webhook(
         if webhook.prefix:
             payload["prefix"] = webhook.prefix
 
+    from ...encryption import decrypt_value, is_encrypted
+    webhook_secret = decrypt_value(webhook.secret) if webhook.secret and is_encrypted(webhook.secret) else webhook.secret
+
     sender = HttpWebhookSender()
     try:
-        await sender.send(webhook.url, payload, secret=webhook.secret)
+        await sender.send(webhook.url, payload, secret=webhook_secret)
         return {"ok": True, "message": f"Test envoye a {webhook.url}"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Echec de l'envoi: {str(e)}")
@@ -188,12 +195,13 @@ async def create_global_webhook(
     db: AsyncSession = Depends(get_db),
 ):
     """Creer un webhook global."""
+    from ...encryption import encrypt_value
     webhook = Webhook(
         user_id=current_user.id,
         is_global=True,
         name=data.name,
         url=data.url,
-        secret=data.secret,
+        secret=encrypt_value(data.secret) if data.secret else None,
         format=data.format,
         prefix=data.prefix,
         event_types=data.event_types,
@@ -218,6 +226,9 @@ async def update_global_webhook(
         raise HTTPException(status_code=404, detail="Webhook global introuvable")
 
     provided = data.model_dump(exclude_unset=True)
+    if "secret" in provided and provided["secret"]:
+        from ...encryption import encrypt_value
+        provided["secret"] = encrypt_value(provided["secret"])
     for field, value in provided.items():
         setattr(webhook, field, value)
     await db.flush()

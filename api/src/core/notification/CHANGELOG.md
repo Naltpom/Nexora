@@ -1,5 +1,13 @@
 # notification — Changelog
 
+## 2026.02.19
+
+- `notifications.user_id` → `ondelete="CASCADE"` (W2)
+- `notification_rules.created_by_id` → nullable + `ondelete="SET NULL"` (W2)
+- CHECK constraints JSONB sur `notification_rules` (event\_types, target\_user\_ids, webhook\_ids) (T7)
+- Index GIN sur `notification_rules.event_types`
+- Nettoyage JSONB null → SQL NULL
+
 ## 2026.02.17
 
 - FK `notifications.event_id` mise a jour avec `ondelete='CASCADE'` (permet purge events)

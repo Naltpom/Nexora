@@ -1,5 +1,10 @@
 # MFA Feature Changelog
 
+## 2026.02.19
+
+- Chiffrement Fernet du secret TOTP avant stockage, dechiffrement avant verification (W6/T4)
+- CHECK constraint JSONB sur `mfa_role_policies.allowed_methods` (T7)
+
 ## 2026.02.2
 
 - MFA enforcement : detection `mfa_setup_required` + `mfa_grace_period_expires` dans TokenResponse

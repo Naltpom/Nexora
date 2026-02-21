@@ -2,6 +2,54 @@
 
 
 
+## 2026.02.19
+
+### Corrections SWOT — Securite, integrite et robustesse du schema DB
+
+Correction de 8 faiblesses (W) et 6 menaces (T) identifiees dans l'analyse SWOT, en 5 phases.
+
+#### Phase 1 — FK, ondelete, indexes
+- **event** : ajout indexes sur `events.actor_id` et `events.resource_id` (W1)
+- **notification** : `notifications.user_id` → `ondelete="CASCADE"`, `notification_rules.created_by_id` → nullable + `ondelete="SET NULL"` (W2)
+- **notification.webhook** : `webhooks.user_id` → `ondelete="SET NULL"` (W2)
+- **\_identity** : FK sur `impersonation_actions.session_id` → `impersonation_logs.session_id` avec CASCADE (W3)
+
+#### Phase 2 — User.preferences Text → JSONB
+- **\_identity** : colonne `preferences` convertie de `Text` a `JSONB` (W4)
+- Suppression de tous les `json.loads`/`json.dumps` dans routes\_auth, services, preference/didacticiel
+
+#### Phase 3 — Chiffrement at-rest + HMAC tokens
+- Nouveau module `api/src/core/encryption.py` : `encrypt_value`, `decrypt_value`, `is_encrypted` (Fernet) (W6/T4)
+- Setting `ENCRYPTION_KEY` dans config
+- **mfa.totp** : chiffrement du secret TOTP avant stockage, dechiffrement avant verification
+- **notification.webhook** : chiffrement des secrets webhook a la creation/mise a jour, dechiffrement avant envoi
+- **\_identity** : `SecurityToken.hash_value` migre de SHA-256 vers HMAC-SHA256 (T3)
+
+#### Phase 4 — Sessions, delivery logs, soft delete
+- **\_identity** : nouvelle table `user_sessions` pour le suivi des refresh tokens (W5)
+  - Login cree une session, refresh revoque l'ancienne et en cree une nouvelle
+  - Detection de reutilisation de token (revocation de toutes les sessions)
+  - Endpoints `GET /me/sessions`, `DELETE /me/sessions/{id}`, `DELETE /me/sessions`
+- **notification.webhook** : nouvelle table `webhook_delivery_logs` (W7)
+  - Logging automatique des livraisons webhook avec status, duree, erreur
+  - Commande de purge `notification.webhook.purge_delivery_logs`
+- **\_identity** : soft delete User via `deleted_at` (T6)
+  - `DELETE /users/{id}` fait un soft delete (anonymise email, desactive)
+  - `authenticate_user` filtre les users soft-deleted
+  - `get_current_user` et `get_current_user_from_query_token` rejettent les soft-deleted
+  - Commande RGPD `_identity.purge_soft_deleted_users` (hard-delete apres 30 jours)
+  - Commande `_identity.purge_expired_sessions`
+
+#### Phase 5 — RBAC super\_admin + validation JSONB
+- Role `super_admin` cree automatiquement avec toutes les permissions (T2)
+- `get_current_super_admin` verifie via RBAC (avec fallback legacy `is_super_admin` flag)
+- CHECK constraints JSONB sur `notification_rules`, `webhooks`, `mfa_role_policies`, `user_rule_preferences` (T7)
+- Index GIN sur `notification_rules.event_types` et `webhooks.event_types`
+- Nettoyage des valeurs JSONB null → SQL NULL
+
+#### Migration Alembic
+- Migration unique `e5f6a7b8c9d0` couvrant les 5 phases
+
 ## 2026.02.18
 
 ### \_identity — Page admin Commandes de maintenance + historique

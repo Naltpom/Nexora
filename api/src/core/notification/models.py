@@ -16,7 +16,7 @@ class Notification(Base):
     __tablename__ = "notifications"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     event_id: Mapped[int] = mapped_column(Integer, ForeignKey("events.id", ondelete="CASCADE"), nullable=False)
     rule_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("notification_rules.id", ondelete="SET NULL"), nullable=True)
     title: Mapped[str] = mapped_column(String(500), nullable=False)
@@ -46,7 +46,7 @@ class NotificationRule(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    created_by_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    created_by_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     # What events trigger this rule
     event_types: Mapped[list] = mapped_column(JSONB, nullable=False)  # ["user.registered"] or ["*"]

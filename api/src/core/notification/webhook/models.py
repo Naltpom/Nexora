@@ -1,8 +1,8 @@
-"""Webhook models: Webhook."""
+"""Webhook models: Webhook, WebhookDeliveryLog."""
 
 from datetime import datetime, timezone
 
-from sqlalchemy import String, Integer, Boolean, ForeignKey, DateTime
+from sqlalchemy import String, Integer, Boolean, ForeignKey, DateTime, Text, Index
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -13,7 +13,7 @@ class Webhook(Base):
     __tablename__ = "webhooks"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    user_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"), nullable=True)
+    user_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     url: Mapped[str] = mapped_column(String(1000), nullable=False)
     secret: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -33,3 +33,28 @@ class Webhook(Base):
     )
 
     user = relationship("User", foreign_keys=[user_id])
+
+
+class WebhookDeliveryLog(Base):
+    __tablename__ = "webhook_delivery_logs"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    webhook_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("webhooks.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    event_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("events.id", ondelete="SET NULL"), nullable=True
+    )
+    status_code: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    success: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True
+    )
+
+    webhook = relationship("Webhook", foreign_keys=[webhook_id])
+
+    __table_args__ = (
+        Index("ix_webhook_delivery_logs_webhook_created", "webhook_id", "created_at"),
+    )

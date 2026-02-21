@@ -1,3 +1,5 @@
+import hashlib
+import hmac
 from datetime import datetime, timedelta, timezone
 
 # Workaround: passlib 1.7.4 expects bcrypt.__about__ removed in bcrypt >= 4.x
@@ -27,6 +29,15 @@ def hash_password(password: str) -> str:
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
+
+
+def hash_refresh_token(token: str) -> str:
+    """HMAC-SHA256 hash for refresh token session tracking."""
+    return hmac.new(
+        settings.SECRET_KEY.encode(),
+        token.encode(),
+        hashlib.sha256,
+    ).hexdigest()
 
 
 def create_access_token(data: dict) -> str:
@@ -132,12 +143,27 @@ async def get_current_user(
 
     result = await db.execute(select(User).where(User.id == int(user_id)))
     user = result.scalar_one_or_none()
-    if user is None or not user.is_active:
+    if user is None or not user.is_active or user.deleted_at is not None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Utilisateur introuvable ou désactivé")
 
     user._impersonated_by = impersonated_by
     user._impersonation_session_id = payload.get("impersonation_session_id")
     return user
+
+
+async def _is_super_admin(db: AsyncSession, user) -> bool:
+    """Check if user has super_admin privileges via RBAC role or legacy flag."""
+    # Legacy flag (kept for transition period)
+    if user.is_super_admin:
+        return True
+    # RBAC: check if user has the 'super_admin' role
+    from ._identity.models import Role, UserRole
+    result = await db.execute(
+        select(Role.name)
+        .join(UserRole, UserRole.role_id == Role.id)
+        .where(UserRole.user_id == user.id, Role.name == "super_admin")
+    )
+    return result.scalar_one_or_none() is not None
 
 
 async def get_current_super_admin(
@@ -151,10 +177,10 @@ async def get_current_super_admin(
 
             result = await db.execute(select(User).where(User.id == original_admin_id))
             original_admin = result.scalar_one_or_none()
-            if original_admin and original_admin.is_super_admin:
+            if original_admin and await _is_super_admin(db, original_admin):
                 return current_user
 
-    if not current_user.is_super_admin:
+    if not await _is_super_admin(db, current_user):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès réservé aux super administrateurs")
     return current_user
 
@@ -192,7 +218,7 @@ async def get_current_user_from_query_token(
 
     result = await db.execute(select(User).where(User.id == int(user_id)))
     user = result.scalar_one_or_none()
-    if user is None or not user.is_active:
+    if user is None or not user.is_active or user.deleted_at is not None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Utilisateur introuvable")
     return user
 
