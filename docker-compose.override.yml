@@ -5,6 +5,10 @@ services:
       - ./api/alembic:/app/alembic
       - ./backups:/app/backups
 
+  worker:
+    volumes:
+      - ./api/src:/app/src
+
   app:
     volumes:
       - ./app/src:/app/src

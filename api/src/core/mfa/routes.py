@@ -8,8 +8,10 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .._identity.models import Role, User, UserRole
+from ..config import settings
 from ..database import get_db
 from ..permissions import require_permission
+from ..rate_limit import limiter
 from ..security import (
     create_access_token,
     create_refresh_token,
@@ -94,16 +96,18 @@ async def get_mfa_status(
 
 
 @router.post("/verify", response_model=MFAVerifyResponse)
+@limiter.limit(settings.RATE_LIMIT_MFA_VERIFY)
 async def verify_mfa(
-    request: MFAVerifyRequest,
+    data: MFAVerifyRequest,
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ):
     """Verifier un code MFA pendant le login et retourner les vrais tokens."""
-    payload = decode_mfa_token(request.mfa_token)
+    payload = decode_mfa_token(data.mfa_token)
     user_id = int(payload["sub"])
 
     # Verify the code
-    is_valid = await verify_mfa_code(db, user_id, request.code, request.method)
+    is_valid = await verify_mfa_code(db, user_id, data.code, data.method)
     if not is_valid:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

@@ -1,7 +1,7 @@
 {
   "name": "nexora",
   "private": true,
-  "version": "2026.02.31",
+  "version": "2026.02.32",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -17,6 +17,7 @@
     "@tiptap/suggestion": "^2.1.13",
     "axios": "^1.6.2",
     "i18next": "^25.8.13",
+    "i18next-resources-to-backend": "^1.2.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-i18next": "^16.5.4",

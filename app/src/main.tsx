@@ -9,6 +9,7 @@ import { AppSettingsProvider } from './core/AppSettingsContext'
 import { ConfirmProvider } from './core/ConfirmModal'
 import { NotificationProvider } from './core/notification/NotificationContext'
 import I18nProvider from './core/i18n/I18nProvider'
+import ErrorBoundary from './core/ErrorBoundary'
 import { hasConsent } from './core/rgpd/consentManager'
 import { applyAllPreferences } from './core/preference/applyPreferences'
 import './core/i18n/i18n'
@@ -67,15 +68,17 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <AppSettingsProvider>
         <AuthProvider>
           <I18nProvider>
-            <PermissionProvider>
-              <FeatureProvider>
-                <ConfirmProvider>
-                  <NotificationProvider>
-                    <App />
-                  </NotificationProvider>
-                </ConfirmProvider>
-              </FeatureProvider>
-            </PermissionProvider>
+            <ErrorBoundary>
+              <PermissionProvider>
+                <FeatureProvider>
+                  <ConfirmProvider>
+                    <NotificationProvider>
+                      <App />
+                    </NotificationProvider>
+                  </ConfirmProvider>
+                </FeatureProvider>
+              </PermissionProvider>
+            </ErrorBoundary>
           </I18nProvider>
         </AuthProvider>
       </AppSettingsProvider>

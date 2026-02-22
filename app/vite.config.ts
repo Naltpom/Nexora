@@ -20,7 +20,11 @@ export default defineConfig({
       usePolling: true,
     },
     allowedHosts: ['localhost', '127.0.0.1'],
-    hmr: false,
+    hmr: {
+      host: 'localhost',
+      port: 5472,
+      clientPort: 5472,
+    },
     proxy: {
       '/api': {
         target: 'http://api:8000',

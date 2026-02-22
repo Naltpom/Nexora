@@ -1,28 +1,33 @@
 """Notification feature services: SSE broadcaster, notification processing."""
 
 import asyncio
+import json
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
+import redis.asyncio as aioredis
 from sqlalchemy import asc, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..config import settings
 from ..event.models import Event
+from ..tasks import enqueue
 from .models import Notification, NotificationRule, UserRulePreference
 
 logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
-#  SSE Broadcaster (in-memory, singleton)
+#  SSE Broadcasters
 # ---------------------------------------------------------------------------
 
 
 class InMemorySSEBroadcaster:
-    """In-memory SSE broadcaster.
+    """In-memory SSE broadcaster (fallback).
 
-    Stores per-user asyncio queues. Suitable for single-process deployments.
+    Stores per-user asyncio queues. Suitable for single-process deployments
+    where Redis is not available.
     """
 
     def __init__(self) -> None:
@@ -62,8 +67,65 @@ class InMemorySSEBroadcaster:
                 )
 
 
+class RedisSSEBroadcaster:
+    """Redis pub/sub SSE broadcaster. Works across multiple API instances."""
+
+    def __init__(self) -> None:
+        self._redis = aioredis.from_url(settings.REDIS_URL, decode_responses=True)
+        self._tasks: dict[int, list[tuple[asyncio.Queue, asyncio.Task]]] = {}
+
+    async def subscribe(self, user_id: int) -> asyncio.Queue:
+        queue: asyncio.Queue = asyncio.Queue()
+        task = asyncio.create_task(self._listen(user_id, queue))
+        if user_id not in self._tasks:
+            self._tasks[user_id] = []
+        self._tasks[user_id].append((queue, task))
+        logger.debug("SSE subscribe: user_id=%d", user_id)
+        return queue
+
+    async def _listen(self, user_id: int, queue: asyncio.Queue) -> None:
+        channel = f"sse:{user_id}"
+        pubsub = self._redis.pubsub()
+        await pubsub.subscribe(channel)
+        try:
+            async for message in pubsub.listen():
+                if message["type"] == "message":
+                    try:
+                        data = json.loads(message["data"])
+                        queue.put_nowait(data)
+                    except (json.JSONDecodeError, asyncio.QueueFull):
+                        pass
+        except asyncio.CancelledError:
+            pass
+        finally:
+            await pubsub.unsubscribe(channel)
+            await pubsub.aclose()
+
+    async def unsubscribe(self, user_id: int, queue: asyncio.Queue) -> None:
+        if user_id in self._tasks:
+            # Find and cancel the task associated with this queue first
+            task_to_cancel: asyncio.Task | None = None
+            for q, t in self._tasks[user_id]:
+                if q is queue:
+                    task_to_cancel = t
+                    break
+            if task_to_cancel is not None:
+                task_to_cancel.cancel()
+            # Remove the entry from the list
+            self._tasks[user_id] = [
+                (q, t) for q, t in self._tasks[user_id] if q is not queue
+            ]
+            if not self._tasks[user_id]:
+                del self._tasks[user_id]
+        logger.debug("SSE unsubscribe: user_id=%d", user_id)
+
+    async def push(self, user_id: int, data: dict[str, Any]) -> None:
+        channel = f"sse:{user_id}"
+        await self._redis.publish(channel, json.dumps(data, default=str))
+
+
 # Singleton instance
-sse_broadcaster = InMemorySSEBroadcaster()
+sse_broadcaster = RedisSSEBroadcaster()
 
 
 # ---------------------------------------------------------------------------
@@ -174,9 +236,6 @@ def resolve_channels(
 async def process_notifications(
     db: AsyncSession,
     event: Event,
-    email_sender=None,
-    push_sender=None,
-    webhook_sender=None,
 ) -> None:
     """Match rules against the event, create notifications, trigger delivery channels."""
     from .._identity.models import User
@@ -266,30 +325,25 @@ async def process_notifications(
                     },
                 })
 
-            # Send email
-            if channels["email"] and email_sender:
+            # Enqueue email delivery
+            if channels["email"]:
                 user_result = await db.execute(
                     select(User).where(User.id == user_id)
                 )
                 user = user_result.scalar_one_or_none()
                 if user and user.email:
-                    try:
-                        email_sender.send_notification(
-                            user.email,
-                            f"{user.first_name} {user.last_name}",
-                            title,
-                            body,
-                            link,
-                        )
-                    except Exception:
-                        logger.exception("Failed to send notification email to user_id=%d", user_id)
+                    await enqueue(
+                        "send_email_task",
+                        user.email,
+                        f"{user.first_name} {user.last_name}",
+                        title,
+                        body,
+                        link,
+                    )
 
-            # Send push
-            if channels["in_app"] and push_sender:
-                try:
-                    await push_sender.send(user_id, title, body, link)
-                except Exception:
-                    logger.exception("Failed to send push notification to user_id=%d", user_id)
+            # Enqueue push delivery
+            if channels["push"]:
+                await enqueue("send_push_task", user_id, title, body, link)
 
             # Collect webhook data
             if channels["webhook"]:
@@ -302,8 +356,8 @@ async def process_notifications(
 
         notified_users.update(new_recipients)
 
-    # Send webhooks
-    if (webhook_rule_ids or explicit_webhook_ids) and webhook_sender:
+    # Enqueue webhook deliveries
+    if webhook_rule_ids or explicit_webhook_ids:
         from ..encryption import decrypt_value, is_encrypted
 
         def _decrypt_secret(secret: str | None) -> str | None:
@@ -324,13 +378,14 @@ async def process_notifications(
             if explicit_webhook_ids and webhook.id in explicit_webhook_ids:
                 sent_ids.add(webhook.id)
                 payload = build_webhook_payload(webhook.format, event, webhook.prefix)
-                try:
-                    await webhook_sender.send(
-                        webhook.url, payload, secret=_decrypt_secret(webhook.secret),
-                        webhook_id=webhook.id, event_id=event.id, db=db,
-                    )
-                except Exception:
-                    logger.exception("Webhook failed: url=%s", webhook.url)
+                await enqueue(
+                    "send_webhook_task",
+                    webhook.url,
+                    payload,
+                    secret=_decrypt_secret(webhook.secret),
+                    webhook_id=webhook.id,
+                    event_id=event.id,
+                )
                 continue
 
             if webhook.notification_rule_ids:
@@ -349,10 +404,12 @@ async def process_notifications(
 
             sent_ids.add(webhook.id)
             payload = build_webhook_payload(webhook.format, event, webhook.prefix)
-            try:
-                await webhook_sender.send(webhook.url, payload, secret=webhook.secret)
-            except Exception:
-                logger.exception("Webhook failed: url=%s", webhook.url)
+            await enqueue(
+                "send_webhook_task",
+                webhook.url,
+                payload,
+                secret=_decrypt_secret(webhook.secret),
+            )
 
 
 # ---------------------------------------------------------------------------

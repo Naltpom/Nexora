@@ -1,5 +1,40 @@
 # Changelog
 
+## 2026.02.32
+
+### Background tasks (ARQ + Redis)
+
+- Worker ARQ (`api/src/worker.py`) pour les jobs asynchrones (email, webhook, push)
+- Helper `enqueue()` (`api/src/core/tasks.py`) pour publier vers la queue Redis
+- Service Redis + worker ajoutes dans `docker-compose.yml`
+- `notification/services.py` : livraison via queue background au lieu de synchrone, `RedisSSEBroadcaster` pour SSE multi-instance
+
+### Securite & rate limiting
+
+- `middleware_security.py` : headers securite (HSTS, CSP, X-Frame-Options, Referrer-Policy, Permissions-Policy)
+- `rate_limit.py` : rate limiting slowapi + protection brute-force login (5 tentatives/email/15min, 20/IP/15min)
+- Rate limits appliques aux endpoints auth : login (5/min), register (3/min), forgot-password (3/min), reset-password (5/min), verify-email (5/min)
+
+### Performance
+
+- Cache TTL in-process pour les permissions utilisateur (`permissions.py`) — 1000 entrees, 5min TTL, invalidation manuelle
+- `config.py` : nouvelles settings pool DB, CORS, rate limiting, cache permissions, Redis URL
+- `ACCESS_TOKEN_EXPIRE_MINUTES` reduit de 1440 (24h) a 15 minutes
+- i18n frontend : chargement lazy des namespaces feature via `i18next-resources-to-backend`
+
+### Frontend robustesse
+
+- `ErrorBoundary.tsx` : composant Error Boundary React avec i18n + dark/light theme
+- `api.ts` : mutex sur le refresh token pour eviter les appels concurrents, queue des requetes 401
+- `App.tsx` : route catch-all vers `/` pour les chemins inconnus
+
+### Infrastructure & CI
+
+- Dockerfile app : `oven/bun:latest` (aligne sur CI)
+- Migration Alembic `k4l5m6n7o8p9` : sync feature state `notification.push` depuis env `PUSH_ENABLED`
+- CI : demarrage Redis en plus de DB, wait Redis, verification demarrage worker ARQ
+- Commande dev `.claude/commands/dev-reset.md`
+
 ## 2026.02.31
 
 ### SSO — fix callback double-call et route statique

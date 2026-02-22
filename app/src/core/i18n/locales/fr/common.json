@@ -70,5 +70,8 @@
   "bg_theme_gradient": "Degradé",
   "bg_theme_particles": "Particules",
   "bg_theme_hue_rotation": "Rotation de teinte",
-  "bg_theme_mesh_blobs": "Taches fluides"
+  "bg_theme_mesh_blobs": "Taches fluides",
+  "error_boundary_title": "Oups, quelque chose s'est mal passe",
+  "error_boundary_description": "Une erreur inattendue est survenue. Veuillez recharger la page.",
+  "error_boundary_reload": "Recharger la page"
 }

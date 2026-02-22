@@ -7,7 +7,6 @@ import {
   useMemo,
   ReactNode,
 } from 'react'
-import { useLocation } from 'react-router-dom'
 import { useFeature } from '../../FeatureContext'
 import { usePermission } from '../../PermissionContext'
 import { useAuth } from '../../AuthContext'
@@ -62,7 +61,6 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
   const { isActive } = useFeature()
   const { can, permissions } = usePermission()
   const { user } = useAuth()
-  const location = useLocation()
 
   const [permissionsSeen, setPermissionsSeen] = useState<Record<string, string>>({})
   const [active, setActive] = useState<ActiveTutorialState | null>(null)

@@ -70,5 +70,8 @@
   "bg_theme_gradient": "",
   "bg_theme_particles": "",
   "bg_theme_hue_rotation": "",
-  "bg_theme_mesh_blobs": ""
+  "bg_theme_mesh_blobs": "",
+  "error_boundary_title": "",
+  "error_boundary_description": "",
+  "error_boundary_reload": ""
 }

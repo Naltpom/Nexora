@@ -9,10 +9,14 @@ class Settings(BaseSettings):
     POSTGRES_HOST: str = "db"
     POSTGRES_PORT: int = 5432
 
+    # Pool sizing DB
+    POOL_SIZE: int = 10
+    POOL_MAX_OVERFLOW: int = 20
+
     # JWT
     SECRET_KEY: str = "dev_secret_key_change_in_production"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24h
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # Encryption (Fernet key for secrets at rest)
@@ -98,6 +102,25 @@ class Settings(BaseSettings):
 
     # Frontend URL (for reset password links)
     FRONTEND_URL: str = "http://localhost:5472"
+
+    # CORS
+    CORS_ORIGINS: str = ""  # Comma-separated origins; empty = use FRONTEND_URL
+
+    # Rate limiting
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_LOGIN: str = "5/minute"
+    RATE_LIMIT_REGISTER: str = "3/minute"
+    RATE_LIMIT_FORGOT_PASSWORD: str = "3/minute"
+    RATE_LIMIT_RESET_PASSWORD: str = "5/minute"
+    RATE_LIMIT_MFA_VERIFY: str = "5/minute"
+    RATE_LIMIT_DEFAULT: str = "60/minute"
+
+    # Permission cache
+    PERMISSION_CACHE_TTL_SECONDS: int = 300  # 5 min
+    PERMISSION_CACHE_MAX_SIZE: int = 1000
+
+    # Redis
+    REDIS_URL: str = "redis://redis:6379/0"
 
     @property
     def database_url(self) -> str:

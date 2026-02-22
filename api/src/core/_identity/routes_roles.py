@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from ..database import get_db
-from ..permissions import require_permission
+from ..permissions import invalidate_permission_cache, require_permission
 from .models import Permission, Role, RolePermission, User, UserRole
 from .schemas import (
     AssignPermissionsRequest,
@@ -147,6 +147,7 @@ async def delete_role(
 
     await db.delete(role)
     await db.flush()
+    invalidate_permission_cache()  # Role deletion affects all users with this role
 
 
 # ---------------------------------------------------------------------------
@@ -191,6 +192,7 @@ async def assign_permissions(
     for pid in data.permission_ids:
         db.add(RolePermission(role_id=role_id, permission_id=pid))
     await db.flush()
+    invalidate_permission_cache()  # Role permission change affects all users with this role
 
     # Reload with permissions
     result = await db.execute(
@@ -301,10 +303,12 @@ async def toggle_role_permission(
     if existing:
         await db.delete(existing)
         await db.flush()
+        invalidate_permission_cache()  # Role permission change affects all users with this role
         return {"granted": False}
     else:
         db.add(RolePermission(role_id=role_id, permission_id=data.permission_id))
         await db.flush()
+        invalidate_permission_cache()  # Role permission change affects all users with this role
         return {"granted": True}
 
 

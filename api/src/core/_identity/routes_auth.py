@@ -13,6 +13,7 @@ from ..config import settings
 from ..database import get_db
 from ..events import event_bus
 from ..permissions import get_user_permission_codes
+from ..rate_limit import limiter, login_limiter
 from ..security import (
     create_access_token,
     create_refresh_token,
@@ -27,6 +28,7 @@ from .schemas import (
     ChangePasswordRequest,
     ForgotPasswordRequest,
     LoginRequest,
+    ProfileUpdate,
     RefreshRequest,
     RegisterRequest,
     RegisterResponse,
@@ -71,14 +73,33 @@ async def _create_session(
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(request: LoginRequest, req: Request, db: AsyncSession = Depends(get_db)):
-    result = await authenticate_user(db, request.email, request.password)
+@limiter.limit(settings.RATE_LIMIT_LOGIN)
+async def login(data: LoginRequest, request: Request, db: AsyncSession = Depends(get_db)):
+    ip = request.client.host if request.client else "unknown"
+
+    # -- Brute-force rate limit check (email + IP tracking) -------------
+    allowed, retry_after = login_limiter.check(data.email, ip)
+    if not allowed:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Trop de tentatives. Réessayez dans {retry_after} secondes.",
+            headers={"Retry-After": str(retry_after)},
+        )
+
+    try:
+        result = await authenticate_user(db, data.email, data.password)
+    except HTTPException:
+        login_limiter.record_failure(data.email, ip)
+        raise
+
+    login_limiter.record_success(data.email)
+
     # Create session if tokens were issued
     if result.get("refresh_token"):
         token_payload = decode_token(result["access_token"])
         user_id = int(token_payload.get("sub", 0))
         if user_id:
-            await _create_session(db, user_id, result["refresh_token"], req)
+            await _create_session(db, user_id, result["refresh_token"], request)
             await db.flush()
     return TokenResponse(**result)
 
@@ -180,6 +201,49 @@ async def get_my_permissions(
     return {"permissions": permission_codes}
 
 
+@router.put("/me", response_model=UserResponse)
+async def update_me(
+    data: ProfileUpdate,
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(select(User).where(User.id == current_user.id))
+    user = result.scalar_one()
+
+    if data.email is not None and data.email != user.email:
+        existing = await db.execute(select(User).where(User.email == data.email))
+        if existing.scalar_one_or_none():
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Cet email est deja utilise")
+        user.email = data.email
+    if data.first_name is not None:
+        user.first_name = data.first_name
+    if data.last_name is not None:
+        user.last_name = data.last_name
+
+    await db.flush()
+
+    from ..rgpd.routes_politique import get_pending_acceptances_for_user
+    pending, has_previous = await get_pending_acceptances_for_user(
+        db, user.id, user_created_at=user.created_at,
+    )
+    return UserResponse(
+        id=user.id,
+        email=user.email,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        auth_source=user.auth_source,
+        is_active=user.is_active,
+        is_super_admin=user.is_super_admin,
+        must_change_password=user.must_change_password,
+        preferences=user.preferences,
+        last_login=user.last_login,
+        last_active=user.last_active,
+        created_at=user.created_at,
+        pending_legal_acceptances=pending,
+        has_previous_acceptances=has_previous,
+    )
+
+
 # ---------------------------------------------------------------------------
 #  Preferences
 # ---------------------------------------------------------------------------
@@ -246,12 +310,14 @@ async def change_password(
 
 
 @router.post("/forgot-password")
+@limiter.limit(settings.RATE_LIMIT_FORGOT_PASSWORD)
 async def forgot_password(
-    request: ForgotPasswordRequest,
+    data: ForgotPasswordRequest,
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ):
     """Public endpoint -- sends a password reset email if the user exists and is local."""
-    email = request.email.lower()
+    email = data.email.lower()
     result = await db.execute(select(User).where(User.email == email))
     user = result.scalar_one_or_none()
 
@@ -277,18 +343,20 @@ async def forgot_password(
 
 
 @router.post("/reset-password")
+@limiter.limit(settings.RATE_LIMIT_RESET_PASSWORD)
 async def reset_password(
-    request: ResetPasswordRequest,
+    data: ResetPasswordRequest,
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ):
     """Public endpoint -- validates token and sets new password."""
-    if len(request.new_password) < 6:
+    if len(data.new_password) < 6:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Le mot de passe doit contenir au moins 6 caracteres",
         )
 
-    token = await verify_security_token(db, request.token, "password_reset")
+    token = await verify_security_token(db, data.token, "password_reset")
     if not token:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -303,7 +371,7 @@ async def reset_password(
             detail="Utilisateur introuvable",
         )
 
-    target_user.password_hash = hash_password(request.new_password)
+    target_user.password_hash = hash_password(data.new_password)
     target_user.must_change_password = False
     await consume_security_token(db, token)
     return {"message": "Mot de passe modifie avec succes"}
@@ -337,8 +405,10 @@ def _generate_verification_code() -> str:
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
+@limiter.limit(settings.RATE_LIMIT_REGISTER)
 async def register(
     data: RegisterRequest,
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ):
     email = data.email.lower()
@@ -406,9 +476,10 @@ async def register(
 
 
 @router.post("/verify-email", response_model=TokenResponse)
+@limiter.limit("5/minute")
 async def verify_email(
     data: VerifyEmailRequest,
-    req: Request,
+    request: Request,
     db: AsyncSession = Depends(get_db),
 ):
     """Verify email with 6-digit code after registration."""
@@ -430,7 +501,7 @@ async def verify_email(
 
     token_data = {"sub": str(user.id), "email": user.email, "lang": user.language}
     refresh = create_refresh_token(token_data)
-    await _create_session(db, user.id, refresh, req)
+    await _create_session(db, user.id, refresh, request)
     await db.flush()
 
     return TokenResponse(

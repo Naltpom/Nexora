@@ -59,3 +59,10 @@ git log --oneline -1
 ```
 
 Confirmer que le commit est propre et que tout est ok.
+
+## Etape 5 — Continuer le developpement ?
+
+Demander a l'utilisateur : "Veux-tu relancer l'environnement de dev (docker + fixtures) ou s'arreter la ?"
+
+- Si oui : executer la commande `/dev-reset`
+- Si non : terminer

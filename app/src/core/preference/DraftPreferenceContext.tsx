@@ -3,10 +3,9 @@ import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { useAuth } from '../AuthContext'
 import { applyFontPrefs, applyLayoutPrefs, applyComposantsPrefs, applyAccessibilitePrefs } from './applyPreferences'
-import { applyCustomColors, clearCustomColors } from './couleur/applyCustomColors'
+import { applyCustomColors } from './couleur/applyCustomColors'
 
 const PREFERENCE_KEYS = ['theme', 'customColors', 'font', 'layout', 'composants', 'accessibilite'] as const
-type PrefKey = typeof PREFERENCE_KEYS[number]
 
 export interface PreferenceChange {
   key: string

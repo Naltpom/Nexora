@@ -6,7 +6,7 @@ import api from '../api'
 
 export default function ImpersonationBanner() {
   const { t } = useTranslation('common')
-  const { isImpersonating, impersonatedUser, stopImpersonation, searchUsersForImpersonation, startImpersonation } = useAuth()
+  const { isImpersonating, impersonatedUser, stopImpersonation, searchUsersForImpersonation } = useAuth()
   const { confirm, alert } = useConfirm()
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<any[]>([])

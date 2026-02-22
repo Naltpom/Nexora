@@ -1,20 +1,55 @@
 """Permission checking system with granular feature.action permissions."""
 
+import logging
+
+from cachetools import TTLCache
 from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from .config import settings
 from .database import get_db
 from .security import get_current_user
+
+logger = logging.getLogger(__name__)
+
+# In-process TTL cache: key = user_id (int), value = effective permission dict
+_permission_cache: TTLCache = TTLCache(
+    maxsize=settings.PERMISSION_CACHE_MAX_SIZE,
+    ttl=settings.PERMISSION_CACHE_TTL_SECONDS,
+)
+
+
+def invalidate_permission_cache(user_id: int | None = None) -> None:
+    """Invalidate cached permissions.
+
+    If *user_id* is given, only that user's entry is evicted.
+    If *user_id* is ``None``, the entire cache is cleared (use after
+    role-definition or global-permission changes).
+    """
+    if user_id is not None:
+        _permission_cache.pop(user_id, None)
+        logger.debug("Permission cache invalidated for user %s", user_id)
+    else:
+        _permission_cache.clear()
+        logger.debug("Permission cache fully cleared")
 
 
 async def load_user_permissions(db: AsyncSession, user_id: int) -> dict[str, bool | None]:
     """
     Load the effective permission set for a user.
 
+    Results are cached in-process with a TTL to avoid repeated SQL queries
+    on every request.
+
     Resolution order: user_permissions > role_permissions > global_permissions.
     Returns dict of {permission_code: True/False/None}.
     """
+    # Check cache first
+    cached = _permission_cache.get(user_id)
+    if cached is not None:
+        return cached
+
     from ._identity.models import (
         GlobalPermission,
         Permission,
@@ -53,6 +88,8 @@ async def load_user_permissions(db: AsyncSession, user_id: int) -> dict[str, boo
     for code, granted in result.all():
         effective[code] = granted
 
+    # Store in cache
+    _permission_cache[user_id] = effective
     return effective
 
 

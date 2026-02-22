@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useAuth } from '../../../core/AuthContext'
 import { useDraftPreference } from '../DraftPreferenceContext'
 import BackgroundThemePicker from '../../../core/BackgroundThemePicker'
 import '../../_identity/_identity.scss'
@@ -9,18 +8,11 @@ import '../preference.scss'
 export default function ThemeSection() {
   const { t } = useTranslation('preference.theme')
   const { getDraftPreference, setDraftPreference } = useDraftPreference()
-  const { updatePreference, getPreference } = useAuth()
   const currentTheme = getDraftPreference('theme', 'light') as string
   const [showBgPicker, setShowBgPicker] = useState(false)
 
   const handleThemeChange = (theme: string) => {
     setDraftPreference('theme', theme)
-  }
-
-  // BackgroundThemePicker saves immediately (not part of draft system)
-  const handleBgSelect = (bgTheme: number) => {
-    updatePreference('backgroundTheme', bgTheme)
-    document.documentElement.setAttribute('data-bg-theme', String(bgTheme))
   }
 
   return (

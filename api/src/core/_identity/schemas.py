@@ -95,6 +95,12 @@ class UserUpdate(BaseModel):
     must_change_password: bool | None = None
 
 
+class ProfileUpdate(BaseModel):
+    email: EmailStr | None = None
+    first_name: str | None = None
+    last_name: str | None = None
+
+
 class UserResponse(BaseModel):
     id: int
     uuid: str | None = None

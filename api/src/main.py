@@ -6,12 +6,14 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from slowapi.errors import RateLimitExceeded
 from sqlalchemy import select
 
 from .core.command_registry import CommandRegistry
 from .core.config import settings
 from .core.database import async_session
 from .core.feature_registry import FeatureGateMiddleware, FeatureRegistry
+from .core.rate_limit import limiter, rate_limit_exceeded_handler
 
 logger = logging.getLogger(__name__)
 
@@ -71,19 +73,32 @@ def create_app() -> FastAPI:
     application = FastAPI(
         title="Nexora",
         description="Feature-based modular application template",
-        version="2026.02.31",
+        version="2026.02.32",
         docs_url="/api/docs",
         openapi_url="/api/openapi.json",
     )
 
     # ── CORS ─────────────────────────────────────────────────────────
+    if settings.CORS_ORIGINS:
+        origins = [o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()]
+    else:
+        origins = [settings.FRONTEND_URL]
+
     application.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:5472"],
+        allow_origins=origins,
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type", "Accept", "Accept-Language"],
     )
+
+    # ── Security headers ──────────────────────────────────────────────
+    from .core.middleware_security import SecurityHeadersMiddleware
+    application.add_middleware(SecurityHeadersMiddleware)
+
+    # ── Rate limiting ─────────────────────────────────────────────────
+    application.state.limiter = limiter
+    application.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 
     # ── Import all models (for Alembic) ──────────────────────────────
     import_all_models()

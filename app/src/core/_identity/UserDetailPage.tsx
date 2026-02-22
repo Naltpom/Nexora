@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Layout from '../../core/Layout'
 import { usePermission } from '../PermissionContext'
@@ -53,7 +53,6 @@ interface UserDetail {
 export default function UserDetailPage() {
   const { t } = useTranslation('_identity')
   const { uuid } = useParams<{ uuid: string }>()
-  const navigate = useNavigate()
   const { can } = usePermission()
 
   const [user, setUser] = useState<UserDetail | null>(null)

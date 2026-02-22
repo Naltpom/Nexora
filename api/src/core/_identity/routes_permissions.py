@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
-from ..permissions import require_permission
+from ..permissions import invalidate_permission_cache, require_permission
 from .models import (
     GlobalPermission,
     Permission,
@@ -100,6 +100,7 @@ async def set_global_permission(
         db.add(GlobalPermission(permission_id=data.permission_id, granted=data.granted))
 
     await db.flush()
+    invalidate_permission_cache()  # Global permission change affects all users
     return {"permission_id": data.permission_id, "code": perm.code, "granted": data.granted}
 
 
@@ -121,6 +122,7 @@ async def remove_global_permission(
         raise HTTPException(status_code=404, detail="Permission globale introuvable")
     await db.delete(gp)
     await db.flush()
+    invalidate_permission_cache()  # Global permission change affects all users
 
 
 # ---------------------------------------------------------------------------
@@ -186,6 +188,7 @@ async def set_user_permission(
         db.add(UserPermission(user_id=user_id, permission_id=data.permission_id, granted=data.granted))
 
     await db.flush()
+    invalidate_permission_cache(user_id)
     return {"user_id": user_id, "permission_id": data.permission_id, "code": perm.code, "granted": data.granted}
 
 
@@ -211,6 +214,7 @@ async def remove_user_permission(
         raise HTTPException(status_code=404, detail="Permission utilisateur introuvable")
     await db.delete(up)
     await db.flush()
+    invalidate_permission_cache(user_id)
 
 
 # ---------------------------------------------------------------------------
@@ -244,6 +248,7 @@ async def assign_roles_to_user(
     for rid in role_ids:
         db.add(UserRole(user_id=user_id, role_id=rid))
     await db.flush()
+    invalidate_permission_cache(user_id)
 
     return {"user_id": user_id, "role_ids": role_ids}
 
@@ -301,3 +306,4 @@ async def remove_role_from_user(
         raise HTTPException(status_code=404, detail="Role utilisateur introuvable")
     await db.delete(ur)
     await db.flush()
+    invalidate_permission_cache(user_id)

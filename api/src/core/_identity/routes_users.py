@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..config import settings
 from ..database import get_db
 from ..events import event_bus
-from ..permissions import require_permission
+from ..permissions import invalidate_permission_cache, require_permission
 from ..security import get_current_super_admin, hash_password
 from .models import (
     GlobalPermission,
@@ -172,6 +172,7 @@ async def create_user(
     # Sync super_admin role with flag
     if data.is_super_admin:
         await _sync_super_admin_role(db, user.id, True)
+        invalidate_permission_cache(user.id)
 
     await event_bus.emit(
         "user.registered",
@@ -218,6 +219,7 @@ async def update_user(
     if data.is_super_admin is not None:
         user.is_super_admin = data.is_super_admin
         await _sync_super_admin_role(db, user.id, data.is_super_admin)
+        invalidate_permission_cache(user.id)
     if data.must_change_password is not None:
         user.must_change_password = data.must_change_password
 
@@ -451,6 +453,7 @@ async def update_user_by_uuid(
     if data.is_super_admin is not None:
         user.is_super_admin = data.is_super_admin
         await _sync_super_admin_role(db, user.id, data.is_super_admin)
+        invalidate_permission_cache(user.id)
     if data.must_change_password is not None:
         user.must_change_password = data.must_change_password
 
@@ -505,6 +508,7 @@ async def update_user_roles(
         db.add(UserRole(user_id=user.id, role_id=role_id))
 
     await db.flush()
+    invalidate_permission_cache(user.id)
 
     # Return updated roles
     result = await db.execute(
@@ -545,6 +549,7 @@ async def set_user_permission_override(
         db.add(UserPermission(user_id=user.id, permission_id=data.permission_id, granted=data.granted))
 
     await db.flush()
+    invalidate_permission_cache(user.id)
     return {"permission_id": data.permission_id, "granted": data.granted}
 
 
@@ -573,3 +578,4 @@ async def remove_user_permission_override(
 
     await db.delete(override)
     await db.flush()
+    invalidate_permission_cache(user.id)

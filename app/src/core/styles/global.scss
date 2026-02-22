@@ -15,6 +15,7 @@
 @use 'components/toggle';
 @use 'components/badges';
 @use 'components/loading';
+@use 'components/error-boundary';
 
 // Content
 @use 'components/cards';

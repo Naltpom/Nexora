@@ -54,8 +54,8 @@ jobs:
       - name: Build images
         run: docker compose -f docker-compose.yml build
 
-      - name: Start database
-        run: docker compose -f docker-compose.yml up -d db
+      - name: Start database and Redis
+        run: docker compose -f docker-compose.yml up -d db redis
 
       - name: Wait for database
         run: |
@@ -64,11 +64,25 @@ jobs:
             sleep 1
           done
 
+      - name: Wait for Redis
+        run: |
+          for i in $(seq 1 15); do
+            docker compose -f docker-compose.yml exec -T redis redis-cli ping && break
+            sleep 1
+          done
+
       - name: Run migrations
         run: docker compose -f docker-compose.yml run --rm api alembic -c alembic/alembic.ini upgrade head
 
       - name: Check no pending migrations
         run: docker compose -f docker-compose.yml run --rm api alembic -c alembic/alembic.ini check
+
+      - name: Verify worker starts
+        run: |
+          docker compose -f docker-compose.yml up -d worker
+          sleep 3
+          docker compose -f docker-compose.yml logs worker 2>&1 | tail -5
+          docker compose -f docker-compose.yml ps worker --format '{{.State}}' | grep -q running
 
       - name: Cleanup
         if: always()

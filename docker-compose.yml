@@ -17,6 +17,20 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: template02_redis
+    restart: unless-stopped
+    ports:
+      - "6479:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   api:
     build:
       context: ./api
@@ -32,6 +46,23 @@ services:
       - rich_text_images:/app/rich_text_images
     depends_on:
       db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: template02_worker
+    restart: unless-stopped
+    env_file:
+      - .env
+    command: ["python", "-m", "arq", "src.worker.WorkerSettings"]
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
   app:
@@ -50,5 +81,6 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
   upload_files:
   rich_text_images:

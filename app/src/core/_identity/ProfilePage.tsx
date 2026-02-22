@@ -48,7 +48,7 @@ export default function Profile() {
     setInfoMessage('')
     setInfoSaving(true)
     try {
-      await api.put('/users/me', {
+      await api.put('/auth/me', {
         first_name: firstName,
         last_name: lastName,
         email,
@@ -56,7 +56,12 @@ export default function Profile() {
       await refreshUser()
       setInfoMessage(t('profile.info_success'))
     } catch (err: any) {
-      setInfoError(err.response?.data?.detail || t('profile.info_error'))
+      const detail = err.response?.data?.detail
+      if (Array.isArray(detail)) {
+        setInfoError(detail.map((e: any) => e.msg).join(', '))
+      } else {
+        setInfoError(detail || t('profile.info_error'))
+      }
     } finally {
       setInfoSaving(false)
     }
@@ -87,7 +92,12 @@ export default function Profile() {
       setNewPassword('')
       setConfirmPassword('')
     } catch (err: any) {
-      setPwdError(err.response?.data?.detail || t('profile.password_error'))
+      const detail = err.response?.data?.detail
+      if (Array.isArray(detail)) {
+        setPwdError(detail.map((e: any) => e.msg).join(', '))
+      } else {
+        setPwdError(detail || t('profile.password_error'))
+      }
     } finally {
       setPwdSaving(false)
     }
