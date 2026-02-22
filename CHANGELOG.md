@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026.02.27
+
+### Refactoring SCSS global
+
+- **styles** : decoupage de `global.scss` (3 868 lignes) en 29 fichiers partiels dans `styles/components/`
+- Chaque composant UI isole dans son propre fichier (`_buttons.scss`, `_forms.scss`, `_cards.scss`, `_modal.scss`, `_tables.scss`, `_unified-table.scss`, etc.)
+- Dark theme colocated avec chaque composant (plus de bloc monolithique)
+- `global.scss` devient un index de `@use` uniquement
+- `animations.scss` inchange (bien organise a 439 lignes)
+
+### Nouvelle feature : storybook
+
+- **storybook** : catalogue visuel des composants UI de l'application
+- 8 onglets : Typographie, Boutons, Formulaires, Cartes & Modals, Tableaux, Badges & Alertes, Navigation, Divers
+- Accessible via `/admin/storybook` (permission `storybook.read`)
+- Feature core independante avec manifest backend + frontend
+- Ajout de l'icone `palette` dans la navigation
+
 ## 2026.02.26
 
 ### Enforcement des permissions (backend + frontend)

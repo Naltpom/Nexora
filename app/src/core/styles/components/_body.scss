@@ -1,0 +1,25 @@
+body {
+  font-family: var(--font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif);
+  font-size: 1rem;
+  font-weight: var(--font-weight, 400);
+  background: transparent;
+  min-height: 100vh;
+  color: var(--gray-900);
+  line-height: var(--line-height, 1.5);
+}
+
+/* Layout */
+.layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: clip;
+}
+
+.main-content {
+  flex: 1;
+  max-width: var(--content-max-width, 1200px);
+  margin: 0 auto;
+  padding: var(--density-padding, 24px);
+  width: 100%;
+}

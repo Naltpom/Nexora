@@ -1,0 +1,291 @@
+.storybook-section {
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--gray-800);
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--gray-200);
+  }
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 500;
+    margin: 1.5rem 0 0.75rem;
+    color: var(--gray-600);
+  }
+}
+
+.storybook-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--density-gap, 12px);
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.storybook-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--density-gap, 12px);
+  margin-bottom: 1.5rem;
+}
+
+.storybook-preview {
+  padding: var(--density-card-padding, 24px);
+  border: 1px dashed var(--gray-300);
+  border-radius: var(--radius);
+  background: var(--gray-50);
+  margin-bottom: 1rem;
+}
+
+.storybook-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--gray-400);
+  margin-bottom: 0.5rem;
+}
+
+.storybook-color-swatch {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--gray-200);
+}
+
+.storybook-color-box {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--gray-200);
+  flex-shrink: 0;
+}
+
+.storybook-color-info {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.storybook-color-name {
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+.storybook-color-var {
+  color: var(--gray-400);
+  font-size: 0.75rem;
+  font-family: monospace;
+}
+
+.storybook-inline-demo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--gray-50);
+  border-radius: var(--radius);
+  margin-bottom: 0.75rem;
+}
+
+.storybook-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 0;
+  border-bottom: 2px solid var(--gray-200);
+}
+
+.storybook-tab {
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gray-500);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.storybook-tab:hover {
+  color: var(--gray-700);
+}
+
+.storybook-tab--active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+.storybook-tabs-mobile {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .storybook-tabs {
+    display: none;
+  }
+
+  .storybook-tabs-mobile {
+    display: block;
+    margin-bottom: 1rem;
+  }
+
+  .storybook-tabs-select {
+    width: 100%;
+    padding: var(--density-input-padding, 8px 12px);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius);
+    font-size: 0.875rem;
+    background: white;
+  }
+}
+
+.storybook-content {
+  margin-top: 1rem;
+}
+
+/* Override loading-screen full height inside storybook previews */
+.storybook-preview .loading-screen {
+  min-height: 120px;
+}
+
+/* Constrain unified-card page-header inside storybook so h1 doesn't break section hierarchy */
+.storybook-preview .unified-page-header {
+  margin-bottom: 1rem;
+}
+
+.storybook-preview .unified-page-header-info h1 {
+  font-size: 1.25rem;
+}
+
+/* Ensure unified-pagination sits inside the preview container */
+.storybook-preview .unified-pagination {
+  padding: 0.75rem 0 0;
+}
+
+/* Ensure changes-bar is not sticky inside storybook */
+.storybook-preview .changes-bar,
+.storybook-preview .unified-changes-bar {
+  position: relative;
+  bottom: auto;
+}
+
+/* Typography section — font weight demos */
+.storybook-font-weight-400 {
+  font-weight: 400;
+  margin-bottom: 0.5rem;
+}
+
+.storybook-font-weight-500 {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.storybook-font-weight-600 {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.storybook-font-weight-700 {
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+/* Typography section — color reference table */
+.storybook-color-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+}
+
+.storybook-color-table th,
+.storybook-color-table td {
+  padding: var(--density-padding, 10px 16px);
+  text-align: left;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.storybook-color-table th {
+  font-weight: 600;
+  color: var(--gray-700);
+  background: var(--gray-50);
+}
+
+.storybook-color-table td code {
+  font-family: monospace;
+  font-size: 0.8125rem;
+  background: var(--gray-100);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--gray-800);
+}
+
+/* Dark theme */
+[data-theme="dark"] {
+  .storybook-section h2 {
+    color: rgba(255, 255, 255, 0.9);
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .storybook-section h3 {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .storybook-preview {
+    border-color: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .storybook-color-swatch {
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .storybook-color-box {
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  .storybook-color-name {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .storybook-inline-demo {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .storybook-tabs {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .storybook-tab {
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  .storybook-tab:hover {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .storybook-tabs-select {
+    background: #1e1b2e;
+    border-color: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .storybook-color-table th {
+    color: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .storybook-color-table td {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .storybook-color-table td code {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.85);
+  }
+}

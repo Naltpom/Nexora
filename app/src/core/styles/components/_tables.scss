@@ -1,0 +1,167 @@
+/* Tables */
+.table-container {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  text-align: left;
+  padding: 10px 16px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--gray-500);
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+td {
+  padding: 10px 16px;
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+tr:hover {
+  background: var(--gray-50);
+}
+
+.th-sortable {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.th-sortable:hover {
+  color: var(--primary);
+}
+
+/* Current user highlight */
+.user-me {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding: 8px 0;
+}
+
+.pagination-info {
+  font-size: 0.8125rem;
+  color: var(--gray-500);
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pagination-dots {
+  padding: 0 6px;
+  color: var(--gray-400);
+  font-size: 0.8125rem;
+}
+
+.sort-indicator {
+  font-size: 0.625rem;
+  margin-left: 4px;
+}
+
+/* Filter checkbox */
+.filter-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  color: var(--gray-600);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.filter-checkbox input[type="checkbox"] {
+  cursor: pointer;
+}
+
+/* Responsive table */
+@media (max-width: 1024px) {
+  .main-content {
+    padding: 16px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .page-header > div {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .search-box {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .search-box input {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -16px;
+    padding: 0 16px;
+  }
+
+  table {
+    min-width: 700px;
+  }
+
+  th, td {
+    padding: 8px 10px;
+    font-size: 0.8125rem;
+  }
+
+  td .inline-input {
+    font-size: 0.8125rem;
+    padding: 3px 6px;
+  }
+
+  .pagination {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .changes-bar {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+
+  .modal {
+    margin: 16px;
+    max-height: calc(100vh - 32px);
+  }
+
+  .modal-permissions {
+    max-width: 100%;
+  }
+
+  .permissions-toggles {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

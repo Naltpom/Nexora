@@ -1,0 +1,53 @@
+/* Webhook badges */
+.webhook-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.webhook-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Validate changes bar */
+.changes-bar {
+  position: sticky;
+  bottom: 0;
+  background: #FFF7ED;
+  border: 1px solid #FDBA74;
+  border-radius: var(--radius);
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+.changes-bar-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #9A3412;
+}
+
+.changes-bar-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Dark theme */
+[data-theme="dark"] .changes-bar {
+  background: rgba(139, 92, 246, 0.1);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+[data-theme="dark"] .changes-bar-text {
+  color: var(--primary-light);
+}

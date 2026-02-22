@@ -1,0 +1,216 @@
+/* Rich Text Editor */
+.rich-text-editor {
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.rich-text-toolbar {
+  display: flex;
+  gap: 4px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--gray-200);
+  background: var(--gray-50);
+  flex-wrap: wrap;
+}
+
+.rich-text-toolbar button {
+  padding: 4px 8px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 0.8125rem;
+  color: var(--gray-600);
+}
+
+.rich-text-toolbar button:hover {
+  background: var(--gray-200);
+}
+
+.rich-text-toolbar button.is-active {
+  background: var(--primary);
+  color: white;
+}
+
+.ProseMirror {
+  padding: 12px;
+  min-height: 120px;
+  outline: none;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--gray-400);
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+
+.ProseMirror img {
+  max-width: 100%;
+  border-radius: var(--radius);
+}
+
+.ProseMirror ul,
+.ProseMirror ol {
+  margin: 8px 0;
+  padding-left: 24px;
+}
+
+.ProseMirror li {
+  margin: 4px 0;
+}
+
+.ProseMirror ul {
+  list-style-type: disc;
+}
+
+.ProseMirror ol {
+  list-style-type: decimal;
+}
+
+.ProseMirror ul ul {
+  list-style-type: circle;
+}
+
+.ProseMirror ul ul ul {
+  list-style-type: square;
+}
+
+/* Mention chips (editor + rendered content) */
+.mention {
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--primary);
+  border-radius: 4px;
+  padding: 1px 4px;
+  font-weight: 500;
+  font-size: 0.9em;
+  white-space: nowrap;
+}
+
+/* Mention suggestion dropdown */
+.mention-suggestion {
+  background: var(--white);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 4px 0;
+  max-height: 240px;
+  overflow-y: auto;
+  z-index: 1000;
+  position: fixed;
+  min-width: 200px;
+}
+
+.mention-suggestion-item {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 6px 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 0.8125rem;
+  text-align: left;
+}
+
+.mention-suggestion-item:hover,
+.mention-suggestion-item.is-selected {
+  background: var(--gray-100);
+}
+
+.mention-suggestion-item .mention-name {
+  font-weight: 500;
+  color: var(--gray-800);
+}
+
+.mention-suggestion-item .mention-email {
+  font-size: 0.6875rem;
+  color: var(--gray-400);
+}
+
+.mention-suggestion-empty {
+  padding: 8px 12px;
+  color: var(--gray-400);
+  font-size: 0.8125rem;
+}
+
+/* Admin Section */
+.admin-section {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 2px solid var(--gray-200);
+}
+
+.admin-section h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--gray-700);
+}
+
+.admin-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Dark theme */
+[data-theme="dark"] .rich-text-editor {
+  border-color: rgba(255,255,255,0.15);
+}
+
+[data-theme="dark"] .rich-text-toolbar {
+  background: var(--gray-100);
+  border-color: rgba(255,255,255,0.08);
+}
+
+[data-theme="dark"] .rich-text-toolbar button {
+  color: rgba(255,255,255,0.6);
+}
+
+[data-theme="dark"] .rich-text-toolbar button:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+[data-theme="dark"] .rich-text-toolbar button.is-active {
+  background: var(--primary);
+  color: white;
+}
+
+[data-theme="dark"] .ProseMirror {
+  color: rgba(255,255,255,0.9);
+}
+
+[data-theme="dark"] .mention {
+  background: rgba(139, 92, 246, 0.2);
+  color: var(--primary-light);
+}
+
+[data-theme="dark"] .mention-suggestion {
+  background: #1a1a2e;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .mention-suggestion-item:hover,
+[data-theme="dark"] .mention-suggestion-item.is-selected {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .mention-suggestion-item .mention-name {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="dark"] .mention-suggestion-item .mention-email {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+[data-theme="dark"] .mention-suggestion-empty {
+  color: rgba(255, 255, 255, 0.4);
+}

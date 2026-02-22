@@ -1,0 +1,24 @@
+/* Cards */
+.card {
+  background: white;
+  border-radius: var(--radius);
+  border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow);
+}
+
+.card-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-body {
+  padding: 20px;
+}
+
+[data-theme="dark"] .card {
+  background: #1e1b2e;
+  border-color: rgba(255,255,255,0.08);
+}

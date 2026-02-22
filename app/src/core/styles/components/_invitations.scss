@@ -1,0 +1,62 @@
+/* Invitations Panel */
+.invitations-panel {
+  border-top: 1px solid var(--gray-200);
+}
+
+.invitations-header {
+  padding: 12px 16px;
+  font-size: 0.8125rem;
+  color: var(--gray-500);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.invitations-list {
+  padding: 8px;
+}
+
+.invitation-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background: white;
+  border-radius: 8px;
+  margin-bottom: 4px;
+}
+
+.invitation-item:last-child {
+  margin-bottom: 0;
+}
+
+.invitation-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.invitation-email {
+  font-weight: 500;
+  color: var(--gray-700);
+}
+
+.invitation-date,
+.invitation-expires {
+  font-size: 0.75rem;
+  color: var(--gray-400);
+}
+
+[data-theme="dark"] .invitations-panel {
+  border-top-color: var(--gray-700);
+}
+
+[data-theme="dark"] .invitations-header {
+  border-bottom-color: var(--gray-700);
+}
+
+[data-theme="dark"] .invitation-item {
+  background: var(--gray-800);
+}
+
+[data-theme="dark"] .invitation-email {
+  color: var(--gray-200);
+}

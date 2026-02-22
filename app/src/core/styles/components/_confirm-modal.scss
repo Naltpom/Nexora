@@ -1,0 +1,146 @@
+/* ==================== */
+/* ==================== */
+
+/* Fullscreen toggle button */
+/* Fullscreen hint message */
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
+  10% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  90% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
+}
+
+/* Dark theme */
+/* Responsive */
+@media (max-width: 1024px) {
+}
+
+@media (max-width: 768px) {
+}
+
+/* Confirm Modal */
+.confirm-modal {
+  max-width: 420px;
+  width: 90%;
+  animation: modalSlideIn 0.2s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.confirm-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--gray-200);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.confirm-modal-header h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.confirm-modal-header svg {
+  flex-shrink: 0;
+}
+
+.confirm-modal-info {
+  background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+  color: var(--primary);
+}
+
+.confirm-modal-info svg {
+  color: var(--primary-light);
+}
+
+.confirm-modal-warning {
+  background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+  color: #92400E;
+}
+
+.confirm-modal-warning svg {
+  color: var(--warning);
+}
+
+.confirm-modal-danger {
+  background: linear-gradient(135deg, #FEF2F2 0%, #FECACA 100%);
+  color: #991B1B;
+}
+
+.confirm-modal-danger svg {
+  color: var(--danger);
+}
+
+.confirm-modal-body {
+  padding: 24px;
+}
+
+.confirm-modal-body p {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--gray-700);
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.confirm-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  background: var(--gray-50);
+  border-top: 1px solid var(--gray-200);
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+
+/* Dark theme */
+[data-theme="dark"] .confirm-modal-header {
+  border-bottom-color: var(--gray-700);
+}
+
+[data-theme="dark"] .confirm-modal-info {
+  background: linear-gradient(135deg, #1E3A5F 0%, #1E40AF40 100%);
+  color: #93C5FD;
+}
+
+[data-theme="dark"] .confirm-modal-warning {
+  background: linear-gradient(135deg, #78350F40 0%, #92400E40 100%);
+  color: #FCD34D;
+}
+
+[data-theme="dark"] .confirm-modal-danger {
+  background: linear-gradient(135deg, #7F1D1D40 0%, #991B1B40 100%);
+  color: #FCA5A5;
+}
+
+[data-theme="dark"] .confirm-modal-body p {
+  color: rgba(255,255,255,0.85);
+}
+
+[data-theme="dark"] .confirm-modal-footer {
+  background: #161625;
+  border-top-color: rgba(255,255,255,0.08);
+}

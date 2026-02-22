@@ -1,0 +1,792 @@
+/* ========================================
+   UNIFIED TABLE DESIGN SYSTEM
+   Inspired by modern dashboard aesthetics
+   ======================================== */
+
+/* Unified Card Container */
+.unified-card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid var(--gray-100);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  /* overflow: hidden; */
+}
+
+/* Unified Card Header */
+.unified-card-header {
+  padding: var(--density-card-padding, 20px 24px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.unified-card-header h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--gray-900);
+}
+
+.unified-card-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Full-width breakout — stretches to viewport width regardless of parent */
+.full-width-breakout {
+  width: calc(100vw - 56px);
+  position: relative;
+  left: 50%;
+  margin-left: calc(-50vw + 28px);
+}
+
+@media (max-width: 1024px) {
+  .full-width-breakout {
+    width: calc(100vw - 46px);
+    margin-left: calc(-50vw + 23px);
+  }
+}
+
+.full-width-breakout .table-container {
+  overflow-x: auto;
+}
+
+/* Card Table — card whose first child is a table, th corners match card radius */
+.card-table .unified-table thead th:first-child {
+  border-top-left-radius: 16px;
+}
+
+.card-table .unified-table thead th:last-child {
+  border-top-right-radius: 16px;
+}
+
+/* Unified Table */
+.unified-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.unified-table thead th {
+  text-align: left;
+  padding: var(--density-padding, 12px 20px);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--gray-400);
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--gray-100);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.unified-table tbody td {
+  padding: var(--density-padding, 14px 20px);
+  font-size: 0.875rem;
+  color: var(--gray-700);
+  border-bottom: 1px solid var(--gray-50);
+  vertical-align: middle;
+  transition: background 0.15s;
+}
+
+.unified-table tbody tr:hover {
+  background: #F8FAFC;
+}
+
+.unified-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Unified Table - Inline Input */
+.unified-table td .inline-input {
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 6px 10px;
+  font-size: 0.875rem;
+  border-radius: 8px;
+  width: 100%;
+  transition: all 0.2s;
+  color: var(--gray-700);
+  font-family: inherit;
+}
+
+.unified-table td .inline-input:hover {
+  border-color: var(--gray-200);
+  background: white;
+}
+
+.unified-table td .inline-input:focus {
+  outline: none;
+  border-color: var(--primary-light);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Unified Table - Cell Modified */
+.unified-table .cell-modified {
+  background: #EFF6FF !important;
+  border-left: 3px solid var(--primary-light) !important;
+}
+
+/* Unified Table - Sortable Columns */
+.unified-table .th-sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s;
+}
+
+.unified-table .th-sortable:hover {
+  color: var(--primary-light);
+}
+
+/* Unified Table - Drag Handle */
+.unified-table .drag-handle {
+  width: 40px;
+  cursor: grab;
+  text-align: center;
+  color: var(--gray-300);
+  transition: color 0.15s;
+}
+
+.unified-table .drag-handle:hover {
+  color: var(--gray-500);
+}
+
+/* Unified Table - Action Buttons */
+.unified-table .btn-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  transition: all 0.2s;
+}
+
+/* Unified Table - Add New Row Form */
+.unified-add-row {
+  padding: 16px 20px;
+  border-top: 1px dashed var(--gray-200);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: #FAFBFC;
+}
+
+.unified-add-row .inline-input {
+  border: 1px solid var(--gray-200);
+  background: white;
+  padding: 8px 12px;
+  font-size: 0.875rem;
+  border-radius: 10px;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.unified-add-row .inline-input:focus {
+  outline: none;
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Unified Table - Page Header */
+.page-header-card {
+  margin-bottom: 24px;
+}
+
+.page-header-card .unified-page-header {
+  margin-bottom: 0;
+  padding: 20px 24px;
+}
+
+.unified-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.unified-page-header-info h1 {
+  font-size: 1.625rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 4px;
+}
+
+.unified-page-header-info p {
+  font-size: 0.875rem;
+  color: var(--gray-400);
+  margin: 0;
+}
+
+.unified-page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Unified Button - Primary Rounded */
+.btn-unified-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.btn-unified-primary:hover:not(:disabled) {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.25);
+}
+
+.btn-unified-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-unified-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: white;
+  color: var(--gray-700);
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.btn-unified-secondary:hover:not(:disabled) {
+  background: var(--gray-50);
+  border-color: var(--gray-300);
+}
+
+/* Unified Changes Bar */
+.unified-changes-bar {
+  position: sticky;
+  bottom: 16px;
+  margin: 16px 0;
+  background: white;
+  border: 1px solid var(--primary-light);
+  border-radius: 16px;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.15), 0 2px 8px rgba(0, 0, 0, 0.05);
+  z-index: 50;
+}
+
+.unified-changes-bar-text {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.unified-changes-bar-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.unified-changes-bar-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Unified Empty State */
+.unified-empty {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--gray-400);
+}
+
+.unified-empty p {
+  font-size: 0.9375rem;
+  margin-bottom: 16px;
+}
+
+/* Dark theme overrides for Unified Table */
+[data-theme="dark"] .unified-card {
+  background: #1e1b2e;
+  border-color: rgba(255,255,255,0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .unified-card-header {
+  border-bottom-color: rgba(255,255,255,0.08);
+}
+
+[data-theme="dark"] .unified-card-header h2 {
+  color: rgba(255,255,255,0.9);
+}
+
+[data-theme="dark"] .unified-table thead th {
+  background: var(--gray-100);
+  color: rgba(255,255,255,0.4);
+  border-bottom-color: rgba(255,255,255,0.08);
+}
+
+[data-theme="dark"] .unified-table tbody td {
+  color: rgba(255,255,255,0.8);
+  border-bottom-color: rgba(255,255,255,0.04);
+}
+
+[data-theme="dark"] .unified-table tbody tr:hover {
+  background: rgba(255,255,255,0.03);
+}
+
+[data-theme="dark"] .unified-table td .inline-input {
+  color: rgba(255,255,255,0.9);
+}
+
+[data-theme="dark"] .unified-table td .inline-input:hover {
+  border-color: rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.05);
+}
+
+[data-theme="dark"] .unified-table td .inline-input:focus {
+  border-color: var(--primary);
+  background: rgba(255,255,255,0.05);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+}
+
+[data-theme="dark"] .unified-table .cell-modified {
+  background: rgba(139, 92, 246, 0.1) !important;
+  border-left-color: var(--primary) !important;
+}
+
+[data-theme="dark"] .unified-table .drag-handle {
+  color: rgba(255,255,255,0.2);
+}
+
+[data-theme="dark"] .unified-table .drag-handle:hover {
+  color: rgba(255,255,255,0.4);
+}
+
+[data-theme="dark"] .unified-add-row {
+  background: var(--gray-100);
+  border-top-color: rgba(255,255,255,0.08);
+}
+
+[data-theme="dark"] .unified-add-row .inline-input {
+  background: #1e1b2e;
+  border-color: rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.9);
+}
+
+[data-theme="dark"] .unified-add-row .inline-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+}
+
+[data-theme="dark"] .unified-changes-bar {
+  background: #1e1b2e;
+  border-color: rgba(139, 92, 246, 0.4);
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.2), 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .unified-changes-bar-text {
+  color: var(--primary-light);
+}
+
+[data-theme="dark"] .unified-changes-bar-dot {
+  background: var(--primary);
+}
+
+[data-theme="dark"] .unified-page-header-info h1 {
+  color: rgba(255,255,255,0.9);
+}
+
+[data-theme="dark"] .unified-page-header-info p {
+  color: rgba(255,255,255,0.4);
+}
+
+[data-theme="dark"] .btn-unified-primary {
+  background: var(--primary);
+}
+
+[data-theme="dark"] .btn-unified-primary:hover:not(:disabled) {
+  background: var(--primary-dark);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.35);
+}
+
+[data-theme="dark"] .btn-unified-secondary {
+  background: #1e1b2e;
+  color: rgba(255,255,255,0.7);
+  border-color: rgba(255,255,255,0.15);
+}
+
+[data-theme="dark"] .btn-unified-secondary:hover:not(:disabled) {
+  background: #252540;
+  border-color: rgba(255,255,255,0.25);
+}
+
+/* Responsive overrides for Unified Table */
+@media (max-width: 768px) {
+  .unified-page-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .unified-card {
+    border-radius: 12px;
+  }
+
+  .unified-table thead th,
+  .unified-table tbody td {
+    padding: 10px 14px;
+    font-size: 0.8125rem;
+  }
+
+  .unified-add-row {
+    flex-wrap: wrap;
+  }
+
+  .unified-changes-bar {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+    bottom: 8px;
+    margin: 8px;
+  }
+}
+
+/* Unified Pagination */
+.unified-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding: 12px 0;
+}
+
+.unified-pagination-info {
+  font-size: 0.8125rem;
+  color: var(--gray-400);
+  font-weight: 500;
+}
+
+.unified-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.unified-pagination-controls .per-page-select {
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-size: 0.8125rem;
+  border: 1px solid var(--gray-200);
+  background: white;
+  color: var(--gray-600);
+  margin-right: 8px;
+}
+
+.unified-pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  background: white;
+  color: var(--gray-600);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.unified-pagination-btn:hover:not(:disabled) {
+  background: var(--gray-50);
+  border-color: var(--gray-300);
+}
+
+.unified-pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.unified-pagination-btn.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.unified-pagination-dots {
+  padding: 0 4px;
+  color: var(--gray-300);
+  font-size: 0.8125rem;
+}
+
+/* Unified Search Box */
+.unified-search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  background: white;
+  transition: all 0.2s;
+}
+
+.unified-search-box:focus-within {
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.unified-search-box svg {
+  color: var(--gray-400);
+  flex-shrink: 0;
+}
+
+.unified-search-box input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.875rem;
+  color: var(--gray-700);
+  width: 100%;
+  font-family: inherit;
+}
+
+.unified-search-box input::placeholder {
+  color: var(--gray-400);
+}
+
+/* Unified Filter Checkbox */
+.unified-filter-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  color: var(--gray-500);
+  cursor: pointer;
+  padding: 8px 14px;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  background: white;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.unified-filter-checkbox:hover {
+  border-color: var(--gray-300);
+}
+
+.unified-filter-checkbox input[type="checkbox"] {
+  accent-color: var(--primary);
+}
+
+.unified-status-group {
+  margin-bottom: 20px;
+}
+
+.unified-status-group .unified-card {
+  overflow: visible;
+}
+
+/* Remove overflow on table-container so sticky thead works */
+.unified-status-group .table-container {
+  overflow: visible;
+}
+
+/* Status header integrated inside the card - sticky */
+.unified-status-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid var(--gray-100);
+  transition: border-radius 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background 0.15s,
+              box-shadow 0.4s ease;
+  position: sticky;
+  top: 56px;
+  z-index: 9; /* below main header (z-index 1000) */
+  background: white;
+  border-radius: 16px 16px 0 0;
+  box-shadow: none;
+}
+
+/* Inverse border-radius "ears" — always present but hidden */
+.unified-status-card-header::before,
+.unified-status-card-header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  opacity: 0;
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.unified-status-card-header::before {
+  right: 100%;
+  background: radial-gradient(circle at bottom left, transparent 16px, white 16.5px);
+}
+
+.unified-status-card-header::after {
+  left: 100%;
+  background: radial-gradient(circle at bottom right, transparent 16px, white 16.5px);
+}
+
+/* Stuck against main header — flat top corners + show ears */
+.unified-status-card-header.stuck {
+  border-radius: 0;
+}
+
+.unified-status-card-header.stuck::before,
+.unified-status-card-header.stuck::after {
+  opacity: 1;
+  transform: scaleY(1);
+}
+
+.unified-status-group .unified-table thead th {
+  position: sticky;
+  top: 105px; /* 56px header + 49px status header */
+  z-index: 8;
+  background: var(--gray-50);
+  box-shadow: 0 1px 0 var(--gray-100);
+}
+
+/* When collapsed (header is last child), round all corners */
+.unified-status-card-header:last-child {
+  border-radius: 16px;
+  border-bottom: none;
+}
+
+/* When collapsed AND stuck, flat everywhere */
+.unified-status-card-header.stuck:last-child {
+  border-radius: 0;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.unified-status-card-header:hover {
+  background: var(--gray-50);
+}
+
+/* Standalone header (not in card) */
+.unified-status-group-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 12px;
+  transition: background 0.15s;
+  margin-bottom: 2px;
+}
+
+.unified-status-group-header:hover {
+  background: var(--gray-50);
+}
+
+.unified-status-group-toggle {
+  font-size: 0.75rem;
+  color: var(--gray-400);
+  transition: transform 0.2s;
+  display: inline-flex;
+}
+
+.unified-status-group-count {
+  font-size: 0.75rem;
+  color: var(--gray-400);
+  font-weight: 400;
+  margin-left: auto;
+}
+
+.unified-status-group .unified-card {
+  border-radius: 12px;
+  margin-bottom: 0;
+}
+
+/* Dark theme overrides for additional unified components */
+[data-theme="dark"] .unified-pagination-controls .per-page-select {
+  background: #1e1b2e;
+  color: rgba(255,255,255,0.7);
+  border-color: rgba(255,255,255,0.15);
+}
+
+[data-theme="dark"] .unified-pagination-btn {
+  background: #1e1b2e;
+  color: rgba(255,255,255,0.7);
+  border-color: rgba(255,255,255,0.15);
+}
+
+[data-theme="dark"] .unified-pagination-btn:hover:not(:disabled) {
+  background: #252540;
+  border-color: rgba(255,255,255,0.25);
+}
+
+[data-theme="dark"] .unified-pagination-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+[data-theme="dark"] .unified-pagination-dots {
+  color: rgba(255,255,255,0.2);
+}
+
+[data-theme="dark"] .unified-pagination-info {
+  color: rgba(255,255,255,0.4);
+}
+
+[data-theme="dark"] .unified-search-box {
+  background: #1e1b2e;
+  border-color: rgba(255,255,255,0.15);
+}
+
+[data-theme="dark"] .unified-search-box:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+}
+
+[data-theme="dark"] .unified-search-box input {
+  color: rgba(255,255,255,0.9);
+}
+
+[data-theme="dark"] .unified-filter-checkbox {
+  background: #1e1b2e;
+  border-color: rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.5);
+}
+
+[data-theme="dark"] .unified-filter-checkbox:hover {
+  border-color: rgba(255,255,255,0.25);
+}
+
+/* ========================================
+   END UNIFIED TABLE DESIGN SYSTEM
+   ======================================== */

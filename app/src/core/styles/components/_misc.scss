@@ -1,0 +1,52 @@
+/* Full width layout */
+.main-content-full {
+  max-width: 100%;
+}
+
+/* Email column wider */
+.col-email {
+  min-width: 280px;
+}
+
+.col-name {
+  min-width: 150px;
+}
+
+/* Sortable table headers */
+.th-sortable {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.th-sortable:hover {
+  color: var(--primary);
+}
+
+.sort-indicator {
+  font-size: 0.625rem;
+  margin-left: 4px;
+}
+
+.pref-popup {
+  position: absolute;
+  bottom: 52px;
+  right: 0;
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  padding: 16px;
+  min-width: 220px;
+}
+
+[data-theme="dark"] .pref-popup {
+  background: #1e1b2e;
+  border-color: rgba(255,255,255,0.12);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+
+/* Utility classes */
+.hidden-input {
+  display: none;
+}

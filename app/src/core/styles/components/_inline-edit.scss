@@ -1,0 +1,202 @@
+/* Page header */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.page-header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+/* Inline edit */
+.inline-edit {
+  border: 1px solid transparent;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: border-color 0.15s;
+}
+
+.inline-edit:hover {
+  border-color: var(--gray-300);
+}
+
+.inline-edit:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+}
+
+/* Inline editable table cells */
+.cell-modified {
+  background: #FFF7ED !important;
+  border-left: 3px solid #F97316 !important;
+}
+
+.inline-input {
+  border: 1px solid var(--gray-300);
+  background: var(--bg-primary, white);
+  color: var(--text-primary, var(--gray-800));
+  padding: 5px 10px;
+  font-size: 0.8125rem;
+  border-radius: 6px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.inline-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(30, 64, 175, 0.1);
+}
+
+[data-theme="dark"] .inline-input {
+  background: #1e1b2e;
+  border-color: rgba(255,255,255,0.12);
+  color: #fff;
+}
+
+[data-theme="dark"] .inline-input:focus {
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* Autocomplete dropdown */
+.autocomplete-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 0 0 6px 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 10;
+}
+
+.autocomplete-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--gray-100);
+  font-size: 0.8125rem;
+  transition: background 0.1s;
+}
+
+.autocomplete-item:hover {
+  background: var(--gray-50);
+}
+
+.autocomplete-item:last-child {
+  border-bottom: none;
+}
+
+.autocomplete-item-name {
+  font-weight: 500;
+  color: var(--gray-800);
+}
+
+.autocomplete-item-detail {
+  font-size: 0.6875rem;
+  color: var(--gray-400);
+  margin-top: 1px;
+}
+
+.autocomplete-empty {
+  padding: 8px 12px;
+  font-size: 0.75rem;
+  color: var(--gray-400);
+}
+
+[data-theme="dark"] .autocomplete-dropdown {
+  background: #1e1b2e;
+  border-color: rgba(255,255,255,0.1);
+}
+
+[data-theme="dark"] .autocomplete-item {
+  border-bottom-color: rgba(255,255,255,0.06);
+}
+
+[data-theme="dark"] .autocomplete-item:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+[data-theme="dark"] .autocomplete-item-name {
+  color: #fff;
+}
+
+[data-theme="dark"] .autocomplete-item-detail {
+  color: var(--gray-500);
+}
+
+td .inline-input {
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 4px 8px;
+  font-size: 0.875rem;
+  border-radius: 4px;
+  width: 100%;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+td .inline-input:hover {
+  border-color: var(--gray-300);
+  background: white;
+}
+
+td .inline-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+}
+
+/* Inline color picker */
+td input[type="color"] {
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+td input[type="color"]:hover {
+  border-color: var(--gray-300);
+}
+
+td input[type="color"]:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+}
+
+/* Dark theme */
+[data-theme="dark"] td .inline-input {
+  color: rgba(255,255,255,0.9);
+}
+
+[data-theme="dark"] td .inline-input:hover {
+  border-color: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.05);
+}
+
+[data-theme="dark"] td .inline-input:focus {
+  border-color: var(--primary);
+  background: rgba(255,255,255,0.05);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+}
+
+[data-theme="dark"] .cell-modified {
+  background: rgba(139, 92, 246, 0.1) !important;
+  border-left-color: var(--primary) !important;
+}
+
+[data-theme="dark"] td input[type="color"]:hover {
+  border-color: rgba(255,255,255,0.2);
+}
+
+[data-theme="dark"] td input[type="color"]:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+}

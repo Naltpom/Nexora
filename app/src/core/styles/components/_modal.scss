@@ -1,0 +1,154 @@
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+}
+
+.modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-header h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: var(--gray-400);
+  padding: 4px;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--gray-200);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Permissions modal - wider */
+.modal-permissions {
+  max-width: 800px;
+}
+
+.permissions-toggles {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.permissions-toggle-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.permissions-toggle-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--gray-400);
+}
+
+/* Recap modal */
+.recap-list {
+  list-style: none;
+  padding: 0;
+}
+
+.recap-item {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--gray-100);
+  font-size: 0.875rem;
+}
+
+.recap-item:last-child {
+  border-bottom: none;
+}
+
+.recap-user-name {
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+.recap-field {
+  color: var(--gray-500);
+  margin-left: 8px;
+}
+
+.recap-old {
+  color: var(--danger);
+  text-decoration: line-through;
+}
+
+.recap-new {
+  color: var(--success);
+  font-weight: 500;
+}
+
+.recap-arrow {
+  margin: 0 6px;
+  color: var(--gray-400);
+}
+
+/* Source badge */
+.source-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.source-local {
+  background: #F3F4F6;
+  color: #6B7280;
+}
+
+.source-intranet {
+  background: #EDE9FE;
+  color: #6D28D9;
+}
+
+/* Dark overrides */
+[data-theme="dark"] .modal {
+  background: #1e1b2e;
+  border-color: rgba(255,255,255,0.08);
+}
+
+[data-theme="dark"] .modal-header,
+[data-theme="dark"] .modal-footer {
+  border-color: rgba(255,255,255,0.08);
+}
+
+[data-theme="dark"] .modal-close {
+  color: rgba(255,255,255,0.5);
+}

@@ -34,8 +34,6 @@ services:
       - ./alembic:/app/alembic
       - ./alembic/alembic.ini:/app/alembic.ini
       - ./backups:/app/backups
-      - ./config.template.yaml:/app/config.template.yaml
-      - ./config.custom.yaml:/app/config.custom.yaml
     depends_on:
       db:
         condition: service_healthy
