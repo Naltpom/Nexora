@@ -1,5 +1,78 @@
 # Changelog
 
+## 2026.02.29
+
+### Simplification du versioning et des changelogs
+
+- Suppression des 14 changelogs par feature — un seul `CHANGELOG.md` centralise a la racine
+- Suppression du champ `version` des 30 `manifest.py` — le versioning est desormais porte uniquement par `package.json`, `main.py` et le changelog global
+- Suppression de la colonne "Version" dans la page admin Features
+- Mise a jour du `FeatureManifest` dataclass (retrait du champ `version`), du schema `FeatureResponse`, et du endpoint dependency graph
+- Mise a jour du type TypeScript `FeatureManifest` (retrait du champ `version`)
+- Mise a jour de `CLAUDE.md` : checklist simplifiee a 3 fichiers, suppression des references aux changelogs par feature et aux versions dans les manifests
+- Consolidation du contenu des changelogs features dans le changelog global avant suppression (aucune information perdue)
+
+### Corrections et ameliorations
+
+- Ajout `showSupportNotice: false` dans la config i18next (suppression du message console)
+- Ajout des future flags React Router v7 (`v7_relativeSplatPath`, `v7_startTransition`) dans `BrowserRouter`
+- Ajout du `favicon.ico` pour compatibilite navigateurs anciens
+
+## 2026.02.28
+
+### SECRET_KEY production
+
+- Remplacement de la cle par defaut `dev_secret_key_change_in_production` par une cle cryptographique 256 bits
+- `.env.example` mis a jour avec placeholder `CHANGE_ME_IN_PRODUCTION`
+
+### CI/CD — GitHub Actions
+
+- Nouveau workflow `ci.yml` : lint backend (ruff), lint frontend (tsc --noEmit), build Docker, check migrations Alembic
+- Nouveau workflow `deploy.yml` : deploiement configurable SSH ou cloud via `workflow_dispatch` (parametres `target` et `environment`)
+
+### Nouvelle feature : i18n (internationalisation)
+
+- Systeme i18n complet avec traductions decentralisees par feature
+- Middleware `I18nMiddleware` : resolution locale (JWT `lang` > `Accept-Language` > defaut)
+- Moteur de traductions backend avec decouverte automatique des JSON (`core/*/i18n/`, `features/*/i18n/`)
+- Fonction `t(key, locale, **kwargs)` pour traduire cote backend
+- Routes publiques : `GET /api/i18n/locales`, `GET /api/i18n/translations`, `GET /api/i18n/namespaces`
+- Frontend : i18next + react-i18next avec decouverte automatique via `import.meta.glob`
+- `I18nProvider` : synchronise la langue utilisateur avec i18next et `document.documentElement.lang`
+- Traductions FR extraites pour toutes les features existantes (catalogue pret, integration TSX ulterieure)
+- Config : `I18N_DEFAULT_LOCALE`, `I18N_SUPPORTED_LOCALES`
+
+### Nouvelle sous-feature : preference.langue
+
+- Nouvel onglet "Langue" dans la page Preferences
+- Endpoints `GET/PUT /api/preferences/language` avec validation contre les locales supportees
+- Mise a jour `User.language` + `User.preferences.language` + changement i18next en temps reel
+- Cards radio avec indicateur de langue par defaut
+
+### _identity — Colonne language + JWT lang
+
+- Nouvelle colonne `User.language` (defaut `fr`) avec migration Alembic
+- Ajout du claim `lang` dans le JWT sur les 7 points de creation de token (login, refresh, email verification, invitation, impersonation stop, SSO, MFA)
+- Impersonation : `create_impersonation_token` inclut la langue du target user
+
+### notification — Parametre locale emails
+
+- Ajout parametre `locale: str = "fr"` sur les 4 methodes publiques du service email (`send_notification`, `send_reset_password`, `send_invitation`, `send_verification_code`)
+
+### Traductions i18n (catalogue complet)
+
+- `_identity` : ~500+ cles FR (18 pages/composants)
+- `preference` parent + 7 sous-features : ~160 cles FR
+- `preference.didacticiel` : 33 cles FR
+- `notification` : 112 cles FR
+- `rgpd` : ~170 cles FR
+- `mfa` : 107 cles FR
+- `sso` : 22 cles FR
+- `event` : 17 cles FR
+- `storybook` : 211 cles FR
+- Traductions globales communes : 64 cles FR
+- Fichiers `en.json` (stubs) crees pour chaque feature
+
 ## 2026.02.27
 
 ### Refactoring SCSS global
@@ -376,11 +449,13 @@ Correction de 8 faiblesses (W) et 6 menaces (T) identifiees dans l'analyse SWOT,
 
 ### notification
 
-> [Changelog complet](api/src/core/notification/CHANGELOG.md)
-
+- Endpoint `PATCH /notifications/{id}/unread` : remettre une notification en non lu
+- Service `mark_notification_unread()` (inverse de `mark_notification_read`)
 - Bouton "Marquer comme non lu" dans le dropdown bell et la page notifications (user + admin)
-- Soft delete des notifications (`deleted_at` au lieu de suppression definitive)
+- Soft delete des notifications (`deleted_at` au lieu de suppression definitive) — filtre `deleted_at IS NULL` sur toutes les requetes utilisateur
+- Parametre `include_deleted` sur l'endpoint admin pour afficher les notifications supprimees
 - Filtre admin "Voir les supprimees" avec affichage rouge des lignes supprimees
+- `markAsUnread()` ajoute au `NotificationContext`
 - Script cron `purge_notifications.py` : suppression definitive des notifications soft-deleted apres N jours (configurable via `NOTIFICATION_PURGE_DAYS` dans `.env`, defaut 90 jours)
 - Migration Alembic : ajout colonne `deleted_at` sur la table `notifications`
 - Seed : notifications de demo pour tous les utilisateurs (read, unread, soft-deleted)
@@ -388,8 +463,6 @@ Correction de 8 faiblesses (W) et 6 menaces (T) identifiees dans l'analyse SWOT,
 ## 2026.02.12
 
 ### preference.didacticiel — Refonte du systeme de tutoriels
-
-> [Changelog complet](api/src/core/preference/CHANGELOG.md)
 
 - Nouveau systeme de tutoriels par feature et par permission (remplace l'ancien systeme par tutorial ID)
 - Navigation multi-page : les tutoriels naviguent automatiquement entre les pages avec MutationObserver
@@ -428,12 +501,13 @@ Correction de 8 faiblesses (W) et 6 menaces (T) identifiees dans l'analyse SWOT,
 
 ### event (NEW)
 
-> [Changelog complet](api/src/core/event/CHANGELOG.md)
-
 - Nouvelle feature `event` : bus d'evenements generique avec persistence
+- Model `Event` (deplace depuis notification) et service `persist_event`
+- Event handler wildcard : persiste les events puis re-emet `event.persisted` pour les features downstream
 - Declaration des types d'events dans les manifests des features (`FeatureManifest.events`)
 - Endpoint `GET /api/events/event-types` pour la decouverte dynamique
 - Page admin "Catalogue d'evenements" : liste groupee par feature avec recherche
+- Lien "Events" dans le menu admin du Header
 
 ### \_identity
 
@@ -442,8 +516,10 @@ Correction de 8 faiblesses (W) et 6 menaces (T) identifiees dans l'analyse SWOT,
 
 ### notification
 
-- Cablage event bus : ecoute `event.persisted` pour le moteur de regles (remplace l'ancien dispatch interne)
+- Cablage event bus : ecoute `event.persisted` via `event_handlers.py` pour le moteur de regles (remplace l'ancien dispatch interne)
 - Dependance vers la feature `event` (persistence + catalogue)
+- Suppression du model `Event` local (deplace vers `event/models.py`)
+- Suppression de `dispatch_event`, `EVENT_CATALOG`, `get_event_categories` du services.py
 - Suppression de l'endpoint doublon `GET /notifications/event-types` (utilise `GET /events/event-types`)
 - Emission de `notification.rule_created` a la creation de regles
 
@@ -460,19 +536,22 @@ Correction de 8 faiblesses (W) et 6 menaces (T) identifiees dans l'analyse SWOT,
 - MFA enforcement : banner d'avertissement pendant la periode de grace, redirection forcee apres expiration
 - Nouvelle page `MFAForceSetupPage` pour la configuration MFA obligatoire
 - Nouveau composant `MFASetupBanner` affiche dans le Layout
-- Ajout `mfa_grace_period_expires` dans `TokenResponse`
+- Ajout `mfa_setup_required` et `mfa_grace_period_expires` dans `TokenResponse`
+- LoginPage : redirection selon etat grace period (banner ou force-setup)
+- ProtectedRoute : blocage navigation si grace period expiree
+- MFASetupPage : appel `clearMfaSetupRequired()` apres activation d'une methode
 
 ### preference (NEW)
-
-> [Changelog complet](api/src/core/preference/CHANGELOG.md)
 
 - Feature parent "Preferences" avec sous-features `preference.theme` et `preference.didacticiel`
 - Page preferences (`/profile/preferences`) accessible depuis le profil
 - `preference.theme` : section theme (dark/light + fond visuel) dans la page preferences
 - `preference.didacticiel` : systeme de tutoriels in-app type intro.js (spotlight/tooltip SVG mask)
-- Backend : endpoints seen-state (`GET/POST/DELETE /api/preference/didacticiel/seen`)
-- Frontend : TutorialContext, TutorialEngine (spotlight overlay), TutorialSection (page preferences)
-- Auto-declenchement des tutoriels par route, etat "vu" persiste cote serveur
+- Backend : endpoints seen-state (`GET/POST/DELETE /api/preference/didacticiel/seen`) avec stockage dans user.preferences
+- Frontend : TutorialContext (collecte tutoriels des manifests, auto-trigger par route, gestion etat "vu")
+- Frontend : TutorialEngine (overlay SVG mask, highlight pulse, tooltip positionne)
+- Frontend : TutorialSection (liste des tutoriels dans la page preferences, bouton Revoir/Commencer)
+- Integration App.tsx : TutorialWrapper conditionnel si feature active
 - Exemple de tutoriel dans la feature notification
 
 ## 2026.02.6
@@ -515,15 +594,11 @@ Correction de 8 faiblesses (W) et 6 menaces (T) identifiees dans l'analyse SWOT,
 
 ### sso (NEW)
 
-> [Changelog complet](api/src/core/sso/CHANGELOG.md)
-
 - Feature SSO (Single Sign-On) avec OAuth2 : Google et GitHub
 - Liaison automatique de comptes, creation d'utilisateur SSO
 - Boutons SSO sur la page de connexion, gestion des comptes lies dans le profil
 
 ### mfa (NEW)
-
-> [Changelog complet](api/src/core/mfa/CHANGELOG.md)
 
 - Feature MFA (Authentification Multi-Facteurs) : TOTP et Email OTP
 - Codes de secours (backup codes)
@@ -558,33 +633,55 @@ Correction de 8 faiblesses (W) et 6 menaces (T) identifiees dans l'analyse SWOT,
 
 ### \_identity
 
-→ [Changelog complet](api/src/core/_identity/CHANGELOG.md)
-
-- Auth JWT + SSO, utilisateurs, roles, permissions granulaires, feature registry, impersonation, app settings, backups, invitations, recherche globale
+- Auth JWT (access 24h + refresh 7d) avec login local et SSO Intranet
+- CRUD utilisateurs avec pagination, tri, recherche, inline-edit en table
+- Systeme de roles avec CRUD et assignation de permissions
+- Permissions granulaires au format `feature.sub.action`, resolution : user > role > global
+- Feature Registry avec toggle dynamique, hierarchie parent/children, validation des dependances
+- Page admin Features avec activation/desactivation en temps reel
+- Impersonation d'utilisateurs avec audit log complet (actions, IP, user-agent)
+- App Settings : nom, logo (upload), couleur, favicon, email support — endpoint public + admin CRUD
+- Backups et restauration de base de donnees
+- Recherche globale
+- Invitations par email avec lien d'acceptation
+- Middleware LastActive pour tracking de l'activite utilisateur
+- Page profil avec modification info, mot de passe, preferences theme
 
 ### notification
 
-→ [Changelog complet](api/src/core/notification/CHANGELOG.md)
-
-- Notifications in-app avec SSE, moteur de regles event-driven, templates globaux, preferences utilisateur
+- Notifications in-app avec stockage en base et pagination
+- SSE (Server-Sent Events) pour reception en temps reel
+- Moteur de regles event-driven : regles personnelles et globales (admin)
+- Templates de regles : appliques automatiquement a tous les utilisateurs
+- Preferences utilisateur par regle (activation, canaux, webhooks)
+- Compteur de non-lus avec endpoint dedie
+- Marquage lu/non-lu individuel et global
+- NotificationBell dynamique : dropdown push si actif, lien settings sinon
+- Prompt d'activation push conditionne par le feature flag `notification.push`
 
 ### notification.email
 
-→ [Changelog complet](api/src/core/notification/email/CHANGELOG.md)
-
-- Envoi SMTP configurable (Office365 par defaut)
+- Envoi d'emails via SMTP configurable (host, port, TLS, credentials)
+- Support Office365 par defaut
+- Configurable via .env (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, EMAIL_ENABLED)
 
 ### notification.push
 
-→ [Changelog complet](api/src/core/notification/push/CHANGELOG.md)
-
-- Web Push VAPID avec service worker
+- Web Push notifications via protocole VAPID (ECDSA P-256)
+- Service Worker (`sw.js`) pour reception en arriere-plan
+- Gestion des abonnements push par navigateur (subscribe/unsubscribe)
+- Endpoint public pour la cle VAPID
+- Configurable via .env (VAPID_PRIVATE_KEY, VAPID_PUBLIC_KEY, PUSH_ENABLED)
 
 ### notification.webhook
 
-→ [Changelog complet](api/src/core/notification/webhook/CHANGELOG.md)
-
-- Webhooks HTTP avec retry, support Slack/Discord/Custom, signature HMAC
+- Webhooks HTTP POST avec retry automatique (configurable)
+- Support multi-format : Custom (JSON brut), Slack, Discord
+- Webhooks personnels et globaux (admin)
+- Signature HMAC optionnelle pour securisation
+- Prefixe de message configurable (ex: @canal pour Slack)
+- Endpoint de test pour valider la connectivite
+- Historique des deliveries avec status HTTP
 
 ### Infrastructure
 

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../../core/AuthContext'
 import { useDraftPreference } from '../DraftPreferenceContext'
 import BackgroundThemePicker from '../../../core/BackgroundThemePicker'
@@ -6,6 +7,7 @@ import '../../_identity/_identity.scss'
 import '../preference.scss'
 
 export default function ThemeSection() {
+  const { t } = useTranslation('preference.theme')
   const { getDraftPreference, setDraftPreference } = useDraftPreference()
   const { updatePreference, getPreference } = useAuth()
   const currentTheme = getDraftPreference('theme', 'light') as string
@@ -23,36 +25,36 @@ export default function ThemeSection() {
 
   return (
     <div className="unified-card card-padded">
-      <h2 className="title-sm">Theme et Apparence</h2>
+      <h2 className="title-sm">{t('section_title')}</h2>
 
       <div className="form-group pref-form-group-spaced">
-        <label>Mode</label>
+        <label>{t('label_mode')}</label>
         <div className="flex-row">
           <button
             className={`btn ${currentTheme === 'light' ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => handleThemeChange('light')}
             type="button"
           >
-            Clair
+            {t('btn_light')}
           </button>
           <button
             className={`btn ${currentTheme === 'dark' ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => handleThemeChange('dark')}
             type="button"
           >
-            Sombre
+            {t('btn_dark')}
           </button>
         </div>
       </div>
 
       <div className="form-group">
-        <label>Fond d'ecran</label>
+        <label>{t('label_wallpaper')}</label>
         <div className="pref-actions-row">
           <button className="btn btn-secondary" onClick={() => setShowBgPicker(true)} type="button">
-            Choisir un fond
+            {t('btn_choose_wallpaper')}
           </button>
           <span className="pref-hint">
-            ou Alt + T
+            {t('hint_shortcut')}
           </span>
         </div>
       </div>

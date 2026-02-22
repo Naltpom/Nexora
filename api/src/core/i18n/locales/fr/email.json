@@ -1,0 +1,22 @@
+{
+  "greeting": "Bonjour {name},",
+  "greeting_generic": "Bonjour,",
+  "footer": "Ne pas repondre a cet email",
+  "reset_password_subject": "Reinitialisation de votre mot de passe",
+  "reset_password_intro_user": "Vous avez demande la reinitialisation de votre mot de passe.",
+  "reset_password_intro_admin": "Un administrateur a demande la reinitialisation de votre mot de passe.",
+  "reset_password_action": "Reinitialiser mon mot de passe",
+  "reset_password_cta": "Cliquez sur le bouton ci-dessous pour definir un nouveau mot de passe :",
+  "reset_password_expiry": "Ce lien est valable 30 minutes. Si vous n'etes pas a l'origine de cette demande, ignorez cet email.",
+  "reset_password_fallback": "Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :",
+  "invitation_subject": "Invitation",
+  "invitation_intro": "Vous avez ete invite(e) par <strong>{name}</strong> a rejoindre la plateforme.",
+  "invitation_action": "Accepter l'invitation",
+  "invitation_cta": "Cliquez sur le bouton ci-dessous pour accepter l'invitation :",
+  "invitation_expiry": "Ce lien est valable 48 heures. Si vous n'etes pas a l'origine de cette demande, ignorez cet email.",
+  "invitation_fallback": "Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :",
+  "verification_subject": "Code de verification",
+  "verification_intro": "Voici votre code de verification :",
+  "verification_expiry": "Ce code est valable 5 minutes.",
+  "notification_action": "Voir le detail"
+}

@@ -1,9 +1,11 @@
 import { useState, FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import './_identity.scss'
 import api from '../../api'
 
 export default function Register() {
+  const { t } = useTranslation('_identity')
   const [email, setEmail] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
@@ -20,17 +22,17 @@ export default function Register() {
     // Validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
-      setError('Veuillez entrer une adresse email valide')
+      setError(t('register.error_invalid_email'))
       return
     }
 
     if (password.length < 8) {
-      setError('Le mot de passe doit contenir au moins 8 caracteres')
+      setError(t('register.error_password_min_8'))
       return
     }
 
     if (password !== confirmPassword) {
-      setError('Les mots de passe ne correspondent pas')
+      setError(t('register.error_password_mismatch'))
       return
     }
 
@@ -50,7 +52,7 @@ export default function Register() {
         navigate('/login?registered=1')
       }
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Erreur lors de l\'inscription')
+      setError(err.response?.data?.detail || t('register.error_default'))
     } finally {
       setLoading(false)
     }
@@ -64,21 +66,21 @@ export default function Register() {
             <rect width="32" height="32" rx="6" fill="var(--primary)" />
             <text x="16" y="22" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold">K</text>
           </svg>
-          <h1>Creer un compte</h1>
-          <p>Remplissez le formulaire pour vous inscrire</p>
+          <h1>{t('register.title')}</h1>
+          <p>{t('register.subtitle')}</p>
         </div>
 
         <form onSubmit={handleSubmit}>
           {error && <div className="alert alert-error">{error}</div>}
 
           <div className="form-group">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email">{t('common.email')}</label>
             <input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="votre@email.com"
+              placeholder={t('common.email_placeholder')}
               required
               autoFocus
             />
@@ -86,61 +88,61 @@ export default function Register() {
 
           <div className="form-grid-2col">
             <div className="form-group">
-              <label htmlFor="firstName">Prenom</label>
+              <label htmlFor="firstName">{t('common.first_name')}</label>
               <input
                 id="firstName"
                 type="text"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                placeholder="Jean"
+                placeholder={t('register.first_name_placeholder')}
                 required
               />
             </div>
             <div className="form-group">
-              <label htmlFor="lastName">Nom</label>
+              <label htmlFor="lastName">{t('common.last_name')}</label>
               <input
                 id="lastName"
                 type="text"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                placeholder="Dupont"
+                placeholder={t('register.last_name_placeholder')}
                 required
               />
             </div>
           </div>
 
           <div className="form-group">
-            <label htmlFor="password">Mot de passe</label>
+            <label htmlFor="password">{t('common.password')}</label>
             <input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Minimum 8 caracteres"
+              placeholder={t('common.password_min_8')}
               required
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="confirmPassword">Confirmer le mot de passe</label>
+            <label htmlFor="confirmPassword">{t('common.confirm_password')}</label>
             <input
               id="confirmPassword"
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirmez votre mot de passe"
+              placeholder={t('common.confirm_password_placeholder')}
               required
             />
           </div>
 
           <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
-            {loading ? 'Inscription...' : 'S\'inscrire'}
+            {loading ? t('register.submitting') : t('register.submit')}
           </button>
         </form>
 
         <div className="login-footer">
           <Link to="/login" className="link-primary">
-            Deja un compte ? Connectez-vous
+            {t('register.already_have_account')}
           </Link>
         </div>
       </div>

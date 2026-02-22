@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface Option {
   value: string
@@ -14,7 +15,10 @@ interface SearchSelectProps {
   className?: string
 }
 
-export default function SearchSelect({ options, value, onChange, placeholder = 'Rechercher...', emptyLabel = '-- Aucun --', className }: SearchSelectProps) {
+export default function SearchSelect({ options, value, onChange, placeholder, emptyLabel, className }: SearchSelectProps) {
+  const { t } = useTranslation('common')
+  const resolvedPlaceholder = placeholder ?? t('search_placeholder')
+  const resolvedEmptyLabel = emptyLabel ?? t('search_select_empty_label')
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const containerRef = useRef<HTMLDivElement>(null)
@@ -52,7 +56,7 @@ export default function SearchSelect({ options, value, onChange, placeholder = '
     <div className={`search-select ${className || ''}`} ref={containerRef}>
       <button className="search-select-trigger" onClick={handleOpen} type="button">
         <span className={selectedOption ? '' : 'search-select-placeholder'}>
-          {selectedOption ? selectedOption.label : emptyLabel}
+          {selectedOption ? selectedOption.label : resolvedEmptyLabel}
         </span>
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <polyline points="6 9 12 15 18 9" />
@@ -69,7 +73,7 @@ export default function SearchSelect({ options, value, onChange, placeholder = '
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder={placeholder}
+              placeholder={resolvedPlaceholder}
             />
           </div>
           <div className="search-select-options">
@@ -77,7 +81,7 @@ export default function SearchSelect({ options, value, onChange, placeholder = '
               className={`search-select-option ${!value ? 'active' : ''}`}
               onClick={() => handleSelect('')}
             >
-              {emptyLabel}
+              {resolvedEmptyLabel}
             </div>
             {filtered.map(o => (
               <div
@@ -89,7 +93,7 @@ export default function SearchSelect({ options, value, onChange, placeholder = '
               </div>
             ))}
             {filtered.length === 0 && (
-              <div className="search-select-empty">Aucun resultat</div>
+              <div className="search-select-empty">{t('no_results')}</div>
             )}
           </div>
         </div>

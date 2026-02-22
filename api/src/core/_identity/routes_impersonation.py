@@ -92,10 +92,12 @@ async def start_impersonation(
         target_email=target.email,
         admin_user_id=current_admin.id,
         session_id=session_id,
+        lang=target.language,
     )
     refresh_token = create_refresh_token({
         "sub": str(target.id),
         "email": target.email,
+        "lang": target.language,
         "impersonated_by": current_admin.id,
         "impersonation_session_id": session_id,
     })
@@ -160,7 +162,7 @@ async def stop_impersonation(
             detail="Utilisateur administrateur introuvable",
         )
 
-    token_data = {"sub": str(admin.id), "email": admin.email}
+    token_data = {"sub": str(admin.id), "email": admin.email, "lang": admin.language}
     return ImpersonationStopResponse(
         access_token=create_access_token(token_data),
         refresh_token=create_refresh_token(token_data),
@@ -239,10 +241,12 @@ async def switch_impersonation(
         target_email=target.email,
         admin_user_id=admin_user_id,
         session_id=session_id,
+        lang=target.language,
     )
     refresh_token = create_refresh_token({
         "sub": str(target.id),
         "email": target.email,
+        "lang": target.language,
         "impersonated_by": admin_user_id,
         "impersonation_session_id": session_id,
     })

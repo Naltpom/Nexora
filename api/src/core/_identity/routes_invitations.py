@@ -355,7 +355,7 @@ async def verify_invitation_code(
         },
     )
 
-    token_data = {"sub": str(user.id), "email": user.email}
+    token_data = {"sub": str(user.id), "email": user.email, "lang": user.language}
     return InvitationTokenResponse(
         access_token=create_access_token(token_data),
         refresh_token=create_refresh_token(token_data),

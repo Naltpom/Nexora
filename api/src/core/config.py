@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
     SMTP_FROM_EMAIL: str = "noreply@example.com"
-    SMTP_FROM_NAME: str = "Template App"
+    SMTP_FROM_NAME: str = "Nexora"
     SMTP_USE_TLS: bool = True
     EMAIL_ENABLED: bool = False
 
@@ -42,8 +42,12 @@ class Settings(BaseSettings):
     VAPID_SUBJECT: str = "mailto:noreply@example.com"
     PUSH_ENABLED: bool = False
 
-    # Intranet SSO (for @kertios.com accounts)
+    # Intranet SSO
     INTRANET_AUTH_URL: str = ""
+    INTRANET_EMAIL_DOMAIN: str = ""
+
+    # Seed defaults
+    DEFAULT_ADMIN_EMAIL: str = "admin@example.com"
 
     # SSO - Google OAuth2
     SSO_GOOGLE_CLIENT_ID: str = ""
@@ -56,7 +60,7 @@ class Settings(BaseSettings):
     SSO_GITHUB_REDIRECT_URI: str = "http://localhost:5472/sso/callback/github"
 
     # MFA - TOTP
-    MFA_TOTP_ISSUER_NAME: str = "Kertios Template"
+    MFA_TOTP_ISSUER_NAME: str = "Nexora"
 
     # MFA - Email OTP
     MFA_EMAIL_CODE_LENGTH: int = 6
@@ -86,6 +90,10 @@ class Settings(BaseSettings):
 
     # Webhook delivery log retention
     DELIVERY_LOG_RETENTION_DAYS: int = 90  # Delete webhook delivery logs older than N days
+
+    # i18n
+    I18N_DEFAULT_LOCALE: str = "fr"
+    I18N_SUPPORTED_LOCALES: str = "fr,en"
 
     # Frontend URL (for reset password links)
     FRONTEND_URL: str = "http://localhost:5472"

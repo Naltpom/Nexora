@@ -1,43 +1,43 @@
+import { useTranslation } from 'react-i18next'
+
 export default function CardsModalsSection() {
+  const { t } = useTranslation('storybook')
+
   return (
     <div className="storybook-section">
-      <h2>Cartes et Modals</h2>
+      <h2>{t('cards_title')}</h2>
 
-      <h3>Carte basique (.card)</h3>
+      <h3>{t('cards_basic_title')}</h3>
       <div className="storybook-preview">
         <div className="card">
           <div className="card-header">
-            <strong>Statistiques du mois</strong>
+            <strong>{t('cards_basic_header')}</strong>
           </div>
           <div className="card-body">
             <p>
-              Ce mois-ci, 142 nouveaux utilisateurs se sont inscrits sur la
-              plateforme. Le taux de retention est de 87%, en hausse de 3 points
-              par rapport au mois precedent.
+              {t('cards_basic_body')}
             </p>
           </div>
         </div>
       </div>
 
-      <h3>Carte unifiee (.unified-card)</h3>
+      <h3>{t('cards_unified_title')}</h3>
       <div className="storybook-preview">
         <div className="unified-card">
           <div className="unified-card-header">
-            <h2>Gestion des equipes</h2>
+            <h2>{t('cards_unified_header')}</h2>
           </div>
           <div className="card-body">
             <p>
-              Organisez vos collaborateurs en equipes pour faciliter la gestion
-              des permissions et le suivi des projets. Chaque equipe peut avoir
-              ses propres parametres et responsables.
+              {t('cards_unified_body')}
             </p>
           </div>
         </div>
       </div>
 
-      <h3>Modals de confirmation (apercu)</h3>
+      <h3>{t('cards_modals_title')}</h3>
 
-      <div className="storybook-label">Information</div>
+      <div className="storybook-label">{t('cards_modal_info_label')}</div>
       <div className="storybook-preview">
         <div className="confirm-modal">
           <div className="confirm-modal-header confirm-modal-info">
@@ -55,26 +55,25 @@ export default function CardsModalsSection() {
               <line x1="12" y1="16" x2="12" y2="12" />
               <line x1="12" y1="8" x2="12.01" y2="8" />
             </svg>
-            <h3>Information</h3>
+            <h3>{t('cards_modal_info_title')}</h3>
           </div>
           <div className="confirm-modal-body">
             <p>
-              Votre session expirera dans 5 minutes. Enregistrez vos
-              modifications pour ne pas perdre votre travail.
+              {t('cards_modal_info_body')}
             </p>
           </div>
           <div className="confirm-modal-footer">
             <button className="btn btn-secondary" type="button">
-              Ignorer
+              {t('cards_modal_info_dismiss')}
             </button>
             <button className="btn btn-primary" type="button">
-              Compris
+              {t('cards_modal_info_confirm')}
             </button>
           </div>
         </div>
       </div>
 
-      <div className="storybook-label">Avertissement</div>
+      <div className="storybook-label">{t('cards_modal_warning_label')}</div>
       <div className="storybook-preview">
         <div className="confirm-modal">
           <div className="confirm-modal-header confirm-modal-warning">
@@ -92,26 +91,25 @@ export default function CardsModalsSection() {
               <line x1="12" y1="9" x2="12" y2="13" />
               <line x1="12" y1="17" x2="12.01" y2="17" />
             </svg>
-            <h3>Attention</h3>
+            <h3>{t('cards_modal_warning_title')}</h3>
           </div>
           <div className="confirm-modal-body">
             <p>
-              Cette action modifiera les permissions de 12 utilisateurs. Les
-              changements prendront effet immediatement apres confirmation.
+              {t('cards_modal_warning_body')}
             </p>
           </div>
           <div className="confirm-modal-footer">
             <button className="btn btn-secondary" type="button">
-              Annuler
+              {t('cards_modal_warning_cancel')}
             </button>
             <button className="btn btn-warning" type="button">
-              Confirmer
+              {t('cards_modal_warning_confirm')}
             </button>
           </div>
         </div>
       </div>
 
-      <div className="storybook-label">Danger</div>
+      <div className="storybook-label">{t('cards_modal_danger_label')}</div>
       <div className="storybook-preview">
         <div className="confirm-modal">
           <div className="confirm-modal-header confirm-modal-danger">
@@ -129,21 +127,19 @@ export default function CardsModalsSection() {
               <line x1="15" y1="9" x2="9" y2="15" />
               <line x1="9" y1="9" x2="15" y2="15" />
             </svg>
-            <h3>Suppression definitive</h3>
+            <h3>{t('cards_modal_danger_title')}</h3>
           </div>
           <div className="confirm-modal-body">
             <p>
-              Etes-vous sur de vouloir supprimer cet utilisateur ? Cette action
-              est irreversible et toutes les donnees associees seront
-              definitivement effacees.
+              {t('cards_modal_danger_body')}
             </p>
           </div>
           <div className="confirm-modal-footer">
             <button className="btn btn-secondary" type="button">
-              Annuler
+              {t('cards_modal_danger_cancel')}
             </button>
             <button className="btn btn-danger" type="button">
-              Supprimer
+              {t('cards_modal_danger_confirm')}
             </button>
           </div>
         </div>

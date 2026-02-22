@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import api from '../../api'
 import { cleanupFunctionalStorage } from './consentManager'
@@ -7,6 +8,7 @@ import './rgpd.scss'
 const CONSENT_KEY = 'rgpd_consent_given'
 
 export default function CookieBanner() {
+  const { t } = useTranslation('rgpd')
   const [show, setShow] = useState(false)
 
   useEffect(() => {
@@ -61,21 +63,20 @@ export default function CookieBanner() {
     <div className="cookie-banner">
       <div className="cookie-banner-content">
         <div className="cookie-banner-text">
-          <strong>Nous respectons votre vie privee</strong>
+          <strong>{t('cookie_banner.title')}</strong>
           <p>
-            Ce site utilise des cookies et traceurs pour fonctionner correctement et ameliorer votre experience.
-            Vous pouvez accepter tous les cookies et traceurs ou n'accepter que ceux strictement necessaires.{' '}
+            {t('cookie_banner.description')}{' '}
             <Link to="/rgpd/legal/cookie-policy" className="cookie-banner-link">
-              En savoir plus
+              {t('cookie_banner.link_learn_more')}
             </Link>
           </p>
         </div>
         <div className="cookie-banner-actions">
           <button className="btn btn-secondary btn-sm" onClick={handleRejectOptional}>
-            Refuser les optionnels
+            {t('cookie_banner.btn_reject_optional')}
           </button>
           <button className="btn btn-primary btn-sm" onClick={handleAccept}>
-            Tout accepter
+            {t('cookie_banner.btn_accept_all')}
           </button>
         </div>
       </div>

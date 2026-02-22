@@ -59,6 +59,7 @@ def create_impersonation_token(
     target_email: str,
     admin_user_id: int,
     session_id: str,
+    lang: str = "fr",
 ) -> str:
     to_encode = {
         "sub": str(target_user_id),
@@ -66,6 +67,7 @@ def create_impersonation_token(
         "impersonated_by": admin_user_id,
         "impersonation_session_id": session_id,
         "type": "access",
+        "lang": lang,
     }
     expire = datetime.now(timezone.utc) + timedelta(minutes=IMPERSONATION_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})

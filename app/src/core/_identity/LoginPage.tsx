@@ -1,5 +1,6 @@
 import { useState, FormEvent, Suspense, lazy } from 'react'
 import { useNavigate, Link, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import './_identity.scss'
 import { useAuth } from '../../core/AuthContext'
 import { useFeature } from '../../core/FeatureContext'
@@ -7,6 +8,7 @@ import { useFeature } from '../../core/FeatureContext'
 const SSOButtons = lazy(() => import('../sso/SSOButtons'))
 
 export default function Login() {
+  const { t } = useTranslation('_identity')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -45,7 +47,7 @@ export default function Login() {
         navigate(returnTo || '/')
       }
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Erreur de connexion')
+      setError(err.response?.data?.detail || t('login.error_default'))
     } finally {
       setLoading(false)
     }
@@ -59,50 +61,50 @@ export default function Login() {
             <rect width="32" height="32" rx="6" fill="var(--primary)" />
             <text x="16" y="22" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold">K</text>
           </svg>
-          <h1>Bienvenue</h1>
-          <p>Connectez-vous pour acceder a la plateforme</p>
+          <h1>{t('login.welcome')}</h1>
+          <p>{t('login.subtitle')}</p>
         </div>
 
         <form onSubmit={handleSubmit}>
           {searchParams.get('legal_refused') && (
             <div className="alert alert-warning mb-16">
-              Vous avez refuse les conditions d&apos;utilisation. L&apos;acces au service necessite l&apos;acceptation des documents legaux.
+              {t('login.legal_refused_warning')}
             </div>
           )}
           {searchParams.get('account_deleted') && (
             <div className="alert alert-info mb-16">
-              Votre compte a ete desactive. Si vous vous reconnectez dans les 30 jours, il sera automatiquement reactive.
+              {t('login.account_deleted_info')}
             </div>
           )}
           {error && <div className="alert alert-error">{error}</div>}
 
           <div className="form-group">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email">{t('login.email_label')}</label>
             <input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="votre@email.com"
+              placeholder={t('common.email_placeholder')}
               required
               autoFocus
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="password">Mot de passe</label>
+            <label htmlFor="password">{t('login.password_label')}</label>
             <input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Mot de passe"
+              placeholder={t('login.password_placeholder')}
               required
             />
           </div>
 
           <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
-            {loading ? 'Connexion...' : 'Se connecter'}
+            {loading ? t('login.submitting') : t('login.submit')}
           </button>
         </form>
 
@@ -110,7 +112,7 @@ export default function Login() {
           <>
             <div className="login-divider">
               <div className="login-divider-line" />
-              <span className="login-divider-text">ou</span>
+              <span className="login-divider-text">{t('login.divider_or')}</span>
               <div className="login-divider-line" />
             </div>
             <Suspense fallback={null}>
@@ -121,10 +123,10 @@ export default function Login() {
 
         <div className="login-footer-flex">
           <Link to="/forgot-password" className="link-primary">
-            Mot de passe oublie ?
+            {t('login.forgot_password_link')}
           </Link>
           <Link to="/register" className="link-primary">
-            Pas encore de compte ? Creez-en un
+            {t('login.no_account_link')}
           </Link>
         </div>
       </div>

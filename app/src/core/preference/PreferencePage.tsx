@@ -1,4 +1,5 @@
 import { Suspense, lazy, useState, useEffect, useMemo, useRef, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import Layout from '../../core/Layout'
 import { useFeature } from '../../core/FeatureContext'
@@ -15,22 +16,24 @@ const FontSection = lazy(() => import('./font/FontSection'))
 const LayoutSection = lazy(() => import('./layout/LayoutSection'))
 const ComposantsSection = lazy(() => import('./composants/ComposantsSection'))
 const AccessibiliteSection = lazy(() => import('./accessibilite/AccessibiliteSection'))
+const LangueSection = lazy(() => import('./langue/LangueSection'))
 
 interface TabDef {
   id: string
-  label: string
+  i18nKey: string
   feature: string
   permission: string
   component: React.LazyExoticComponent<any>
 }
 
 const TABS: TabDef[] = [
-  { id: 'theme', label: 'Theme', feature: 'preference.theme', permission: 'preference.theme.read', component: ThemeSection },
-  { id: 'couleur', label: 'Couleurs', feature: 'preference.couleur', permission: 'preference.couleur.read', component: ColorSection },
-  { id: 'font', label: 'Typographie', feature: 'preference.font', permission: 'preference.font.read', component: FontSection },
-  { id: 'layout', label: 'Mise en page', feature: 'preference.layout', permission: 'preference.layout.read', component: LayoutSection },
-  { id: 'composants', label: 'Composants', feature: 'preference.composants', permission: 'preference.composants.read', component: ComposantsSection },
-  { id: 'accessibilite', label: 'Accessibilite', feature: 'preference.accessibilite', permission: 'preference.accessibilite.read', component: AccessibiliteSection },
+  { id: 'theme', i18nKey: 'tab_theme', feature: 'preference.theme', permission: 'preference.theme.read', component: ThemeSection },
+  { id: 'couleur', i18nKey: 'tab_couleur', feature: 'preference.couleur', permission: 'preference.couleur.read', component: ColorSection },
+  { id: 'font', i18nKey: 'tab_font', feature: 'preference.font', permission: 'preference.font.read', component: FontSection },
+  { id: 'layout', i18nKey: 'tab_layout', feature: 'preference.layout', permission: 'preference.layout.read', component: LayoutSection },
+  { id: 'composants', i18nKey: 'tab_composants', feature: 'preference.composants', permission: 'preference.composants.read', component: ComposantsSection },
+  { id: 'accessibilite', i18nKey: 'tab_accessibilite', feature: 'preference.accessibilite', permission: 'preference.accessibilite.read', component: AccessibiliteSection },
+  { id: 'langue', i18nKey: 'tab_langue', feature: 'preference.langue', permission: 'preference.langue.read', component: LangueSection },
 ]
 
 export default function PreferencePage() {
@@ -42,6 +45,7 @@ export default function PreferencePage() {
 }
 
 function PreferencePageInner() {
+  const { t } = useTranslation('preference')
   const { isActive } = useFeature()
   const { can } = usePermission()
   const { hasChanges, getChanges, saveAll, discardAll } = useDraftPreference()
@@ -147,17 +151,17 @@ function PreferencePageInner() {
     <>
       <Layout
         breadcrumb={[
-          { label: 'Accueil', path: '/' },
-          { label: 'Mon profil', path: '/profile' },
-          { label: 'Preferences' },
+          { label: t('breadcrumb_home'), path: '/' },
+          { label: t('breadcrumb_profile'), path: '/profile' },
+          { label: t('breadcrumb_preferences') },
         ]}
-        title="Preferences"
+        title={t('page_title')}
       >
         <div className="unified-card page-header-card">
           <div className="unified-page-header">
             <div className="unified-page-header-info">
-              <h1>Preferences</h1>
-              <p>Personnalisez votre experience utilisateur.</p>
+              <h1>{t('page_title')}</h1>
+              <p>{t('page_description')}</p>
             </div>
           </div>
         </div>
@@ -172,7 +176,7 @@ function PreferencePageInner() {
                   onClick={() => setActiveTab(tab.id)}
                   type="button"
                 >
-                  {tab.label}
+                  {t(tab.i18nKey)}
                 </button>
               ))}
             </div>
@@ -184,7 +188,7 @@ function PreferencePageInner() {
                 onChange={(e) => setActiveTab(e.target.value)}
               >
                 {visibleTabs.map(tab => (
-                  <option key={tab.id} value={tab.id}>{tab.label}</option>
+                  <option key={tab.id} value={tab.id}>{t(tab.i18nKey)}</option>
                 ))}
               </select>
             </div>
@@ -207,13 +211,13 @@ function PreferencePageInner() {
                 <line x1="12" y1="8" x2="12" y2="12" />
                 <line x1="12" y1="16" x2="12.01" y2="16" />
               </svg>
-              Modifications non sauvegardees
+              {t('unsaved_changes_hint')}
             </span>
             <button className="btn btn-secondary" onClick={discardAll} type="button">
-              Annuler
+              {t('btn_cancel')}
             </button>
             <button className="btn btn-primary" onClick={saveAll} type="button">
-              Sauvegarder mes preferences
+              {t('btn_save_preferences')}
             </button>
           </div>
         )}

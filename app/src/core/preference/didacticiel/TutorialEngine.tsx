@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useTutorial } from './TutorialContext'
 import './didacticiel.scss'
 
@@ -67,6 +68,7 @@ function clampTop(top: number, vh: number, gap: number): number {
 }
 
 export default function TutorialEngine() {
+  const { t } = useTranslation('preference.didacticiel')
   const {
     active,
     currentStep,
@@ -356,11 +358,11 @@ export default function TutorialEngine() {
           </button>
         </div>
         <h3 className="tutorial-tooltip-title">
-          {elementNotFound ? 'Element introuvable' : currentStep.title}
+          {elementNotFound ? t('tutorial_engine_element_not_found_title') : currentStep.title}
         </h3>
         <p className="tutorial-tooltip-desc">
           {elementNotFound
-            ? "L'element cible n'a pas ete trouve sur cette page. Passez a l'etape suivante."
+            ? t('tutorial_engine_element_not_found_description')
             : currentStep.description}
         </p>
         <div className="tutorial-tooltip-actions">
@@ -370,7 +372,7 @@ export default function TutorialEngine() {
               onClick={prevStep}
               type="button"
             >
-              Precedent
+              {t('tutorial_engine_previous')}
             </button>
           )}
           <button
@@ -379,8 +381,8 @@ export default function TutorialEngine() {
             type="button"
           >
             {isLastInPermission && active.mode === 'single'
-              ? 'Terminer'
-              : 'Suivant'}
+              ? t('tutorial_engine_finish')
+              : t('tutorial_engine_next')}
           </button>
           {active.mode === 'chain' && (
             <button
@@ -388,7 +390,7 @@ export default function TutorialEngine() {
               onClick={skipAll}
               type="button"
             >
-              Tout passer
+              {t('tutorial_engine_skip_all')}
             </button>
           )}
           {active.mode === 'single' && !isLastInPermission && (
@@ -397,7 +399,7 @@ export default function TutorialEngine() {
               onClick={skipCurrent}
               type="button"
             >
-              Passer
+              {t('tutorial_engine_skip')}
             </button>
           )}
         </div>

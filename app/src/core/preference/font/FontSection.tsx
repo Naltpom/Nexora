@@ -1,26 +1,28 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useDraftPreference } from '../DraftPreferenceContext'
 import { applyFontPrefs, type FontPrefs } from '../applyPreferences'
 import './font.scss'
 
-const FONT_OPTIONS = [
-  { value: 'system', label: 'Systeme' },
-  { value: 'inter', label: 'Inter' },
-  { value: 'roboto', label: 'Roboto' },
-  { value: 'open-sans', label: 'Open Sans' },
-  { value: 'atkinson', label: 'Atkinson Hyperlegible' },
-  { value: 'opendyslexic', label: 'OpenDyslexic' },
+const FONT_OPTION_KEYS = [
+  { value: 'system', key: 'font_system' },
+  { value: 'inter', key: 'font_inter' },
+  { value: 'roboto', key: 'font_roboto' },
+  { value: 'open-sans', key: 'font_open_sans' },
+  { value: 'atkinson', key: 'font_atkinson' },
+  { value: 'opendyslexic', key: 'font_opendyslexic' },
 ]
 
-const WEIGHT_OPTIONS = [
-  { value: 300, label: 'Leger (300)' },
-  { value: 400, label: 'Normal (400)' },
-  { value: 500, label: 'Medium (500)' },
+const WEIGHT_OPTION_KEYS = [
+  { value: 300, key: 'weight_light' },
+  { value: 400, key: 'weight_normal' },
+  { value: 500, key: 'weight_medium' },
 ]
 
 const DEFAULTS: FontPrefs = { family: 'system', scale: 100, lineHeight: 1.5, weight: 400 }
 
 export default function FontSection() {
+  const { t } = useTranslation('preference.font')
   const { getDraftPreference, setDraftPreference, resetVersion } = useDraftPreference()
 
   const [prefs, setPrefs] = useState<FontPrefs>(() => {
@@ -54,26 +56,26 @@ export default function FontSection() {
 
   return (
     <div className="unified-card card-padded">
-      <h2 className="title-sm">Typographie</h2>
-      <p className="text-secondary">Personnalisez la police, la taille et l'interligne.</p>
+      <h2 className="title-sm">{t('section_title')}</h2>
+      <p className="text-secondary">{t('section_description')}</p>
 
       <div className="font-section__grid">
         <div className="font-section__field">
-          <label className="font-section__label">Famille de police</label>
+          <label className="font-section__label">{t('label_font_family')}</label>
           <select
             className="input"
             value={prefs.family || 'system'}
             onChange={(e) => update({ family: e.target.value })}
           >
-            {FONT_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            {FONT_OPTION_KEYS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{t(opt.key)}</option>
             ))}
           </select>
         </div>
 
         <div className="font-section__field">
           <label className="font-section__label">
-            Echelle de texte
+            {t('label_text_scale')}
             <span className="font-section__value">{prefs.scale || 100}%</span>
           </label>
           <input
@@ -93,7 +95,7 @@ export default function FontSection() {
 
         <div className="font-section__field">
           <label className="font-section__label">
-            Interligne
+            {t('label_line_height')}
             <span className="font-section__value">{prefs.lineHeight || 1.5}</span>
           </label>
           <input
@@ -112,14 +114,14 @@ export default function FontSection() {
         </div>
 
         <div className="font-section__field">
-          <label className="font-section__label">Epaisseur</label>
+          <label className="font-section__label">{t('label_weight')}</label>
           <select
             className="input"
             value={prefs.weight || 400}
             onChange={(e) => update({ weight: Number(e.target.value) })}
           >
-            {WEIGHT_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            {WEIGHT_OPTION_KEYS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{t(opt.key)}</option>
             ))}
           </select>
         </div>
@@ -127,14 +129,14 @@ export default function FontSection() {
 
       <div className="font-section__preview">
         <p className="font-section__preview-text">
-          Apercu : Le vif renard brun saute par-dessus le chien paresseux. 0123456789
+          {t('preview_text')}
         </p>
       </div>
 
       {isModified && (
         <div className="font-section__actions">
           <button className="btn btn-secondary" onClick={handleReset} type="button">
-            Reinitialiser
+            {t('btn_reset')}
           </button>
         </div>
       )}

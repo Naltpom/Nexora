@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import Layout from '../../core/Layout'
 import { useAuth } from '../../core/AuthContext'
 import { useNotifications } from './NotificationContext'
@@ -7,18 +8,18 @@ import { useConfirm } from '../../core/ConfirmModal'
 import api from '../../api'
 import './notifications.scss'
 
-function timeAgo(dateStr: string): string {
+function timeAgo(dateStr: string, t: (key: string, opts?: Record<string, unknown>) => string): string {
   const now = new Date()
   const date = new Date(dateStr)
   const seconds = Math.floor((now.getTime() - date.getTime()) / 1000)
 
-  if (seconds < 60) return "A l'instant"
+  if (seconds < 60) return t('time_ago_just_now')
   const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `Il y a ${minutes}min`
+  if (minutes < 60) return t('time_ago_minutes', { minutes })
   const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `Il y a ${hours}h`
+  if (hours < 24) return t('time_ago_hours', { hours })
   const days = Math.floor(hours / 24)
-  if (days < 7) return `Il y a ${days}j`
+  if (days < 7) return t('time_ago_days', { days })
   return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
 }
 
@@ -56,13 +57,14 @@ interface AdminNotificationItem extends NotificationItem {
 // -- Main Component --
 
 export default function NotificationList() {
+  const { t } = useTranslation('notification')
   const { user } = useAuth()
   const isSuperAdmin = user?.is_super_admin ?? false
 
   return (
     <Layout
-      breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Notifications' }]}
-      title="Notifications"
+      breadcrumb={[{ label: t('breadcrumb_home'), path: '/' }, { label: t('breadcrumb_notifications') }]}
+      title={t('breadcrumb_notifications')}
     >
       {isSuperAdmin ? <AdminNotificationList /> : <UserNotificationList />}
     </Layout>
@@ -72,6 +74,7 @@ export default function NotificationList() {
 // -- User View --
 
 function UserNotificationList() {
+  const { t } = useTranslation('notification')
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
@@ -158,16 +161,16 @@ function UserNotificationList() {
       <div className="unified-card page-header-card">
         <div className="unified-page-header">
           <div className="unified-page-header-info">
-            <h1>Mes notifications</h1>
-            <p>Historique de vos notifications</p>
+            <h1>{t('user_list_title')}</h1>
+            <p>{t('user_list_subtitle')}</p>
           </div>
           <div className="unified-page-header-actions">
             {hasUnread && (
               <button className="btn-unified-secondary" onClick={handleMarkAllAsRead}>
-                Tout marquer comme lu
+                {t('user_list_mark_all_read')}
               </button>
             )}
-            <Link to="/notifications/settings" className="btn-icon btn-icon-secondary" title="Parametres">
+            <Link to="/notifications/settings" className="btn-icon btn-icon-secondary" title={t('user_list_settings_title')}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
               </svg>
@@ -184,7 +187,7 @@ function UserNotificationList() {
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
             <path d="M13.73 21a2 2 0 0 1-3.46 0" />
           </svg>
-          Aucune notification
+          {t('user_list_empty')}
         </div>
       ) : (
         <>
@@ -204,14 +207,14 @@ function UserNotificationList() {
                   )}
                   <div className="notification-list-card-meta">
                     <span className="notification-event-badge">{notif.event_type}</span>
-                    <span className="notif-time-ago">{timeAgo(notif.created_at)}</span>
+                    <span className="notif-time-ago">{timeAgo(notif.created_at, t)}</span>
                   </div>
                 </div>
                 <div className="notification-list-card-actions">
                   {!notif.is_read ? (
                     <button
                       className="btn-icon btn-icon-secondary"
-                      title="Marquer comme lu"
+                      title={t('user_list_mark_as_read')}
                       onClick={(e) => { e.stopPropagation(); handleMarkAsRead(notif.id) }}
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -221,7 +224,7 @@ function UserNotificationList() {
                   ) : (
                     <button
                       className="btn-icon btn-icon-secondary"
-                      title="Marquer comme non lu"
+                      title={t('user_list_mark_as_unread')}
                       onClick={(e) => { e.stopPropagation(); handleMarkAsUnread(notif.id) }}
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -231,7 +234,7 @@ function UserNotificationList() {
                   )}
                   <button
                     className="btn-icon btn-icon-danger"
-                    title="Supprimer"
+                    title={t('user_list_delete')}
                     onClick={(e) => { e.stopPropagation(); handleDelete(notif.id) }}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -261,6 +264,7 @@ function UserNotificationList() {
 // -- Admin View --
 
 function AdminNotificationList() {
+  const { t } = useTranslation('notification')
   const [notifications, setNotifications] = useState<AdminNotificationItem[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
@@ -369,9 +373,9 @@ function AdminNotificationList() {
 
   const handleDelete = async (id: number) => {
     const ok = await confirm({
-      title: 'Supprimer la notification',
-      message: 'Voulez-vous vraiment supprimer cette notification ?',
-      confirmText: 'Supprimer',
+      title: t('confirm_delete_title'),
+      message: t('confirm_delete_message'),
+      confirmText: t('confirm_delete_button'),
       variant: 'danger',
     })
     if (!ok) return
@@ -387,33 +391,33 @@ function AdminNotificationList() {
 
   const handleResendEmail = async (id: number) => {
     const ok = await confirm({
-      title: "Renvoyer l'email",
-      message: "Renvoyer l'email de notification a l'utilisateur ?",
-      confirmText: 'Renvoyer',
+      title: t('confirm_resend_email_title'),
+      message: t('confirm_resend_email_message'),
+      confirmText: t('confirm_resend_email_button'),
       variant: 'warning',
     })
     if (!ok) return
     try {
       const res = await api.post(`/notifications/${id}/resend-email`)
-      await alert({ title: 'Email renvoye', message: res.data.message })
+      await alert({ title: t('alert_email_sent_title'), message: res.data.message })
     } catch (err: any) {
-      await alert({ message: err.response?.data?.detail || "Erreur lors de l'envoi", variant: 'danger' })
+      await alert({ message: err.response?.data?.detail || t('alert_send_error'), variant: 'danger' })
     }
   }
 
   const handleResendWebhook = async (id: number) => {
     const ok = await confirm({
-      title: 'Renvoyer le webhook',
-      message: 'Renvoyer la notification via webhook ?',
-      confirmText: 'Renvoyer',
+      title: t('confirm_resend_webhook_title'),
+      message: t('confirm_resend_webhook_message'),
+      confirmText: t('confirm_resend_webhook_button'),
       variant: 'warning',
     })
     if (!ok) return
     try {
       const res = await api.post(`/notifications/${id}/resend-webhook`)
-      await alert({ title: 'Webhook renvoye', message: res.data.message })
+      await alert({ title: t('alert_webhook_sent_title'), message: res.data.message })
     } catch (err: any) {
-      await alert({ message: err.response?.data?.detail || "Erreur lors de l'envoi", variant: 'danger' })
+      await alert({ message: err.response?.data?.detail || t('alert_send_error'), variant: 'danger' })
     }
   }
 
@@ -431,8 +435,8 @@ function AdminNotificationList() {
       <div className="unified-card page-header-card">
         <div className="unified-page-header">
           <div className="unified-page-header-info">
-            <h1>Notifications</h1>
-            <p>Gestion des notifications de tous les utilisateurs</p>
+            <h1>{t('admin_list_title')}</h1>
+            <p>{t('admin_list_subtitle')}</p>
           </div>
           <div className="unified-page-header-actions">
             <label className="unified-filter-checkbox">
@@ -441,7 +445,7 @@ function AdminNotificationList() {
                 checked={!myOnly}
                 onChange={handleToggleMyOnly}
               />
-              Toutes les notifications
+              {t('admin_filter_all_notifications')}
             </label>
             <label className="unified-filter-checkbox notif-filter-deleted">
               <input
@@ -449,7 +453,7 @@ function AdminNotificationList() {
                 checked={includeDeleted}
                 onChange={handleToggleIncludeDeleted}
               />
-              Voir les supprimees
+              {t('admin_filter_show_deleted')}
             </label>
             <div className="unified-search-box">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -457,12 +461,12 @@ function AdminNotificationList() {
               </svg>
               <input
                 type="text"
-                placeholder="Rechercher..."
+                placeholder={t('admin_search_placeholder')}
                 value={search}
                 onChange={(e) => handleSearchChange(e.target.value)}
               />
             </div>
-            <Link to="/notifications/settings" className="btn-icon btn-icon-secondary" title="Parametres">
+            <Link to="/notifications/settings" className="btn-icon btn-icon-secondary" title={t('admin_settings_title')}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
               </svg>
@@ -480,21 +484,21 @@ function AdminNotificationList() {
               <table className="unified-table">
                 <thead>
                   <tr>
-                    {!myOnly && <SortHeader field="user_email">Utilisateur</SortHeader>}
-                    <th>Titre</th>
-                    <SortHeader field="event_type">Type</SortHeader>
-                    <SortHeader field="is_read">Lu</SortHeader>
-                    <th>Email</th>
-                    <th>Webhook</th>
-                    <SortHeader field="created_at">Date</SortHeader>
-                    <th>Actions</th>
+                    {!myOnly && <SortHeader field="user_email">{t('admin_column_user')}</SortHeader>}
+                    <th>{t('admin_column_title')}</th>
+                    <SortHeader field="event_type">{t('admin_column_type')}</SortHeader>
+                    <SortHeader field="is_read">{t('admin_column_read')}</SortHeader>
+                    <th>{t('admin_column_email')}</th>
+                    <th>{t('admin_column_webhook')}</th>
+                    <SortHeader field="created_at">{t('admin_column_date')}</SortHeader>
+                    <th>{t('admin_column_actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {notifications.length === 0 ? (
                     <tr>
                       <td colSpan={myOnly ? 7 : 8} className="notif-admin-empty-cell">
-                        Aucune notification
+                        {t('admin_empty')}
                       </td>
                     </tr>
                   ) : (
@@ -521,13 +525,13 @@ function AdminNotificationList() {
                         </td>
                         <td>
                           {notif.is_read ? (
-                            <span className="notif-status-green" title="Lu">
+                            <span className="notif-status-green" title={t('admin_status_read')}>
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="20 6 9 17 4 12" />
                               </svg>
                             </span>
                           ) : (
-                            <span className="notification-item-dot" title="Non lu" />
+                            <span className="notification-item-dot" title={t('admin_status_unread')} />
                           )}
                         </td>
                         <td className="notif-cell-nowrap">
@@ -562,7 +566,7 @@ function AdminNotificationList() {
                             {!notif.is_read ? (
                               <button
                                 className="btn-icon btn-icon-secondary"
-                                title="Marquer comme lu"
+                                title={t('admin_mark_as_read')}
                                 onClick={() => handleMarkAsRead(notif.id)}
                               >
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -572,7 +576,7 @@ function AdminNotificationList() {
                             ) : (
                               <button
                                 className="btn-icon btn-icon-secondary"
-                                title="Marquer comme non lu"
+                                title={t('admin_mark_as_unread')}
                                 onClick={() => handleMarkAsUnread(notif.id)}
                               >
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -582,7 +586,7 @@ function AdminNotificationList() {
                             )}
                             <button
                               className="btn-icon btn-icon-danger"
-                              title="Supprimer"
+                              title={t('admin_delete')}
                               onClick={() => handleDelete(notif.id)}
                             >
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -592,27 +596,27 @@ function AdminNotificationList() {
                             {notif.email_sent_at && (
                               <button
                                 className="btn-resend btn-resend-email"
-                                title={`Dernier envoi: ${formatDate(notif.email_sent_at)}`}
+                                title={t('admin_last_sent', { date: formatDate(notif.email_sent_at) })}
                                 onClick={() => handleResendEmail(notif.id)}
                               >
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                                   <polyline points="22,6 12,13 2,6" />
                                 </svg>
-                                Email
+                                {t('admin_resend_email_button')}
                               </button>
                             )}
                             {notif.webhook_sent_at && (
                               <button
                                 className="btn-resend btn-resend-webhook"
-                                title={`Dernier envoi: ${formatDate(notif.webhook_sent_at)}`}
+                                title={t('admin_last_sent', { date: formatDate(notif.webhook_sent_at) })}
                                 onClick={() => handleResendWebhook(notif.id)}
                               >
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                   <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                                   <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
                                 </svg>
-                                Webhook
+                                {t('admin_resend_webhook_button')}
                               </button>
                             )}
                           </div>
@@ -653,6 +657,7 @@ function Pagination({
   onPageChange: (p: number) => void
   onPerPageChange: (pp: number) => void
 }) {
+  const { t } = useTranslation('notification')
   return (
     <div className="unified-pagination">
       <span className="unified-pagination-info">{total} {label}{total > 1 ? 's' : ''}</span>
@@ -662,10 +667,10 @@ function Pagination({
           value={perPage}
           onChange={(e) => onPerPageChange(parseInt(e.target.value))}
         >
-          <option value={10}>10 / page</option>
-          <option value={25}>25 / page</option>
-          <option value={50}>50 / page</option>
-          <option value={100}>100 / page</option>
+          <option value={10}>{t('pagination_per_page_10')}</option>
+          <option value={25}>{t('pagination_per_page_25')}</option>
+          <option value={50}>{t('pagination_per_page_50')}</option>
+          <option value={100}>{t('pagination_per_page_100')}</option>
         </select>
         {totalPages > 1 && (
           <>

@@ -35,7 +35,6 @@ export interface FeatureManifest {
   name: string
   label: string
   description: string
-  version: string
   parent: string | null
   children: string[]
   depends: string[]

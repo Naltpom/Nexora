@@ -1,0 +1,19 @@
+{
+  "section_title": "Accessibilite",
+  "section_description": "Adaptez l'interface a vos besoins.",
+  "active_count_singular": "actif",
+  "active_count_plural": "actifs",
+  "toggle_high_contrast_label": "Contraste eleve",
+  "toggle_high_contrast_desc": "Force les couleurs a un ratio 7:1 minimum (WCAG AAA)",
+  "toggle_reduce_motion_label": "Reduire les animations",
+  "toggle_reduce_motion_desc": "Desactive les transitions et animations CSS",
+  "toggle_dyslexia_label": "Police dyslexie",
+  "toggle_dyslexia_desc": "Utilise la police OpenDyslexic pour une meilleure lisibilite",
+  "toggle_focus_visible_label": "Focus renforce",
+  "toggle_focus_visible_desc": "Outline epais sur les elements focusables au clavier",
+  "toggle_underline_links_label": "Liens soulignes",
+  "toggle_underline_links_desc": "Souligne tous les liens, pas seulement au survol",
+  "toggle_large_targets_label": "Grandes zones tactiles",
+  "toggle_large_targets_desc": "Minimum 44x44px sur les boutons et liens (WCAG 2.5.5)",
+  "btn_disable_all": "Tout desactiver"
+}

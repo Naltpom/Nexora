@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { PreferenceChange } from './DraftPreferenceContext'
 import './unsavedChangesModal.scss'
 
@@ -14,6 +15,7 @@ export default function UnsavedChangesModal({
   onDiscardAndLeave,
   onCancel,
 }: UnsavedChangesModalProps) {
+  const { t } = useTranslation('preference')
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) onCancel()
   }
@@ -27,11 +29,11 @@ export default function UnsavedChangesModal({
             <line x1="12" y1="9" x2="12" y2="13" />
             <line x1="12" y1="17" x2="12.01" y2="17" />
           </svg>
-          <h3>Modifications non sauvegardees</h3>
+          <h3>{t('modal_title')}</h3>
         </div>
 
         <div className="unsaved-modal__body">
-          <p>Vous avez des preferences modifiees qui n'ont pas ete sauvegardees :</p>
+          <p>{t('modal_description')}</p>
           <div className="unsaved-modal__changes">
             {changes.map((change) => (
               <div key={change.key} className="unsaved-modal__change-item">
@@ -51,10 +53,10 @@ export default function UnsavedChangesModal({
 
         <div className="unsaved-modal__footer">
           <button className="btn btn-secondary" onClick={onDiscardAndLeave} type="button">
-            Abandonner les modifications
+            {t('modal_btn_discard')}
           </button>
           <button className="btn btn-primary" onClick={onSaveAndLeave} type="button">
-            Sauvegarder et quitter
+            {t('modal_btn_save_and_leave')}
           </button>
         </div>
       </div>

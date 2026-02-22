@@ -124,7 +124,7 @@ async def get_latest_security_token(
 
 
 async def authenticate_intranet(email: str, password: str) -> dict | None:
-    """Try authenticating via the Kertios intranet SSO endpoint.
+    """Try authenticating via the intranet SSO endpoint.
 
     Returns a dict with user fields on success, ``None`` otherwise.
     """
@@ -180,8 +180,8 @@ async def authenticate_user(
 
     user = None
 
-    # --- Intranet SSO for @kertios.com emails --------------------------------
-    if email.endswith("@kertios.com") and settings.INTRANET_AUTH_URL:
+    # --- Intranet SSO --------------------------------------------------------
+    if settings.INTRANET_EMAIL_DOMAIN and email.endswith(f"@{settings.INTRANET_EMAIL_DOMAIN}") and settings.INTRANET_AUTH_URL:
         intranet_data = await authenticate_intranet(email, password)
         if intranet_data:
             result = await db.execute(
@@ -311,7 +311,7 @@ async def authenticate_user(
         }
 
     # --- Build response ------------------------------------------------------
-    token_data = {"sub": str(user.id), "email": user.email}
+    token_data = {"sub": str(user.id), "email": user.email, "lang": user.language}
     preferences = user.preferences
 
     # --- Compute MFA grace period expiration if setup required ---------------

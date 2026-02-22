@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import Layout from '../../core/Layout'
 import { useConfirm } from '../../core/ConfirmModal'
 import { usePermission } from '../PermissionContext'
@@ -40,6 +41,7 @@ interface PermsPaginated {
 /* ------------------------------------------------------------------ */
 
 export default function RolesAdminPage() {
+  const { t } = useTranslation('_identity')
   const { confirm } = useConfirm()
   const { can } = usePermission()
   const [roles, setRoles] = useState<Role[]>([])
@@ -152,7 +154,7 @@ export default function RolesAdminPage() {
       setShowModal(false)
       loadRoles()
     } catch (err: any) {
-      setFormError(err.response?.data?.detail || 'Erreur')
+      setFormError(err.response?.data?.detail || t('common.error'))
     } finally {
       setSaving(false)
     }
@@ -164,9 +166,9 @@ export default function RolesAdminPage() {
 
   const handleDelete = async (role: Role) => {
     const confirmed = await confirm({
-      title: 'Supprimer le role',
-      message: `Etes-vous sur de vouloir supprimer le role "${role.name}" ?`,
-      confirmText: 'Supprimer',
+      title: t('roles_admin.confirm_delete_title'),
+      message: t('roles_admin.confirm_delete_message', { name: role.name }),
+      confirmText: t('roles_admin.confirm_delete_btn'),
       variant: 'danger',
     })
     if (!confirmed) return
@@ -268,7 +270,7 @@ export default function RolesAdminPage() {
     return (
       <div className="unified-pagination">
         <div className="unified-pagination-info">
-          {permsTotal} permission{permsTotal !== 1 ? 's' : ''}
+          {permsTotal !== 1 ? t('roles_admin.badge_permissions_plural', { count: permsTotal }) : t('roles_admin.badge_permissions', { count: permsTotal })}
         </div>
         <div className="unified-pagination-controls">
           <select
@@ -317,12 +319,12 @@ export default function RolesAdminPage() {
   /* ---------------------------------------------------------------- */
 
   return (
-    <Layout breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Roles' }]} title="Roles">
+    <Layout breadcrumb={[{ label: t('common.home'), path: '/' }, { label: t('roles_admin.breadcrumb_roles') }]} title={t('roles_admin.breadcrumb_roles')}>
       <div className="unified-card page-header-card">
         <div className="unified-page-header">
           <div className="unified-page-header-info">
-            <h1>Gestion des roles</h1>
-            <p>Creez et gerez les roles et leurs permissions</p>
+            <h1>{t('roles_admin.page_title')}</h1>
+            <p>{t('roles_admin.subtitle')}</p>
           </div>
           <div className="unified-page-header-actions">
             {can('roles.create') && (
@@ -330,7 +332,7 @@ export default function RolesAdminPage() {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 5v14M5 12h14" />
                 </svg>
-                Nouveau role
+                {t('roles_admin.btn_new_role')}
               </button>
             )}
           </div>
@@ -350,18 +352,18 @@ export default function RolesAdminPage() {
               <table className="unified-table">
                 <thead>
                   <tr>
-                    <th>Nom</th>
-                    {!isPermsMode && <th>Description</th>}
-                    {!isPermsMode && <th>Permissions</th>}
-                    {!isPermsMode && <th>Date creation</th>}
-                    <th>{isPermsMode ? '' : 'Actions'}</th>
+                    <th>{t('roles_admin.th_name')}</th>
+                    {!isPermsMode && <th>{t('roles_admin.th_description')}</th>}
+                    {!isPermsMode && <th>{t('roles_admin.th_permissions')}</th>}
+                    {!isPermsMode && <th>{t('roles_admin.th_created_at')}</th>}
+                    <th>{isPermsMode ? '' : t('roles_admin.th_actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {roles.length === 0 ? (
                     <tr>
                       <td colSpan={isPermsMode ? 2 : 5} className="empty-state-sm">
-                        Aucun role trouve
+                        {t('roles_admin.empty_state')}
                       </td>
                     </tr>
                   ) : (
@@ -385,9 +387,9 @@ export default function RolesAdminPage() {
                             <span
                               className="badge badge-info cursor-pointer"
                               onClick={() => openPerms(role)}
-                              title="Gerer les permissions"
+                              title={t('roles_admin.tooltip_manage_permissions')}
                             >
-                              {role.permissions.length} permission{role.permissions.length !== 1 ? 's' : ''}
+                              {role.permissions.length !== 1 ? t('roles_admin.badge_permissions_plural', { count: role.permissions.length }) : t('roles_admin.badge_permissions', { count: role.permissions.length })}
                             </span>
                           </td>
                         )}
@@ -404,7 +406,7 @@ export default function RolesAdminPage() {
                               <button
                                 className="btn-icon btn-icon-secondary"
                                 onClick={(e) => { e.stopPropagation(); closePerms() }}
-                                title="Retour au tableau complet"
+                                title={t('roles_admin.tooltip_back_full_table')}
                               >
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                   <path d="M19 12H5M12 19l-7-7 7-7" />
@@ -416,7 +418,7 @@ export default function RolesAdminPage() {
                               <button
                                 className="btn-icon btn-icon-primary"
                                 onClick={() => openPerms(role)}
-                                title="Gerer les permissions"
+                                title={t('roles_admin.tooltip_manage_permissions')}
                               >
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
@@ -426,7 +428,7 @@ export default function RolesAdminPage() {
                                 <button
                                   className="btn-icon btn-icon-primary"
                                   onClick={() => openEdit(role)}
-                                  title="Modifier"
+                                  title={t('roles_admin.tooltip_edit')}
                                 >
                                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -438,7 +440,7 @@ export default function RolesAdminPage() {
                                 <button
                                   className="btn-icon btn-icon-danger"
                                   onClick={() => handleDelete(role)}
-                                  title="Supprimer"
+                                  title={t('roles_admin.tooltip_delete')}
                                 >
                                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <polyline points="3 6 5 6 21 6" />
@@ -467,16 +469,16 @@ export default function RolesAdminPage() {
                 <div className="perms-panel-header">
                   <div>
                     <h2 className="title-section-lg">
-                      Permissions de {permsRole.name}
+                      {t('roles_admin.perms_panel_title', { name: permsRole.name })}
                     </h2>
                     <span className="text-muted-sm">
-                      {permsGrantedCount} / {permsTotal} actives
+                      {t('roles_admin.perms_panel_active_count', { granted: permsGrantedCount, total: permsTotal })}
                     </span>
                   </div>
                   <button
                     className="btn-icon btn-icon-secondary"
                     onClick={closePerms}
-                    title="Fermer"
+                    title={t('roles_admin.tooltip_close')}
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="18" y1="6" x2="6" y2="18" />
@@ -486,7 +488,7 @@ export default function RolesAdminPage() {
                 </div>
                 <input
                   type="text"
-                  placeholder="Rechercher une permission..."
+                  placeholder={t('roles_admin.perms_search_placeholder')}
                   value={permsSearch}
                   onChange={(e) => handlePermsSearch(e.target.value)}
                   className="input-styled"
@@ -503,17 +505,17 @@ export default function RolesAdminPage() {
                   <table className="unified-table">
                     <thead>
                       <tr>
-                        <th>Nom</th>
-                        <th>Slug</th>
-                        <th>Description</th>
-                        <th className="text-center">Active</th>
+                        <th>{t('roles_admin.perms_th_name')}</th>
+                        <th>{t('roles_admin.perms_th_slug')}</th>
+                        <th>{t('roles_admin.perms_th_description')}</th>
+                        <th className="text-center">{t('roles_admin.perms_th_active')}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {perms.length === 0 ? (
                         <tr>
                           <td colSpan={4} className="empty-state-sm">
-                            Aucune permission trouvee
+                            {t('roles_admin.perms_empty')}
                           </td>
                         </tr>
                       ) : (
@@ -565,38 +567,38 @@ export default function RolesAdminPage() {
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{editingRole ? 'Modifier le role' : 'Nouveau role'}</h2>
+              <h2>{editingRole ? t('roles_admin.modal_edit_title') : t('roles_admin.modal_create_title')}</h2>
               <button className="modal-close" onClick={() => setShowModal(false)}>&times;</button>
             </div>
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
                 {formError && <div className="alert alert-error">{formError}</div>}
                 <div className="form-group">
-                  <label>Nom</label>
+                  <label>{t('roles_admin.modal_name_label')}</label>
                   <input
                     type="text"
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                     required
-                    placeholder="Ex: Administrateur, Editeur..."
+                    placeholder={t('roles_admin.modal_name_placeholder')}
                   />
                 </div>
                 <div className="form-group">
-                  <label>Description</label>
+                  <label>{t('roles_admin.modal_description_label')}</label>
                   <textarea
                     value={form.description}
                     onChange={(e) => setForm({ ...form, description: e.target.value })}
                     rows={3}
-                    placeholder="Description du role..."
+                    placeholder={t('roles_admin.modal_description_placeholder')}
                   />
                 </div>
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
-                  Annuler
+                  {t('common.cancel')}
                 </button>
                 <button type="submit" className="btn btn-primary" disabled={saving}>
-                  {saving ? 'Enregistrement...' : editingRole ? 'Modifier' : 'Creer'}
+                  {saving ? t('roles_admin.modal_submitting') : editingRole ? t('roles_admin.modal_submit_edit') : t('roles_admin.modal_submit_create')}
                 </button>
               </div>
             </form>

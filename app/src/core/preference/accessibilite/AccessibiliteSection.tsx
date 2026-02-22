@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useDraftPreference } from '../DraftPreferenceContext'
 import { applyAccessibilitePrefs, type AccessibilitePrefs } from '../applyPreferences'
 import './accessibilite.scss'
@@ -12,16 +13,17 @@ const DEFAULTS: AccessibilitePrefs = {
   largeTargets: false,
 }
 
-const TOGGLES: { key: keyof AccessibilitePrefs; label: string; desc: string }[] = [
-  { key: 'highContrast', label: 'Contraste eleve', desc: 'Force les couleurs a un ratio 7:1 minimum (WCAG AAA)' },
-  { key: 'reduceMotion', label: 'Reduire les animations', desc: 'Desactive les transitions et animations CSS' },
-  { key: 'dyslexia', label: 'Police dyslexie', desc: 'Utilise la police OpenDyslexic pour une meilleure lisibilite' },
-  { key: 'focusVisible', label: 'Focus renforce', desc: 'Outline epais sur les elements focusables au clavier' },
-  { key: 'underlineLinks', label: 'Liens soulignes', desc: 'Souligne tous les liens, pas seulement au survol' },
-  { key: 'largeTargets', label: 'Grandes zones tactiles', desc: 'Minimum 44x44px sur les boutons et liens (WCAG 2.5.5)' },
+const TOGGLE_KEYS: { key: keyof AccessibilitePrefs; labelKey: string; descKey: string }[] = [
+  { key: 'highContrast', labelKey: 'toggle_high_contrast_label', descKey: 'toggle_high_contrast_desc' },
+  { key: 'reduceMotion', labelKey: 'toggle_reduce_motion_label', descKey: 'toggle_reduce_motion_desc' },
+  { key: 'dyslexia', labelKey: 'toggle_dyslexia_label', descKey: 'toggle_dyslexia_desc' },
+  { key: 'focusVisible', labelKey: 'toggle_focus_visible_label', descKey: 'toggle_focus_visible_desc' },
+  { key: 'underlineLinks', labelKey: 'toggle_underline_links_label', descKey: 'toggle_underline_links_desc' },
+  { key: 'largeTargets', labelKey: 'toggle_large_targets_label', descKey: 'toggle_large_targets_desc' },
 ]
 
 export default function AccessibiliteSection() {
+  const { t } = useTranslation('preference.accessibilite')
   const { getDraftPreference, setDraftPreference, resetVersion } = useDraftPreference()
 
   const [prefs, setPrefs] = useState<AccessibilitePrefs>(() => {
@@ -45,7 +47,7 @@ export default function AccessibiliteSection() {
     setDraftPreference('accessibilite', next)
   }
 
-  const activeCount = TOGGLES.filter((t) => prefs[t.key]).length
+  const activeCount = TOGGLE_KEYS.filter((tk) => prefs[tk.key]).length
 
   const isModified = activeCount > 0
 
@@ -57,20 +59,22 @@ export default function AccessibiliteSection() {
 
   return (
     <div className="unified-card card-padded">
-      <h2 className="title-sm">Accessibilite</h2>
+      <h2 className="title-sm">{t('section_title')}</h2>
       <p className="text-secondary">
-        Adaptez l'interface a vos besoins.
+        {t('section_description')}
         {activeCount > 0 && (
-          <span className="a11y-section__active-count">{activeCount} actif{activeCount > 1 ? 's' : ''}</span>
+          <span className="a11y-section__active-count">
+            {activeCount} {activeCount > 1 ? t('active_count_plural') : t('active_count_singular')}
+          </span>
         )}
       </p>
 
       <div className="a11y-section__list">
-        {TOGGLES.map((toggle) => (
+        {TOGGLE_KEYS.map((toggle) => (
           <label key={toggle.key} className="a11y-section__item">
             <div className="a11y-section__item-text">
-              <span className="a11y-section__item-label">{toggle.label}</span>
-              <span className="a11y-section__item-desc">{toggle.desc}</span>
+              <span className="a11y-section__item-label">{t(toggle.labelKey)}</span>
+              <span className="a11y-section__item-desc">{t(toggle.descKey)}</span>
             </div>
             <input
               type="checkbox"
@@ -85,7 +89,7 @@ export default function AccessibiliteSection() {
       {isModified && (
         <div className="a11y-section__actions">
           <button className="btn btn-secondary" onClick={handleReset} type="button">
-            Tout desactiver
+            {t('btn_disable_all')}
           </button>
         </div>
       )}

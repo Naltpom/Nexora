@@ -1,0 +1,19 @@
+{
+  "section_title": "Typographie",
+  "section_description": "Personnalisez la police, la taille et l'interligne.",
+  "label_font_family": "Famille de police",
+  "font_system": "Systeme",
+  "font_inter": "Inter",
+  "font_roboto": "Roboto",
+  "font_open_sans": "Open Sans",
+  "font_atkinson": "Atkinson Hyperlegible",
+  "font_opendyslexic": "OpenDyslexic",
+  "label_text_scale": "Echelle de texte",
+  "label_line_height": "Interligne",
+  "label_weight": "Epaisseur",
+  "weight_light": "Leger (300)",
+  "weight_normal": "Normal (400)",
+  "weight_medium": "Medium (500)",
+  "preview_text": "Apercu : Le vif renard brun saute par-dessus le chien paresseux. 0123456789",
+  "btn_reset": "Reinitialiser"
+}

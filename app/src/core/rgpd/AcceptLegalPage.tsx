@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../AuthContext'
 import { useConfirm } from '../ConfirmModal'
@@ -7,6 +8,7 @@ import type { PendingLegalAcceptance } from '../../types'
 import './rgpd.scss'
 
 export default function AcceptLegalPage() {
+  const { t } = useTranslation('rgpd')
   const { user, logout, refreshUser } = useAuth()
   const { confirm } = useConfirm()
   const navigate = useNavigate()
@@ -66,7 +68,7 @@ export default function AcceptLegalPage() {
       await refreshUser()
       navigate('/', { replace: true })
     } catch {
-      setError("Une erreur est survenue. Veuillez reessayer.")
+      setError(t('accept_legal_page.error_generic'))
     } finally {
       setLoading(false)
     }
@@ -79,11 +81,10 @@ export default function AcceptLegalPage() {
 
   const handleDeleteAccount = async () => {
     const confirmed = await confirm({
-      title: 'Supprimer mon compte',
-      message:
-        'Votre compte sera desactive pendant 30 jours. Si vous vous reconnectez dans ce delai, il sera automatiquement reactive. Passe ce delai, toutes vos donnees seront definitivement supprimees.\n\nEtes-vous sur de vouloir continuer ?',
-      confirmText: 'Oui, supprimer mon compte',
-      cancelText: 'Annuler',
+      title: t('accept_legal_page.confirm_delete_title'),
+      message: t('accept_legal_page.confirm_delete_message'),
+      confirmText: t('accept_legal_page.confirm_delete_confirm'),
+      cancelText: t('accept_legal_page.confirm_delete_cancel'),
       variant: 'danger',
     })
     if (!confirmed) return
@@ -118,11 +119,11 @@ export default function AcceptLegalPage() {
       <div className="login-container">
         <div className="legal-accept-card">
           <div className="login-header">
-            <h1>Mise a jour des documents legaux</h1>
-            <p>Des documents legaux ont ete mis a jour. Veuillez les lire et les accepter pour continuer.</p>
+            <h1>{t('accept_legal_page.update_heading')}</h1>
+            <p>{t('accept_legal_page.update_description')}</p>
             {pending.length > 1 && (
               <div className="legal-step-indicator">
-                Document {currentStep + 1} sur {pending.length}
+                {t('accept_legal_page.step_indicator', { current: currentStep + 1, total: pending.length })}
               </div>
             )}
           </div>
@@ -133,7 +134,7 @@ export default function AcceptLegalPage() {
             <div className="legal-accept-document-header">
               <h3>{currentDoc.title}</h3>
               <span className="text-secondary">
-                Mis a jour le {formatDate(currentDoc.updated_at)} — Version {currentDoc.version}
+                {t('accept_legal_page.updated_at_prefix')} {formatDate(currentDoc.updated_at)} — {t('accept_legal_page.version_prefix')} {currentDoc.version}
               </span>
             </div>
             <div
@@ -144,7 +145,7 @@ export default function AcceptLegalPage() {
             />
             {!canCheck && (
               <p className="legal-scroll-hint">
-                Faites defiler jusqu&apos;en bas du document pour pouvoir l&apos;accepter.
+                {t('accept_legal_page.scroll_hint')}
               </p>
             )}
             <label className={`legal-accept-checkbox${!canCheck ? ' disabled' : ''}`}>
@@ -154,17 +155,17 @@ export default function AcceptLegalPage() {
                 onChange={() => handleToggle(currentDoc.slug)}
                 disabled={!canCheck}
               />
-              J&apos;ai lu et j&apos;accepte {currentDoc.title}
+              {t('accept_legal_page.checkbox_read_and_accept', { title: currentDoc.title })}
             </label>
           </div>
 
           <div className="legal-accept-actions">
             <div className="legal-accept-actions-left">
               <button className="btn btn-secondary" onClick={handleRefuse}>
-                Refuser et se deconnecter
+                {t('accept_legal_page.btn_refuse_logout')}
               </button>
               <button className="btn btn-danger" onClick={handleDeleteAccount}>
-                Supprimer mon compte
+                {t('accept_legal_page.btn_delete_account')}
               </button>
             </div>
             {isLastStep ? (
@@ -173,7 +174,7 @@ export default function AcceptLegalPage() {
                 onClick={handleAccept}
                 disabled={!allAccepted || loading}
               >
-                {loading ? 'Validation...' : 'Valider'}
+                {loading ? t('accept_legal_page.btn_validating') : t('accept_legal_page.btn_validate')}
               </button>
             ) : (
               <button
@@ -181,7 +182,7 @@ export default function AcceptLegalPage() {
                 onClick={() => setCurrentStep((s) => s + 1)}
                 disabled={!isChecked}
               >
-                Suivant
+                {t('accept_legal_page.btn_next')}
               </button>
             )}
           </div>
@@ -195,8 +196,8 @@ export default function AcceptLegalPage() {
     <div className="login-container">
       <div className="legal-accept-card">
         <div className="login-header">
-          <h1>Documents legaux</h1>
-          <p>Veuillez accepter les documents suivants pour acceder au service.</p>
+          <h1>{t('accept_legal_page.registration_heading')}</h1>
+          <p>{t('accept_legal_page.registration_description')}</p>
         </div>
 
         {error && <div className="alert alert-error">{error}</div>}
@@ -211,13 +212,13 @@ export default function AcceptLegalPage() {
                     checked={!!accepted[doc.slug]}
                     onChange={() => handleToggle(doc.slug)}
                   />
-                  J&apos;accepte {doc.title}
+                  {t('accept_legal_page.checkbox_accept', { title: doc.title })}
                 </label>
                 <button
                   className="btn btn-sm btn-secondary"
                   onClick={() => setExpanded((prev) => ({ ...prev, [doc.slug]: !prev[doc.slug] }))}
                 >
-                  {expanded[doc.slug] ? 'Masquer' : 'Voir'}
+                  {expanded[doc.slug] ? t('accept_legal_page.btn_hide') : t('accept_legal_page.btn_show')}
                 </button>
               </div>
               {expanded[doc.slug] && (
@@ -233,10 +234,10 @@ export default function AcceptLegalPage() {
         <div className="legal-accept-actions">
           <div className="legal-accept-actions-left">
             <button className="btn btn-secondary" onClick={handleRefuse}>
-              Refuser et se deconnecter
+              {t('accept_legal_page.btn_refuse_logout')}
             </button>
             <button className="btn btn-danger" onClick={handleDeleteAccount}>
-              Supprimer mon compte
+              {t('accept_legal_page.btn_delete_account')}
             </button>
           </div>
           <button
@@ -244,7 +245,7 @@ export default function AcceptLegalPage() {
             onClick={handleAccept}
             disabled={!allAccepted || loading}
           >
-            {loading ? 'Validation...' : 'Valider'}
+            {loading ? t('accept_legal_page.btn_validating') : t('accept_legal_page.btn_validate')}
           </button>
         </div>
       </div>

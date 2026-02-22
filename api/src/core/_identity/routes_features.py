@@ -124,7 +124,6 @@ async def get_dependency_graph(request: Request):
             "label": manifest.label,
             "is_core": manifest.is_core,
             "active": registry.is_active(manifest.name),
-            "version": manifest.version,
         })
 
         # Parent relationship

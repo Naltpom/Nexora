@@ -7,14 +7,18 @@ interface PublicAppSettings {
   app_logo: string
   app_favicon: string
   primary_color: string
+  header_show_logo: string
+  header_show_name: string
 }
 
 const DEFAULTS: PublicAppSettings = {
-  app_name: 'Template App',
+  app_name: 'Nexora',
   app_description: '',
   app_logo: '/logo_full.svg',
-  app_favicon: '/favicon.ico',
+  app_favicon: '/favicon.svg',
   primary_color: '#1E40AF',
+  header_show_logo: 'true',
+  header_show_name: 'true',
 }
 
 interface AppSettingsContextType {

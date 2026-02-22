@@ -3,6 +3,7 @@ import Header from './Header'
 import Breadcrumb from './Breadcrumb'
 import ImpersonationBanner from './ImpersonationBanner'
 import { useFeature } from './FeatureContext'
+import { useAppSettings } from './AppSettingsContext'
 
 const MFASetupBanner = lazy(() => import('./mfa/MFASetupBanner'))
 
@@ -20,11 +21,13 @@ interface Props {
 
 export default function Layout({ children, breadcrumb, fullWidth, title }: Props) {
   const { isActive } = useFeature()
+  const { settings: appSettings } = useAppSettings()
 
   useEffect(() => {
-    document.title = title ? `${title} | Kertios Support` : 'Kertios Support'
-    return () => { document.title = 'Kertios Support' }
-  }, [title])
+    const appTitle = appSettings.app_name || 'Nexora'
+    document.title = title ? `${title} | ${appTitle}` : appTitle
+    return () => { document.title = appTitle }
+  }, [title, appSettings.app_name])
 
   return (
     <div className="layout">

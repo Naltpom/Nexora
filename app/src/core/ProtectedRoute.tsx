@@ -1,4 +1,5 @@
 import { Navigate, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from './AuthContext'
 import { usePermission } from './PermissionContext'
 import { useFeature } from './FeatureContext'
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default function ProtectedRoute({ children, requireSuperAdmin = false, permission, feature, isPublic = false }: Props) {
+  const { t } = useTranslation('common')
   const { user, loading } = useAuth()
   const { can } = usePermission()
   const { isActive } = useFeature()
@@ -29,7 +31,7 @@ export default function ProtectedRoute({ children, requireSuperAdmin = false, pe
     return (
       <div className="loading-screen">
         <div className="spinner" />
-        <p>Chargement...</p>
+        <p>{t('loading')}</p>
       </div>
     )
   }

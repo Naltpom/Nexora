@@ -1,0 +1,39 @@
+{
+  "aide_breadcrumb_home": "",
+  "aide_breadcrumb_aide": "",
+  "aide_title": "",
+  "aide_description": "",
+  "aide_stats_tutorial_steps": "",
+  "aide_stats_permissions_with_tutorial": "",
+  "aide_stats_permissions_without_tutorial": "",
+
+  "tutorial_section_title": "",
+  "tutorial_section_description": "",
+  "tutorial_section_empty": "",
+  "tutorial_section_seen_badge": "",
+  "tutorial_section_review_all_feature": "",
+  "tutorial_section_start_all_feature": "",
+  "tutorial_section_step_count_plural": "",
+  "tutorial_section_step_count_singular": "",
+  "tutorial_section_review_permission": "",
+  "tutorial_section_start_permission": "",
+  "tutorial_section_review_all": "",
+  "tutorial_section_reset_all": "",
+
+  "tutorial_admin_title": "",
+  "tutorial_admin_description": "",
+  "tutorial_admin_saving": "",
+  "tutorial_admin_save": "",
+
+  "tutorial_notification_text": "",
+  "tutorial_notification_view": "",
+  "tutorial_notification_later": "",
+
+  "tutorial_engine_element_not_found_title": "",
+  "tutorial_engine_element_not_found_description": "",
+  "tutorial_engine_previous": "",
+  "tutorial_engine_finish": "",
+  "tutorial_engine_next": "",
+  "tutorial_engine_skip_all": "",
+  "tutorial_engine_skip": ""
+}

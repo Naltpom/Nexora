@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from './AuthContext'
 import { useConfirm } from './ConfirmModal'
 import api from '../api'
 
 export default function ImpersonationBanner() {
+  const { t } = useTranslation('common')
   const { isImpersonating, impersonatedUser, stopImpersonation, searchUsersForImpersonation, startImpersonation } = useAuth()
   const { confirm, alert } = useConfirm()
   const [searchQuery, setSearchQuery] = useState('')
@@ -58,16 +60,16 @@ export default function ImpersonationBanner() {
 
       window.location.href = currentPath
     } catch (error: any) {
-      await alert({ message: error.message || "Erreur lors du changement d'utilisateur", variant: 'danger' })
+      await alert({ message: error.message || t('impersonation_switch_error'), variant: 'danger' })
       setSwitching(false)
     }
   }
 
   const handleStop = async () => {
     const confirmed = await confirm({
-      title: 'Quitter le mode impersonation',
-      message: 'Voulez-vous quitter le mode impersonation ?',
-      confirmText: 'Quitter',
+      title: t('impersonation_quit_title'),
+      message: t('impersonation_quit_message'),
+      confirmText: t('impersonation_quit'),
       variant: 'warning',
     })
     if (!confirmed) return
@@ -75,7 +77,7 @@ export default function ImpersonationBanner() {
     try {
       await stopImpersonation()
     } catch (error: any) {
-      await alert({ message: error.message || "Erreur lors de la sortie", variant: 'danger' })
+      await alert({ message: error.message || t('impersonation_exit_error'), variant: 'danger' })
     }
   }
 
@@ -92,7 +94,7 @@ export default function ImpersonationBanner() {
             <path d="M16 3.13a4 4 0 0 1 0 7.75" />
           </svg>
           <span className="impersonation-banner-text">
-            Mode impersonation actif: <strong>{impersonatedUser?.name}</strong>
+            {t('impersonation_active')} <strong>{impersonatedUser?.name}</strong>
           </span>
         </div>
 
@@ -101,16 +103,16 @@ export default function ImpersonationBanner() {
             <input
               type="text"
               className="impersonation-search-input"
-              placeholder="Changer d'utilisateur..."
+              placeholder={t('impersonation_switch_user')}
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
               disabled={switching}
             />
             {showDropdown && (
               <div className="impersonation-search-dropdown">
-                {loading && <div className="impersonation-search-loading">Recherche...</div>}
+                {loading && <div className="impersonation-search-loading">{t('impersonation_searching')}</div>}
                 {!loading && searchResults.length === 0 && (
-                  <div className="impersonation-search-empty">Aucun utilisateur trouve</div>
+                  <div className="impersonation-search-empty">{t('impersonation_no_user_found')}</div>
                 )}
                 {!loading && searchResults.map(user => (
                   <div
@@ -138,7 +140,7 @@ export default function ImpersonationBanner() {
               <polyline points="16 17 21 12 16 7" />
               <line x1="21" y1="12" x2="9" y2="12" />
             </svg>
-            Quitter le mode
+            {t('impersonation_quit_button')}
           </button>
         </div>
       </div>

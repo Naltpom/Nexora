@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface ConfirmOptions {
   title?: string
@@ -28,6 +29,7 @@ interface ConfirmProviderProps {
 }
 
 export function ConfirmProvider({ children }: ConfirmProviderProps) {
+  const { t } = useTranslation('common')
   const [isOpen, setIsOpen] = useState(false)
   const [options, setOptions] = useState<ConfirmOptions | null>(null)
   const [isAlert, setIsAlert] = useState(false)
@@ -109,7 +111,7 @@ export function ConfirmProvider({ children }: ConfirmProviderProps) {
                   <path d="M12 8h.01" />
                 </svg>
               )}
-              <h3>{options.title || (isAlert ? 'Information' : 'Confirmation')}</h3>
+              <h3>{options.title || (isAlert ? t('alert_default_title') : t('confirm_default_title'))}</h3>
             </div>
             <div className="confirm-modal-body">
               <p>{options.message}</p>
@@ -117,14 +119,14 @@ export function ConfirmProvider({ children }: ConfirmProviderProps) {
             <div className="confirm-modal-footer">
               {!isAlert && (
                 <button className="btn btn-secondary" onClick={handleCancel}>
-                  {options.cancelText || 'Annuler'}
+                  {options.cancelText || t('cancel')}
                 </button>
               )}
               <button
                 className={`btn ${variantClass === 'danger' ? 'btn-danger' : variantClass === 'warning' ? 'btn-warning' : 'btn-primary'}`}
                 onClick={handleConfirm}
               >
-                {options.confirmText || (isAlert ? 'OK' : 'Confirmer')}
+                {options.confirmText || (isAlert ? t('ok') : t('confirm'))}
               </button>
             </div>
           </div>

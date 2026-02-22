@@ -4,6 +4,7 @@ import Image from '@tiptap/extension-image'
 import Placeholder from '@tiptap/extension-placeholder'
 import Mention from '@tiptap/extension-mention'
 import { useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import api from '../api'
 import { createMentionSuggestion, type MentionUser } from './MentionSuggestion'
 
@@ -14,7 +15,9 @@ interface Props {
   mentionUsers?: MentionUser[]
 }
 
-export default function RichTextEditor({ content, onChange, placeholder = 'Ecrivez ici...', mentionUsers }: Props) {
+export default function RichTextEditor({ content, onChange, placeholder, mentionUsers }: Props) {
+  const { t } = useTranslation('common')
+  const resolvedPlaceholder = placeholder ?? t('rte_placeholder')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const mentionUsersRef = useRef<MentionUser[]>(mentionUsers || [])
 
@@ -26,7 +29,7 @@ export default function RichTextEditor({ content, onChange, placeholder = 'Ecriv
     extensions: [
       StarterKit,
       Image.configure({ inline: false }),
-      Placeholder.configure({ placeholder }),
+      Placeholder.configure({ placeholder: resolvedPlaceholder }),
       Mention.configure({
         HTMLAttributes: { class: 'mention' },
         suggestion: createMentionSuggestion(mentionUsersRef),
@@ -138,24 +141,24 @@ export default function RichTextEditor({ content, onChange, placeholder = 'Ecriv
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           className={editor.isActive('bulletList') ? 'is-active' : ''}
         >
-          * Liste
+          {t('rte_bullet_list')}
         </button>
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           className={editor.isActive('orderedList') ? 'is-active' : ''}
         >
-          1. Liste
+          {t('rte_ordered_list')}
         </button>
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleCodeBlock().run()}
           className={editor.isActive('codeBlock') ? 'is-active' : ''}
         >
-          Code
+          {t('rte_code_block')}
         </button>
         <button type="button" onClick={handleImageClick}>
-          Image
+          {t('rte_image')}
         </button>
         <input
           ref={fileInputRef}

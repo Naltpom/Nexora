@@ -1,0 +1,39 @@
+{
+  "aide_breadcrumb_home": "Accueil",
+  "aide_breadcrumb_aide": "Aide",
+  "aide_title": "Aide",
+  "aide_description": "Decouvrez les fonctionnalites de l'application grace aux tutoriels interactifs.",
+  "aide_stats_tutorial_steps": "Etapes de tutoriel",
+  "aide_stats_permissions_with_tutorial": "Permissions avec tuto",
+  "aide_stats_permissions_without_tutorial": "Permissions sans tuto",
+
+  "tutorial_section_title": "Didacticiels",
+  "tutorial_section_description": "Revoyez les tutoriels in-app pour decouvrir les fonctionnalites.",
+  "tutorial_section_empty": "Aucun didacticiel disponible.",
+  "tutorial_section_seen_badge": "Vu",
+  "tutorial_section_review_all_feature": "Revoir tout",
+  "tutorial_section_start_all_feature": "Tout lancer",
+  "tutorial_section_step_count_plural": "etapes",
+  "tutorial_section_step_count_singular": "etape",
+  "tutorial_section_review_permission": "Revoir",
+  "tutorial_section_start_permission": "Commencer",
+  "tutorial_section_review_all": "Tout revoir",
+  "tutorial_section_reset_all": "Reinitialiser",
+
+  "tutorial_admin_title": "Ordre des didacticiels",
+  "tutorial_admin_description": "Reordonnez les features et les tutoriels par permission en glissant-deposant.",
+  "tutorial_admin_saving": "Enregistrement...",
+  "tutorial_admin_save": "Enregistrer l'ordre",
+
+  "tutorial_notification_text": "De nouveaux tutoriels sont disponibles",
+  "tutorial_notification_view": "Voir",
+  "tutorial_notification_later": "Plus tard",
+
+  "tutorial_engine_element_not_found_title": "Element introuvable",
+  "tutorial_engine_element_not_found_description": "L'element cible n'a pas ete trouve sur cette page. Passez a l'etape suivante.",
+  "tutorial_engine_previous": "Precedent",
+  "tutorial_engine_finish": "Terminer",
+  "tutorial_engine_next": "Suivant",
+  "tutorial_engine_skip_all": "Tout passer",
+  "tutorial_engine_skip": "Passer"
+}

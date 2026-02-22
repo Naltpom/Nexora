@@ -6,6 +6,7 @@ from datetime import datetime, timezone, timedelta
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from .core.config import settings as app_settings
 from .core.database import engine, async_session, Base
 from .core.security import hash_password
 from .core._identity.models import User, FeatureState, AppSetting
@@ -32,11 +33,16 @@ async def seed():
 
         # ── USERS ────────────────────────────────────────────────────
 
+        admin_email = app_settings.DEFAULT_ADMIN_EMAIL
+        admin_parts = admin_email.split("@")[0].split(".")
+        admin_first = admin_parts[0].capitalize() if len(admin_parts) > 0 else "Admin"
+        admin_last = admin_parts[1].capitalize() if len(admin_parts) > 1 else ""
+
         admin = User(
-            email="nathan.provost@kertios.com",
-            first_name="Nathan",
-            last_name="Provost",
-            auth_source="intranet",
+            email=admin_email,
+            first_name=admin_first,
+            last_name=admin_last,
+            auth_source="intranet" if app_settings.INTRANET_EMAIL_DOMAIN and admin_email.endswith(f"@{app_settings.INTRANET_EMAIL_DOMAIN}") else "local",
             is_super_admin=True,
             must_change_password=False,
             created_at=ago(120),
@@ -94,10 +100,10 @@ async def seed():
         # ── DEFAULT APP SETTINGS ────────────────────────────────────
 
         default_settings = [
-            AppSetting(key="app_name", value="Template App"),
+            AppSetting(key="app_name", value="Nexora"),
             AppSetting(key="app_description", value=""),
             AppSetting(key="app_logo", value="/logo_full.svg"),
-            AppSetting(key="app_favicon", value="/favicon.ico"),
+            AppSetting(key="app_favicon", value="/favicon.svg"),
             AppSetting(key="primary_color", value="#1E40AF"),
             AppSetting(key="support_email", value=""),
         ]
@@ -326,7 +332,7 @@ async def seed():
         print()
         print("  Comptes disponibles :")
         print("  -----------------------------------------------------")
-        print("  nathan.provost@kertios.com  Super Admin  (auth intranet)")
+        print(f"  {admin_email}  Super Admin  (auth {'intranet' if admin.auth_source == 'intranet' else 'local'})")
         print("  alice@example.com     Utilisateur  (mdp: demo123)")
         print("  bob@example.com       Utilisateur  (mdp: demo123)")
         print("  charlie@example.com   Utilisateur  (mdp: demo123)")

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import api from '../../api'
 import './sso.scss'
 
@@ -24,12 +25,8 @@ const providerIcons: Record<string, JSX.Element> = {
   ),
 }
 
-const providerLabels: Record<string, string> = {
-  google: 'Continuer avec Google',
-  github: 'Continuer avec GitHub',
-}
-
 export default function SSOButtons() {
+  const { t } = useTranslation('sso')
   const [providers, setProviders] = useState<SSOProvider[]>([])
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -55,7 +52,7 @@ export default function SSOButtons() {
       window.location.href = response.data.authorization_url
     } catch (err: any) {
       const detail = err.response?.data?.detail
-      setError(typeof detail === 'string' ? detail : `Erreur lors de la connexion ${provider}.`)
+      setError(typeof detail === 'string' ? detail : t('erreur_connexion_provider', { provider }))
       setLoadingProvider(null)
     }
   }
@@ -82,7 +79,7 @@ export default function SSOButtons() {
           ) : (
             providerIcons[p.name] || null
           )}
-          <span>{providerLabels[p.name] || `Continuer avec ${p.label}`}</span>
+          <span>{t('continuer_avec_provider', { label: p.label })}</span>
         </button>
       ))}
     </div>

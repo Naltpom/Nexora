@@ -1,0 +1,16 @@
+{
+  "section_title": "Mise en page",
+  "section_description": "Ajustez la densite, les arrondis et la largeur du contenu.",
+  "label_density": "Densite",
+  "density_compact": "Compact",
+  "density_normal": "Normal",
+  "density_airy": "Aere",
+  "label_border_radius": "Border-radius",
+  "label_max_width": "Largeur max du contenu",
+  "width_narrow": "Etroit (720px)",
+  "width_normal": "Normal (960px)",
+  "width_wide": "Large (1200px)",
+  "width_full": "Pleine largeur",
+  "label_section_spacing": "Espacement sections",
+  "btn_reset": "Reinitialiser"
+}

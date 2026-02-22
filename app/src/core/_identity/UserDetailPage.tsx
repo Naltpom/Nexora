@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import Layout from '../../core/Layout'
 import { usePermission } from '../PermissionContext'
 import api from '../../api'
@@ -49,6 +50,7 @@ interface UserDetail {
 /* ------------------------------------------------------------------ */
 
 export default function UserDetailPage() {
+  const { t } = useTranslation('_identity')
   const { uuid } = useParams<{ uuid: string }>()
   const navigate = useNavigate()
   const { can } = usePermission()
@@ -91,7 +93,7 @@ export default function UserDetailPage() {
       })
       setAllRoles(rolesRes.data.map((r: any) => ({ id: r.id, name: r.name, description: r.description })))
     } catch {
-      showMessage('error', 'Erreur lors du chargement')
+      showMessage('error', t('user_detail.load_error'))
     } finally {
       setLoading(false)
     }
@@ -107,10 +109,10 @@ export default function UserDetailPage() {
     setSaving(true)
     try {
       await api.put(`/users/by-uuid/${uuid}`, form)
-      showMessage('success', 'Profil mis a jour')
+      showMessage('success', t('user_detail.save_success'))
       await loadUser()
     } catch (err: any) {
-      showMessage('error', err.response?.data?.detail || 'Erreur')
+      showMessage('error', err.response?.data?.detail || t('common.error'))
     } finally {
       setSaving(false)
     }
@@ -128,7 +130,7 @@ export default function UserDetailPage() {
       await api.put(`/users/by-uuid/${uuid}/roles`, { role_ids: newIds })
       await loadUser()
     } catch (err: any) {
-      showMessage('error', err.response?.data?.detail || 'Erreur')
+      showMessage('error', err.response?.data?.detail || t('common.error'))
     }
   }
 
@@ -156,7 +158,7 @@ export default function UserDetailPage() {
       }
       await loadUser()
     } catch (err: any) {
-      showMessage('error', err.response?.data?.detail || 'Erreur')
+      showMessage('error', err.response?.data?.detail || t('common.error'))
     }
   }
 
@@ -186,7 +188,7 @@ export default function UserDetailPage() {
 
   if (loading) {
     return (
-      <Layout breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Utilisateurs', path: '/admin/users' }, { label: '...' }]} title="Utilisateur">
+      <Layout breadcrumb={[{ label: t('common.home'), path: '/' }, { label: t('user_detail.breadcrumb_users'), path: '/admin/users' }, { label: '...' }]} title={t('user_detail.page_title')}>
         <div className="spinner" />
       </Layout>
     )
@@ -194,9 +196,9 @@ export default function UserDetailPage() {
 
   if (!user) {
     return (
-      <Layout breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Utilisateurs', path: '/admin/users' }]} title="Utilisateur introuvable">
+      <Layout breadcrumb={[{ label: t('common.home'), path: '/' }, { label: t('user_detail.breadcrumb_users'), path: '/admin/users' }]} title={t('user_detail.user_not_found')}>
         <div className="unified-card empty-state">
-          Utilisateur introuvable
+          {t('user_detail.user_not_found')}
         </div>
       </Layout>
     )
@@ -207,8 +209,8 @@ export default function UserDetailPage() {
   return (
     <Layout
       breadcrumb={[
-        { label: 'Accueil', path: '/' },
-        { label: 'Utilisateurs', path: '/admin/users' },
+        { label: t('common.home'), path: '/' },
+        { label: t('user_detail.breadcrumb_users'), path: '/admin/users' },
         { label: `${user.first_name} ${user.last_name}` },
       ]}
       title={`${user.first_name} ${user.last_name}`}
@@ -231,10 +233,10 @@ export default function UserDetailPage() {
           </div>
           <div className="ud-badges">
             <span className={`badge ${user.is_active ? 'badge-success' : 'badge-warning'} text-xs`}>
-              {user.is_active ? 'Actif' : 'Inactif'}
+              {user.is_active ? t('common.active') : t('common.inactive')}
             </span>
             {user.is_super_admin && (
-              <span className="badge badge-info text-xs">Admin</span>
+              <span className="badge badge-info text-xs">{t('common.admin')}</span>
             )}
             <span className="badge badge-secondary text-xs">
               {user.auth_source}
@@ -242,9 +244,9 @@ export default function UserDetailPage() {
           </div>
         </div>
         <div className="info-row">
-          <span>Derniere connexion : {formatDate(user.last_login)}</span>
-          <span>Derniere activite : {formatDate(user.last_active)}</span>
-          <span>Cree le : {formatDate(user.created_at)}</span>
+          <span>{t('user_detail.last_login')} {formatDate(user.last_login)}</span>
+          <span>{t('user_detail.last_activity')} {formatDate(user.last_active)}</span>
+          <span>{t('user_detail.created_at')} {formatDate(user.created_at)}</span>
         </div>
       </div>
 
@@ -252,10 +254,10 @@ export default function UserDetailPage() {
       <div className="flex-row-lg section-mb">
         {/* Profile form */}
         <div className="unified-card ud-main-panel">
-          <h3 className="title-section mb-16">Informations</h3>
+          <h3 className="title-section mb-16">{t('user_detail.section_info')}</h3>
           <div className="flex-col-lg">
             <label className="text-sm">
-              <span className="field-label">Email</span>
+              <span className="field-label">{t('user_detail.field_email')}</span>
               <input
                 type="email"
                 value={form.email}
@@ -265,7 +267,7 @@ export default function UserDetailPage() {
             </label>
             <div className="flex-row">
               <label className="text-sm flex-1">
-                <span className="field-label">Prenom</span>
+                <span className="field-label">{t('user_detail.field_first_name')}</span>
                 <input
                   type="text"
                   value={form.first_name}
@@ -274,7 +276,7 @@ export default function UserDetailPage() {
                 />
               </label>
               <label className="text-sm flex-1">
-                <span className="field-label">Nom</span>
+                <span className="field-label">{t('user_detail.field_last_name')}</span>
                 <input
                   type="text"
                   value={form.last_name}
@@ -285,14 +287,14 @@ export default function UserDetailPage() {
             </div>
             <div className="ud-toggle-row">
               <label className="ud-toggle-label">
-                <span className="text-gray-500-sm font-medium">Admin</span>
+                <span className="text-gray-500-sm font-medium">{t('user_detail.field_admin')}</span>
                 <label className="toggle">
                   <input type="checkbox" checked={form.is_super_admin} onChange={e => setForm(f => ({ ...f, is_super_admin: e.target.checked }))} />
                   <span className="toggle-slider" />
                 </label>
               </label>
               <label className="ud-toggle-label">
-                <span className="text-gray-500-sm font-medium">Actif</span>
+                <span className="text-gray-500-sm font-medium">{t('user_detail.field_active')}</span>
                 <label className="toggle">
                   <input type="checkbox" checked={form.is_active} onChange={e => setForm(f => ({ ...f, is_active: e.target.checked }))} />
                   <span className="toggle-slider" />
@@ -301,7 +303,7 @@ export default function UserDetailPage() {
             </div>
             {can('users.update') && (
               <button className="btn btn-primary ud-save-btn" onClick={handleSaveProfile} disabled={saving}>
-                {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+                {saving ? t('user_detail.saving') : t('user_detail.save')}
               </button>
             )}
           </div>
@@ -309,7 +311,7 @@ export default function UserDetailPage() {
 
         {/* Roles */}
         <div className="unified-card ud-side-panel">
-          <h3 className="title-section mb-16">Roles</h3>
+          <h3 className="title-section mb-16">{t('user_detail.section_roles')}</h3>
           <div className="flex-col-md">
             {allRoles.map(role => {
               const assigned = user.roles.some(r => r.id === role.id)
@@ -332,7 +334,7 @@ export default function UserDetailPage() {
               )
             })}
             {allRoles.length === 0 && (
-              <div className="text-muted">Aucun role disponible</div>
+              <div className="text-muted">{t('user_detail.no_roles')}</div>
             )}
           </div>
         </div>
@@ -341,7 +343,7 @@ export default function UserDetailPage() {
       {/* Permissions table */}
       <div className="unified-card full-width-breakout">
         <div className="section-header flex-between">
-          <h3 className="title-section mb-0">Permissions</h3>
+          <h3 className="title-section mb-0">{t('user_detail.section_permissions')}</h3>
           <div className="flex-center-xl">
             {/* Legend */}
             <div className="ud-legend">
@@ -351,7 +353,7 @@ export default function UserDetailPage() {
             </div>
             <input
               type="text"
-              placeholder="Rechercher..."
+              placeholder={t('common.search')}
               value={permSearch}
               onChange={e => setPermSearch(e.target.value)}
               className="input-filter"
@@ -362,20 +364,20 @@ export default function UserDetailPage() {
           <table className="unified-table">
             <thead>
               <tr>
-                <th>Permission</th>
-                <th>Code</th>
-                <th>Feature</th>
-                <th className="text-center">User</th>
-                <th className="text-center">Role</th>
-                <th className="text-center">Global</th>
-                <th className="text-center">Effectif</th>
+                <th>{t('user_detail.th_permission')}</th>
+                <th>{t('user_detail.th_code')}</th>
+                <th>{t('user_detail.th_feature')}</th>
+                <th className="text-center">{t('user_detail.th_user')}</th>
+                <th className="text-center">{t('user_detail.th_role')}</th>
+                <th className="text-center">{t('user_detail.th_global')}</th>
+                <th className="text-center">{t('user_detail.th_effective')}</th>
               </tr>
             </thead>
             <tbody>
               {filteredPerms.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="empty-state-sm">
-                    {permSearch ? 'Aucune permission correspondante' : 'Aucune permission'}
+                    {permSearch ? t('user_detail.empty_permissions_search') : t('user_detail.empty_permissions')}
                   </td>
                 </tr>
               ) : (
@@ -397,7 +399,7 @@ export default function UserDetailPage() {
                       <button
                         onClick={() => handlePermissionCycle(perm)}
                         className={`perm-indicator perm-indicator--btn ${perm.user_override === true ? 'perm-indicator--user-granted' : perm.user_override === false ? 'perm-indicator--user-denied' : 'perm-indicator--none'}`}
-                        title={perm.user_override === true ? 'Autorise (clic: bloquer)' : perm.user_override === false ? 'Bloque (clic: retirer)' : 'Non defini (clic: autoriser)'}
+                        title={perm.user_override === true ? t('user_detail.tooltip_user_granted') : perm.user_override === false ? t('user_detail.tooltip_user_denied') : t('user_detail.tooltip_user_none')}
                         disabled={!can('permissions.manage')}
                       >
                         {perm.user_override === true ? '\u2713' : perm.user_override === false ? '\u2717' : '\u2014'}
@@ -421,7 +423,7 @@ export default function UserDetailPage() {
                     {/* Effective */}
                     <td className="text-center">
                       <span className={`badge ${perm.effective ? 'badge-success' : 'badge-warning'} text-xs`}>
-                        {perm.effective ? 'Oui' : 'Non'}
+                        {perm.effective ? t('common.yes') : t('common.no')}
                       </span>
                     </td>
                   </tr>

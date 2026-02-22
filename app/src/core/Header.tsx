@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from './AuthContext'
 import { useFeature } from './FeatureContext'
 import { useAppSettings } from './AppSettingsContext'
@@ -10,6 +11,7 @@ import { UserMenu } from './navigation'
 const NotificationBell = lazy(() => import('./notification/NotificationBell'))
 
 export default function Header() {
+  const { t } = useTranslation('common')
   const { user, getPreference, updatePreference } = useAuth()
   const { isActive } = useFeature()
   const { settings: appSettings } = useAppSettings()
@@ -28,10 +30,14 @@ export default function Header() {
     <header className="header">
       <div className="header-left">
         <Link to="/" className="header-logo">
-          <div className="header-logo-icon" style={{ backgroundColor: appSettings.primary_color || '#1E40AF' }}>
-            <img src={appSettings.app_logo || '/logo_full.svg'} alt={appSettings.app_name} className="header-logo-img" />
-          </div>
-          <span className="header-title">{appSettings.app_name}</span>
+          {appSettings.header_show_logo !== 'false' && (
+            <div className="header-logo-icon" style={{ backgroundColor: appSettings.primary_color || '#1E40AF' }}>
+              <img src={appSettings.app_logo || '/logo_full.svg'} alt={appSettings.app_name} className="header-logo-img" />
+            </div>
+          )}
+          {appSettings.header_show_name !== 'false' && (
+            <span className="header-title">{appSettings.app_name}</span>
+          )}
         </Link>
         {user && <GlobalSearch />}
       </div>
@@ -41,7 +47,7 @@ export default function Header() {
             <button
               className="header-theme-toggle"
               onClick={toggleTheme}
-              title={theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
+              title={theme === 'dark' ? t('theme_light') : t('theme_dark')}
             >
               {theme === 'dark' ? (
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

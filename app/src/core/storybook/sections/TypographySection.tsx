@@ -1,138 +1,139 @@
+import { useTranslation } from 'react-i18next'
+
 export default function TypographySection() {
+  const { t } = useTranslation('storybook')
+
   return (
     <div className="storybook-section">
-      <h2>Typographie</h2>
+      <h2>{t('typography_title')}</h2>
 
-      <h3>Titres</h3>
+      <h3>{t('typography_headings_title')}</h3>
       <div className="storybook-preview">
-        <h1>Titre H1 — Tableau de bord</h1>
-        <h2>Titre H2 — Gestion des utilisateurs</h2>
-        <h3>Titre H3 — Parametres du compte</h3>
-        <h4>Titre H4 — Notifications recentes</h4>
-        <h5>Titre H5 — Details de la session</h5>
-        <h6>Titre H6 — Informations complementaires</h6>
+        <h1>{t('typography_h1_demo')}</h1>
+        <h2>{t('typography_h2_demo')}</h2>
+        <h3>{t('typography_h3_demo')}</h3>
+        <h4>{t('typography_h4_demo')}</h4>
+        <h5>{t('typography_h5_demo')}</h5>
+        <h6>{t('typography_h6_demo')}</h6>
       </div>
 
-      <h3>Texte courant</h3>
+      <h3>{t('typography_body_title')}</h3>
       <div className="storybook-preview">
         <p>
-          Bienvenue sur la plateforme de gestion. Cette application vous permet
-          de gerer vos utilisateurs, configurer les permissions et suivre
-          l'activite en temps reel. Chaque module est concu pour offrir une
-          experience fluide et intuitive.
+          {t('typography_body_text')}
         </p>
       </div>
 
-      <h3>Graisses typographiques</h3>
+      <h3>{t('typography_weights_title')}</h3>
       <div className="storybook-preview">
         <p className="storybook-font-weight-400">
-          Regular (400) — Texte standard pour le contenu principal
+          {t('typography_weight_400')}
         </p>
         <p className="storybook-font-weight-500">
-          Medium (500) — Labels et sous-titres
+          {t('typography_weight_500')}
         </p>
         <p className="storybook-font-weight-600">
-          Semibold (600) — Titres de sections
+          {t('typography_weight_600')}
         </p>
         <p className="storybook-font-weight-700">
-          Bold (700) — Mise en evidence importante
+          {t('typography_weight_700')}
         </p>
       </div>
 
-      <h3>Palette de couleurs (variables CSS)</h3>
+      <h3>{t('typography_colors_title')}</h3>
       <table className="storybook-color-table">
         <thead>
           <tr>
-            <th>Variable</th>
-            <th>Valeur</th>
-            <th>Usage</th>
+            <th>{t('typography_color_th_variable')}</th>
+            <th>{t('typography_color_th_value')}</th>
+            <th>{t('typography_color_th_usage')}</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td><code>--primary</code></td>
             <td><code>#1E40AF</code></td>
-            <td>Couleur principale, boutons primaires, liens</td>
+            <td>{t('typography_color_primary_usage')}</td>
           </tr>
           <tr>
             <td><code>--primary-light</code></td>
             <td><code>#3B82F6</code></td>
-            <td>Variante claire, icones, accents</td>
+            <td>{t('typography_color_primary_light_usage')}</td>
           </tr>
           <tr>
             <td><code>--primary-dark</code></td>
             <td><code>#1E3A8A</code></td>
-            <td>Variante sombre, hover des boutons primaires</td>
+            <td>{t('typography_color_primary_dark_usage')}</td>
           </tr>
           <tr>
             <td><code>--success</code></td>
             <td><code>#059669</code></td>
-            <td>Confirmations, alertes de succes</td>
+            <td>{t('typography_color_success_usage')}</td>
           </tr>
           <tr>
             <td><code>--warning</code></td>
             <td><code>#D97706</code></td>
-            <td>Avertissements, etats en attente</td>
+            <td>{t('typography_color_warning_usage')}</td>
           </tr>
           <tr>
             <td><code>--danger</code></td>
             <td><code>#DC2626</code></td>
-            <td>Erreurs, suppressions, alertes critiques</td>
+            <td>{t('typography_color_danger_usage')}</td>
           </tr>
           <tr>
             <td><code>--gray-50</code></td>
             <td><code>#F9FAFB</code></td>
-            <td>Arriere-plan tres clair</td>
+            <td>{t('typography_color_gray50_usage')}</td>
           </tr>
           <tr>
             <td><code>--gray-100</code></td>
             <td><code>#F3F4F6</code></td>
-            <td>Arriere-plan des champs, hover subtil</td>
+            <td>{t('typography_color_gray100_usage')}</td>
           </tr>
           <tr>
             <td><code>--gray-200</code></td>
             <td><code>#E5E7EB</code></td>
-            <td>Bordures, separateurs</td>
+            <td>{t('typography_color_gray200_usage')}</td>
           </tr>
           <tr>
             <td><code>--gray-300</code></td>
             <td><code>#D1D5DB</code></td>
-            <td>Bordures de formulaires</td>
+            <td>{t('typography_color_gray300_usage')}</td>
           </tr>
           <tr>
             <td><code>--gray-400</code></td>
             <td><code>#9CA3AF</code></td>
-            <td>Placeholders, texte tertiaire</td>
+            <td>{t('typography_color_gray400_usage')}</td>
           </tr>
           <tr>
             <td><code>--gray-500</code></td>
             <td><code>#6B7280</code></td>
-            <td>Texte secondaire, icones inactives</td>
+            <td>{t('typography_color_gray500_usage')}</td>
           </tr>
           <tr>
             <td><code>--gray-600</code></td>
             <td><code>#4B5563</code></td>
-            <td>Sous-titres, texte moyen</td>
+            <td>{t('typography_color_gray600_usage')}</td>
           </tr>
           <tr>
             <td><code>--gray-700</code></td>
             <td><code>#374151</code></td>
-            <td>Labels de formulaires, texte fort</td>
+            <td>{t('typography_color_gray700_usage')}</td>
           </tr>
           <tr>
             <td><code>--gray-800</code></td>
             <td><code>#1F2937</code></td>
-            <td>Titres principaux</td>
+            <td>{t('typography_color_gray800_usage')}</td>
           </tr>
           <tr>
             <td><code>--gray-900</code></td>
             <td><code>#111827</code></td>
-            <td>Texte le plus sombre, corps principal</td>
+            <td>{t('typography_color_gray900_usage')}</td>
           </tr>
         </tbody>
       </table>
 
-      <h3>Demonstration des couleurs en contexte</h3>
+      <h3>{t('typography_colors_demo_title')}</h3>
       <div className="storybook-row">
         <button className="btn btn-primary" type="button">
           --primary
@@ -149,12 +150,12 @@ export default function TypographySection() {
       </div>
       <div className="storybook-row">
         <div className="alert alert-success">
-          Alerte succes — utilise <code>--success</code>
+          {t('typography_alert_success')} <code>--success</code>
         </div>
       </div>
       <div className="storybook-row">
         <div className="alert alert-error">
-          Alerte erreur — utilise <code>--danger</code>
+          {t('typography_alert_error')} <code>--danger</code>
         </div>
       </div>
     </div>

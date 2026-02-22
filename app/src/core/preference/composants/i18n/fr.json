@@ -1,0 +1,22 @@
+{
+  "section_title": "Style des composants",
+  "section_description": "Personnalisez l'apparence des elements d'interface.",
+  "label_card_style": "Style des cards",
+  "card_flat": "Plate",
+  "card_elevated": "Elevee",
+  "card_bordered": "Bordee",
+  "label_button_style": "Style des boutons",
+  "button_rounded": "Arrondi",
+  "button_square": "Carre",
+  "button_pill": "Pill",
+  "label_modal_animation": "Animation des modals",
+  "modal_none": "Aucune",
+  "modal_fade": "Fade",
+  "modal_slide": "Slide-up",
+  "modal_scale": "Scale",
+  "label_striped_tables": "Tables rayees",
+  "label_list_separators": "Separateurs de liste",
+  "preview_card": "Apercu card",
+  "preview_button": "Apercu bouton",
+  "btn_reset": "Reinitialiser"
+}

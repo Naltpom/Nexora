@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useDraftPreference } from '../DraftPreferenceContext'
 import { applyCustomColors, clearCustomColors } from './applyCustomColors'
 import { COLOR_GROUPS, LIGHT_DEFAULTS, DARK_DEFAULTS } from './colorDefaults'
 import './couleur.scss'
 
 export default function ColorSection() {
+  const { t } = useTranslation('preference.couleur')
   const { getDraftPreference, setDraftPreference, resetVersion } = useDraftPreference()
   const currentTheme = getDraftPreference('theme', 'light') as string
   const activeThemeKey = currentTheme === 'dark' ? 'dark' : 'light'
@@ -101,9 +103,9 @@ export default function ColorSection() {
 
   return (
     <div className="unified-card card-padded">
-      <h2 className="title-sm">Couleurs personnalisees</h2>
+      <h2 className="title-sm">{t('section_title')}</h2>
       <p className="text-secondary couleur-description">
-        Personnalisez les couleurs de l'application pour chaque theme.
+        {t('section_description')}
       </p>
 
       <div className="couleur-tabs">
@@ -112,24 +114,24 @@ export default function ColorSection() {
           onClick={() => setEditingTheme('light')}
           type="button"
         >
-          Theme clair
+          {t('tab_light')}
         </button>
         <button
           className={`couleur-tab ${editingTheme === 'dark' ? 'couleur-tab--active' : ''}`}
           onClick={() => setEditingTheme('dark')}
           type="button"
         >
-          Theme sombre
+          {t('tab_dark')}
         </button>
       </div>
 
       {COLOR_GROUPS.map((group) => (
         <div key={group.label} className="couleur-group">
-          <h3 className="couleur-group__title">{group.label}</h3>
+          <h3 className="couleur-group__title">{t(group.i18nKey)}</h3>
           <div className="couleur-grid">
-            {group.vars.map(({ name, label }) => (
+            {group.vars.map(({ name, i18nKey }) => (
               <div key={name} className={`couleur-item${isModified(name) ? ' couleur-item--modified' : ''}`}>
-                <label className="couleur-item__label">{label}</label>
+                <label className="couleur-item__label">{t(i18nKey)}</label>
                 <div className="couleur-item__controls">
                   <input
                     type="color"
@@ -144,7 +146,7 @@ export default function ColorSection() {
                       className="couleur-item__reset"
                       onClick={() => handleResetVar(name)}
                       type="button"
-                      title="Reinitialiser"
+                      title={t('btn_reset_var')}
                     >
                       &#x21BA;
                     </button>
@@ -159,12 +161,12 @@ export default function ColorSection() {
       <div className="couleur-actions">
         {hasAnyModification() && (
           <button className="btn btn-secondary" onClick={handleResetTheme} type="button">
-            Reinitialiser {editingTheme === 'light' ? 'clair' : 'sombre'}
+            {editingTheme === 'light' ? t('btn_reset_theme_light') : t('btn_reset_theme_dark')}
           </button>
         )}
         {hasAnyModificationGlobal() && (
           <button className="btn btn-secondary" onClick={handleResetAll} type="button">
-            Tout reinitialiser
+            {t('btn_reset_all')}
           </button>
         )}
       </div>

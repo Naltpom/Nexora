@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useImperativeHandle, forwardRef, type RefObject } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import type { SuggestionProps, SuggestionKeyDownProps } from '@tiptap/suggestion'
+import i18next from 'i18next'
 
 export interface MentionUser {
   id: number
@@ -54,7 +55,7 @@ const MentionList = forwardRef<MentionListRef, MentionListProps>(({ items, comma
   }))
 
   if (items.length === 0) {
-    return <div className="mention-suggestion-empty">Aucun utilisateur trouve</div>
+    return <div className="mention-suggestion-empty">{i18next.t('common:impersonation_no_user_found')}</div>
   }
 
   return (

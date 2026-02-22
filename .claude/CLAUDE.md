@@ -55,23 +55,21 @@ CalVer : `YYYY.MM.N` (ex: 2026.02.1, 2026.02.2)
 
 ### Fichiers de version a mettre a jour
 
-A chaque increment de version, mettre a jour **tous** ces fichiers :
+A chaque increment de version, mettre a jour **ces 3 fichiers** :
 
-| Fichier | Champ | Scope |
-|---------|-------|-------|
-| `app/package.json` | `"version"` | Version globale frontend |
-| `api/src/main.py` | `version=` dans `create_app()` | Version globale API |
-| `api/src/core/<name>/manifest.py` | `version=` | Version de chaque feature template modifiee |
-| `api/src/features/<name>/manifest.py` | `version=` | Version de chaque feature projet modifiee |
+| Fichier | Champ |
+|---------|-------|
+| `CHANGELOG.md` (racine) | Nouvelle section `## YYYY.MM.N` en haut |
+| `app/package.json` | `"version"` |
+| `api/src/main.py` | `version=` dans `create_app()` |
+
+**Note** : les manifests (`manifest.py`) ne contiennent plus de champ `version`. Le versioning est centralise.
 
 ### Regles de bump
 
 - **1 version = 1 commit/merge sur master** : ne pas incrementer la version en cours de travail. Toutes les modifications faites avant un commit/merge sur master sont groupees sous une seule version. Si l'utilisateur demande plusieurs changements avant de commit, ils partagent la meme version.
 - **Version globale** : toujours = la derniere version du CHANGELOG global
-- **Version manifest** : = la derniere version ou la feature a ete modifiee (pas forcement la globale)
-- Les sous-features (`parent.child`) ont leur propre version dans leur `manifest.py`
 - **Quand tu incrementes** : verifie le N actuel dans `CHANGELOG.md` racine, incremente de 1
-- **Ne jamais oublier** de bump les 2 fichiers globaux + les manifests des features touchees
 
 ## Structure d'une feature
 
@@ -85,7 +83,6 @@ A chaque increment de version, mettre a jour **tous** ces fichiers :
   schemas.py       # Schemas Pydantic (request/response)
   routes.py        # Endpoints FastAPI (ou routes_*.py si multiple)
   services.py      # Logique metier (optionnel)
-  CHANGELOG.md     # Historique des changements de la feature
 ```
 
 ### Backend projet (`api/src/features/<name>/`)
@@ -99,6 +96,8 @@ Meme structure que ci-dessus.
   index.ts         # Export manifest + routes
   *.tsx             # Composants React
   *.scss            # Styles (SCSS, jamais de CSS brut)
+  i18n/fr.json     # Traductions FR
+  i18n/en.json     # Traductions EN (stub)
 ```
 
 ### Frontend projet (`app/src/features/<name>/`)
@@ -114,7 +113,6 @@ manifest = FeatureManifest(
     name="ma_feature",
     label="Ma Feature",
     description="Description courte",
-    version="2026.02.1",
     permissions=["ma_feature.read", "ma_feature.manage"],
     router_module="src.core.ma_feature.routes",
     router_prefix="/api/ma-feature",
@@ -131,7 +129,6 @@ manifest = FeatureManifest(
     name="ma_feature",
     label="Ma Feature",
     description="Description courte",
-    version="2026.02.1",
     permissions=["ma_feature.read", "ma_feature.manage"],
     router_module="src.features.ma_feature.routes",
     router_prefix="/api/ma-feature",
@@ -146,7 +143,6 @@ manifest = FeatureManifest(
     name="parent.child",
     label="Child Feature",
     parent="parent",
-    version="2026.02.1",
     permissions=["parent.child.read"],
     router_module="src.core.parent.child.routes",  # ou src.features. pour projet
     router_prefix="/api/parent/child",
@@ -154,32 +150,22 @@ manifest = FeatureManifest(
 )
 ```
 
-## Changelogs
+## Changelog
 
-### Fichiers changelog
-
-| Fichier | Quand le modifier |
-|---------|------------------|
-| `CHANGELOG.md` (racine) | **Toujours** — resume de chaque changement, groupe par version |
-| `api/src/core/<name>/CHANGELOG.md` | Quand une feature template est modifiee |
-| `api/src/features/<name>/CHANGELOG.md` | Quand une feature projet est modifiee |
+Un seul changelog centralise : `CHANGELOG.md` a la racine du projet.
 
 ### Regles
 
-- Chaque feature a un `CHANGELOG.md` dans son dossier backend
-- Le `CHANGELOG.md` racine pointe vers les changelogs de chaque feature avec un resume
-- Changement specifique a une feature → modifier le CHANGELOG de la feature **ET** ajouter un resume dans le global
-- Changement transversal (docker, config, infra) → changelog global uniquement
-- Nouvelle feature → creer son CHANGELOG.md + ajouter une section dans le global
 - **Format** : nouvelle section `## YYYY.MM.N` en haut du fichier, sous-sections `### feature_name`
+- Changement specifique a une feature → ajouter sous `### feature_name` dans la version courante
+- Changement transversal (docker, config, infra) → section dediee dans la version courante
+- Nouvelle feature → section `### feature_name (NEW)` avec le detail
 
 ### Checklist apres chaque modification
 
 1. Incrementer la version N dans `CHANGELOG.md` racine (nouvelle section en haut)
-2. Mettre a jour le `CHANGELOG.md` de chaque feature touchee
-3. Bump `app/package.json` → `"version"`
-4. Bump `api/src/main.py` → `version=` dans `create_app()`
-5. Bump `manifest.py` de chaque feature modifiee → `version=`
+2. Bump `app/package.json` → `"version"`
+3. Bump `api/src/main.py` → `version=` dans `create_app()`
 
 ## RGPD & Consentement (localStorage/sessionStorage)
 
@@ -247,6 +233,50 @@ Les preferences de personnalisation s'appliquent a **l'ensemble de l'interface**
 - Utilitaire : `app/src/core/preference/applyPreferences.ts`
 - Chaque section appelle son `apply*Prefs()` au changement + `updatePreference()` pour persister
 
+## Internationalisation (i18n)
+
+L'application utilise un systeme i18n decentralise : chaque feature gere ses propres traductions.
+
+### Architecture
+
+- **Backend** : feature `i18n` dans `api/src/core/i18n/` — middleware de resolution locale (JWT `lang` > `Accept-Language` > defaut), API publique `/api/i18n/locales` et `/api/i18n/translations`
+- **Frontend** : `i18next` + `react-i18next` — auto-decouverte des fichiers JSON via `import.meta.glob` dans `app/src/core/i18n/i18n.ts`
+- **Config** : `I18N_DEFAULT_LOCALE=fr`, `I18N_SUPPORTED_LOCALES=fr,en` dans `.env`
+
+### Structure des traductions
+
+```
+app/src/core/<feature>/i18n/fr.json          # Traductions FR de la feature
+app/src/core/<feature>/i18n/en.json          # Traductions EN (stub vide = fallback FR)
+app/src/core/<feature>/<sub>/i18n/fr.json    # Sous-feature
+app/src/features/<feature>/i18n/fr.json      # Feature projet
+app/src/core/i18n/locales/fr/common.json     # Traductions globales communes
+```
+
+Le **namespace** i18next = le nom de la feature (deduit du chemin). Ex : `preference.theme`, `_identity`, `rgpd`, `common`.
+
+### Regles obligatoires
+
+1. **AUCUN texte visible hardcode** dans les `.tsx` — tous les textes passent par `t('cle')` via `useTranslation('namespace')`
+2. **Namespace = nom de la feature** : `useTranslation('_identity')`, `useTranslation('preference.theme')`, `useTranslation('common')` pour les composants partages
+3. **Constantes avec labels** : utiliser des `labelKey` (cles de traduction) au lieu de textes en dur. Appeler `t(item.labelKey)` au render
+4. **Composants hors arbre React** (AuthContext, utilitaires) : utiliser `i18next.t('common:cle')` directement
+5. **Interpolation** : `t('message', { name, count })` — les variables sont passees en 2e argument
+
+### Quand tu crees un composant ou une feature
+
+1. Creer `<feature>/i18n/fr.json` avec toutes les chaines visibles (labels, titres, messages, placeholders, boutons)
+2. Creer `<feature>/i18n/en.json` avec les memes cles et valeurs vides `""` (stub pour traduction future)
+3. Dans le TSX : `import { useTranslation } from 'react-i18next'` + `const { t } = useTranslation('<namespace>')`
+4. Remplacer chaque texte visible par `t('cle')`
+5. Pour les traductions communes (boutons generiques : "Annuler", "Sauvegarder"...), utiliser le namespace `common` dans `app/src/core/i18n/locales/fr/common.json`
+
+### Backend — locale dans les services
+
+- Les methodes d'envoi d'email acceptent un parametre `locale: str = "fr"`
+- Le JWT contient un claim `lang` avec la preference de langue de l'utilisateur
+- Le middleware `I18nMiddleware` set `request.state.locale` sur chaque requete
+
 ## Regles de dev
 
 - Toujours supporter dark + light theme
@@ -254,6 +284,6 @@ Les preferences de personnalisation s'appliquent a **l'ensemble de l'interface**
 - Les features template ne doivent pas dependre de features projet
 - Utiliser **Bun** (pas npm/yarn)
 - Ne pas ajouter de tests sauf demande explicite
-- Apres chaque modification, mettre a jour le CHANGELOG concerne
+- Apres chaque modification, mettre a jour le `CHANGELOG.md` racine
 - **Toujours utiliser Docker** pour executer des commandes (build, install, run, migrations, etc.). Ne jamais executer directement sur la machine hote. Exception : les commandes `git` s'executent sur la machine hote.
-- **Avant chaque git add/commit** : verifier et mettre a jour les changelogs (global + features concernees) et bumper les versions si necessaire
+- **Avant chaque git add/commit** : verifier et mettre a jour le changelog global et bumper les versions (`package.json` + `main.py`)

@@ -1,0 +1,20 @@
+{
+  "breadcrumb_accueil": "Accueil",
+  "breadcrumb_events": "Events",
+  "titre_catalogue": "Catalogue d'evenements",
+  "sous_titre_catalogue": "Types d'evenements declares par les features actives",
+  "stat_events": "events",
+  "stat_features": "features",
+  "aucun_type_declare": "Aucun type d'evenement declare",
+  "rechercher_evenement": "Rechercher un evenement...",
+  "aucun_evenement_correspondant": "Aucun evenement correspondant",
+  "colonne_event_type": "Event Type",
+  "colonne_label": "Label",
+  "colonne_categorie": "Categorie",
+  "colonne_description": "Description",
+  "colonne_acces": "Acces",
+  "badge_admin": "Admin",
+  "badge_tous": "Tous",
+  "event_count_singular": "event",
+  "event_count_plural": "events"
+}

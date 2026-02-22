@@ -1,5 +1,6 @@
 import { Suspense, lazy, useState, useEffect, useMemo, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import Layout from '../../core/Layout'
 import './storybook.scss'
 
@@ -14,22 +15,23 @@ const MiscSection = lazy(() => import('./sections/MiscSection'))
 
 interface TabDef {
   id: string
-  label: string
+  labelKey: string
   component: React.LazyExoticComponent<any>
 }
 
 const TABS: TabDef[] = [
-  { id: 'typography', label: 'Typographie', component: TypographySection },
-  { id: 'buttons', label: 'Boutons', component: ButtonsSection },
-  { id: 'forms', label: 'Formulaires', component: FormsSection },
-  { id: 'cards', label: 'Cartes & Modals', component: CardsModalsSection },
-  { id: 'tables', label: 'Tableaux', component: TablesSection },
-  { id: 'badges', label: 'Badges & Alertes', component: BadgesSection },
-  { id: 'navigation', label: 'Navigation', component: NavigationSection },
-  { id: 'misc', label: 'Divers', component: MiscSection },
+  { id: 'typography', labelKey: 'tab_typography', component: TypographySection },
+  { id: 'buttons', labelKey: 'tab_buttons', component: ButtonsSection },
+  { id: 'forms', labelKey: 'tab_forms', component: FormsSection },
+  { id: 'cards', labelKey: 'tab_cards', component: CardsModalsSection },
+  { id: 'tables', labelKey: 'tab_tables', component: TablesSection },
+  { id: 'badges', labelKey: 'tab_badges', component: BadgesSection },
+  { id: 'navigation', labelKey: 'tab_navigation', component: NavigationSection },
+  { id: 'misc', labelKey: 'tab_misc', component: MiscSection },
 ]
 
 export default function StorybookPage() {
+  const { t } = useTranslation('storybook')
   const [searchParams, setSearchParams] = useSearchParams()
 
   const tabParam = searchParams.get('tab')
@@ -54,17 +56,17 @@ export default function StorybookPage() {
   return (
     <Layout
       breadcrumb={[
-        { label: 'Accueil', path: '/' },
-        { label: 'Administration' },
-        { label: 'Storybook' },
+        { label: t('breadcrumb_home'), path: '/' },
+        { label: t('breadcrumb_admin') },
+        { label: t('breadcrumb_storybook') },
       ]}
-      title="Storybook"
+      title={t('page_title')}
     >
       <div className="unified-card page-header-card">
         <div className="unified-page-header">
           <div className="unified-page-header-info">
-            <h1>Storybook</h1>
-            <p>Catalogue visuel des composants UI de l'application.</p>
+            <h1>{t('page_title')}</h1>
+            <p>{t('page_description')}</p>
           </div>
         </div>
       </div>
@@ -77,7 +79,7 @@ export default function StorybookPage() {
             onClick={() => setActiveTab(tab.id)}
             type="button"
           >
-            {tab.label}
+            {t(tab.labelKey)}
           </button>
         ))}
       </div>
@@ -89,7 +91,7 @@ export default function StorybookPage() {
           onChange={(e) => setActiveTab(e.target.value)}
         >
           {TABS.map(tab => (
-            <option key={tab.id} value={tab.id}>{tab.label}</option>
+            <option key={tab.id} value={tab.id}>{t(tab.labelKey)}</option>
           ))}
         </select>
       </div>

@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import api from '../../api'
 import { useAuth } from '../../core/AuthContext'
 import { useFeature } from '../../core/FeatureContext'
@@ -56,7 +57,7 @@ async function subscribeToPush(): Promise<boolean> {
     if (permission !== 'granted') return false
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(vapidKey),
+      applicationServerKey: urlBase64ToUint8Array(vapidKey) as BufferSource,
     })
     const subJson = subscription.toJSON()
     const ua = navigator.userAgent
@@ -139,6 +140,7 @@ const PUSH_PROMPT_DISMISSED_KEY = 'push_prompt_dismissed'
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined)
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
+  const { t } = useTranslation('notification')
   const { user } = useAuth()
   const { isActive } = useFeature()
   const pushFeatureActive = isActive('notification.push')
@@ -407,17 +409,17 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
               </svg>
             </div>
             <div className="push-prompt-content">
-              <div className="push-prompt-title">Activer les notifications</div>
+              <div className="push-prompt-title">{t('push_prompt_title')}</div>
               <div className="push-prompt-desc">
-                Recevez les alertes directement dans votre navigateur, meme quand l'onglet est ferme.
+                {t('push_prompt_desc')}
               </div>
             </div>
             <div className="push-prompt-actions">
               <button className="push-prompt-btn push-prompt-btn-primary" onClick={handlePromptAccept}>
-                Activer
+                {t('push_prompt_accept')}
               </button>
               <button className="push-prompt-btn push-prompt-btn-secondary" onClick={handlePromptDismiss}>
-                Plus tard
+                {t('push_prompt_dismiss')}
               </button>
             </div>
           </div>

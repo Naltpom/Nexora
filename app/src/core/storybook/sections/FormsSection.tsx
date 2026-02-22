@@ -1,96 +1,100 @@
+import { useTranslation } from 'react-i18next'
+
 export default function FormsSection() {
+  const { t } = useTranslation('storybook')
+
   return (
     <div className="storybook-section">
-      <h2>Formulaires</h2>
+      <h2>{t('forms_title')}</h2>
 
-      <h3>Groupe de formulaire basique</h3>
+      <h3>{t('forms_basic_title')}</h3>
       <div className="storybook-preview">
         <div className="form-group">
-          <label>Nom complet</label>
-          <input type="text" placeholder="Jean Dupont" />
+          <label>{t('forms_label_fullname')}</label>
+          <input type="text" placeholder={t('forms_placeholder_fullname')} />
         </div>
         <div className="form-group">
-          <label>Adresse e-mail</label>
-          <input type="email" placeholder="jean.dupont@exemple.fr" />
+          <label>{t('forms_label_email')}</label>
+          <input type="email" placeholder={t('forms_placeholder_email')} />
         </div>
       </div>
 
-      <h3>Groupe avec select</h3>
+      <h3>{t('forms_select_title')}</h3>
       <div className="storybook-preview">
         <div className="form-group">
-          <label>Role utilisateur</label>
+          <label>{t('forms_label_role')}</label>
           <select defaultValue="">
             <option value="" disabled>
-              Choisir un role...
+              {t('forms_placeholder_role')}
             </option>
-            <option value="admin">Administrateur</option>
-            <option value="editor">Editeur</option>
-            <option value="viewer">Lecteur</option>
+            <option value="admin">{t('forms_option_admin')}</option>
+            <option value="editor">{t('forms_option_editor')}</option>
+            <option value="viewer">{t('forms_option_viewer')}</option>
           </select>
         </div>
       </div>
 
-      <h3>Groupe avec textarea</h3>
+      <h3>{t('forms_textarea_title')}</h3>
       <div className="storybook-preview">
         <div className="form-group">
-          <label>Description</label>
+          <label>{t('forms_label_description')}</label>
           <textarea
             rows={4}
-            placeholder="Decrivez brievement le projet ou la demande..."
+            placeholder={t('forms_placeholder_description')}
           />
         </div>
       </div>
 
-      <h3>Ligne de formulaire (.form-row)</h3>
+      <h3>{t('forms_row_title')}</h3>
       <div className="storybook-preview">
         <div className="form-row">
           <div className="form-group">
-            <label>Prenom</label>
-            <input type="text" placeholder="Jean" />
+            <label>{t('forms_label_firstname')}</label>
+            <input type="text" placeholder={t('forms_placeholder_firstname')} />
           </div>
           <div className="form-group">
-            <label>Nom</label>
-            <input type="text" placeholder="Dupont" />
+            <label>{t('forms_label_lastname')}</label>
+            <input type="text" placeholder={t('forms_placeholder_lastname')} />
           </div>
         </div>
         <div className="form-row">
           <div className="form-group">
-            <label>Ville</label>
-            <input type="text" placeholder="Paris" />
+            <label>{t('forms_label_city')}</label>
+            <input type="text" placeholder={t('forms_placeholder_city')} />
           </div>
           <div className="form-group">
-            <label>Code postal</label>
-            <input type="text" placeholder="75001" />
+            <label>{t('forms_label_zipcode')}</label>
+            <input type="text" placeholder={t('forms_placeholder_zipcode')} />
           </div>
         </div>
       </div>
 
-      <h3>Interrupteur (.toggle)</h3>
+      <h3>{t('forms_toggle_title')}</h3>
       <div className="storybook-preview">
         <div className="storybook-inline-demo">
           <label className="toggle">
             <input type="checkbox" defaultChecked={false} />
             <span className="toggle-slider" />
           </label>
-          <span>Notifications par e-mail (desactive)</span>
+          <span>{t('forms_toggle_email_off')}</span>
         </div>
         <div className="storybook-inline-demo">
           <label className="toggle">
             <input type="checkbox" defaultChecked />
             <span className="toggle-slider" />
           </label>
-          <span>Mode sombre (active)</span>
+          <span>{t('forms_toggle_dark_on')}</span>
         </div>
         <div className="storybook-inline-demo">
           <label className="toggle">
             <input type="checkbox" disabled />
             <span className="toggle-slider" />
           </label>
-          <span>Option verrouillée (desactive, non modifiable)</span>
+          <span>{t('forms_toggle_locked')}</span>
         </div>
       </div>
 
-      <h3>Champ de recherche (.search-box)</h3>
+      <h3>{t('forms_search_title')}</h3>
       <div className="storybook-preview">
         <div className="search-box">
           <svg
@@ -106,7 +110,7 @@ export default function FormsSection() {
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
-          <input type="text" placeholder="Rechercher un utilisateur..." />
+          <input type="text" placeholder={t('forms_search_placeholder')} />
         </div>
       </div>
     </div>

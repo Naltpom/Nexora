@@ -20,12 +20,14 @@ router = APIRouter()
 
 # Default settings with their initial values
 DEFAULTS: dict[str, str] = {
-    "app_name": "Template App",
+    "app_name": "Nexora",
     "app_description": "",
     "app_logo": "/logo_full.svg",
-    "app_favicon": "/favicon.ico",
+    "app_favicon": "/favicon.svg",
     "primary_color": "#1E40AF",
     "support_email": "",
+    "header_show_logo": "true",
+    "header_show_name": "true",
 }
 
 UPLOAD_DIR = "/app/uploads/settings"
@@ -54,6 +56,8 @@ async def get_public_settings(db: AsyncSession = Depends(get_db)):
         "app_logo": all_settings.get("app_logo"),
         "app_favicon": all_settings.get("app_favicon"),
         "primary_color": all_settings.get("primary_color"),
+        "header_show_logo": all_settings.get("header_show_logo"),
+        "header_show_name": all_settings.get("header_show_name"),
     }
 
 
@@ -211,3 +215,52 @@ async def upload_favicon(
     await db.flush()
 
     return {"favicon_url": favicon_url}
+
+
+# ---------------------------------------------------------------------------
+#  Admin: reset logo / favicon to defaults
+# ---------------------------------------------------------------------------
+
+
+async def _reset_setting(key: str, current_user, db: AsyncSession) -> str:
+    """Reset a setting to its default value and return the default."""
+    default_value = DEFAULTS[key]
+    now = datetime.now(timezone.utc)
+
+    result = await db.execute(select(AppSetting).where(AppSetting.key == key))
+    existing = result.scalar_one_or_none()
+    if existing:
+        existing.value = default_value
+        existing.updated_at = now
+        existing.updated_by = current_user.id
+    else:
+        db.add(AppSetting(key=key, value=default_value, updated_at=now, updated_by=current_user.id))
+
+    await db.flush()
+    return default_value
+
+
+@router.delete(
+    "/logo",
+    dependencies=[Depends(require_permission("settings.manage"))],
+)
+async def reset_logo(
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Reset logo to default."""
+    default = await _reset_setting("app_logo", current_user, db)
+    return {"logo_url": default}
+
+
+@router.delete(
+    "/favicon",
+    dependencies=[Depends(require_permission("settings.manage"))],
+)
+async def reset_favicon(
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Reset favicon to default."""
+    default = await _reset_setting("app_favicon", current_user, db)
+    return {"favicon_url": default}

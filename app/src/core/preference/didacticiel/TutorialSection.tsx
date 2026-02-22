@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useTutorial } from './TutorialContext'
 import '../../_identity/_identity.scss'
 import './didacticiel.scss'
 
 export default function TutorialSection() {
+  const { t } = useTranslation('preference.didacticiel')
   const {
     featureTutorials,
     permissionsSeen,
@@ -28,13 +30,13 @@ export default function TutorialSection() {
 
   return (
     <div className="unified-card card-padded">
-      <h2 className="title-sm">Didacticiels</h2>
+      <h2 className="title-sm">{t('tutorial_section_title')}</h2>
       <p className="text-secondary">
-        Revoyez les tutoriels in-app pour decouvrir les fonctionnalites.
+        {t('tutorial_section_description')}
       </p>
 
       {featureTutorials.length === 0 ? (
-        <p className="tutorial-section__empty">Aucun didacticiel disponible.</p>
+        <p className="tutorial-section__empty">{t('tutorial_section_empty')}</p>
       ) : (
         <>
           <div className="tutorial-section__features">
@@ -59,7 +61,7 @@ export default function TutorialSection() {
                       </span>
                       <span className="tutorial-feature__name">{ft.label}</span>
                       {allSeen && (
-                        <span className="tutorial-feature__seen-badge">Vu</span>
+                        <span className="tutorial-feature__seen-badge">{t('tutorial_section_seen_badge')}</span>
                       )}
                     </button>
                     <button
@@ -67,7 +69,7 @@ export default function TutorialSection() {
                       type="button"
                       onClick={() => startFeatureTutorial(ft.featureName)}
                     >
-                      {allSeen ? 'Revoir tout' : 'Tout lancer'}
+                      {allSeen ? t('tutorial_section_review_all_feature') : t('tutorial_section_start_all_feature')}
                     </button>
                   </div>
 
@@ -81,7 +83,7 @@ export default function TutorialSection() {
                               <div className="tutorial-section__item-label">
                                 {pt.label}
                                 <span className="tutorial-section__step-count">
-                                  {pt.steps.length} {pt.steps.length > 1 ? 'etapes' : 'etape'}
+                                  {pt.steps.length} {pt.steps.length > 1 ? t('tutorial_section_step_count_plural') : t('tutorial_section_step_count_singular')}
                                 </span>
                                 <span className="tutorial-section__permission-code">
                                   {pt.permission}
@@ -96,7 +98,7 @@ export default function TutorialSection() {
                             <div className="tutorial-section__item-actions">
                               {isSeen && (
                                 <span className="tutorial-section__seen-badge">
-                                  Vu
+                                  {t('tutorial_section_seen_badge')}
                                 </span>
                               )}
                               <button
@@ -106,7 +108,7 @@ export default function TutorialSection() {
                                 }
                                 type="button"
                               >
-                                {isSeen ? 'Revoir' : 'Commencer'}
+                                {isSeen ? t('tutorial_section_review_permission') : t('tutorial_section_start_permission')}
                               </button>
                             </div>
                           </div>
@@ -125,14 +127,14 @@ export default function TutorialSection() {
               onClick={startAllTutorials}
               type="button"
             >
-              Tout revoir
+              {t('tutorial_section_review_all')}
             </button>
             <button
               className="btn btn-secondary"
               onClick={resetAll}
               type="button"
             >
-              Reinitialiser
+              {t('tutorial_section_reset_all')}
             </button>
           </div>
         </>

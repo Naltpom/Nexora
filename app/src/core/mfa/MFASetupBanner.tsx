@@ -1,10 +1,12 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../core/AuthContext'
 import '../_identity/_identity.scss'
 import './mfa.scss'
 
 export default function MFASetupBanner() {
+  const { t } = useTranslation('mfa')
   const { isMfaSetupRequired, getMfaGraceExpires } = useAuth()
   const [dismissed, setDismissed] = useState(() => sessionStorage.getItem('mfa_banner_dismissed') === 'true')
 
@@ -30,18 +32,18 @@ export default function MFASetupBanner() {
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
       </svg>
       <span>
-        Vous devez configurer l'authentification multi-facteurs avant le <strong>{formattedDate}</strong>.
+        {t('banner_message_before_date')} <strong>{formattedDate}</strong>.
       </span>
       <Link
         to="/profile/mfa"
         className="mfa-setup-banner-link"
       >
-        Configurer maintenant
+        {t('banner_configure_now')}
       </Link>
       <button
         onClick={handleDismiss}
         className="mfa-setup-banner-dismiss"
-        title="Fermer"
+        title={t('banner_dismiss_title')}
       >
         &times;
       </button>

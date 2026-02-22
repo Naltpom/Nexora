@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import api from '../api'
 
@@ -7,6 +8,7 @@ interface SearchResults {
 }
 
 export default function GlobalSearch() {
+  const { t } = useTranslation('common')
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResults | null>(null)
   const [open, setOpen] = useState(false)
@@ -65,7 +67,7 @@ export default function GlobalSearch() {
         <input
           type="text"
           className="global-search-input"
-          placeholder="Rechercher..."
+          placeholder={t('search_placeholder')}
           value={query}
           onChange={(e) => handleChange(e.target.value)}
           onFocus={() => { if (results && query.length >= 2) setOpen(true) }}
@@ -73,15 +75,15 @@ export default function GlobalSearch() {
       </div>
       {open && (
         <div className="global-search-dropdown">
-          {loading && <div className="global-search-loading">Recherche...</div>}
+          {loading && <div className="global-search-loading">{t('search_loading')}</div>}
           {!loading && !hasResults && query.length >= 2 && (
-            <div className="global-search-empty">Aucun resultat</div>
+            <div className="global-search-empty">{t('search_no_results')}</div>
           )}
           {!loading && hasResults && (
             <>
               {results!.users.length > 0 && (
                 <div className="global-search-group">
-                  <div className="global-search-group-title">Utilisateurs</div>
+                  <div className="global-search-group-title">{t('search_group_users')}</div>
                   {results!.users.map(u => (
                     <Link key={`u-${u.id}`} to={`/admin/users`} className="global-search-item" onClick={clearSearch}>
                       <span className="global-search-item-icon">

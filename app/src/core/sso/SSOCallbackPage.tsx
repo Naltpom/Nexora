@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../core/AuthContext'
 import api from '../../api'
 import './sso.scss'
@@ -16,6 +17,7 @@ function parseJwtPayload(token: string): Record<string, any> | null {
 }
 
 export default function SSOCallbackPage() {
+  const { t } = useTranslation('sso')
   const { provider } = useParams<{ provider: string }>()
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -34,7 +36,7 @@ export default function SSOCallbackPage() {
     const state = searchParams.get('state')
 
     if (!code || !provider) {
-      setError('Parametres de callback manquants.')
+      setError(t('parametres_callback_manquants'))
       setLoading(false)
       return
     }
@@ -84,7 +86,7 @@ export default function SSOCallbackPage() {
         }
       } catch (err: any) {
         const detail = err.response?.data?.detail
-        setError(typeof detail === 'string' ? detail : isLink ? 'Erreur lors de la liaison du compte.' : 'Erreur lors de la connexion SSO.')
+        setError(typeof detail === 'string' ? detail : isLink ? t('erreur_liaison_compte') : t('erreur_connexion_sso'))
         setLoading(false)
       }
     }
@@ -99,7 +101,7 @@ export default function SSOCallbackPage() {
           <div className="sso-callback-loading">
             <div className="sso-spinner" />
             <p className="sso-callback-loading-text">
-              Connexion en cours...
+              {t('connexion_en_cours')}
             </p>
           </div>
         )}
@@ -112,13 +114,13 @@ export default function SSOCallbackPage() {
               <line x1="9" y1="9" x2="15" y2="15" />
             </svg>
             <h2 className="sso-callback-error-title">
-              Echec de la connexion
+              {t('echec_connexion')}
             </h2>
             <p className="sso-callback-error-message">
               {error}
             </p>
             <Link to="/login" className="btn btn-primary sso-callback-back-link">
-              Retour a la connexion
+              {t('retour_connexion')}
             </Link>
           </div>
         )}

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import Layout from '../../core/Layout'
 import { useConfirm } from '../../core/ConfirmModal'
 import { usePermission } from '../PermissionContext'
@@ -25,6 +26,7 @@ interface Command {
 /* ------------------------------------------------------------------ */
 
 export default function CommandsAdminPage() {
+  const { t } = useTranslation('_identity')
   const { confirm } = useConfirm()
   const { can } = usePermission()
   const [commands, setCommands] = useState<Command[]>([])
@@ -41,7 +43,7 @@ export default function CommandsAdminPage() {
       const res = await api.get('/commands')
       setCommands(res.data)
     } catch {
-      setMessage({ type: 'error', text: 'Erreur lors du chargement des commandes' })
+      setMessage({ type: 'error', text: t('commands_admin.load_error') })
     } finally {
       setLoading(false)
     }
@@ -60,11 +62,11 @@ export default function CommandsAdminPage() {
   }
 
   const handleToggle = async (cmd: Command) => {
-    const action = cmd.enabled ? 'desactiver' : 'activer'
+    const action = cmd.enabled ? t('commands_admin.confirm_toggle_action_deactivate') : t('commands_admin.confirm_toggle_action_activate')
     const confirmed = await confirm({
-      title: `${cmd.enabled ? 'Desactiver' : 'Activer'} la commande`,
-      message: `Etes-vous sur de vouloir ${action} la commande "${cmd.label}" ?`,
-      confirmText: cmd.enabled ? 'Desactiver' : 'Activer',
+      title: cmd.enabled ? t('commands_admin.confirm_toggle_title_deactivate') : t('commands_admin.confirm_toggle_title_activate'),
+      message: t('commands_admin.confirm_toggle_message', { action, label: cmd.label }),
+      confirmText: cmd.enabled ? t('commands_admin.confirm_toggle_btn_deactivate') : t('commands_admin.confirm_toggle_btn_activate'),
       variant: cmd.enabled ? 'warning' : 'info',
     })
     if (!confirmed) return
@@ -73,10 +75,10 @@ export default function CommandsAdminPage() {
     setMessage(null)
     try {
       await api.patch(`/commands/${cmd.name}`, { enabled: !cmd.enabled })
-      setMessage({ type: 'success', text: `Commande "${cmd.label}" ${!cmd.enabled ? 'activee' : 'desactivee'}` })
+      setMessage({ type: 'success', text: !cmd.enabled ? t('commands_admin.toggle_success_activated', { label: cmd.label }) : t('commands_admin.toggle_success_deactivated', { label: cmd.label }) })
       await loadCommands()
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.response?.data?.detail || `Erreur lors du changement de statut de "${cmd.label}"` })
+      setMessage({ type: 'error', text: err.response?.data?.detail || t('commands_admin.toggle_error', { label: cmd.label }) })
     } finally {
       setToggling(null)
     }
@@ -84,9 +86,9 @@ export default function CommandsAdminPage() {
 
   const handleRun = async (cmd: Command) => {
     const confirmed = await confirm({
-      title: 'Executer la commande',
-      message: `Etes-vous sur de vouloir executer "${cmd.label}" ?`,
-      confirmText: 'Executer',
+      title: t('commands_admin.confirm_run_title'),
+      message: t('commands_admin.confirm_run_message', { label: cmd.label }),
+      confirmText: t('commands_admin.confirm_run_btn'),
       variant: 'info',
     })
     if (!confirmed) return
@@ -101,10 +103,10 @@ export default function CommandsAdminPage() {
         : 'OK'
       setMessage({
         type: 'success',
-        text: `"${cmd.label}" executee en ${data.elapsed_seconds}s — ${resultText}`,
+        text: t('commands_admin.run_success', { label: cmd.label, seconds: data.elapsed_seconds, result: resultText }),
       })
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.response?.data?.detail || `Erreur lors de l'execution de "${cmd.label}"` })
+      setMessage({ type: 'error', text: err.response?.data?.detail || t('commands_admin.run_error', { label: cmd.label }) })
     } finally {
       setRunning(null)
     }
@@ -121,12 +123,12 @@ export default function CommandsAdminPage() {
     : commands
 
   return (
-    <Layout breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Commandes' }]} title="Commandes">
+    <Layout breadcrumb={[{ label: t('common.home'), path: '/' }, { label: t('commands_admin.breadcrumb_commands') }]} title={t('commands_admin.breadcrumb_commands')}>
       <div className="unified-card page-header-card">
         <div className="unified-page-header">
           <div className="unified-page-header-info">
-            <h1>Commandes de maintenance</h1>
-            <p>Gerez et executez les commandes de maintenance de l'application</p>
+            <h1>{t('commands_admin.page_title')}</h1>
+            <p>{t('commands_admin.subtitle')}</p>
           </div>
           <div className="unified-page-header-actions">
             <Link to="/admin/commands/history" className="btn btn-secondary btn-sm">
@@ -134,7 +136,7 @@ export default function CommandsAdminPage() {
                 <circle cx="12" cy="12" r="10" />
                 <polyline points="12 6 12 12 16 14" />
               </svg>
-              Historique
+              {t('commands_admin.btn_history')}
             </Link>
           </div>
         </div>
@@ -150,7 +152,7 @@ export default function CommandsAdminPage() {
         <div className="spinner" />
       ) : commands.length === 0 ? (
         <div className="unified-card empty-state">
-          Aucune commande trouvee
+          {t('commands_admin.empty_state')}
         </div>
       ) : (
         <div className="unified-card full-width-breakout">
@@ -158,7 +160,7 @@ export default function CommandsAdminPage() {
           <div className="section-header">
             <input
               type="text"
-              placeholder="Rechercher une commande..."
+              placeholder={t('commands_admin.search_placeholder')}
               value={searchValue}
               onChange={(e) => handleSearchChange(e.target.value)}
               className="input-search-wide"
@@ -169,20 +171,20 @@ export default function CommandsAdminPage() {
             <table className="unified-table">
               <thead>
                 <tr>
-                  <th>Commande</th>
-                  <th>Description</th>
-                  <th>Feature</th>
-                  <th>Schedule</th>
-                  <th>Config</th>
-                  <th className="text-center">Actif</th>
-                  <th className="text-center">Actions</th>
+                  <th>{t('commands_admin.th_command')}</th>
+                  <th>{t('commands_admin.th_description')}</th>
+                  <th>{t('commands_admin.th_feature')}</th>
+                  <th>{t('commands_admin.th_schedule')}</th>
+                  <th>{t('commands_admin.th_config')}</th>
+                  <th className="text-center">{t('commands_admin.th_active')}</th>
+                  <th className="text-center">{t('commands_admin.th_actions')}</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredCommands.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="empty-state-sm">
-                      {search ? 'Aucune commande correspondante' : 'Aucune commande trouvee'}
+                      {search ? t('commands_admin.empty_search') : t('commands_admin.empty_state')}
                     </td>
                   </tr>
                 ) : (
@@ -241,7 +243,7 @@ export default function CommandsAdminPage() {
                           </label>
                         ) : (
                           <span className={`badge ${cmd.enabled ? 'badge-success' : 'badge-warning'} text-xs`}>
-                            {cmd.enabled ? 'Actif' : 'Inactif'}
+                            {cmd.enabled ? t('common.active') : t('common.inactive')}
                           </span>
                         )}
                       </td>
@@ -253,7 +255,7 @@ export default function CommandsAdminPage() {
                             className="btn btn-sm btn-primary"
                             onClick={() => handleRun(cmd)}
                             disabled={!cmd.enabled || running === cmd.name}
-                            title={!cmd.enabled ? 'Commande desactivee' : 'Executer la commande'}
+                            title={!cmd.enabled ? t('commands_admin.tooltip_run_disabled') : t('commands_admin.tooltip_run')}
                           >
                             {running === cmd.name ? (
                               <span className="spinner-sm" />

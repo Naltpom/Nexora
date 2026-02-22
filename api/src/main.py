@@ -68,9 +68,9 @@ def import_all_models():
 
 def create_app() -> FastAPI:
     application = FastAPI(
-        title="Kertios Template",
+        title="Nexora",
         description="Feature-based modular application template",
-        version="2026.02.27",
+        version="2026.02.29",
         docs_url="/api/docs",
         openapi_url="/api/openapi.json",
     )

@@ -126,7 +126,7 @@ async def refresh_token(
             detail="Utilisateur introuvable",
         )
 
-    token_data = {"sub": str(user.id), "email": user.email}
+    token_data = {"sub": str(user.id), "email": user.email, "lang": user.language}
     new_refresh = create_refresh_token(token_data)
 
     # Create new session
@@ -428,7 +428,7 @@ async def verify_email(
     user.email_verified = True
     await consume_security_token(db, token)
 
-    token_data = {"sub": str(user.id), "email": user.email}
+    token_data = {"sub": str(user.id), "email": user.email, "lang": user.language}
     refresh = create_refresh_token(token_data)
     await _create_session(db, user.id, refresh, req)
     await db.flush()

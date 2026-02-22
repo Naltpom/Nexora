@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import Layout from '../Layout'
 import api from '../../api'
 import './rgpd.scss'
@@ -13,23 +14,24 @@ interface RightsRequest {
   completed_at: string | null
 }
 
-const REQUEST_TYPES: Record<string, { label: string; description: string }> = {
-  access: { label: 'Droit d\'acces', description: 'Obtenir une copie de toutes les donnees personnelles vous concernant.' },
-  rectification: { label: 'Droit de rectification', description: 'Corriger des donnees inexactes ou incompletes.' },
-  erasure: { label: 'Droit a l\'effacement', description: 'Demander la suppression de vos donnees personnelles.' },
-  portability: { label: 'Droit a la portabilite', description: 'Recevoir vos donnees dans un format structure et lisible.' },
-  opposition: { label: 'Droit d\'opposition', description: 'Vous opposer au traitement de vos donnees personnelles.' },
-  limitation: { label: 'Droit a la limitation', description: 'Demander la limitation du traitement de vos donnees.' },
+const REQUEST_TYPE_KEYS: Record<string, { labelKey: string; descriptionKey: string }> = {
+  access: { labelKey: 'rights_request_page.type_access_label', descriptionKey: 'rights_request_page.type_access_description' },
+  rectification: { labelKey: 'rights_request_page.type_rectification_label', descriptionKey: 'rights_request_page.type_rectification_description' },
+  erasure: { labelKey: 'rights_request_page.type_erasure_label', descriptionKey: 'rights_request_page.type_erasure_description' },
+  portability: { labelKey: 'rights_request_page.type_portability_label', descriptionKey: 'rights_request_page.type_portability_description' },
+  opposition: { labelKey: 'rights_request_page.type_opposition_label', descriptionKey: 'rights_request_page.type_opposition_description' },
+  limitation: { labelKey: 'rights_request_page.type_limitation_label', descriptionKey: 'rights_request_page.type_limitation_description' },
 }
 
-const STATUS_LABELS: Record<string, { label: string; className: string }> = {
-  pending: { label: 'En attente', className: 'rgpd-status-pending' },
-  processing: { label: 'En cours', className: 'rgpd-status-processing' },
-  completed: { label: 'Traitee', className: 'rgpd-status-completed' },
-  rejected: { label: 'Refusee', className: 'rgpd-status-rejected' },
+const STATUS_CLASSNAMES: Record<string, string> = {
+  pending: 'rgpd-status-pending',
+  processing: 'rgpd-status-processing',
+  completed: 'rgpd-status-completed',
+  rejected: 'rgpd-status-rejected',
 }
 
 export default function RightsRequestPage() {
+  const { t } = useTranslation('rgpd')
   const [requests, setRequests] = useState<RightsRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -61,13 +63,13 @@ export default function RightsRequestPage() {
         request_type: formType,
         description: formDescription || null,
       })
-      setSuccess('Votre demande a ete soumise. Nous la traiterons dans les meilleurs delais.')
+      setSuccess(t('rights_request_page.success_message'))
       setShowForm(false)
       setFormDescription('')
       setTimeout(() => setSuccess(''), 5000)
       loadRequests()
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Erreur lors de la soumission.')
+      setError(err.response?.data?.detail || t('rights_request_page.error_default'))
     } finally {
       setSubmitting(false)
     }
@@ -75,23 +77,23 @@ export default function RightsRequestPage() {
 
   if (loading) {
     return (
-      <Layout title="Exercice des droits" breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Mes droits' }]}>
+      <Layout title={t('rights_request_page.page_title')} breadcrumb={[{ label: t('rights_request_page.breadcrumb_home'), path: '/' }, { label: t('rights_request_page.breadcrumb_label') }]}>
         <div className="text-center loading-pad-lg"><div className="spinner" /></div>
       </Layout>
     )
   }
 
   return (
-    <Layout title="Exercice des droits" breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Mes droits' }]}>
+    <Layout title={t('rights_request_page.page_title')} breadcrumb={[{ label: t('rights_request_page.breadcrumb_home'), path: '/' }, { label: t('rights_request_page.breadcrumb_label') }]}>
       <div className="unified-card page-header-card">
         <div className="unified-page-header">
           <div className="unified-page-header-info">
-            <h1>Exercice des droits RGPD</h1>
-            <p>Conformement au RGPD, vous pouvez exercer vos droits sur vos donnees personnelles.</p>
+            <h1>{t('rights_request_page.heading')}</h1>
+            <p>{t('rights_request_page.description')}</p>
           </div>
           <div className="unified-page-header-actions">
             <button className="btn btn-primary btn-sm" onClick={() => setShowForm(!showForm)}>
-              {showForm ? 'Annuler' : 'Nouvelle demande'}
+              {showForm ? t('rights_request_page.btn_cancel') : t('rights_request_page.btn_new_request')}
             </button>
           </div>
         </div>
@@ -102,28 +104,28 @@ export default function RightsRequestPage() {
 
       {showForm && (
         <div className="unified-card rgpd-rights-form">
-          <h3>Nouvelle demande</h3>
+          <h3>{t('rights_request_page.form_title')}</h3>
           <div className="form-group">
-            <label>Type de demande</label>
+            <label>{t('rights_request_page.form_type_label')}</label>
             <select value={formType} onChange={(e) => setFormType(e.target.value)}>
-              {Object.entries(REQUEST_TYPES).map(([key, info]) => (
-                <option key={key} value={key}>{info.label}</option>
+              {Object.entries(REQUEST_TYPE_KEYS).map(([key, info]) => (
+                <option key={key} value={key}>{t(info.labelKey)}</option>
               ))}
             </select>
-            <small>{REQUEST_TYPES[formType]?.description}</small>
+            <small>{t(REQUEST_TYPE_KEYS[formType]?.descriptionKey)}</small>
           </div>
           <div className="form-group">
-            <label>Description (optionnel)</label>
+            <label>{t('rights_request_page.form_description_label')}</label>
             <textarea
               value={formDescription}
               onChange={(e) => setFormDescription(e.target.value)}
-              placeholder="Precisions sur votre demande..."
+              placeholder={t('rights_request_page.form_description_placeholder')}
               rows={3}
             />
           </div>
           <div className="form-actions">
             <button className="btn btn-primary" onClick={handleSubmit} disabled={submitting}>
-              {submitting ? 'Envoi...' : 'Soumettre la demande'}
+              {submitting ? t('rights_request_page.btn_submitting') : t('rights_request_page.btn_submit')}
             </button>
           </div>
         </div>
@@ -131,24 +133,25 @@ export default function RightsRequestPage() {
 
       {requests.length === 0 ? (
         <div className="unified-card">
-          <p className="text-center text-secondary">Aucune demande pour le moment.</p>
+          <p className="text-center text-secondary">{t('rights_request_page.no_requests')}</p>
         </div>
       ) : (
         <div className="rgpd-requests-list">
           {requests.map((req) => {
-            const statusInfo = STATUS_LABELS[req.status] || STATUS_LABELS.pending
-            const typeInfo = REQUEST_TYPES[req.request_type]
+            const statusClassName = STATUS_CLASSNAMES[req.status] || STATUS_CLASSNAMES.pending
+            const statusLabelKey = `rights_request_page.status_${req.status}` as const
+            const typeKeys = REQUEST_TYPE_KEYS[req.request_type]
             return (
               <div key={req.id} className="unified-card rgpd-request-item">
                 <div className="rgpd-request-header">
                   <div>
-                    <h3>{typeInfo?.label || req.request_type}</h3>
+                    <h3>{typeKeys ? t(typeKeys.labelKey) : req.request_type}</h3>
                     <span className="rgpd-request-date">
                       {new Date(req.created_at).toLocaleDateString('fr-FR')}
                     </span>
                   </div>
-                  <span className={`rgpd-status ${statusInfo.className}`}>
-                    {statusInfo.label}
+                  <span className={`rgpd-status ${statusClassName}`}>
+                    {t(statusLabelKey)}
                   </span>
                 </div>
                 {req.description && (
@@ -156,7 +159,7 @@ export default function RightsRequestPage() {
                 )}
                 {req.admin_response && (
                   <div className="rgpd-request-response">
-                    <strong>Reponse :</strong>
+                    <strong>{t('rights_request_page.response_label')}</strong>
                     <p>{req.admin_response}</p>
                   </div>
                 )}

@@ -1,4 +1,5 @@
 import { Suspense, lazy, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import Layout from '../../Layout'
 import { usePermission } from '../../PermissionContext'
 import { useTutorial } from './TutorialContext'
@@ -8,6 +9,7 @@ const TutorialSection = lazy(() => import('./TutorialSection'))
 const TutorialAdminSection = lazy(() => import('./TutorialAdminSection'))
 
 export default function AidePage() {
+  const { t } = useTranslation('preference.didacticiel')
   const { permissions } = usePermission()
   const { featureTutorials } = useTutorial()
 
@@ -28,31 +30,31 @@ export default function AidePage() {
   return (
     <Layout
       breadcrumb={[
-        { label: 'Accueil', path: '/' },
-        { label: 'Aide' },
+        { label: t('aide_breadcrumb_home'), path: '/' },
+        { label: t('aide_breadcrumb_aide') },
       ]}
-      title="Aide"
+      title={t('aide_title')}
     >
       <div className="page-narrow">
         <div>
-          <h1 className="title-md">Aide</h1>
+          <h1 className="title-md">{t('aide_title')}</h1>
           <p className="text-gray-500">
-            Decouvrez les fonctionnalites de l'application grace aux tutoriels interactifs.
+            {t('aide_description')}
           </p>
         </div>
 
         <div className="aide-stats">
           <div className="aide-stats__card">
             <span className="aide-stats__value">{stats.totalSteps}</span>
-            <span className="aide-stats__label">Etapes de tutoriel</span>
+            <span className="aide-stats__label">{t('aide_stats_tutorial_steps')}</span>
           </div>
           <div className="aide-stats__card">
             <span className="aide-stats__value">{stats.withTuto}</span>
-            <span className="aide-stats__label">Permissions avec tuto</span>
+            <span className="aide-stats__label">{t('aide_stats_permissions_with_tutorial')}</span>
           </div>
           <div className="aide-stats__card">
             <span className="aide-stats__value">{stats.withoutTuto}</span>
-            <span className="aide-stats__label">Permissions sans tuto</span>
+            <span className="aide-stats__label">{t('aide_stats_permissions_without_tutorial')}</span>
           </div>
         </div>
 

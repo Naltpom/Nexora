@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, FormEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import './_identity.scss'
 import Layout from '../../core/Layout'
 import { usePermission } from '../PermissionContext'
@@ -10,16 +11,8 @@ interface AppSetting {
   updated_at: string | null
 }
 
-const SETTING_LABELS: Record<string, { label: string; description: string; type: string }> = {
-  app_name: { label: 'Nom de l\'application', description: 'Affiche dans le header et le titre de la page', type: 'text' },
-  app_description: { label: 'Description', description: 'Courte description de l\'application', type: 'textarea' },
-  app_logo: { label: 'Logo', description: 'URL ou chemin du logo (header)', type: 'logo' },
-  app_favicon: { label: 'Favicon', description: 'URL ou chemin du favicon', type: 'text' },
-  primary_color: { label: 'Couleur principale', description: 'Couleur de la marque (hex)', type: 'color' },
-  support_email: { label: 'Email de support', description: 'Adresse email de contact', type: 'email' },
-}
-
 export default function AppSettingsAdminPage() {
+  const { t } = useTranslation('_identity')
   const { can } = usePermission()
   const [settings, setSettings] = useState<AppSetting[]>([])
   const [form, setForm] = useState<Record<string, string>>({})
@@ -40,7 +33,7 @@ export default function AppSettingsAdminPage() {
       }
       setForm(formData)
     } catch {
-      setError('Erreur lors du chargement des parametres')
+      setError(t('app_settings.load_error'))
     } finally {
       setLoading(false)
     }
@@ -58,15 +51,15 @@ export default function AppSettingsAdminPage() {
     try {
       const payload: Record<string, string | null> = {}
       for (const [key, value] of Object.entries(form)) {
-        if (key !== 'app_logo') {
+        if (key !== 'app_logo' && key !== 'app_favicon') {
           payload[key] = value || null
         }
       }
       await api.put('/settings/', { settings: payload })
-      setSuccess('Parametres enregistres avec succes')
+      setSuccess(t('app_settings.save_success'))
       setTimeout(() => setSuccess(''), 3000)
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Erreur lors de la sauvegarde')
+      setError(err.response?.data?.detail || t('app_settings.save_error'))
     } finally {
       setSaving(false)
     }
@@ -82,10 +75,10 @@ export default function AppSettingsAdminPage() {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       setForm(prev => ({ ...prev, app_logo: res.data.logo_url }))
-      setSuccess('Logo mis a jour')
+      setSuccess(t('app_settings.logo_updated'))
       setTimeout(() => setSuccess(''), 3000)
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Erreur lors de l\'upload')
+      setError(err.response?.data?.detail || t('app_settings.upload_error'))
     } finally {
       setUploading(false)
     }
@@ -103,25 +96,52 @@ export default function AppSettingsAdminPage() {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       setForm(prev => ({ ...prev, app_favicon: res.data.favicon_url }))
-      setSuccess('Favicon mis a jour')
+      setSuccess(t('app_settings.favicon_updated'))
       setTimeout(() => setSuccess(''), 3000)
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Erreur lors de l\'upload')
+      setError(err.response?.data?.detail || t('app_settings.upload_error'))
     } finally {
       setUploadingFavicon(false)
     }
   }
 
-  const orderedKeys = ['app_name', 'app_description', 'app_logo', 'app_favicon', 'primary_color', 'support_email']
+  const handleResetLogo = async () => {
+    setError('')
+    try {
+      const res = await api.delete('/settings/logo')
+      setForm(prev => ({ ...prev, app_logo: res.data.logo_url }))
+      setSuccess(t('app_settings.logo_reset'))
+      setTimeout(() => setSuccess(''), 3000)
+    } catch (err: any) {
+      setError(err.response?.data?.detail || t('app_settings.reset_error'))
+    }
+  }
+
+  const handleResetFavicon = async () => {
+    setError('')
+    try {
+      const res = await api.delete('/settings/favicon')
+      setForm(prev => ({ ...prev, app_favicon: res.data.favicon_url }))
+      setSuccess(t('app_settings.favicon_reset'))
+      setTimeout(() => setSuccess(''), 3000)
+    } catch (err: any) {
+      setError(err.response?.data?.detail || t('app_settings.reset_error'))
+    }
+  }
+
+  const isLogoCustom = form.app_logo && form.app_logo !== '/logo_full.svg'
+  const isFaviconCustom = form.app_favicon && form.app_favicon !== '/favicon.svg'
+
+  const orderedKeys = ['app_name', 'app_description', 'app_logo', 'app_favicon', 'primary_color', 'support_email', 'header_show_logo', 'header_show_name']
 
   return (
-    <Layout breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Parametres' }]} title="Parametres de l'application">
+    <Layout breadcrumb={[{ label: t('common.home'), path: '/' }, { label: t('app_settings.breadcrumb_settings') }]} title={t('app_settings.page_title')}>
       {/* Page Header */}
       <div className="unified-card page-header-card">
         <div className="unified-page-header">
           <div className="unified-page-header-info">
-            <h1>Parametres de l'application</h1>
-            <p>Configurez le nom, le logo et l'apparence de l'application</p>
+            <h1>{t('app_settings.page_title')}</h1>
+            <p>{t('app_settings.subtitle')}</p>
           </div>
         </div>
       </div>
@@ -137,50 +157,50 @@ export default function AppSettingsAdminPage() {
 
           {/* Identite */}
           <div className="unified-card settings-section">
-            <h3 className="settings-section-title">Identite</h3>
+            <h3 className="settings-section-title">{t('app_settings.section_identity')}</h3>
 
             <div className="settings-grid">
               <div className="form-group mb-0">
-                <label>Nom de l'application</label>
+                <label>{t('app_settings.label_app_name')}</label>
                 <input
                   type="text"
                   value={form.app_name || ''}
                   onChange={(e) => setForm(prev => ({ ...prev, app_name: e.target.value }))}
-                  placeholder="Mon Application"
+                  placeholder={t('app_settings.placeholder_app_name')}
                 />
               </div>
 
               <div className="form-group mb-0">
-                <label>Email de support</label>
+                <label>{t('app_settings.label_support_email')}</label>
                 <input
                   type="email"
                   value={form.support_email || ''}
                   onChange={(e) => setForm(prev => ({ ...prev, support_email: e.target.value }))}
-                  placeholder="support@example.com"
+                  placeholder={t('app_settings.placeholder_support_email')}
                 />
               </div>
             </div>
 
             <div className="form-group mt-16 mb-0">
-              <label>Description</label>
+              <label>{t('app_settings.label_description')}</label>
               <textarea
                 value={form.app_description || ''}
                 onChange={(e) => setForm(prev => ({ ...prev, app_description: e.target.value }))}
                 rows={3}
-                placeholder="Courte description de l'application"
+                placeholder={t('app_settings.placeholder_description')}
               />
             </div>
           </div>
 
           {/* Apparence */}
           <div className="unified-card settings-section">
-            <h3 className="settings-section-title">Apparence</h3>
+            <h3 className="settings-section-title">{t('app_settings.section_appearance')}</h3>
 
             <div className="settings-grid-align">
               {/* Logo */}
               <div className="form-group mb-0">
-                <label>Logo</label>
-                <p className="text-gray-500-sm mb-8">URL ou chemin du logo (header)</p>
+                <label>{t('app_settings.label_logo')}</label>
+                <p className="text-gray-500-sm mb-8">{t('app_settings.logo_help')}</p>
                 <div className="flex-center-lg">
                   {form.app_logo && (
                     <div className="header-logo-icon flex-shrink-0" style={{ backgroundColor: form.primary_color || '#1E40AF' }}>
@@ -197,29 +217,40 @@ export default function AppSettingsAdminPage() {
                       type="text"
                       value={form.app_logo || ''}
                       onChange={(e) => setForm(prev => ({ ...prev, app_logo: e.target.value }))}
-                      placeholder="/logo_full.svg"
+                      placeholder={t('app_settings.placeholder_logo')}
                       className="mb-8"
                     />
                     {can('settings.manage') && (
-                      <label
-                        className="btn btn-secondary cursor-pointer flex-center text-sm"
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                          <polyline points="17 8 12 3 7 8" />
-                          <line x1="12" y1="3" x2="12" y2="15" />
-                        </svg>
-                        {uploading ? 'Upload...' : 'Uploader un logo'}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden-input"
-                          onChange={(e) => {
-                            const f = e.target.files?.[0]
-                            if (f) handleLogoUpload(f)
-                          }}
-                        />
-                      </label>
+                      <div className="flex-center gap-8">
+                        <label
+                          className="btn btn-secondary cursor-pointer flex-center text-sm"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                          </svg>
+                          {uploading ? t('app_settings.uploading_logo') : t('app_settings.upload_logo')}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden-input"
+                            onChange={(e) => {
+                              const f = e.target.files?.[0]
+                              if (f) handleLogoUpload(f)
+                            }}
+                          />
+                        </label>
+                        {isLogoCustom && (
+                          <button type="button" className="btn btn-ghost text-sm" onClick={handleResetLogo}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <polyline points="1 4 1 10 7 10" />
+                              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+                            </svg>
+                            {t('app_settings.reset_default')}
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -227,8 +258,8 @@ export default function AppSettingsAdminPage() {
 
               {/* Couleur principale */}
               <div className="form-group mb-0">
-                <label>Couleur principale</label>
-                <p className="text-gray-500-sm mb-8">Couleur de la marque (hex)</p>
+                <label>{t('app_settings.label_primary_color')}</label>
+                <p className="text-gray-500-sm mb-8">{t('app_settings.primary_color_help')}</p>
                 <div className="flex-center-lg">
                   <input
                     type="color"
@@ -249,8 +280,8 @@ export default function AppSettingsAdminPage() {
 
             {/* Favicon — full width row */}
             <div className="form-group mt-16 mb-0">
-              <label>Favicon</label>
-              <p className="text-gray-500-sm mb-8">URL ou chemin du favicon (.ico, .png, .svg)</p>
+              <label>{t('app_settings.label_favicon')}</label>
+              <p className="text-gray-500-sm mb-8">{t('app_settings.favicon_help')}</p>
               <div className="flex-center-lg">
                 {form.app_favicon && (
                   <img
@@ -265,30 +296,76 @@ export default function AppSettingsAdminPage() {
                     type="text"
                     value={form.app_favicon || ''}
                     onChange={(e) => setForm(prev => ({ ...prev, app_favicon: e.target.value }))}
-                    placeholder="/favicon.ico"
+                    placeholder={t('app_settings.placeholder_favicon')}
                     className="mb-8"
                   />
                   {can('settings.manage') && (
-                    <label
-                      className="btn btn-secondary cursor-pointer flex-center text-sm"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                        <polyline points="17 8 12 3 7 8" />
-                        <line x1="12" y1="3" x2="12" y2="15" />
-                      </svg>
-                      {uploadingFavicon ? 'Upload...' : 'Uploader un favicon'}
-                      <input
-                        type="file"
-                        accept=".ico,.png,.svg,image/x-icon,image/png,image/svg+xml"
-                        className="hidden-input"
-                        onChange={(e) => {
-                          const f = e.target.files?.[0]
-                          if (f) handleFaviconUpload(f)
-                        }}
-                      />
-                    </label>
+                    <div className="flex-center gap-8">
+                      <label
+                        className="btn btn-secondary cursor-pointer flex-center text-sm"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                          <polyline points="17 8 12 3 7 8" />
+                          <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                        {uploadingFavicon ? t('app_settings.uploading_favicon') : t('app_settings.upload_favicon')}
+                        <input
+                          type="file"
+                          accept=".ico,.png,.svg,image/x-icon,image/png,image/svg+xml"
+                          className="hidden-input"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0]
+                            if (f) handleFaviconUpload(f)
+                          }}
+                        />
+                      </label>
+                      {isFaviconCustom && (
+                        <button type="button" className="btn btn-ghost text-sm" onClick={handleResetFavicon}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <polyline points="1 4 1 10 7 10" />
+                            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+                          </svg>
+                          {t('app_settings.reset_default')}
+                        </button>
+                      )}
+                    </div>
                   )}
+                </div>
+              </div>
+            </div>
+            {/* Header toggles */}
+            <div className="settings-grid mt-16">
+              <div className="form-group mb-0">
+                <div className="flex-between">
+                  <div>
+                    <label>{t('app_settings.label_header_show_logo')}</label>
+                    <p className="text-gray-500-sm">{t('app_settings.header_show_logo_help')}</p>
+                  </div>
+                  <label className="toggle">
+                    <input
+                      type="checkbox"
+                      checked={form.header_show_logo !== 'false'}
+                      onChange={(e) => setForm(prev => ({ ...prev, header_show_logo: e.target.checked ? 'true' : 'false' }))}
+                    />
+                    <span className="toggle-slider" />
+                  </label>
+                </div>
+              </div>
+              <div className="form-group mb-0">
+                <div className="flex-between">
+                  <div>
+                    <label>{t('app_settings.label_header_show_name')}</label>
+                    <p className="text-gray-500-sm">{t('app_settings.header_show_name_help')}</p>
+                  </div>
+                  <label className="toggle">
+                    <input
+                      type="checkbox"
+                      checked={form.header_show_name !== 'false'}
+                      onChange={(e) => setForm(prev => ({ ...prev, header_show_name: e.target.checked ? 'true' : 'false' }))}
+                    />
+                    <span className="toggle-slider" />
+                  </label>
                 </div>
               </div>
             </div>
@@ -297,7 +374,7 @@ export default function AppSettingsAdminPage() {
           {/* Extra settings not in predefined keys */}
           {settings.filter(s => !orderedKeys.includes(s.key)).length > 0 && (
             <div className="unified-card settings-section">
-              <h3 className="settings-section-title">Autres</h3>
+              <h3 className="settings-section-title">{t('app_settings.section_other')}</h3>
               {settings
                 .filter(s => !orderedKeys.includes(s.key))
                 .map(s => (
@@ -317,7 +394,7 @@ export default function AppSettingsAdminPage() {
           {can('settings.manage') && (
             <div className="flex-end pt-8">
               <button type="submit" className="btn btn-primary" disabled={saving}>
-                {saving ? 'Enregistrement...' : 'Enregistrer les parametres'}
+                {saving ? t('app_settings.submitting') : t('app_settings.submit')}
               </button>
             </div>
           )}

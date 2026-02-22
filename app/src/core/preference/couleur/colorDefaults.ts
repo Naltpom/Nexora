@@ -1,38 +1,42 @@
 export interface ColorGroup {
   label: string
-  vars: { name: string; label: string }[]
+  i18nKey: string
+  vars: { name: string; label: string; i18nKey: string }[]
 }
 
 export const COLOR_GROUPS: ColorGroup[] = [
   {
     label: 'Couleurs principales',
+    i18nKey: 'group_main_colors',
     vars: [
-      { name: 'primary', label: 'Primaire' },
-      { name: 'primary-light', label: 'Primaire clair' },
-      { name: 'primary-dark', label: 'Primaire sombre' },
+      { name: 'primary', label: 'Primaire', i18nKey: 'color_primary' },
+      { name: 'primary-light', label: 'Primaire clair', i18nKey: 'color_primary_light' },
+      { name: 'primary-dark', label: 'Primaire sombre', i18nKey: 'color_primary_dark' },
     ],
   },
   {
     label: 'Couleurs de statut',
+    i18nKey: 'group_status_colors',
     vars: [
-      { name: 'success', label: 'Succes' },
-      { name: 'warning', label: 'Avertissement' },
-      { name: 'danger', label: 'Danger' },
+      { name: 'success', label: 'Succes', i18nKey: 'color_success' },
+      { name: 'warning', label: 'Avertissement', i18nKey: 'color_warning' },
+      { name: 'danger', label: 'Danger', i18nKey: 'color_danger' },
     ],
   },
   {
     label: 'Echelle de gris',
+    i18nKey: 'group_gray_scale',
     vars: [
-      { name: 'gray-50', label: 'Gris 50' },
-      { name: 'gray-100', label: 'Gris 100' },
-      { name: 'gray-200', label: 'Gris 200' },
-      { name: 'gray-300', label: 'Gris 300' },
-      { name: 'gray-400', label: 'Gris 400' },
-      { name: 'gray-500', label: 'Gris 500' },
-      { name: 'gray-600', label: 'Gris 600' },
-      { name: 'gray-700', label: 'Gris 700' },
-      { name: 'gray-800', label: 'Gris 800' },
-      { name: 'gray-900', label: 'Gris 900' },
+      { name: 'gray-50', label: 'Gris 50', i18nKey: 'color_gray_50' },
+      { name: 'gray-100', label: 'Gris 100', i18nKey: 'color_gray_100' },
+      { name: 'gray-200', label: 'Gris 200', i18nKey: 'color_gray_200' },
+      { name: 'gray-300', label: 'Gris 300', i18nKey: 'color_gray_300' },
+      { name: 'gray-400', label: 'Gris 400', i18nKey: 'color_gray_400' },
+      { name: 'gray-500', label: 'Gris 500', i18nKey: 'color_gray_500' },
+      { name: 'gray-600', label: 'Gris 600', i18nKey: 'color_gray_600' },
+      { name: 'gray-700', label: 'Gris 700', i18nKey: 'color_gray_700' },
+      { name: 'gray-800', label: 'Gris 800', i18nKey: 'color_gray_800' },
+      { name: 'gray-900', label: 'Gris 900', i18nKey: 'color_gray_900' },
     ],
   },
 ]

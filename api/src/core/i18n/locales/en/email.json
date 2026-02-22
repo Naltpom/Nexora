@@ -1,0 +1,22 @@
+{
+  "greeting": "",
+  "greeting_generic": "",
+  "footer": "",
+  "reset_password_subject": "",
+  "reset_password_intro_user": "",
+  "reset_password_intro_admin": "",
+  "reset_password_action": "",
+  "reset_password_cta": "",
+  "reset_password_expiry": "",
+  "reset_password_fallback": "",
+  "invitation_subject": "",
+  "invitation_intro": "",
+  "invitation_action": "",
+  "invitation_cta": "",
+  "invitation_expiry": "",
+  "invitation_fallback": "",
+  "verification_subject": "",
+  "verification_intro": "",
+  "verification_expiry": "",
+  "notification_action": ""
+}

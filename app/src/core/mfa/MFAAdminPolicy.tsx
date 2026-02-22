@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import Layout from '../../core/Layout'
 import api from '../../api'
 import './mfa.scss'
@@ -18,13 +19,15 @@ interface MFAPolicy {
 }
 
 const ALL_METHODS = ['totp', 'email', 'backup']
-const METHOD_LABELS: Record<string, string> = {
-  totp: 'TOTP',
-  email: 'Email',
-  backup: 'Code de secours',
-}
 
 export default function MFAAdminPolicy() {
+  const { t } = useTranslation('mfa')
+
+  const METHOD_LABELS: Record<string, string> = {
+    totp: t('method_totp'),
+    email: t('method_email'),
+    backup: t('method_backup'),
+  }
   const [roles, setRoles] = useState<Role[]>([])
   const [policies, setPolicies] = useState<Record<number, MFAPolicy>>({})
   const [loading, setLoading] = useState(true)
@@ -44,7 +47,7 @@ export default function MFAAdminPolicy() {
       const res = await api.get('/roles/')
       setRoles(res.data)
     } catch {
-      setError('Erreur lors du chargement des roles')
+      setError(t('admin_error_loading_roles'))
     }
   }, [])
 
@@ -135,9 +138,9 @@ export default function MFAAdminPolicy() {
         grace_period_days: state.grace_period_days,
       })
       await fetchPolicies()
-      showSuccess('Politique MFA mise a jour')
+      showSuccess(t('admin_policy_updated'))
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Erreur lors de la sauvegarde')
+      setError(err.response?.data?.detail || t('admin_error_saving'))
     } finally {
       setSavingRoleId(null)
     }
@@ -155,9 +158,9 @@ export default function MFAAdminPolicy() {
         ...prev,
         [roleId]: { mfa_required: false, allowed_methods: null, grace_period_days: 0 },
       }))
-      showSuccess('Politique supprimee')
+      showSuccess(t('admin_policy_deleted'))
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Erreur lors de la suppression')
+      setError(err.response?.data?.detail || t('admin_error_deleting'))
     } finally {
       setSavingRoleId(null)
     }
@@ -165,22 +168,22 @@ export default function MFAAdminPolicy() {
 
   if (loading) {
     return (
-      <Layout breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Administration' }, { label: 'Politique MFA' }]} title="Politique MFA">
+      <Layout breadcrumb={[{ label: t('admin_breadcrumb_home'), path: '/' }, { label: t('admin_breadcrumb_administration') }, { label: t('admin_breadcrumb_policy') }]} title={t('admin_breadcrumb_policy')}>
         <div className="loading-screen">
           <div className="spinner" />
-          <p>Chargement...</p>
+          <p>{t('loading')}</p>
         </div>
       </Layout>
     )
   }
 
   return (
-    <Layout breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Administration' }, { label: 'Politique MFA' }]} title="Politique MFA">
+    <Layout breadcrumb={[{ label: t('admin_breadcrumb_home'), path: '/' }, { label: t('admin_breadcrumb_administration') }, { label: t('admin_breadcrumb_policy') }]} title={t('admin_breadcrumb_policy')}>
       <div className="mfa-admin-page-layout">
         <div>
-          <h1 className="mfa-admin-page-title">Politique MFA par role</h1>
+          <h1 className="mfa-admin-page-title">{t('admin_page_title')}</h1>
           <p className="mfa-admin-page-desc">
-            Configurez les exigences d'authentification multi-facteurs pour chaque role.
+            {t('admin_page_description')}
           </p>
         </div>
 
@@ -192,18 +195,18 @@ export default function MFAAdminPolicy() {
             <table className="mfa-policy-table">
               <thead>
                 <tr>
-                  <th>Role</th>
-                  <th>MFA requis</th>
-                  <th>Methodes autorisees</th>
-                  <th>Periode de grace (jours)</th>
-                  <th>Actions</th>
+                  <th>{t('admin_table_role')}</th>
+                  <th>{t('admin_table_mfa_required')}</th>
+                  <th>{t('admin_table_allowed_methods')}</th>
+                  <th>{t('admin_table_grace_period')}</th>
+                  <th>{t('admin_table_actions')}</th>
                 </tr>
               </thead>
               <tbody>
                 {roles.length === 0 && (
                   <tr>
                     <td colSpan={5} className="mfa-policy-empty">
-                      Aucun role configure
+                      {t('admin_no_roles')}
                     </td>
                   </tr>
                 )}
@@ -261,7 +264,7 @@ export default function MFAAdminPolicy() {
                             onClick={() => handleSave(role.id)}
                             disabled={isSaving}
                           >
-                            {isSaving ? '...' : 'Sauvegarder'}
+                            {isSaving ? '...' : t('admin_save')}
                           </button>
                           {hasPolicy && (
                             <button
@@ -269,7 +272,7 @@ export default function MFAAdminPolicy() {
                               onClick={() => handleDelete(role.id)}
                               disabled={isSaving}
                             >
-                              Supprimer
+                              {t('admin_delete')}
                             </button>
                           )}
                         </div>

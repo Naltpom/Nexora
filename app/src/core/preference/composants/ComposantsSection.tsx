@@ -1,25 +1,26 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useDraftPreference } from '../DraftPreferenceContext'
 import { applyComposantsPrefs, type ComposantsPrefs } from '../applyPreferences'
 import './composants.scss'
 
-const CARD_OPTIONS = [
-  { value: 'flat', label: 'Plate' },
-  { value: 'elevated', label: 'Elevee' },
-  { value: 'bordered', label: 'Bordee' },
+const CARD_OPTION_KEYS = [
+  { value: 'flat', key: 'card_flat' },
+  { value: 'elevated', key: 'card_elevated' },
+  { value: 'bordered', key: 'card_bordered' },
 ]
 
-const MODAL_OPTIONS = [
-  { value: 'none', label: 'Aucune' },
-  { value: 'fade', label: 'Fade' },
-  { value: 'slide', label: 'Slide-up' },
-  { value: 'scale', label: 'Scale' },
+const MODAL_OPTION_KEYS = [
+  { value: 'none', key: 'modal_none' },
+  { value: 'fade', key: 'modal_fade' },
+  { value: 'slide', key: 'modal_slide' },
+  { value: 'scale', key: 'modal_scale' },
 ]
 
-const BUTTON_OPTIONS = [
-  { value: 'rounded', label: 'Arrondi' },
-  { value: 'square', label: 'Carre' },
-  { value: 'pill', label: 'Pill' },
+const BUTTON_OPTION_KEYS = [
+  { value: 'rounded', key: 'button_rounded' },
+  { value: 'square', key: 'button_square' },
+  { value: 'pill', key: 'button_pill' },
 ]
 
 const DEFAULTS: ComposantsPrefs = {
@@ -31,6 +32,7 @@ const DEFAULTS: ComposantsPrefs = {
 }
 
 export default function ComposantsSection() {
+  const { t } = useTranslation('preference.composants')
   const { getDraftPreference, setDraftPreference, resetVersion } = useDraftPreference()
 
   const [prefs, setPrefs] = useState<ComposantsPrefs>(() => {
@@ -64,58 +66,58 @@ export default function ComposantsSection() {
 
   return (
     <div className="unified-card card-padded">
-      <h2 className="title-sm">Style des composants</h2>
-      <p className="text-secondary">Personnalisez l'apparence des elements d'interface.</p>
+      <h2 className="title-sm">{t('section_title')}</h2>
+      <p className="text-secondary">{t('section_description')}</p>
 
       <div className="composants-section__grid">
         <div className="composants-section__field">
-          <label className="composants-section__label">Style des cards</label>
+          <label className="composants-section__label">{t('label_card_style')}</label>
           <div className="composants-section__radio-group">
-            {CARD_OPTIONS.map((opt) => (
+            {CARD_OPTION_KEYS.map((opt) => (
               <button
                 key={opt.value}
                 className={`composants-section__radio-btn${prefs.cardStyle === opt.value ? ' composants-section__radio-btn--active' : ''}`}
                 onClick={() => update({ cardStyle: opt.value })}
                 type="button"
               >
-                {opt.label}
+                {t(opt.key)}
               </button>
             ))}
           </div>
         </div>
 
         <div className="composants-section__field">
-          <label className="composants-section__label">Style des boutons</label>
+          <label className="composants-section__label">{t('label_button_style')}</label>
           <div className="composants-section__radio-group">
-            {BUTTON_OPTIONS.map((opt) => (
+            {BUTTON_OPTION_KEYS.map((opt) => (
               <button
                 key={opt.value}
                 className={`composants-section__radio-btn${prefs.buttonStyle === opt.value ? ' composants-section__radio-btn--active' : ''}`}
                 onClick={() => update({ buttonStyle: opt.value })}
                 type="button"
               >
-                {opt.label}
+                {t(opt.key)}
               </button>
             ))}
           </div>
         </div>
 
         <div className="composants-section__field">
-          <label className="composants-section__label">Animation des modals</label>
+          <label className="composants-section__label">{t('label_modal_animation')}</label>
           <select
             className="input"
             value={prefs.modalAnimation || 'fade'}
             onChange={(e) => update({ modalAnimation: e.target.value })}
           >
-            {MODAL_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            {MODAL_OPTION_KEYS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{t(opt.key)}</option>
             ))}
           </select>
         </div>
 
         <div className="composants-section__field">
           <label className="composants-section__toggle-row">
-            <span>Tables rayees</span>
+            <span>{t('label_striped_tables')}</span>
             <input
               type="checkbox"
               className="toggle"
@@ -127,7 +129,7 @@ export default function ComposantsSection() {
 
         <div className="composants-section__field">
           <label className="composants-section__toggle-row">
-            <span>Separateurs de liste</span>
+            <span>{t('label_list_separators')}</span>
             <input
               type="checkbox"
               className="toggle"
@@ -140,15 +142,15 @@ export default function ComposantsSection() {
 
       <div className="composants-section__preview">
         <div className="composants-section__preview-card">
-          <span>Apercu card</span>
+          <span>{t('preview_card')}</span>
         </div>
-        <button className="btn btn-primary composants-section__preview-btn" type="button">Apercu bouton</button>
+        <button className="btn btn-primary composants-section__preview-btn" type="button">{t('preview_button')}</button>
       </div>
 
       {isModified && (
         <div className="composants-section__actions">
           <button className="btn btn-secondary" onClick={handleReset} type="button">
-            Reinitialiser
+            {t('btn_reset')}
           </button>
         </div>
       )}

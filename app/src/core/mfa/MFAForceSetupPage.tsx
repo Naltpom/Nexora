@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../core/AuthContext'
 import api from '../../api'
@@ -6,6 +7,7 @@ import '../_identity/_identity.scss'
 import './mfa.scss'
 
 export default function MFAForceSetupPage() {
+  const { t } = useTranslation('mfa')
   const navigate = useNavigate()
   const { clearMfaSetupRequired, logout } = useAuth()
 
@@ -43,7 +45,7 @@ export default function MFAForceSetupPage() {
 
   const onSetupComplete = () => {
     clearMfaSetupRequired()
-    setSuccessMessage('MFA configure avec succes !')
+    setSuccessMessage(t('force_success'))
     setTimeout(() => navigate('/'), 1500)
   }
 
@@ -55,7 +57,7 @@ export default function MFAForceSetupPage() {
       const res = await api.post('/mfa/totp/setup')
       setTotpSetupData(res.data)
     } catch (err: any) {
-      setTotpError(err.response?.data?.detail || 'Erreur')
+      setTotpError(err.response?.data?.detail || t('force_totp_error_generic'))
     } finally {
       setTotpSaving(false)
     }
@@ -63,7 +65,7 @@ export default function MFAForceSetupPage() {
 
   const handleTotpVerify = async () => {
     if (!totpCode || totpCode.length !== 6) {
-      setTotpError('Entrez un code a 6 chiffres')
+      setTotpError(t('force_totp_error_6_digits'))
       return
     }
     setTotpError('')
@@ -72,7 +74,7 @@ export default function MFAForceSetupPage() {
       await api.post('/mfa/totp/verify-setup', { code: totpCode })
       onSetupComplete()
     } catch (err: any) {
-      setTotpError(err.response?.data?.detail || 'Code invalide')
+      setTotpError(err.response?.data?.detail || t('force_totp_error_invalid_code'))
     } finally {
       setTotpSaving(false)
     }
@@ -85,7 +87,7 @@ export default function MFAForceSetupPage() {
       await api.post('/mfa/email/enable')
       onSetupComplete()
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Erreur lors de l'activation")
+      setError(err.response?.data?.detail || t('force_email_error_activation'))
     } finally {
       setEmailSaving(false)
     }
@@ -108,9 +110,9 @@ export default function MFAForceSetupPage() {
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--warning, #D97706)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
           </svg>
-          <h1 className="mfa-force-title">Configuration MFA requise</h1>
+          <h1 className="mfa-force-title">{t('force_title')}</h1>
           <p className="mfa-force-subtitle">
-            Votre politique de securite exige la configuration de l'authentification multi-facteurs pour continuer.
+            {t('force_subtitle')}
           </p>
         </div>
 
@@ -122,31 +124,31 @@ export default function MFAForceSetupPage() {
             {/* TOTP */}
             {availableMethods.includes('totp') && (
               <div className="mfa-force-method-card">
-                <h3 className="mfa-force-method-title">Application d'authentification (TOTP)</h3>
+                <h3 className="mfa-force-method-title">{t('force_totp_title')}</h3>
                 <p className="mfa-force-method-desc">
-                  Google Authenticator, Authy, ou similaire.
+                  {t('force_totp_description')}
                 </p>
 
                 {totpError && <div className="alert alert-error alert-spaced">{totpError}</div>}
 
                 {!totpSetupData ? (
                   <button className="btn btn-primary" onClick={handleTotpSetup} disabled={totpSaving}>
-                    {totpSaving ? 'Chargement...' : 'Configurer TOTP'}
+                    {totpSaving ? t('force_totp_loading') : t('force_totp_setup')}
                   </button>
                 ) : (
                   <div>
                     <div className="mfa-force-qr-center">
                       <img
                         src={`data:image/png;base64,${totpSetupData.qr_code_base64}`}
-                        alt="QR Code TOTP"
+                        alt={t('force_totp_qr_alt')}
                         className="mfa-force-qr-img"
                       />
                     </div>
                     <div className="mfa-force-secret-hint">
-                      Cle : <code>{totpSetupData.secret}</code>
+                      {t('force_totp_secret_label')} <code>{totpSetupData.secret}</code>
                     </div>
                     <div className="form-group">
-                      <label>Code de verification</label>
+                      <label>{t('force_totp_verification_label')}</label>
                       <input
                         type="text"
                         inputMode="numeric"
@@ -159,10 +161,10 @@ export default function MFAForceSetupPage() {
                     </div>
                     <div className="flex-row-sm">
                       <button className="btn btn-primary" onClick={handleTotpVerify} disabled={totpSaving || totpCode.length !== 6}>
-                        {totpSaving ? 'Verification...' : 'Confirmer'}
+                        {totpSaving ? t('force_totp_verifying') : t('force_totp_confirm')}
                       </button>
                       <button className="btn btn-secondary" onClick={() => { setTotpSetupData(null); setTotpCode(''); setTotpError('') }}>
-                        Annuler
+                        {t('force_totp_cancel')}
                       </button>
                     </div>
                   </div>
@@ -173,19 +175,19 @@ export default function MFAForceSetupPage() {
             {/* Email */}
             {availableMethods.includes('email') && (
               <div className="mfa-force-method-card">
-                <h3 className="mfa-force-method-title">Verification par email</h3>
+                <h3 className="mfa-force-method-title">{t('force_email_title')}</h3>
                 <p className="mfa-force-method-desc">
-                  Recevez un code par email a chaque connexion.
+                  {t('force_email_description')}
                 </p>
                 <button className="btn btn-primary" onClick={handleEmailEnable} disabled={emailSaving}>
-                  {emailSaving ? 'Activation...' : 'Activer la verification email'}
+                  {emailSaving ? t('force_email_activating') : t('force_email_activate')}
                 </button>
               </div>
             )}
 
             {availableMethods.length === 0 && (
               <p className="mfa-force-no-methods">
-                Aucune methode MFA disponible. Contactez votre administrateur.
+                {t('force_no_methods')}
               </p>
             )}
           </div>
@@ -195,7 +197,7 @@ export default function MFAForceSetupPage() {
           className="btn btn-secondary mfa-force-logout-btn"
           onClick={() => { logout(); navigate('/login') }}
         >
-          Se deconnecter
+          {t('force_logout')}
         </button>
       </div>
     </div>

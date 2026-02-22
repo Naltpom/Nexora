@@ -1,5 +1,6 @@
 import { useState, FormEvent, Suspense, lazy } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import './_identity.scss'
 import Layout from '../../core/Layout'
 import { useAuth } from '../../core/AuthContext'
@@ -12,6 +13,7 @@ const SSOAccountLinks = lazy(() => import('../sso/SSOAccountLinks'))
 const MFAStatusBadge = lazy(() => import('../mfa/MFAStatusBadge'))
 
 export default function Profile() {
+  const { t } = useTranslation('_identity')
   const { user, refreshUser, getPreference, updatePreference } = useAuth()
   const { isActive } = useFeature()
 
@@ -52,9 +54,9 @@ export default function Profile() {
         email,
       })
       await refreshUser()
-      setInfoMessage('Informations mises a jour avec succes')
+      setInfoMessage(t('profile.info_success'))
     } catch (err: any) {
-      setInfoError(err.response?.data?.detail || 'Erreur lors de la sauvegarde')
+      setInfoError(err.response?.data?.detail || t('profile.info_error'))
     } finally {
       setInfoSaving(false)
     }
@@ -66,11 +68,11 @@ export default function Profile() {
     setPwdMessage('')
 
     if (newPassword.length < 6) {
-      setPwdError('Le mot de passe doit contenir au moins 6 caracteres')
+      setPwdError(t('profile.password_min_6_error'))
       return
     }
     if (newPassword !== confirmPassword) {
-      setPwdError('Les mots de passe ne correspondent pas')
+      setPwdError(t('profile.password_mismatch_error'))
       return
     }
 
@@ -80,12 +82,12 @@ export default function Profile() {
         current_password: currentPassword,
         new_password: newPassword,
       })
-      setPwdMessage('Mot de passe modifie avec succes')
+      setPwdMessage(t('profile.password_success'))
       setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
     } catch (err: any) {
-      setPwdError(err.response?.data?.detail || 'Erreur lors du changement de mot de passe')
+      setPwdError(err.response?.data?.detail || t('profile.password_error'))
     } finally {
       setPwdSaving(false)
     }
@@ -99,17 +101,17 @@ export default function Profile() {
   }
 
   return (
-    <Layout breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Mon profil' }]} title="Mon profil">
+    <Layout breadcrumb={[{ label: t('profile.breadcrumb_home'), path: '/' }, { label: t('profile.breadcrumb_profile') }]} title={t('profile.page_title')}>
       <div className="page-narrow">
         {/* User Info Section */}
         <div className="unified-card card-padded reveal-up" ref={infoRef}>
-          <h2 className="title-sm">Informations personnelles</h2>
+          <h2 className="title-sm">{t('profile.section_personal_info')}</h2>
           <form onSubmit={handleSaveInfo}>
             {infoError && <div className="alert alert-error alert-spaced">{infoError}</div>}
             {infoMessage && <div className="alert alert-success alert-spaced">{infoMessage}</div>}
 
             <div className="form-group">
-              <label>Email</label>
+              <label>{t('common.email')}</label>
               <input
                 type="email"
                 value={email}
@@ -120,7 +122,7 @@ export default function Profile() {
 
             <div className="form-grid-2col">
               <div className="form-group">
-                <label>Prenom</label>
+                <label>{t('common.first_name')}</label>
                 <input
                   type="text"
                   value={firstName}
@@ -129,7 +131,7 @@ export default function Profile() {
                 />
               </div>
               <div className="form-group">
-                <label>Nom</label>
+                <label>{t('common.last_name')}</label>
                 <input
                   type="text"
                   value={lastName}
@@ -140,20 +142,20 @@ export default function Profile() {
             </div>
 
             <button type="submit" className="btn btn-primary" disabled={infoSaving}>
-              {infoSaving ? 'Enregistrement...' : 'Sauvegarder'}
+              {infoSaving ? t('profile.saving') : t('profile.save')}
             </button>
           </form>
         </div>
 
         {/* Password Section */}
         <div className="unified-card card-padded reveal-up" ref={passwordRef}>
-          <h2 className="title-sm">Changer le mot de passe</h2>
+          <h2 className="title-sm">{t('profile.section_change_password')}</h2>
           <form onSubmit={handleChangePassword}>
             {pwdError && <div className="alert alert-error alert-spaced">{pwdError}</div>}
             {pwdMessage && <div className="alert alert-success alert-spaced">{pwdMessage}</div>}
 
             <div className="form-group">
-              <label>Mot de passe actuel</label>
+              <label>{t('common.current_password')}</label>
               <input
                 type="password"
                 value={currentPassword}
@@ -163,18 +165,18 @@ export default function Profile() {
             </div>
 
             <div className="form-group">
-              <label>Nouveau mot de passe</label>
+              <label>{t('common.new_password')}</label>
               <input
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Minimum 6 caracteres"
+                placeholder={t('common.password_min_6')}
                 required
               />
             </div>
 
             <div className="form-group">
-              <label>Confirmer le nouveau mot de passe</label>
+              <label>{t('common.confirm_new_password')}</label>
               <input
                 type="password"
                 value={confirmPassword}
@@ -184,7 +186,7 @@ export default function Profile() {
             </div>
 
             <button type="submit" className="btn btn-primary" disabled={pwdSaving}>
-              {pwdSaving ? 'Modification...' : 'Modifier le mot de passe'}
+              {pwdSaving ? t('profile.password_submitting') : t('profile.password_submit')}
             </button>
           </form>
         </div>
@@ -193,16 +195,16 @@ export default function Profile() {
         {isActive('mfa') && (
           <div className="unified-card card-padded reveal-up" ref={mfaRef}>
             <div className="flex-between mb-16">
-              <h2 className="title-sm mb-0">Authentification multi-facteurs (MFA)</h2>
+              <h2 className="title-sm mb-0">{t('profile.section_mfa')}</h2>
               <Suspense fallback={null}>
                 <MFAStatusBadge />
               </Suspense>
             </div>
             <p className="text-secondary">
-              Renforcez la securite de votre compte en activant une methode de verification supplementaire.
+              {t('profile.mfa_description')}
             </p>
             <Link to="/profile/mfa" className="btn btn-secondary">
-              Configurer MFA
+              {t('profile.mfa_configure')}
             </Link>
           </div>
         )}
@@ -210,9 +212,9 @@ export default function Profile() {
         {/* SSO Section */}
         {isActive('sso') && (
           <div className="unified-card card-padded sso-profile-section reveal-up" ref={ssoRef}>
-            <h2 className="title-sm">Comptes lies</h2>
+            <h2 className="title-sm">{t('profile.section_sso')}</h2>
             <p className="text-secondary">
-              Liez vos comptes externes pour vous connecter plus rapidement.
+              {t('profile.sso_description')}
             </p>
             <Suspense fallback={null}>
               <SSOAccountLinks />
@@ -223,33 +225,33 @@ export default function Profile() {
         {/* Preferences Section */}
         {isActive('preference') ? (
           <div className="unified-card card-padded reveal-up" ref={prefsRef}>
-            <h2 className="title-sm">Preferences</h2>
+            <h2 className="title-sm">{t('profile.section_preferences')}</h2>
             <p className="text-secondary">
-              Gerez vos preferences de theme, tutoriels, et plus.
+              {t('profile.preferences_description')}
             </p>
             <Link to="/profile/preferences" className="btn btn-secondary">
-              Gerer les preferences
+              {t('profile.preferences_manage')}
             </Link>
           </div>
         ) : (
           <div className="unified-card card-padded reveal-up" ref={prefsRef}>
-            <h2 className="title-sm">Preferences</h2>
+            <h2 className="title-sm">{t('profile.section_preferences')}</h2>
             <div className="form-group">
-              <label>Theme</label>
+              <label>{t('profile.theme_label')}</label>
               <div className="flex-row">
                 <button
                   className={`btn ${currentTheme === 'light' ? 'btn-primary' : 'btn-secondary'}`}
                   onClick={() => handleThemeChange('light')}
                   type="button"
                 >
-                  Clair
+                  {t('profile.theme_light')}
                 </button>
                 <button
                   className={`btn ${currentTheme === 'dark' ? 'btn-primary' : 'btn-secondary'}`}
                   onClick={() => handleThemeChange('dark')}
                   type="button"
                 >
-                  Sombre
+                  {t('profile.theme_dark')}
                 </button>
               </div>
             </div>

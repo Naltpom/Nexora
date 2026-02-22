@@ -1,4 +1,6 @@
 import { createContext, useContext, useState, useRef, useEffect, useCallback, ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import { useAuth } from '../AuthContext'
 import { applyFontPrefs, applyLayoutPrefs, applyComposantsPrefs, applyAccessibilitePrefs } from './applyPreferences'
 import { applyCustomColors, clearCustomColors } from './couleur/applyCustomColors'
@@ -31,89 +33,105 @@ export function useDraftPreference() {
   return ctx
 }
 
-// ── Label maps for human-readable change display ──
+// ── i18n key maps for human-readable change display ──
 
-const PREF_LABELS: Record<string, string> = {
-  theme: 'Theme',
-  customColors: 'Couleurs personnalisees',
-  font: 'Typographie',
-  layout: 'Mise en page',
-  composants: 'Style des composants',
-  accessibilite: 'Accessibilite',
+const PREF_LABEL_KEYS: Record<string, string> = {
+  theme: 'pref_label_theme',
+  customColors: 'pref_label_custom_colors',
+  font: 'pref_label_font',
+  layout: 'pref_label_layout',
+  composants: 'pref_label_composants',
+  accessibilite: 'pref_label_accessibilite',
 }
 
-const FONT_LABELS: Record<string, string> = {
-  system: 'Systeme', inter: 'Inter', roboto: 'Roboto',
+const FONT_LABEL_KEYS: Record<string, string | null> = {
+  system: 'font_label_system', inter: null, roboto: null,
+  'open-sans': null, atkinson: null, opendyslexic: null,
+}
+
+const FONT_DISPLAY_NAMES: Record<string, string> = {
+  inter: 'Inter', roboto: 'Roboto',
   'open-sans': 'Open Sans', atkinson: 'Atkinson Hyperlegible', opendyslexic: 'OpenDyslexic',
 }
 
-const DENSITY_LABELS: Record<string, string> = { compact: 'Compact', normal: 'Normal', airy: 'Aere' }
-
-const WIDTH_LABELS: Record<string, string> = {
-  narrow: 'Etroit (720px)', normal: 'Normal (960px)', wide: 'Large (1200px)', full: 'Pleine largeur',
+const DENSITY_LABEL_KEYS: Record<string, string> = {
+  compact: 'density_label_compact', normal: 'density_label_normal', airy: 'density_label_airy',
 }
 
-const A11Y_LABELS: { key: string; label: string }[] = [
-  { key: 'highContrast', label: 'Contraste eleve' },
-  { key: 'reduceMotion', label: 'Reduire animations' },
-  { key: 'dyslexia', label: 'Police dyslexie' },
-  { key: 'focusVisible', label: 'Focus renforce' },
-  { key: 'underlineLinks', label: 'Liens soulignes' },
-  { key: 'largeTargets', label: 'Grandes zones tactiles' },
+const WIDTH_LABEL_KEYS: Record<string, string> = {
+  narrow: 'width_label_narrow', normal: 'width_label_normal', wide: 'width_label_wide', full: 'width_label_full',
+}
+
+const A11Y_LABEL_KEYS: { key: string; i18nKey: string }[] = [
+  { key: 'highContrast', i18nKey: 'a11y_label_high_contrast' },
+  { key: 'reduceMotion', i18nKey: 'a11y_label_reduce_motion' },
+  { key: 'dyslexia', i18nKey: 'a11y_label_dyslexia' },
+  { key: 'focusVisible', i18nKey: 'a11y_label_focus_visible' },
+  { key: 'underlineLinks', i18nKey: 'a11y_label_underline_links' },
+  { key: 'largeTargets', i18nKey: 'a11y_label_large_targets' },
 ]
 
-function formatValue(key: string, val: any): string {
-  if (val === null || val === undefined) return 'Par defaut'
+function formatValue(t: TFunction, key: string, val: any): string {
+  if (val === null || val === undefined) return t('format_default')
 
   switch (key) {
     case 'theme':
-      return val === 'dark' ? 'Sombre' : 'Clair'
+      return val === 'dark' ? t('format_theme_dark') : t('format_theme_light')
 
     case 'customColors': {
-      if (!val || typeof val !== 'object') return 'Par defaut'
+      if (!val || typeof val !== 'object') return t('format_default')
       const parts: string[] = []
       if (val.light && Object.keys(val.light).length > 0)
-        parts.push(`${Object.keys(val.light).length} clair`)
+        parts.push(`${Object.keys(val.light).length} ${t('format_custom_light')}`)
       if (val.dark && Object.keys(val.dark).length > 0)
-        parts.push(`${Object.keys(val.dark).length} sombre`)
-      return parts.length > 0 ? parts.join(', ') + ' personnalisee(s)' : 'Par defaut'
+        parts.push(`${Object.keys(val.dark).length} ${t('format_custom_dark')}`)
+      return parts.length > 0 ? parts.join(', ') + ' ' + t('format_custom_suffix') : t('format_default')
     }
 
     case 'font': {
-      if (!val || typeof val !== 'object') return 'Par defaut'
+      if (!val || typeof val !== 'object') return t('format_default')
       const parts: string[] = []
-      if (val.family && val.family !== 'system') parts.push(FONT_LABELS[val.family] || val.family)
+      if (val.family && val.family !== 'system') {
+        const fKey = FONT_LABEL_KEYS[val.family]
+        parts.push(fKey ? t(fKey) : (FONT_DISPLAY_NAMES[val.family] || val.family))
+      }
       if (val.scale && val.scale !== 100) parts.push(`${val.scale}%`)
-      if (val.lineHeight && val.lineHeight !== 1.5) parts.push(`interligne ${val.lineHeight}`)
-      if (val.weight && val.weight !== 400) parts.push(`epaisseur ${val.weight}`)
-      return parts.length > 0 ? parts.join(', ') : 'Par defaut'
+      if (val.lineHeight && val.lineHeight !== 1.5) parts.push(`${t('format_line_height')} ${val.lineHeight}`)
+      if (val.weight && val.weight !== 400) parts.push(`${t('format_weight')} ${val.weight}`)
+      return parts.length > 0 ? parts.join(', ') : t('format_default')
     }
 
     case 'layout': {
-      if (!val || typeof val !== 'object') return 'Par defaut'
+      if (!val || typeof val !== 'object') return t('format_default')
       const parts: string[] = []
-      if (val.density && val.density !== 'normal') parts.push(DENSITY_LABELS[val.density] || val.density)
-      if (val.radius !== undefined && val.radius !== 8) parts.push(`rayon ${val.radius}px`)
-      if (val.maxWidth && val.maxWidth !== 'normal') parts.push(WIDTH_LABELS[val.maxWidth] || val.maxWidth)
-      if (val.sectionGap && val.sectionGap !== 16) parts.push(`espacement ${val.sectionGap}px`)
-      return parts.length > 0 ? parts.join(', ') : 'Par defaut'
+      if (val.density && val.density !== 'normal') {
+        const dKey = DENSITY_LABEL_KEYS[val.density]
+        parts.push(dKey ? t(dKey) : val.density)
+      }
+      if (val.radius !== undefined && val.radius !== 8) parts.push(`${t('format_radius')} ${val.radius}px`)
+      if (val.maxWidth && val.maxWidth !== 'normal') {
+        const wKey = WIDTH_LABEL_KEYS[val.maxWidth]
+        parts.push(wKey ? t(wKey) : val.maxWidth)
+      }
+      if (val.sectionGap && val.sectionGap !== 16) parts.push(`${t('format_spacing')} ${val.sectionGap}px`)
+      return parts.length > 0 ? parts.join(', ') : t('format_default')
     }
 
     case 'composants': {
-      if (!val || typeof val !== 'object') return 'Par defaut'
+      if (!val || typeof val !== 'object') return t('format_default')
       const parts: string[] = []
-      if (val.cardStyle && val.cardStyle !== 'elevated') parts.push(`cards ${val.cardStyle}`)
-      if (val.buttonStyle && val.buttonStyle !== 'rounded') parts.push(`boutons ${val.buttonStyle}`)
-      if (val.modalAnimation && val.modalAnimation !== 'fade') parts.push(`modal ${val.modalAnimation}`)
-      if (val.stripedTables === false) parts.push('sans rayures')
-      if (val.listSeparators === false) parts.push('sans separateurs')
-      return parts.length > 0 ? parts.join(', ') : 'Par defaut'
+      if (val.cardStyle && val.cardStyle !== 'elevated') parts.push(`${t('format_cards')} ${val.cardStyle}`)
+      if (val.buttonStyle && val.buttonStyle !== 'rounded') parts.push(`${t('format_buttons')} ${val.buttonStyle}`)
+      if (val.modalAnimation && val.modalAnimation !== 'fade') parts.push(`${t('format_modal')} ${val.modalAnimation}`)
+      if (val.stripedTables === false) parts.push(t('format_no_stripes'))
+      if (val.listSeparators === false) parts.push(t('format_no_separators'))
+      return parts.length > 0 ? parts.join(', ') : t('format_default')
     }
 
     case 'accessibilite': {
-      if (!val || typeof val !== 'object') return 'Aucun'
-      const active = A11Y_LABELS.filter(({ key: k }) => val[k]).map(({ label }) => label)
-      return active.length > 0 ? active.join(', ') : 'Aucun'
+      if (!val || typeof val !== 'object') return t('format_none')
+      const active = A11Y_LABEL_KEYS.filter(({ key: k }) => val[k]).map(({ i18nKey }) => t(i18nKey))
+      return active.length > 0 ? active.join(', ') : t('format_none')
     }
 
     default:
@@ -161,6 +179,7 @@ function deepClone<T>(obj: T): T {
 }
 
 export function DraftPreferenceProvider({ children }: { children: ReactNode }) {
+  const { t } = useTranslation('preference')
   const { getPreference, updatePreference } = useAuth()
 
   const buildSnapshot = () => {
@@ -195,16 +214,17 @@ export function DraftPreferenceProvider({ children }: { children: ReactNode }) {
     const changes: PreferenceChange[] = []
     for (const key of PREFERENCE_KEYS) {
       if (JSON.stringify(draft[key]) !== JSON.stringify(snapshot[key])) {
+        const labelKey = PREF_LABEL_KEYS[key]
         changes.push({
           key,
-          label: PREF_LABELS[key] || key,
-          oldDisplay: formatValue(key, snapshot[key]),
-          newDisplay: formatValue(key, draft[key]),
+          label: labelKey ? t(labelKey) : key,
+          oldDisplay: formatValue(t, key, snapshot[key]),
+          newDisplay: formatValue(t, key, draft[key]),
         })
       }
     }
     return changes
-  }, [draft, snapshot])
+  }, [draft, snapshot, t])
 
   const saveAll = useCallback(async () => {
     for (const key of PREFERENCE_KEYS) {

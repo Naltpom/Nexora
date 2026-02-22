@@ -1,0 +1,136 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Deployment target"
+        required: true
+        default: "ssh"
+        type: choice
+        options:
+          - ssh
+          - cloud
+      environment:
+        description: "Target environment"
+        required: true
+        default: "staging"
+        type: choice
+        options:
+          - staging
+          - production
+
+  # Uncomment to auto-deploy after successful CI on main:
+  # workflow_run:
+  #   workflows: ["CI"]
+  #   types: [completed]
+  #   branches: [main]
+
+jobs:
+  # ─── SSH Deployment (VPS / Dedicated Server) ─────────────────────
+  deploy-ssh:
+    name: Deploy via SSH
+    if: inputs.target == 'ssh'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            cd ${{ secrets.APP_DIR || '/app' }}
+            git pull origin main
+            docker compose down
+            docker compose up -d --build
+            docker compose exec -T api alembic upgrade head
+            echo "Deployment complete"
+
+  # ─── Cloud Deployment (Container Services) ───────────────────────
+  deploy-cloud:
+    name: Deploy to Cloud
+    if: inputs.target == 'cloud'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # ── AWS ECS ──────────────────────────────────────────────────
+      # Uncomment and configure for AWS ECS deployment:
+      #
+      # - name: Configure AWS credentials
+      #   uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws-region: ${{ secrets.AWS_REGION }}
+      #
+      # - name: Login to ECR
+      #   id: ecr-login
+      #   uses: aws-actions/amazon-ecr-login@v2
+      #
+      # - name: Build and push API image
+      #   run: |
+      #     docker build -t ${{ steps.ecr-login.outputs.registry }}/template-api:${{ github.sha }} ./api
+      #     docker push ${{ steps.ecr-login.outputs.registry }}/template-api:${{ github.sha }}
+      #
+      # - name: Build and push App image
+      #   run: |
+      #     docker build -t ${{ steps.ecr-login.outputs.registry }}/template-app:${{ github.sha }} ./app
+      #     docker push ${{ steps.ecr-login.outputs.registry }}/template-app:${{ github.sha }}
+      #
+      # - name: Update ECS service
+      #   run: |
+      #     aws ecs update-service --cluster ${{ secrets.ECS_CLUSTER }} --service ${{ secrets.ECS_SERVICE }} --force-new-deployment
+
+      # ── GCP Cloud Run ────────────────────────────────────────────
+      # Uncomment and configure for GCP Cloud Run deployment:
+      #
+      # - name: Authenticate to Google Cloud
+      #   uses: google-github-actions/auth@v2
+      #   with:
+      #     credentials_json: ${{ secrets.GCP_SA_KEY }}
+      #
+      # - name: Set up Cloud SDK
+      #   uses: google-github-actions/setup-gcloud@v2
+      #
+      # - name: Configure Docker for Artifact Registry
+      #   run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev
+      #
+      # - name: Build and push API
+      #   run: |
+      #     docker build -t ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/${{ secrets.GCP_REPO }}/api:${{ github.sha }} ./api
+      #     docker push ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/${{ secrets.GCP_REPO }}/api:${{ github.sha }}
+      #
+      # - name: Deploy API to Cloud Run
+      #   uses: google-github-actions/deploy-cloudrun@v2
+      #   with:
+      #     service: template-api
+      #     image: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/${{ secrets.GCP_REPO }}/api:${{ github.sha }}
+      #     region: ${{ secrets.GCP_REGION }}
+
+      # ── Azure Container Apps ─────────────────────────────────────
+      # Uncomment and configure for Azure Container Apps deployment:
+      #
+      # - name: Azure Login
+      #   uses: azure/login@v2
+      #   with:
+      #     creds: ${{ secrets.AZURE_CREDENTIALS }}
+      #
+      # - name: Build and push to ACR
+      #   run: |
+      #     az acr login --name ${{ secrets.ACR_NAME }}
+      #     docker build -t ${{ secrets.ACR_NAME }}.azurecr.io/template-api:${{ github.sha }} ./api
+      #     docker push ${{ secrets.ACR_NAME }}.azurecr.io/template-api:${{ github.sha }}
+      #
+      # - name: Deploy to Container Apps
+      #   run: |
+      #     az containerapp update --name template-api \
+      #       --resource-group ${{ secrets.AZURE_RG }} \
+      #       --image ${{ secrets.ACR_NAME }}.azurecr.io/template-api:${{ github.sha }}
+
+      - name: Placeholder
+        run: echo "Configure a cloud provider above by uncommenting the relevant section"

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import api from '../../api'
 import './mfa.scss'
 
@@ -9,6 +10,7 @@ interface MFAStatusResponse {
 }
 
 export default function MFAStatusBadge() {
+  const { t } = useTranslation('mfa')
   const [status, setStatus] = useState<MFAStatusResponse | null>(null)
 
   useEffect(() => {
@@ -26,12 +28,12 @@ export default function MFAStatusBadge() {
   if (!status) return null
 
   if (status.is_mfa_enabled) {
-    return <span className="mfa-badge mfa-badge-active">MFA actif</span>
+    return <span className="mfa-badge mfa-badge-active">{t('badge_active')}</span>
   }
 
   if (status.mfa_required_by_policy) {
-    return <span className="mfa-badge mfa-badge-required">MFA requis</span>
+    return <span className="mfa-badge mfa-badge-required">{t('badge_required')}</span>
   }
 
-  return <span className="mfa-badge mfa-badge-inactive">MFA inactif</span>
+  return <span className="mfa-badge mfa-badge-inactive">{t('badge_inactive')}</span>
 }

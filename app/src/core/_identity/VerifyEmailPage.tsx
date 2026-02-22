@@ -1,10 +1,12 @@
 import { useState, useEffect, FormEvent, useRef } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import api from '../../api'
 import { useAuth } from '../../core/AuthContext'
 import './_identity.scss'
 
 export default function VerifyEmail() {
+  const { t } = useTranslation('_identity')
   const navigate = useNavigate()
   const location = useLocation()
   const { refreshUser } = useAuth()
@@ -55,7 +57,7 @@ export default function VerifyEmail() {
       }
       startCooldown()
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Erreur lors du renvoi')
+      setError(err.response?.data?.detail || t('verify_email.error_resend'))
     }
   }
 
@@ -72,7 +74,7 @@ export default function VerifyEmail() {
       setSuccess(true)
       setTimeout(() => navigate('/'), 2000)
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Code incorrect')
+      setError(err.response?.data?.detail || t('verify_email.error_code_incorrect'))
     } finally {
       setSubmitting(false)
     }
@@ -88,13 +90,13 @@ export default function VerifyEmail() {
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
-            <h1>Email verifie !</h1>
+            <h1>{t('verify_email.success_title')}</h1>
           </div>
           <p className="text-center text-gray-500 mb-16">
-            Votre compte a ete active avec succes.
+            {t('verify_email.success_message')}
           </p>
           <p className="text-center text-gray-500">
-            Redirection en cours...
+            {t('common.redirecting')}
           </p>
         </div>
       </div>
@@ -109,15 +111,15 @@ export default function VerifyEmail() {
             <rect width="32" height="32" rx="6" fill="var(--primary)" />
             <text x="16" y="22" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold">K</text>
           </svg>
-          <h1>Verification de l'email</h1>
+          <h1>{t('verify_email.title')}</h1>
           <p className="text-gray-500">
-            Un code de verification a ete envoye a <strong>{email}</strong>
+            {t('verify_email.code_sent_to')} <strong>{email}</strong>
           </p>
         </div>
 
         {debugCode && (
           <div className="verify-debug-box">
-            <span className="verify-debug-label">MODE DEV — Code :</span>
+            <span className="verify-debug-label">{t('verify_email.debug_label')}</span>
             <span className="verify-debug-code">{debugCode}</span>
           </div>
         )}
@@ -126,7 +128,7 @@ export default function VerifyEmail() {
           {error && <div className="alert alert-error">{error}</div>}
 
           <div className="form-group">
-            <label>Code de verification</label>
+            <label>{t('verify_email.code_label')}</label>
             <input
               type="text"
               value={verificationCode}
@@ -141,7 +143,7 @@ export default function VerifyEmail() {
           </div>
 
           <button type="submit" className="btn btn-primary btn-block" disabled={submitting || verificationCode.length !== 6}>
-            {submitting ? 'Verification...' : 'Valider'}
+            {submitting ? t('verify_email.submitting') : t('verify_email.submit')}
           </button>
 
           <div className="text-center mt-16">
@@ -152,19 +154,19 @@ export default function VerifyEmail() {
               className={resendCooldown > 0 ? 'verify-resend-btn verify-resend-btn--disabled' : 'verify-resend-btn verify-resend-btn--active'}
             >
               {resendCooldown > 0
-                ? `Renvoyer le code (${resendCooldown}s)`
-                : 'Renvoyer le code'}
+                ? t('verify_email.resend_code_cooldown', { seconds: resendCooldown })
+                : t('verify_email.resend_code')}
             </button>
           </div>
 
           <p className="text-muted text-center mt-16">
-            Le code est valable 5 minutes.
+            {t('verify_email.code_validity')}
           </p>
         </form>
 
         <div className="login-footer">
           <Link to="/login" className="link-primary text-gray-500">
-            Retourner a la connexion
+            {t('verify_email.back_to_login')}
           </Link>
         </div>
       </div>

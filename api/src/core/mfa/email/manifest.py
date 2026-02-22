@@ -4,7 +4,6 @@ manifest = FeatureManifest(
     name="mfa.email",
     label="Email OTP",
     description="Mot de passe a usage unique envoye par email",
-    version="2026.02.3",
     parent="mfa",
     depends=["notification.email"],
     permissions=["mfa.email.setup"],

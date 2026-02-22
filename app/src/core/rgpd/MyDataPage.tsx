@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import Layout from '../Layout'
 import api from '../../api'
@@ -11,6 +12,7 @@ interface DataSection {
 }
 
 export default function MyDataPage() {
+  const { t } = useTranslation('rgpd')
   const [sections, setSections] = useState<DataSection[]>([])
   const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState<string | null>(null)
@@ -49,22 +51,19 @@ export default function MyDataPage() {
 
   if (loading) {
     return (
-      <Layout title="Mes donnees" breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Mes donnees' }]}>
+      <Layout title={t('my_data_page.page_title')} breadcrumb={[{ label: t('my_data_page.breadcrumb_home'), path: '/' }, { label: t('my_data_page.breadcrumb_label') }]}>
         <div className="text-center loading-pad-lg"><div className="spinner" /></div>
       </Layout>
     )
   }
 
   return (
-    <Layout title="Mes donnees" breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Mes donnees' }]}>
+    <Layout title={t('my_data_page.page_title')} breadcrumb={[{ label: t('my_data_page.breadcrumb_home'), path: '/' }, { label: t('my_data_page.breadcrumb_label') }]}>
       <div className="unified-card page-header-card">
         <div className="unified-page-header">
           <div className="unified-page-header-info">
-            <h1>Mes donnees personnelles</h1>
-            <p>
-              Consultez les donnees que nous stockons a votre sujet.
-              Vous pouvez les exporter ou exercer vos droits RGPD.
-            </p>
+            <h1>{t('my_data_page.heading')}</h1>
+            <p>{t('my_data_page.description')}</p>
           </div>
           <div className="unified-page-header-actions">
             <button
@@ -72,14 +71,14 @@ export default function MyDataPage() {
               onClick={() => handleExport('csv')}
               disabled={exporting !== null}
             >
-              {exporting === 'csv' ? 'Export...' : 'Exporter CSV'}
+              {exporting === 'csv' ? t('my_data_page.btn_export_csv_loading') : t('my_data_page.btn_export_csv')}
             </button>
             <button
               className="btn btn-primary btn-sm"
               onClick={() => handleExport('json')}
               disabled={exporting !== null}
             >
-              {exporting === 'json' ? 'Export...' : 'Exporter JSON'}
+              {exporting === 'json' ? t('my_data_page.btn_export_json_loading') : t('my_data_page.btn_export_json')}
             </button>
           </div>
         </div>
@@ -87,7 +86,7 @@ export default function MyDataPage() {
 
       {sections.length === 0 ? (
         <div className="unified-card">
-          <p className="text-center text-secondary">Aucune donnee trouvee.</p>
+          <p className="text-center text-secondary">{t('my_data_page.no_data')}</p>
         </div>
       ) : (
         <div className="rgpd-data-sections">
@@ -95,7 +94,7 @@ export default function MyDataPage() {
             <div key={s.section} className="unified-card rgpd-data-section">
               <div className="rgpd-data-section-header">
                 <h3>{s.section}</h3>
-                <span className="rgpd-badge">{s.count} enregistrement{s.count > 1 ? 's' : ''}</span>
+                <span className="rgpd-badge">{s.count} {s.count > 1 ? t('my_data_page.record_plural') : t('my_data_page.record_singular')}</span>
               </div>
               <div className="rgpd-data-fields">
                 {s.fields.map((f) => (
@@ -108,24 +107,18 @@ export default function MyDataPage() {
       )}
 
       <div className="unified-card rgpd-rights-cta">
-        <h3>Gerer mes preferences</h3>
-        <p>
-          Configurez vos preferences de cookies et traceurs et de consentement.
-          Vous pouvez activer ou desactiver chaque categorie de cookies et traceurs a tout moment.
-        </p>
+        <h3>{t('my_data_page.manage_preferences_title')}</h3>
+        <p>{t('my_data_page.manage_preferences_description')}</p>
         <Link to="/rgpd/consent" className="btn btn-secondary btn-sm">
-          Preferences de consentement
+          {t('my_data_page.btn_consent_preferences')}
         </Link>
       </div>
 
       <div className="unified-card rgpd-rights-cta">
-        <h3>Exercer vos droits</h3>
-        <p>
-          Vous avez le droit d'acceder a vos donnees, de les rectifier, de les supprimer,
-          de vous opposer a leur traitement ou de demander leur portabilite.
-        </p>
+        <h3>{t('my_data_page.exercise_rights_title')}</h3>
+        <p>{t('my_data_page.exercise_rights_description')}</p>
         <Link to="/rgpd/rights" className="btn btn-primary btn-sm">
-          Faire une demande
+          {t('my_data_page.btn_make_request')}
         </Link>
       </div>
     </Layout>

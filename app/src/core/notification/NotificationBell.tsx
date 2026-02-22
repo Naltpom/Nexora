@@ -1,26 +1,28 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useNotifications } from './NotificationContext'
 import { useFeature } from '../../core/FeatureContext'
 import './notifications.scss'
 
-function timeAgo(dateStr: string): string {
+function timeAgo(dateStr: string, t: (key: string, opts?: Record<string, unknown>) => string): string {
   const now = new Date()
   const date = new Date(dateStr)
   const seconds = Math.floor((now.getTime() - date.getTime()) / 1000)
 
-  if (seconds < 60) return "A l'instant"
+  if (seconds < 60) return t('time_ago_just_now')
   const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `Il y a ${minutes}min`
+  if (minutes < 60) return t('time_ago_minutes', { minutes })
   const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `Il y a ${hours}h`
+  if (hours < 24) return t('time_ago_hours', { hours })
   const days = Math.floor(hours / 24)
-  if (days < 7) return `Il y a ${days}j`
+  if (days < 7) return t('time_ago_days', { days })
   return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
 }
 
 export default function NotificationBell() {
-  const { notifications, unreadCount, markAsRead, markAsUnread, markAllAsRead, deleteNotification } = useNotifications()
+  const { t } = useTranslation('notification')
+  const { notifications, unreadCount, markAsRead, markAsUnread, markAllAsRead, deleteNotification, fetchNotifications } = useNotifications()
   const { isActive } = useFeature()
   const pushActive = isActive('notification.push')
   const [open, setOpen] = useState(false)
@@ -74,7 +76,7 @@ export default function NotificationBell() {
       <button
         className="notification-bell-btn"
         onClick={handleBellClick}
-        title={pushActive ? 'Notifications' : 'Parametres de notifications'}
+        title={pushActive ? t('bell_title_notifications') : t('bell_title_settings')}
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
@@ -90,11 +92,11 @@ export default function NotificationBell() {
       {pushActive && open && (
         <div className="notification-dropdown">
           <div className="notification-dropdown-header">
-            <span className="notification-dropdown-title">Notifications</span>
+            <span className="notification-dropdown-title">{t('dropdown_title')}</span>
             <div className="notification-dropdown-actions">
               {unreadCount > 0 && (
                 <button className="notification-mark-all-btn" onClick={markAllAsRead}>
-                  Tout marquer lu
+                  {t('dropdown_mark_all_read')}
                 </button>
               )}
             </div>
@@ -107,7 +109,7 @@ export default function NotificationBell() {
                   <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
                   <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                 </svg>
-                Aucune notification
+                {t('dropdown_empty')}
               </div>
             ) : (
               notifications.slice(0, 20).map(notif => (
@@ -122,13 +124,13 @@ export default function NotificationBell() {
                     {notif.body && (
                       <div className="notification-item-body">{notif.body}</div>
                     )}
-                    <div className="notification-item-time">{timeAgo(notif.created_at)}</div>
+                    <div className="notification-item-time">{timeAgo(notif.created_at, t)}</div>
                   </div>
                   {notif.is_read && (
                     <button
                       className="notification-item-unread-btn"
                       onClick={(e) => { e.stopPropagation(); markAsUnread(notif.id) }}
-                      title="Marquer comme non lu"
+                      title={t('dropdown_mark_as_unread')}
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="12" r="5" />
@@ -138,7 +140,7 @@ export default function NotificationBell() {
                   <button
                     className="notification-item-delete"
                     onClick={(e) => handleDelete(e, notif.id)}
-                    title="Supprimer"
+                    title={t('dropdown_delete')}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <line x1="18" y1="6" x2="6" y2="18" />
@@ -152,11 +154,11 @@ export default function NotificationBell() {
 
           <div className="notification-dropdown-footer">
             <Link to="/notifications" onClick={() => setOpen(false)}>
-              Voir toutes
+              {t('dropdown_view_all')}
             </Link>
             <span className="notification-footer-separator">|</span>
             <Link to="/notifications/settings" onClick={() => setOpen(false)}>
-              Parametres
+              {t('dropdown_settings')}
             </Link>
           </div>
         </div>

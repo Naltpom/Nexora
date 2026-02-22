@@ -31,6 +31,7 @@ class User(Base):
     is_super_admin: Mapped[bool] = mapped_column(Boolean, default=False)
     must_change_password: Mapped[bool] = mapped_column(Boolean, default=False)
     preferences: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    language: Mapped[str] = mapped_column(String(10), nullable=False, default="fr")
     last_login: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     last_active: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(

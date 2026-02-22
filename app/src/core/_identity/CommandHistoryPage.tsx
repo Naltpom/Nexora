@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import Layout from '../../core/Layout'
 import api from '../../api'
 import './_identity.scss'
@@ -36,6 +37,7 @@ interface PaginatedResponse {
 /* ------------------------------------------------------------------ */
 
 export default function CommandHistoryPage() {
+  const { t } = useTranslation('_identity')
   const [data, setData] = useState<PaginatedResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
@@ -84,7 +86,7 @@ export default function CommandHistoryPage() {
   }
 
   const formatResult = (exec: CommandExecution) => {
-    if (exec.status === 'error') return exec.error_message || 'Erreur'
+    if (exec.status === 'error') return exec.error_message || t('common.error')
     if (!exec.result) return 'OK'
     if (exec.result.message) return exec.result.message as string
     return Object.entries(exec.result).map(([k, v]) => `${k}: ${v}`).join(', ')
@@ -104,24 +106,24 @@ export default function CommandHistoryPage() {
   return (
     <Layout
       breadcrumb={[
-        { label: 'Accueil', path: '/' },
-        { label: 'Commandes', path: '/admin/commands' },
-        { label: 'Historique' },
+        { label: t('common.home'), path: '/' },
+        { label: t('command_history.breadcrumb_commands'), path: '/admin/commands' },
+        { label: t('command_history.breadcrumb_history') },
       ]}
-      title="Historique des commandes"
+      title={t('command_history.page_title')}
     >
       <div className="unified-card page-header-card">
         <div className="unified-page-header">
           <div className="unified-page-header-info">
-            <h1>Historique des commandes</h1>
-            <p>Consultez l'historique d'execution des commandes de maintenance</p>
+            <h1>{t('command_history.page_title')}</h1>
+            <p>{t('command_history.subtitle')}</p>
           </div>
           <div className="unified-page-header-actions">
             <Link to="/admin/commands" className="btn btn-secondary btn-sm">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polyline points="15 18 9 12 15 6" />
               </svg>
-              Commandes
+              {t('command_history.btn_commands')}
             </Link>
           </div>
         </div>
@@ -135,7 +137,7 @@ export default function CommandHistoryPage() {
           <div className="section-header">
             <input
               type="text"
-              placeholder="Filtrer par nom de commande..."
+              placeholder={t('command_history.filter_placeholder')}
               value={searchValue}
               onChange={(e) => handleSearchChange(e.target.value)}
               className="input-search-wide"
@@ -145,9 +147,9 @@ export default function CommandHistoryPage() {
               onChange={(e) => { setStatusFilter(e.target.value); setPage(1) }}
               className="input-select"
             >
-              <option value="">Tous les statuts</option>
-              <option value="success">Succes</option>
-              <option value="error">Erreur</option>
+              <option value="">{t('command_history.filter_all_statuses')}</option>
+              <option value="success">{t('command_history.filter_success')}</option>
+              <option value="error">{t('command_history.filter_error')}</option>
             </select>
           </div>
 
@@ -155,21 +157,21 @@ export default function CommandHistoryPage() {
             <table className="unified-table">
               <thead>
                 <tr>
-                  <th>Date</th>
-                  <th>Commande</th>
-                  <th>Feature</th>
-                  <th>Statut</th>
-                  <th>Duree</th>
-                  <th>Source</th>
-                  <th>Executee par</th>
-                  <th>Resultat</th>
+                  <th>{t('command_history.th_date')}</th>
+                  <th>{t('command_history.th_command')}</th>
+                  <th>{t('command_history.th_feature')}</th>
+                  <th>{t('command_history.th_status')}</th>
+                  <th>{t('command_history.th_duration')}</th>
+                  <th>{t('command_history.th_source')}</th>
+                  <th>{t('command_history.th_executed_by')}</th>
+                  <th>{t('command_history.th_result')}</th>
                 </tr>
               </thead>
               <tbody>
                 {items.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="empty-state-sm">
-                      Aucune execution trouvee
+                      {t('command_history.empty_state')}
                     </td>
                   </tr>
                 ) : (
@@ -189,7 +191,7 @@ export default function CommandHistoryPage() {
                       </td>
                       <td>
                         <span className={`badge ${exec.status === 'success' ? 'badge-success' : 'badge-error'} text-xs`}>
-                          {exec.status === 'success' ? 'Succes' : 'Erreur'}
+                          {exec.status === 'success' ? t('command_history.status_success') : t('command_history.status_error')}
                         </span>
                       </td>
                       <td className="text-gray-500-sm nowrap">
@@ -207,7 +209,7 @@ export default function CommandHistoryPage() {
                         <button
                           className="btn btn-xs btn-secondary"
                           onClick={() => setDetailModal(exec)}
-                          title="Voir le detail"
+                          title={t('command_history.btn_view_detail')}
                         >
                           {formatResult(exec).length > 40
                             ? formatResult(exec).substring(0, 40) + '...'
@@ -229,17 +231,17 @@ export default function CommandHistoryPage() {
                 disabled={page <= 1}
                 onClick={() => setPage(p => p - 1)}
               >
-                Precedent
+                {t('common.previous')}
               </button>
               <span className="pagination-info">
-                Page {data.page} / {data.pages} ({data.total} resultats)
+                {t('command_history.pagination_page', { current: data.page, total: data.pages, count: data.total })}
               </span>
               <button
                 className="btn btn-sm btn-secondary"
                 disabled={page >= data.pages}
                 onClick={() => setPage(p => p + 1)}
               >
-                Suivant
+                {t('common.next')}
               </button>
             </div>
           )}
@@ -257,42 +259,42 @@ export default function CommandHistoryPage() {
             <div className="modal-body modal-body-scroll">
               <div className="flex-col-sm">
                 <div className="detail-item">
-                  <div className="detail-item-label">Commande</div>
+                  <div className="detail-item-label">{t('command_history.detail_title_command')}</div>
                   <code className="text-gray-500-code">{detailModal.command_name}</code>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-item-label">Statut</div>
+                  <div className="detail-item-label">{t('command_history.detail_title_status')}</div>
                   <span className={`badge ${detailModal.status === 'success' ? 'badge-success' : 'badge-error'} text-xs`}>
-                    {detailModal.status === 'success' ? 'Succes' : 'Erreur'}
+                    {detailModal.status === 'success' ? t('command_history.status_success') : t('command_history.status_error')}
                   </span>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-item-label">Date</div>
+                  <div className="detail-item-label">{t('command_history.detail_title_date')}</div>
                   <span>{formatDate(detailModal.executed_at)}</span>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-item-label">Duree</div>
+                  <div className="detail-item-label">{t('command_history.detail_title_duration')}</div>
                   <span>{detailModal.duration_seconds}s</span>
                 </div>
                 <div className="detail-item">
-                  <div className="detail-item-label">Source</div>
+                  <div className="detail-item-label">{t('command_history.detail_title_source')}</div>
                   <span className="badge badge-secondary text-xs">{sourceLabel(detailModal.source)}</span>
                 </div>
                 {detailModal.executed_by_name && (
                   <div className="detail-item">
-                    <div className="detail-item-label">Executee par</div>
+                    <div className="detail-item-label">{t('command_history.detail_title_executed_by')}</div>
                     <span>{detailModal.executed_by_name}</span>
                   </div>
                 )}
                 {detailModal.error_message && (
                   <div className="detail-item">
-                    <div className="detail-item-label">Erreur</div>
+                    <div className="detail-item-label">{t('command_history.detail_title_error')}</div>
                     <pre className="command-result-pre">{detailModal.error_message}</pre>
                   </div>
                 )}
                 {detailModal.result && (
                   <div className="detail-item">
-                    <div className="detail-item-label">Resultat</div>
+                    <div className="detail-item-label">{t('command_history.detail_title_result')}</div>
                     <pre className="command-result-pre">{JSON.stringify(detailModal.result, null, 2)}</pre>
                   </div>
                 )}
@@ -300,7 +302,7 @@ export default function CommandHistoryPage() {
             </div>
             <div className="modal-footer">
               <button className="btn btn-secondary" onClick={() => setDetailModal(null)}>
-                Fermer
+                {t('common.close')}
               </button>
             </div>
           </div>

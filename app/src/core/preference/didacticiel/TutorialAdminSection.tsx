@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, DragEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { usePermission } from '../../PermissionContext'
 import { useTutorial } from './TutorialContext'
 import api from '../../../api'
@@ -6,6 +7,7 @@ import type { TutorialOrdering } from '../../../types'
 import './didacticiel.scss'
 
 export default function TutorialAdminSection() {
+  const { t } = useTranslation('preference.didacticiel')
   const { can } = usePermission()
   const { featureTutorials } = useTutorial()
 
@@ -160,9 +162,9 @@ export default function TutorialAdminSection() {
 
   return (
     <div className="unified-card card-padded">
-      <h2 className="title-sm">Ordre des didacticiels</h2>
+      <h2 className="title-sm">{t('tutorial_admin_title')}</h2>
       <p className="text-secondary">
-        Reordonnez les features et les tutoriels par permission en glissant-deposant.
+        {t('tutorial_admin_description')}
       </p>
 
       <div className="tutorial-admin__list">
@@ -228,7 +230,7 @@ export default function TutorialAdminSection() {
             disabled={saving}
             type="button"
           >
-            {saving ? 'Enregistrement...' : 'Enregistrer l\'ordre'}
+            {saving ? t('tutorial_admin_saving') : t('tutorial_admin_save')}
           </button>
         </div>
       )}

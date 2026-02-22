@@ -1,65 +1,69 @@
+import { useTranslation } from 'react-i18next'
+
 export default function TablesSection() {
+  const { t } = useTranslation('storybook')
+
   return (
     <div className="storybook-section">
-      <h2>Tableaux</h2>
+      <h2>{t('tables_title')}</h2>
 
-      <h3>Tableau basique</h3>
+      <h3>{t('tables_basic_title')}</h3>
       <div className="storybook-preview">
         <div className="table-container">
           <table>
             <thead>
               <tr>
                 <th className="th-sortable">
-                  Nom <span className="sort-indicator">&#9650;</span>
+                  {t('tables_th_name')} <span className="sort-indicator">&#9650;</span>
                 </th>
                 <th className="th-sortable">
-                  Email <span className="sort-indicator">&#9660;</span>
+                  {t('tables_th_email')} <span className="sort-indicator">&#9660;</span>
                 </th>
-                <th>Role</th>
-                <th>Statut</th>
+                <th>{t('tables_th_role')}</th>
+                <th>{t('tables_th_status')}</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td><span className="user-me">Marie Dupont (vous)</span></td>
-                <td>marie.dupont@exemple.fr</td>
-                <td>Administrateur</td>
-                <td><span className="badge badge-success">Actif</span></td>
+                <td><span className="user-me">{t('tables_user_marie')}</span></td>
+                <td>{t('tables_email_marie')}</td>
+                <td>{t('tables_role_admin')}</td>
+                <td><span className="badge badge-success">{t('tables_status_active')}</span></td>
               </tr>
               <tr>
-                <td>Jean Martin</td>
-                <td>jean.martin@exemple.fr</td>
-                <td>Editeur</td>
-                <td><span className="badge badge-success">Actif</span></td>
+                <td>{t('tables_user_jean')}</td>
+                <td>{t('tables_email_jean')}</td>
+                <td>{t('tables_role_editor')}</td>
+                <td><span className="badge badge-success">{t('tables_status_active')}</span></td>
               </tr>
               <tr>
-                <td>Sophie Bernard</td>
-                <td>sophie.bernard@exemple.fr</td>
-                <td>Lecteur</td>
-                <td><span className="badge badge-warning">En attente</span></td>
+                <td>{t('tables_user_sophie')}</td>
+                <td>{t('tables_email_sophie')}</td>
+                <td>{t('tables_role_viewer')}</td>
+                <td><span className="badge badge-warning">{t('tables_status_pending')}</span></td>
               </tr>
               <tr>
-                <td>Pierre Leroy</td>
-                <td>pierre.leroy@exemple.fr</td>
-                <td>Editeur</td>
-                <td><span className="badge badge-error">Inactif</span></td>
+                <td>{t('tables_user_pierre')}</td>
+                <td>{t('tables_email_pierre')}</td>
+                <td>{t('tables_role_editor')}</td>
+                <td><span className="badge badge-error">{t('tables_status_inactive')}</span></td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <h3>Tableau unifie (unified table)</h3>
+      <h3>{t('tables_unified_title')}</h3>
       <div className="storybook-preview">
         <div className="unified-card">
           <div className="unified-page-header">
             <div className="unified-page-header-info">
-              <h1>Utilisateurs</h1>
-              <p>Liste des comptes enregistres sur la plateforme.</p>
+              <h1>{t('tables_unified_header')}</h1>
+              <p>{t('tables_unified_description')}</p>
             </div>
             <div className="unified-page-header-actions">
               <button className="btn-unified-primary" type="button">
-                Ajouter
+                {t('tables_unified_add_button')}
               </button>
             </div>
           </div>
@@ -69,37 +73,37 @@ export default function TablesSection() {
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
-            <input type="text" placeholder="Rechercher un utilisateur..." readOnly />
+            <input type="text" placeholder={t('tables_unified_search_placeholder')} readOnly />
           </div>
 
           <div className="card-table">
             <table className="unified-table">
               <thead>
                 <tr>
-                  <th className="th-sortable">Nom</th>
-                  <th className="th-sortable">Email</th>
-                  <th>Role</th>
-                  <th>Statut</th>
+                  <th className="th-sortable">{t('tables_th_name')}</th>
+                  <th className="th-sortable">{t('tables_th_email')}</th>
+                  <th>{t('tables_th_role')}</th>
+                  <th>{t('tables_th_status')}</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td><span className="user-me">Marie Dupont (vous)</span></td>
-                  <td>marie.dupont@exemple.fr</td>
-                  <td>Administrateur</td>
-                  <td><span className="badge badge-success">Actif</span></td>
+                  <td><span className="user-me">{t('tables_user_marie')}</span></td>
+                  <td>{t('tables_email_marie')}</td>
+                  <td>{t('tables_role_admin')}</td>
+                  <td><span className="badge badge-success">{t('tables_status_active')}</span></td>
                 </tr>
                 <tr>
-                  <td>Jean Martin</td>
-                  <td>jean.martin@exemple.fr</td>
-                  <td>Editeur</td>
-                  <td><span className="badge badge-success">Actif</span></td>
+                  <td>{t('tables_user_jean')}</td>
+                  <td>{t('tables_email_jean')}</td>
+                  <td>{t('tables_role_editor')}</td>
+                  <td><span className="badge badge-success">{t('tables_status_active')}</span></td>
                 </tr>
                 <tr>
-                  <td>Sophie Bernard</td>
-                  <td>sophie.bernard@exemple.fr</td>
-                  <td>Lecteur</td>
-                  <td><span className="badge badge-warning">En attente</span></td>
+                  <td>{t('tables_user_sophie')}</td>
+                  <td>{t('tables_email_sophie')}</td>
+                  <td>{t('tables_role_viewer')}</td>
+                  <td><span className="badge badge-warning">{t('tables_status_pending')}</span></td>
                 </tr>
               </tbody>
             </table>
@@ -107,7 +111,7 @@ export default function TablesSection() {
 
           <div className="unified-pagination">
             <span className="unified-pagination-info">
-              Affichage 1-3 sur 12 resultats
+              {t('tables_unified_pagination_info')}
             </span>
             <div className="unified-pagination-controls">
               <button className="unified-pagination-btn" type="button" disabled>

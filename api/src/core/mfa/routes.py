@@ -119,7 +119,7 @@ async def verify_mfa(
             detail="Utilisateur introuvable",
         )
 
-    token_data = {"sub": str(user.id), "email": user.email}
+    token_data = {"sub": str(user.id), "email": user.email, "lang": user.language}
     preferences = json.loads(user.preferences) if user.preferences else None
 
     return MFAVerifyResponse(

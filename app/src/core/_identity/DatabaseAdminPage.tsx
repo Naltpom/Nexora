@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import './_identity.scss'
 import Layout from '../../core/Layout'
 import { usePermission } from '../PermissionContext'
@@ -30,6 +31,7 @@ interface Job {
 const isDev = import.meta.env.VITE_ENV === 'dev'
 
 export default function DatabaseAdminPage() {
+  const { t } = useTranslation('_identity')
   const { can } = usePermission()
   const [backups, setBackups] = useState<BackupFile[]>([])
   const [demos, setDemos] = useState<BackupFile[]>([])
@@ -46,7 +48,7 @@ export default function DatabaseAdminPage() {
       setBackups(res.data.backups)
       setDemos(res.data.demos)
     } catch {
-      setMessage({ type: 'error', text: 'Erreur lors du chargement des sauvegardes' })
+      setMessage({ type: 'error', text: t('database_admin.error_load') })
     } finally {
       setLoading(false)
     }
@@ -66,7 +68,7 @@ export default function DatabaseAdminPage() {
           pollRef.current = null
           if (job.status === 'completed') {
             let msg = job.message
-            if (job.backup_created) msg += ` (sauvegarde créée : ${job.backup_created})`
+            if (job.backup_created) msg += ' ' + t('database_admin.backup_created_suffix', { filename: job.backup_created })
             setMessage({ type: 'success', text: msg })
           } else {
             setMessage({ type: 'error', text: job.message })
@@ -78,7 +80,7 @@ export default function DatabaseAdminPage() {
         if (pollRef.current) clearInterval(pollRef.current)
         pollRef.current = null
         setActiveJob(null)
-        setMessage({ type: 'error', text: 'Erreur lors du suivi de la restauration' })
+        setMessage({ type: 'error', text: t('database_admin.error_restore_poll') })
       }
     }, 2000)
   }, [fetchBackups])
@@ -88,10 +90,10 @@ export default function DatabaseAdminPage() {
     setMessage(null)
     try {
       const res = await api.post('/backups')
-      setMessage({ type: 'success', text: `Sauvegarde créée : ${res.data.filename}` })
+      setMessage({ type: 'success', text: t('database_admin.backup_created', { filename: res.data.filename }) })
       await fetchBackups()
     } catch {
-      setMessage({ type: 'error', text: 'Erreur lors de la création de la sauvegarde' })
+      setMessage({ type: 'error', text: t('database_admin.error_create') })
     } finally {
       setCreating(false)
     }
@@ -100,14 +102,14 @@ export default function DatabaseAdminPage() {
   const handleRestore = async (filename: string, source: 'backups' | 'demos', createBackupFirst: boolean) => {
     setRestoreTarget(null)
     setMessage(null)
-    setActiveJob({ id: '', status: 'running', message: `Lancement de la restauration de ${filename}...` })
+    setActiveJob({ id: '', status: 'running', message: t('database_admin.restore_starting', { filename }) })
     try {
       const res = await api.post('/backups/restore', { filename, source, create_backup_first: createBackupFirst })
-      setActiveJob({ id: res.data.job_id, status: 'running', message: `Restauration de ${filename} en cours...`, backup_created: res.data.backup_created })
+      setActiveJob({ id: res.data.job_id, status: 'running', message: t('database_admin.restore_in_progress', { filename }), backup_created: res.data.backup_created })
       pollJob(res.data.job_id)
     } catch {
       setActiveJob(null)
-      setMessage({ type: 'error', text: 'Erreur lors du lancement de la restauration' })
+      setMessage({ type: 'error', text: t('database_admin.error_restore_start') })
     }
   }
 
@@ -115,10 +117,10 @@ export default function DatabaseAdminPage() {
     setMessage(null)
     try {
       await api.post('/backups/copy-to-demo', { filename })
-      setMessage({ type: 'success', text: `${filename} copié dans les démos` })
+      setMessage({ type: 'success', text: t('database_admin.copied_to_demo', { filename }) })
       await fetchBackups()
     } catch {
-      setMessage({ type: 'error', text: 'Erreur lors de la copie vers les démos' })
+      setMessage({ type: 'error', text: t('database_admin.error_copy_demo') })
     }
   }
 
@@ -126,10 +128,10 @@ export default function DatabaseAdminPage() {
     setMessage(null)
     try {
       await api.post('/backups/copy-to-initial', { filename })
-      setMessage({ type: 'success', text: `${filename} défini comme backup initial` })
+      setMessage({ type: 'success', text: t('database_admin.set_as_initial', { filename }) })
       await fetchBackups()
     } catch {
-      setMessage({ type: 'error', text: 'Erreur lors de la copie vers le backup initial' })
+      setMessage({ type: 'error', text: t('database_admin.error_copy_initial') })
     }
   }
 
@@ -145,11 +147,11 @@ export default function DatabaseAdminPage() {
       <table className="unified-table">
         <thead>
           <tr>
-            <th>Fichier</th>
-            <th>Type</th>
-            <th>Taille</th>
-            <th>Date</th>
-            <th className="col-actions-wide">Actions</th>
+            <th>{t('database_admin.th_file')}</th>
+            <th>{t('database_admin.th_type')}</th>
+            <th>{t('database_admin.th_size')}</th>
+            <th>{t('database_admin.th_date')}</th>
+            <th className="col-actions-wide">{t('database_admin.th_actions')}</th>
           </tr>
         </thead>
         <tbody>
@@ -167,16 +169,16 @@ export default function DatabaseAdminPage() {
                 <td>
                   <div className="flex-row-xs">
                     {can('backups.restore') && (
-                      <button className="btn btn-secondary btn-sm" onClick={() => setRestoreTarget({ filename: b.filename, source })} disabled={isBusy} title="Restaurer cette sauvegarde">
+                      <button className="btn btn-secondary btn-sm" onClick={() => setRestoreTarget({ filename: b.filename, source })} disabled={isBusy} title={t('database_admin.tooltip_restore')}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" /></svg>
-                        Restaurer
+                        {t('database_admin.btn_restore')}
                       </button>
                     )}
                     {source === 'backups' && isDev && can('backups.create') && (
-                      <button className="btn btn-sm badge-tag db-badge--active" onClick={() => handleCopyToDemo(b.filename)} disabled={isBusy} title="Copier vers les démos">Vers démo</button>
+                      <button className="btn btn-sm badge-tag db-badge--active" onClick={() => handleCopyToDemo(b.filename)} disabled={isBusy} title={t('database_admin.tooltip_to_demo')}>{t('database_admin.btn_to_demo')}</button>
                     )}
                     {source === 'demos' && can('backups.restore') && (
-                      <button className="btn btn-sm badge-tag db-badge--highlight" onClick={() => handleCopyToInitial(b.filename)} disabled={isBusy} title="Définir comme backup initial">Vers initial</button>
+                      <button className="btn btn-sm badge-tag db-badge--highlight" onClick={() => handleCopyToInitial(b.filename)} disabled={isBusy} title={t('database_admin.tooltip_to_initial')}>{t('database_admin.btn_to_initial')}</button>
                     )}
                   </div>
                 </td>
@@ -189,17 +191,17 @@ export default function DatabaseAdminPage() {
   )
 
   return (
-    <Layout breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Base de données' }]} title="Base de données">
+    <Layout breadcrumb={[{ label: t('common.home'), path: '/' }, { label: t('database_admin.breadcrumb_database') }]} title={t('database_admin.breadcrumb_database')}>
       <div className="unified-card page-header-card">
         <div className="unified-page-header">
           <div className="unified-page-header-info">
-            <h1>Base de données</h1>
-            <p>Gérez les sauvegardes et restaurations de la base de données</p>
+            <h1>{t('database_admin.page_title')}</h1>
+            <p>{t('database_admin.subtitle')}</p>
           </div>
           {can('backups.create') && (
             <div className="flex-row-sm">
               <button className="btn btn-primary" onClick={handleCreateBackup} disabled={isBusy}>
-                {creating ? (<><span className="spinner spinner-sm" /> Sauvegarde en cours...</>) : (<><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg> Nouvelle sauvegarde</>)}
+                {creating ? (<><span className="spinner spinner-sm" /> {t('database_admin.btn_backup_in_progress')}</>) : (<><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg> {t('database_admin.btn_new_backup')}</>)}
               </button>
             </div>
           )}
@@ -219,16 +221,16 @@ export default function DatabaseAdminPage() {
         </div>
       )}
 
-      <h2 className="title-sm mb-12">Sauvegardes</h2>
+      <h2 className="title-sm mb-12">{t('database_admin.section_backups')}</h2>
       <div className="unified-card card-table section-mb-lg">
-        {renderTable(backups, 'backups', 'Aucune sauvegarde trouvée')}
+        {renderTable(backups, 'backups', t('database_admin.empty_backups'))}
       </div>
 
       {isDev && (
         <>
-          <h2 className="title-sm mb-12">Sauvegardes démo</h2>
+          <h2 className="title-sm mb-12">{t('database_admin.section_demo_backups')}</h2>
           <div className="unified-card card-table">
-            {renderTable(demos, 'demos', 'Aucune sauvegarde démo trouvée')}
+            {renderTable(demos, 'demos', t('database_admin.empty_demo_backups'))}
           </div>
         </>
       )}
@@ -237,21 +239,21 @@ export default function DatabaseAdminPage() {
         <div className="modal-overlay" onClick={() => setRestoreTarget(null)}>
           <div className="modal modal-narrow" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Restaurer une sauvegarde</h3>
+              <h3>{t('database_admin.modal_restore_title')}</h3>
               <button className="modal-close" onClick={() => setRestoreTarget(null)}>&times;</button>
             </div>
             <div className="modal-body">
-              <p className="mb-8">Fichier : <strong className="text-mono">{restoreTarget.filename}</strong></p>
-              <p className="mb-8">Cette action va <strong>remplacer toutes les données actuelles</strong> par celles de cette sauvegarde.</p>
-              <p>Voulez-vous créer une sauvegarde de la base actuelle avant de restaurer ?</p>
+              <p className="mb-8">{t('database_admin.modal_restore_file_label')} <strong className="text-mono">{restoreTarget.filename}</strong></p>
+              <p className="mb-8">{t('database_admin.modal_restore_warning')}</p>
+              <p>{t('database_admin.modal_restore_backup_question')}</p>
             </div>
             <div className="modal-footer flex-end flex-row-sm">
-              <button className="btn btn-secondary btn-sm" onClick={() => setRestoreTarget(null)}>Annuler</button>
+              <button className="btn btn-secondary btn-sm" onClick={() => setRestoreTarget(null)}>{t('common.cancel')}</button>
               {can('backups.restore') && (
-                <button className="btn btn-warning btn-sm" onClick={() => handleRestore(restoreTarget.filename, restoreTarget.source, false)}>Restaurer directement</button>
+                <button className="btn btn-warning btn-sm" onClick={() => handleRestore(restoreTarget.filename, restoreTarget.source, false)}>{t('database_admin.modal_restore_direct')}</button>
               )}
               {can('backups.restore') && (
-                <button className="btn btn-primary btn-sm" onClick={() => handleRestore(restoreTarget.filename, restoreTarget.source, true)}>Sauvegarder puis restaurer</button>
+                <button className="btn btn-primary btn-sm" onClick={() => handleRestore(restoreTarget.filename, restoreTarget.source, true)}>{t('database_admin.modal_restore_backup_first')}</button>
               )}
             </div>
           </div>

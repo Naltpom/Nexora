@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import Layout from '../../core/Layout'
 import { useConfirm } from '../../core/ConfirmModal'
 import { usePermission } from '../PermissionContext'
@@ -13,7 +14,6 @@ interface Feature {
   name: string
   label: string
   description: string
-  version: string
   parent: string | null
   children: string[]
   depends: string[]
@@ -28,6 +28,7 @@ interface Feature {
 /* ------------------------------------------------------------------ */
 
 export default function FeaturesAdminPage() {
+  const { t } = useTranslation('_identity')
   const { confirm } = useConfirm()
   const { can } = usePermission()
   const [features, setFeatures] = useState<Feature[]>([])
@@ -47,7 +48,7 @@ export default function FeaturesAdminPage() {
       const res = await api.get('/features/')
       setFeatures(res.data)
     } catch {
-      setMessage({ type: 'error', text: 'Erreur lors du chargement des features' })
+      setMessage({ type: 'error', text: t('features_admin.load_error') })
     } finally {
       setLoading(false)
     }
@@ -66,15 +67,14 @@ export default function FeaturesAdminPage() {
   }
 
   const handleToggle = async (feature: Feature) => {
-    const action = feature.active ? 'desactiver' : 'activer'
+    const action = feature.active ? t('features_admin.confirm_toggle_action_deactivate') : t('features_admin.confirm_toggle_action_activate')
     const confirmed = await confirm({
-      title: `${feature.active ? 'Desactiver' : 'Activer'} la feature`,
-      message: `Etes-vous sur de vouloir ${action} la feature "${feature.label}" ?${
-        feature.active && feature.children.length > 0
-          ? `\n\nAttention : cette feature a ${feature.children.length} enfant(s) qui pourrai(en)t etre impacte(s).`
-          : ''
-      }`,
-      confirmText: feature.active ? 'Desactiver' : 'Activer',
+      title: feature.active ? t('features_admin.confirm_toggle_title_deactivate') : t('features_admin.confirm_toggle_title_activate'),
+      message: t('features_admin.confirm_toggle_message', { action, label: feature.label }) +
+        (feature.active && feature.children.length > 0
+          ? '\n\n' + t('features_admin.confirm_toggle_children_warning', { count: feature.children.length })
+          : ''),
+      confirmText: feature.active ? t('features_admin.confirm_toggle_btn_deactivate') : t('features_admin.confirm_toggle_btn_activate'),
       variant: feature.active ? 'warning' : 'info',
     })
     if (!confirmed) return
@@ -84,11 +84,11 @@ export default function FeaturesAdminPage() {
     try {
       const res = await api.put(`/features/${feature.name}/toggle`, { active: !feature.active })
       const cascaded: string[] = res.data.cascaded || []
-      const cascadeText = cascaded.length > 0 ? ` (+ ${cascaded.length} enfant(s) desactive(s) : ${cascaded.join(', ')})` : ''
-      setMessage({ type: 'success', text: `Feature "${feature.label}" ${!feature.active ? 'activee' : 'desactivee'}${cascadeText}` })
+      const cascadeText = cascaded.length > 0 ? ' ' + t('features_admin.toggle_cascade_suffix', { count: cascaded.length, names: cascaded.join(', ') }) : ''
+      setMessage({ type: 'success', text: (!feature.active ? t('features_admin.toggle_success_activated', { label: feature.label }) : t('features_admin.toggle_success_deactivated', { label: feature.label })) + cascadeText })
       await loadFeatures()
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.response?.data?.detail || `Erreur lors du changement de statut de "${feature.label}"` })
+      setMessage({ type: 'error', text: err.response?.data?.detail || t('features_admin.toggle_error', { label: feature.label }) })
     } finally {
       setToggling(null)
     }
@@ -129,12 +129,12 @@ export default function FeaturesAdminPage() {
     : orderedFeatures
 
   return (
-    <Layout breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Features' }]} title="Features">
+    <Layout breadcrumb={[{ label: t('common.home'), path: '/' }, { label: t('features_admin.breadcrumb_features') }]} title={t('features_admin.breadcrumb_features')}>
       <div className="unified-card page-header-card">
         <div className="unified-page-header">
           <div className="unified-page-header-info">
-            <h1>Gestion des features</h1>
-            <p>Activez ou desactivez les fonctionnalites de l'application</p>
+            <h1>{t('features_admin.page_title')}</h1>
+            <p>{t('features_admin.subtitle')}</p>
           </div>
         </div>
       </div>
@@ -149,7 +149,7 @@ export default function FeaturesAdminPage() {
         <div className="spinner" />
       ) : features.length === 0 ? (
         <div className="unified-card empty-state">
-          Aucune feature trouvee
+          {t('features_admin.empty_state')}
         </div>
       ) : (
         <div className="unified-card full-width-breakout">
@@ -157,7 +157,7 @@ export default function FeaturesAdminPage() {
           <div className="section-header">
             <input
               type="text"
-              placeholder="Rechercher une feature..."
+              placeholder={t('features_admin.search_placeholder')}
               value={searchValue}
               onChange={(e) => handleSearchChange(e.target.value)}
               className="input-search-wide"
@@ -168,20 +168,19 @@ export default function FeaturesAdminPage() {
             <table className="unified-table">
               <thead>
                 <tr>
-                  <th>Feature</th>
-                  <th>Description</th>
-                  <th>Version</th>
-                  <th>Statut</th>
-                  <th>Infos</th>
-                  <th>Dependances</th>
-                  <th className="text-center">Activer</th>
+                  <th>{t('features_admin.th_feature')}</th>
+                  <th>{t('features_admin.th_description')}</th>
+                  <th>{t('features_admin.th_status')}</th>
+                  <th>{t('features_admin.th_info')}</th>
+                  <th>{t('features_admin.th_dependencies')}</th>
+                  <th className="text-center">{t('features_admin.th_toggle')}</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredFeatures.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="empty-state-sm">
-                      {search ? 'Aucune feature correspondante' : 'Aucune feature trouvee'}
+                    <td colSpan={6} className="empty-state-sm">
+                      {search ? t('features_admin.empty_search') : t('features_admin.empty_state')}
                     </td>
                   </tr>
                 ) : (
@@ -208,15 +207,10 @@ export default function FeaturesAdminPage() {
                         {feature.description || '\u2014'}
                       </td>
 
-                      {/* Version */}
-                      <td className="text-gray-500-sm nowrap">
-                        v{feature.version}
-                      </td>
-
                       {/* Status */}
                       <td>
                         <span className={`badge ${feature.active ? 'badge-success' : 'badge-warning'} text-xs`}>
-                          {feature.active ? 'Actif' : 'Inactif'}
+                          {feature.active ? t('common.active') : t('common.inactive')}
                         </span>
                       </td>
 
@@ -234,28 +228,28 @@ export default function FeaturesAdminPage() {
                               className="badge badge-secondary text-xs cursor-pointer"
                               onClick={async () => {
                                 setDetailModal({
-                                  title: `Permissions de ${feature.label}`,
+                                  title: t('features_admin.permissions_of', { label: feature.label }),
                                   items: [],
                                   loading: true,
                                 })
                                 try {
                                   const res = await api.get('/permissions/', { params: { feature: feature.name } })
                                   setDetailModal({
-                                    title: `Permissions de ${feature.label}`,
+                                    title: t('features_admin.permissions_of', { label: feature.label }),
                                     items: res.data.map((p: any) => ({ code: p.code, label: p.label, description: p.description })),
                                     loading: false,
                                   })
                                 } catch {
                                   setDetailModal({
-                                    title: `Permissions de ${feature.label}`,
+                                    title: t('features_admin.permissions_of', { label: feature.label }),
                                     items: feature.permissions.map(code => ({ code })),
                                     loading: false,
                                   })
                                 }
                               }}
-                              title="Voir les permissions"
+                              title={t('features_admin.tooltip_view_permissions')}
                             >
-                              {feature.permissions.length} perm{feature.permissions.length > 1 ? 's' : ''}
+                              {feature.permissions.length > 1 ? t('features_admin.badge_perms_plural', { count: feature.permissions.length }) : t('features_admin.badge_perms', { count: feature.permissions.length })}
                             </span>
                           )}
                           {feature.children.length > 0 && (
@@ -271,14 +265,14 @@ export default function FeaturesAdminPage() {
                                   }
                                 })
                                 setDetailModal({
-                                  title: `Enfants de ${feature.label}`,
+                                  title: t('features_admin.children_of', { label: feature.label }),
                                   items: childItems,
                                   loading: false,
                                 })
                               }}
-                              title="Voir les enfants"
+                              title={t('features_admin.tooltip_view_children')}
                             >
-                              {feature.children.length} enfant{feature.children.length > 1 ? 's' : ''}
+                              {feature.children.length > 1 ? t('features_admin.badge_children_plural', { count: feature.children.length }) : t('features_admin.badge_children', { count: feature.children.length })}
                             </span>
                           )}
                         </div>
@@ -293,7 +287,7 @@ export default function FeaturesAdminPage() {
                       <td className="text-center">
                         {feature.is_core ? (
                           <span className="feature-locked">
-                            Verrouille
+                            {t('features_admin.locked')}
                           </span>
                         ) : (
                           <label className="toggle" style={{ cursor: toggling === feature.name ? 'wait' : 'pointer' }}>
@@ -328,7 +322,7 @@ export default function FeaturesAdminPage() {
               {detailModal.loading ? (
                 <div className="text-center p-24"><div className="spinner" /></div>
               ) : detailModal.items.length === 0 ? (
-                <p className="text-gray-400 text-center">Aucun element</p>
+                <p className="text-gray-400 text-center">{t('common.no_element')}</p>
               ) : (
                 <div className="flex-col-sm">
                   {detailModal.items.map((item) => (
@@ -350,7 +344,7 @@ export default function FeaturesAdminPage() {
             </div>
             <div className="modal-footer">
               <button className="btn btn-secondary" onClick={() => setDetailModal(null)}>
-                Fermer
+                {t('common.close')}
               </button>
             </div>
           </div>

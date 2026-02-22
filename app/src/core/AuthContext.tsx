@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import i18next from 'i18next'
 import api from '../api'
 import type { User } from '../types'
 import { hasConsent } from './rgpd/consentManager'
@@ -240,7 +241,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('impersonation_active', 'true')
       await fetchUser()
     } catch (error: any) {
-      throw new Error(error.response?.data?.detail || "Erreur lors de l'impersonation")
+      throw new Error(error.response?.data?.detail || i18next.t('common:impersonation_start_error'))
     }
   }
 
@@ -253,7 +254,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem('impersonation_active')
       window.location.href = window.location.pathname
     } catch (error: any) {
-      throw new Error(error.response?.data?.detail || "Erreur lors de la sortie d'impersonation")
+      throw new Error(error.response?.data?.detail || i18next.t('common:impersonation_stop_error'))
     }
   }
 

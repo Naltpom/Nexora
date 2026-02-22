@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import api from '../../api'
 import './sso.scss'
 
@@ -19,6 +20,7 @@ interface SSOProvider {
 }
 
 export default function SSOAccountLinks() {
+  const { t } = useTranslation('sso')
   const [accounts, setAccounts] = useState<SSOAccount[]>([])
   const [providers, setProviders] = useState<SSOProvider[]>([])
   const [loading, setLoading] = useState(true)
@@ -39,7 +41,7 @@ export default function SSOAccountLinks() {
       setProviders(all.filter(p => p.enabled))
     } catch (err: any) {
       const detail = err.response?.data?.detail
-      setError(typeof detail === 'string' ? detail : 'Erreur lors du chargement des comptes lies.')
+      setError(typeof detail === 'string' ? detail : t('erreur_chargement_comptes_lies'))
     } finally {
       setLoading(false)
     }
@@ -51,7 +53,7 @@ export default function SSOAccountLinks() {
 
   const handleUnlink = async (account: SSOAccount) => {
     const confirmed = window.confirm(
-      `Voulez-vous vraiment delier votre compte ${account.provider_email || account.provider} (${account.provider}) ?`
+      t('confirmer_delier_compte', { email: account.provider_email || account.provider, provider: account.provider })
     )
     if (!confirmed) return
 
@@ -61,7 +63,7 @@ export default function SSOAccountLinks() {
       setAccounts(prev => prev.filter(a => a.id !== account.id))
     } catch (err: any) {
       const detail = err.response?.data?.detail
-      setError(typeof detail === 'string' ? detail : 'Erreur lors de la suppression du lien.')
+      setError(typeof detail === 'string' ? detail : t('erreur_suppression_lien'))
     } finally {
       setUnlinkingId(null)
     }
@@ -77,7 +79,7 @@ export default function SSOAccountLinks() {
       window.location.href = response.data.authorization_url
     } catch (err: any) {
       const detail = err.response?.data?.detail
-      setError(typeof detail === 'string' ? detail : `Erreur lors de la liaison ${provider}.`)
+      setError(typeof detail === 'string' ? detail : t('erreur_liaison_provider', { provider }))
       setLinkingProvider(null)
     }
   }
@@ -97,7 +99,7 @@ export default function SSOAccountLinks() {
   if (loading) {
     return (
       <div className="sso-loading-state">
-        Chargement...
+        {t('chargement')}
       </div>
     )
   }
@@ -135,7 +137,7 @@ export default function SSOAccountLinks() {
                     {account.provider_email}
                   </div>
                   <div className="sso-account-date">
-                    Lie le {formatDate(account.created_at)}
+                    {t('lie_le', { date: formatDate(account.created_at) })}
                   </div>
                 </div>
               </div>
@@ -144,7 +146,7 @@ export default function SSOAccountLinks() {
                 onClick={() => handleUnlink(account)}
                 disabled={unlinkingId === account.id}
               >
-                {unlinkingId === account.id ? 'Suppression...' : 'Delier'}
+                {unlinkingId === account.id ? t('suppression_en_cours') : t('delier')}
               </button>
             </div>
           ))}
@@ -153,7 +155,7 @@ export default function SSOAccountLinks() {
 
       {accounts.length === 0 && (
         <p className="sso-empty-message">
-          Aucun compte externe lie.
+          {t('aucun_compte_externe_lie')}
         </p>
       )}
 
@@ -161,7 +163,7 @@ export default function SSOAccountLinks() {
       {unlinkableProviders.length > 0 && (
         <div className={accounts.length > 0 ? 'sso-link-section-spaced' : ''}>
           <div className="sso-link-section-label">
-            Lier un nouveau compte
+            {t('lier_nouveau_compte')}
           </div>
           <div className="sso-link-buttons-row">
             {unlinkableProviders.map((p) => (
@@ -172,9 +174,9 @@ export default function SSOAccountLinks() {
                 disabled={linkingProvider !== null}
               >
                 {linkingProvider === p.name ? (
-                  'Redirection...'
+                  t('redirection_en_cours')
                 ) : (
-                  <span>Lier {p.label}</span>
+                  <span>{t('lier_provider', { label: p.label })}</span>
                 )}
               </button>
             ))}

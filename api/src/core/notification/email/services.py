@@ -48,6 +48,7 @@ class SmtpEmailSender:
         title: str,
         body: str | None,
         link: str | None,
+        locale: str = "fr",
     ) -> bool:
         if not settings.EMAIL_ENABLED:
             logger.warning("Email disabled — skipping notification email to %s", to_email)
@@ -100,6 +101,7 @@ class SmtpEmailSender:
         reset_token: str,
         *,
         initiated_by_user: bool = False,
+        locale: str = "fr",
     ) -> bool:
         if not settings.EMAIL_ENABLED:
             logger.warning("Email disabled — skipping reset password email to %s", to_email)
@@ -153,6 +155,7 @@ class SmtpEmailSender:
         to_email: str,
         invited_by_name: str,
         invitation_token: str,
+        locale: str = "fr",
     ) -> bool:
         if not settings.EMAIL_ENABLED:
             logger.warning("Email disabled — skipping invitation email to %s", to_email)
@@ -201,6 +204,7 @@ class SmtpEmailSender:
         to_email: str,
         to_name: str,
         verification_code: str,
+        locale: str = "fr",
     ) -> bool:
         if not settings.EMAIL_ENABLED:
             logger.warning("Email disabled — skipping verification code email to %s", to_email)

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import Layout from '../../core/Layout'
 import api from '../../api'
 import './events.scss'
@@ -17,6 +18,7 @@ interface EventType {
 /* -- Component -- */
 
 export default function EventsPage() {
+  const { t } = useTranslation('event')
   const [eventTypes, setEventTypes] = useState<EventType[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -90,21 +92,21 @@ export default function EventsPage() {
   const featureCount = Object.keys(filteredGroups).length
 
   return (
-    <Layout breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Events' }]} title="Events">
+    <Layout breadcrumb={[{ label: t('breadcrumb_accueil'), path: '/' }, { label: t('breadcrumb_events') }]} title={t('breadcrumb_events')}>
       <div className="unified-card page-header-card">
         <div className="unified-page-header">
           <div className="unified-page-header-info">
-            <h1>Catalogue d'evenements</h1>
-            <p>Types d'evenements declares par les features actives</p>
+            <h1>{t('titre_catalogue')}</h1>
+            <p>{t('sous_titre_catalogue')}</p>
           </div>
           <div className="events-stats">
             <div className="events-stat">
               <span className="events-stat-value">{totalEvents}</span>
-              <span className="events-stat-label">events</span>
+              <span className="events-stat-label">{t('stat_events')}</span>
             </div>
             <div className="events-stat">
               <span className="events-stat-value">{featureCount}</span>
-              <span className="events-stat-label">features</span>
+              <span className="events-stat-label">{t('stat_features')}</span>
             </div>
           </div>
         </div>
@@ -114,7 +116,7 @@ export default function EventsPage() {
         <div className="spinner" />
       ) : eventTypes.length === 0 ? (
         <div className="unified-card events-empty-state">
-          Aucun type d'evenement declare
+          {t('aucun_type_declare')}
         </div>
       ) : (
         <div className="unified-card full-width-breakout">
@@ -122,7 +124,7 @@ export default function EventsPage() {
             <input
               type="text"
               className="events-search-input"
-              placeholder="Rechercher un evenement..."
+              placeholder={t('rechercher_evenement')}
               value={searchValue}
               onChange={(e) => handleSearchChange(e.target.value)}
             />
@@ -130,7 +132,7 @@ export default function EventsPage() {
 
           {Object.keys(filteredGroups).length === 0 ? (
             <div className="events-no-match">
-              Aucun evenement correspondant
+              {t('aucun_evenement_correspondant')}
             </div>
           ) : (
             <div className="events-list">
@@ -149,7 +151,7 @@ export default function EventsPage() {
                       </svg>
                       <span className="events-feature-name">{feature}</span>
                       <span className="badge badge-secondary events-badge-sm">
-                        {events.length} event{events.length > 1 ? 's' : ''}
+                        {events.length} {events.length > 1 ? t('event_count_plural') : t('event_count_singular')}
                       </span>
                     </div>
                   </div>
@@ -166,11 +168,11 @@ export default function EventsPage() {
                         </colgroup>
                         <thead>
                           <tr>
-                            <th>Event Type</th>
-                            <th>Label</th>
-                            <th>Categorie</th>
-                            <th>Description</th>
-                            <th>Acces</th>
+                            <th>{t('colonne_event_type')}</th>
+                            <th>{t('colonne_label')}</th>
+                            <th>{t('colonne_categorie')}</th>
+                            <th>{t('colonne_description')}</th>
+                            <th>{t('colonne_acces')}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -190,9 +192,9 @@ export default function EventsPage() {
                               </td>
                               <td>
                                 {evt.admin_only ? (
-                                  <span className="badge badge-warning events-badge-sm">Admin</span>
+                                  <span className="badge badge-warning events-badge-sm">{t('badge_admin')}</span>
                                 ) : (
-                                  <span className="badge badge-success events-badge-sm">Tous</span>
+                                  <span className="badge badge-success events-badge-sm">{t('badge_tous')}</span>
                                 )}
                               </td>
                             </tr>

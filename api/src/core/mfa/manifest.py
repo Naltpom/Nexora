@@ -4,7 +4,6 @@ manifest = FeatureManifest(
     name="mfa",
     label="Authentification Multi-Facteurs (MFA)",
     description="Gestion et application de l'authentification multi-facteurs",
-    version="2026.02.26",
     children=["mfa.totp", "mfa.email"],
     permissions=[
         "mfa.manage",

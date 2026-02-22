@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../core/AuthContext'
 import { usePermission } from '../../core/PermissionContext'
 import Layout from '../../core/Layout'
@@ -92,6 +93,7 @@ const emptyRuleForm: RuleForm = {
 /* -- Component -- */
 
 export default function NotificationSettings() {
+  const { t } = useTranslation('notification')
   const { user } = useAuth()
   const { can } = usePermission()
   const isSuperAdmin = user?.is_super_admin ?? false
@@ -231,15 +233,15 @@ export default function NotificationSettings() {
 
   const saveRule = async () => {
     if (!ruleForm.name.trim()) {
-      setError('Le nom est requis')
+      setError(t('rule_modal_error_name_required'))
       return
     }
     if (ruleForm.event_types.length === 0) {
-      setError('Selectionnez au moins un type d\'evenement')
+      setError(t('rule_modal_error_event_required'))
       return
     }
     if (!ruleForm.channel_in_app && !ruleForm.channel_email && !ruleForm.channel_webhook) {
-      setError('Selectionnez au moins un canal')
+      setError(t('rule_modal_error_channel_required'))
       return
     }
 
@@ -261,14 +263,14 @@ export default function NotificationSettings() {
       setShowRuleModal(false)
       loadData()
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Erreur lors de la sauvegarde')
+      setError(err.response?.data?.detail || t('rule_modal_error_save'))
     } finally {
       setSaving(false)
     }
   }
 
   const deleteRule = async (id: number) => {
-    if (!confirm('Supprimer cette regle ?')) return
+    if (!confirm(t('rules_confirm_delete'))) return
     try {
       await api.delete(`/notifications/rules/${id}`)
       loadData()
@@ -378,7 +380,7 @@ export default function NotificationSettings() {
 
   const saveWebhook = async () => {
     if (!webhookForm.url.trim()) {
-      setError('L\'URL est requise')
+      setError(t('webhook_modal_error_url_required'))
       return
     }
     setSaving(true)
@@ -405,14 +407,14 @@ export default function NotificationSettings() {
       setShowWebhookModal(false)
       loadData()
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Erreur lors de la sauvegarde')
+      setError(err.response?.data?.detail || t('webhook_modal_error_save'))
     } finally {
       setSaving(false)
     }
   }
 
   const deleteWebhook = async (wh: Webhook) => {
-    if (!confirm('Supprimer ce webhook ?')) return
+    if (!confirm(t('webhooks_confirm_delete'))) return
     try {
       const endpoint = wh.is_global
         ? `/notifications/webhooks/global/${wh.id}`
@@ -429,12 +431,12 @@ export default function NotificationSettings() {
       const res = await api.post(`/notifications/webhooks/${id}/test`)
       const data = res.data
       if (data.ok) {
-        window.alert(`Test reussi (HTTP ${data.status_code})`)
+        window.alert(t('webhooks_test_success', { status_code: data.status_code }))
       } else {
-        window.alert(`Echec du test : ${data.detail || data.error || `HTTP ${data.status_code}`}`)
+        window.alert(t('webhooks_test_failure', { detail: data.detail || data.error || `HTTP ${data.status_code}` }))
       }
     } catch (err: any) {
-      window.alert(err.response?.data?.detail || 'Erreur lors du test')
+      window.alert(err.response?.data?.detail || t('webhooks_test_error'))
     }
   }
 
@@ -469,11 +471,11 @@ export default function NotificationSettings() {
         <td>
           <span className="notif-rule-name">{rule.name}</span>
           {showBadges && rule.is_default_template && (
-            <span className="notif-rule-template-badge">Template</span>
+            <span className="notif-rule-template-badge">{t('rules_badge_template')}</span>
           )}
           {showBadges && locked && rule.user_preference?.is_customized && (
             <span className="notif-rule-template-badge notif-badge-personalized">
-              Personnalise
+              {t('rules_badge_personalized')}
             </span>
           )}
           {showBadges && locked && (
@@ -482,14 +484,14 @@ export default function NotificationSettings() {
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
-              Admin
+              {t('rules_badge_admin')}
             </span>
           )}
         </td>
         <td>
           <div className="notif-event-tags">
             {rule.event_types.length > 3 ? (
-              <span className="notif-event-tag">{rule.event_types.length} events</span>
+              <span className="notif-event-tag">{t('rules_events_count', { count: rule.event_types.length })}</span>
             ) : (
               rule.event_types.map(et => (
                 <span key={et} className="notif-event-tag">{et}</span>
@@ -570,7 +572,7 @@ export default function NotificationSettings() {
                           )
                         })
                       ) : (
-                        <span className="notif-webhook-placeholder">Aucun webhook</span>
+                        <span className="notif-webhook-placeholder">{t('rules_webhook_placeholder')}</span>
                       )}
                     </div>
                   </div>
@@ -628,7 +630,7 @@ export default function NotificationSettings() {
                           )
                         })
                       ) : (
-                        <span className="notif-webhook-placeholder">Aucun webhook</span>
+                        <span className="notif-webhook-placeholder">{t('rules_webhook_placeholder')}</span>
                       )}
                     </div>
                   </div>
@@ -668,7 +670,7 @@ export default function NotificationSettings() {
         </td>
         <td>
           {locked ? (
-            <div className="notif-actions notif-actions-locked" title="Regle geree par un administrateur">
+            <div className="notif-actions notif-actions-locked" title={t('rules_locked_title')}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
@@ -679,7 +681,7 @@ export default function NotificationSettings() {
               <button
                 className="btn-icon btn-icon-secondary"
                 onClick={() => openEditRule(rule, scope)}
-                title="Modifier"
+                title={t('rules_edit_title')}
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -689,7 +691,7 @@ export default function NotificationSettings() {
               <button
                 className="btn-icon btn-icon-danger"
                 onClick={() => deleteRule(rule.id)}
-                title="Supprimer"
+                title={t('rules_delete_title')}
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="3 6 5 6 21 6" />
@@ -715,16 +717,16 @@ export default function NotificationSettings() {
         </colgroup>
         <thead>
           <tr>
-            <th>Nom</th>
-            <th>Events</th>
-            <th>Canaux</th>
-            <th>Actif</th>
+            <th>{t('rules_column_name')}</th>
+            <th>{t('rules_column_events')}</th>
+            <th>{t('rules_column_channels')}</th>
+            <th>{t('rules_column_active')}</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
           {rules.length === 0 ? (
-            <tr><td colSpan={5} className="notif-rules-empty">Aucune regle configuree</td></tr>
+            <tr><td colSpan={5} className="notif-rules-empty">{t('rules_empty')}</td></tr>
           ) : (
             rules.map(r => renderRuleRow(r, scope))
           )}
@@ -744,22 +746,22 @@ export default function NotificationSettings() {
         </div>
         <div className="notif-webhook-url">{wh.url}</div>
         {wh.prefix && (
-          <div className="notif-webhook-url italic">Prefixe : {wh.prefix}</div>
+          <div className="notif-webhook-url italic">{t('webhooks_prefix_label', { prefix: wh.prefix })}</div>
         )}
       </div>
       <div className="notif-webhook-actions">
-        <button className="btn-icon btn-icon-secondary" onClick={() => testWebhook(wh.id)} title="Tester">
+        <button className="btn-icon btn-icon-secondary" onClick={() => testWebhook(wh.id)} title={t('webhooks_test_title')}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <polygon points="5 3 19 12 5 21 5 3" />
           </svg>
         </button>
-        <button className="btn-icon btn-icon-secondary" onClick={() => openEditWebhook(wh)} title="Modifier">
+        <button className="btn-icon btn-icon-secondary" onClick={() => openEditWebhook(wh)} title={t('webhooks_edit_title')}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
           </svg>
         </button>
-        <button className="btn-icon btn-icon-danger" onClick={() => deleteWebhook(wh)} title="Supprimer">
+        <button className="btn-icon btn-icon-danger" onClick={() => deleteWebhook(wh)} title={t('webhooks_delete_title')}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <polyline points="3 6 5 6 21 6" />
             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
@@ -773,7 +775,7 @@ export default function NotificationSettings() {
 
   if (loading) {
     return (
-      <Layout title="Notifications" breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Notifications', path: '/notifications' }, { label: 'Parametres' }]}>
+      <Layout title="Notifications" breadcrumb={[{ label: t('breadcrumb_home'), path: '/' }, { label: t('breadcrumb_notifications'), path: '/notifications' }, { label: t('breadcrumb_settings') }]}>
         <div className="notif-loading-center">
           <div className="spinner" />
         </div>
@@ -782,13 +784,13 @@ export default function NotificationSettings() {
   }
 
   return (
-    <Layout title="Notifications" breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Notifications', path: '/notifications' }, { label: 'Parametres' }]}>
+    <Layout title="Notifications" breadcrumb={[{ label: t('breadcrumb_home'), path: '/' }, { label: t('breadcrumb_notifications'), path: '/notifications' }, { label: t('breadcrumb_settings') }]}>
       {/* Page Header */}
       <div className="unified-card page-header-card">
         <div className="unified-page-header">
           <div className="unified-page-header-info">
-            <h1>Gestion des notifications</h1>
-            <p>Configurez vos regles de notification et webhooks</p>
+            <h1>{t('settings_page_title')}</h1>
+            <p>{t('settings_page_subtitle')}</p>
           </div>
           <div className="unified-page-header-actions">
             <div className="notif-tabs">
@@ -796,13 +798,13 @@ export default function NotificationSettings() {
                 className={`notif-tab ${activeTab === 'rules' ? 'active' : ''}`}
                 onClick={() => setActiveTab('rules')}
               >
-                Regles
+                {t('settings_tab_rules')}
               </button>
               <button
                 className={`notif-tab ${activeTab === 'webhooks' ? 'active' : ''}`}
                 onClick={() => setActiveTab('webhooks')}
               >
-                Webhooks
+                {t('settings_tab_webhooks')}
               </button>
             </div>
           </div>
@@ -816,16 +818,16 @@ export default function NotificationSettings() {
             <div className="notif-section-header">
               <div>
                 <div className="notif-section-title">
-                  <h3>Mes regles personnelles</h3>
-                  <span className="notif-scope-badge personal">Personnel</span>
+                  <h3>{t('rules_personal_title')}</h3>
+                  <span className="notif-scope-badge personal">{t('rules_personal_badge')}</span>
                 </div>
-                <div className="notif-section-desc">Regles qui ne s'appliquent qu'a vous</div>
+                <div className="notif-section-desc">{t('rules_personal_desc')}</div>
               </div>
               <button className="btn btn-sm btn-primary" onClick={() => openCreateRule('my')}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
-                Ajouter
+                {t('rules_add_button')}
               </button>
             </div>
             {renderRulesTable(myRules, 'my')}
@@ -837,17 +839,17 @@ export default function NotificationSettings() {
               <div className="notif-section-header">
                 <div>
                   <div className="notif-section-title">
-                    <h3>Regles globales</h3>
-                    <span className="notif-scope-badge super-admin">Super Admin</span>
+                    <h3>{t('rules_global_title')}</h3>
+                    <span className="notif-scope-badge super-admin">{t('rules_global_badge')}</span>
                   </div>
-                  <div className="notif-section-desc">Regles a portee globale. Les templates s'appliquent a tous les utilisateurs existants et futurs.</div>
+                  <div className="notif-section-desc">{t('rules_global_desc')}</div>
                 </div>
                 {can('notification.rules.create') && (
                   <button className="btn btn-sm btn-primary" onClick={() => openCreateRule('global')}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
                     </svg>
-                    Ajouter
+                    {t('rules_add_button')}
                   </button>
                 )}
               </div>
@@ -864,20 +866,20 @@ export default function NotificationSettings() {
             <div className="notif-section-header">
               <div>
                 <div className="notif-section-title">
-                  <h3>Mes webhooks</h3>
-                  <span className="notif-scope-badge personal">Personnel</span>
+                  <h3>{t('webhooks_personal_title')}</h3>
+                  <span className="notif-scope-badge personal">{t('webhooks_personal_badge')}</span>
                 </div>
-                <div className="notif-section-desc">URLs de callback qui recevront les events en HTTP POST</div>
+                <div className="notif-section-desc">{t('webhooks_personal_desc')}</div>
               </div>
               <button className="btn btn-sm btn-primary" onClick={() => openCreateWebhook(false)}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
-                Ajouter
+                {t('webhooks_add_button')}
               </button>
             </div>
             {myWebhooks.length === 0 ? (
-              <div className="notif-webhook-empty">Aucun webhook configure</div>
+              <div className="notif-webhook-empty">{t('webhooks_personal_empty')}</div>
             ) : (
               <div className="notif-webhook-list">
                 {myWebhooks.map(wh => renderWebhookCard(wh))}
@@ -891,22 +893,22 @@ export default function NotificationSettings() {
               <div className="notif-section-header">
                 <div>
                   <div className="notif-section-title">
-                    <h3>Webhooks globaux</h3>
-                    <span className="notif-scope-badge super-admin">Super Admin</span>
+                    <h3>{t('webhooks_global_title')}</h3>
+                    <span className="notif-scope-badge super-admin">{t('webhooks_global_badge')}</span>
                   </div>
-                  <div className="notif-section-desc">Webhooks recevant tous les events de la plateforme</div>
+                  <div className="notif-section-desc">{t('webhooks_global_desc')}</div>
                 </div>
                 {can('notification.webhook.global.create') && (
                   <button className="btn btn-sm btn-primary" onClick={() => openCreateWebhook(true)}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
                     </svg>
-                    Ajouter
+                    {t('webhooks_add_button')}
                   </button>
                 )}
               </div>
               {globalWebhooks.length === 0 ? (
-                <div className="notif-webhook-empty">Aucun webhook global</div>
+                <div className="notif-webhook-empty">{t('webhooks_global_empty')}</div>
               ) : (
                 <div className="notif-webhook-list">
                   {globalWebhooks.map(wh => renderWebhookCard(wh))}
@@ -922,27 +924,27 @@ export default function NotificationSettings() {
         <div className="modal-overlay" onClick={() => setShowRuleModal(false)}>
           <div className="modal notif-modal-rule" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{editingRule ? 'Modifier la regle' : 'Nouvelle regle'}</h2>
+              <h2>{editingRule ? t('rule_modal_title_edit') : t('rule_modal_title_create')}</h2>
               <button className="modal-close" onClick={() => setShowRuleModal(false)}>&times;</button>
             </div>
             <div className="modal-body">
               {error && <div className="alert alert-error notif-alert-spaced">{error}</div>}
 
               <div className="form-group">
-                <label>Nom de la regle</label>
+                <label>{t('rule_modal_label_name')}</label>
                 <input
                   type="text"
                   value={ruleForm.name}
                   onChange={e => setRuleForm(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Ex: Me notifier des nouveaux evenements"
+                  placeholder={t('rule_modal_name_placeholder')}
                 />
               </div>
 
               <div className="form-group">
                 <label>
-                  Types d'evenements
+                  {t('rule_modal_label_event_types')}
                   <button type="button" onClick={toggleAllEvents} className="notif-toggle-all">
-                    {ruleForm.event_types.length === eventTypes.filter(et => !et.admin_only || isSuperAdmin).length ? 'Tout decocher' : 'Tout cocher'}
+                    {ruleForm.event_types.length === eventTypes.filter(et => !et.admin_only || isSuperAdmin).length ? t('rule_modal_toggle_all_uncheck') : t('rule_modal_toggle_all_check')}
                   </button>
                 </label>
                 <div className="notif-event-checkboxes">
@@ -967,20 +969,20 @@ export default function NotificationSettings() {
               {/* Target type */}
               {ruleScope === 'global' && (
                 <div className="form-group">
-                  <label>Destinataires</label>
+                  <label>{t('rule_modal_label_recipients')}</label>
                   <select
                     value={ruleForm.target_type}
                     onChange={e => setRuleForm(prev => ({ ...prev, target_type: e.target.value }))}
                   >
-                    <option value="all">Tous les utilisateurs</option>
-                    <option value="users">Utilisateurs specifiques</option>
-                    <option value="event_target">Cible de l'event (ex: assigne)</option>
+                    <option value="all">{t('rule_modal_target_all')}</option>
+                    <option value="users">{t('rule_modal_target_users')}</option>
+                    <option value="event_target">{t('rule_modal_target_event')}</option>
                   </select>
                 </div>
               )}
 
               <div className="form-group">
-                <label>Canaux de notification</label>
+                <label>{t('rule_modal_label_channels')}</label>
                 <div className="notif-channel-options">
                   <label className="notif-channel-option">
                     <input
@@ -1030,7 +1032,7 @@ export default function NotificationSettings() {
                       checked={ruleForm.is_default_template}
                       onChange={e => setRuleForm(prev => ({ ...prev, is_default_template: e.target.checked }))}
                     />
-                    Template par defaut (applique a tous les utilisateurs existants et futurs)
+                    {t('rule_modal_template_default')}
                   </label>
                 </div>
               )}
@@ -1038,9 +1040,9 @@ export default function NotificationSettings() {
               {/* Default channels for users (only for templates) */}
               {ruleScope === 'global' && isSuperAdmin && ruleForm.is_default_template && (
                 <div className="form-group">
-                  <label>Canaux actives par defaut chez les utilisateurs</label>
+                  <label>{t('rule_modal_label_default_channels')}</label>
                   <p className="notif-default-channels-desc">
-                    Les utilisateurs qui n'ont pas personnalise leurs preferences recevront ces canaux par defaut.
+                    {t('rule_modal_default_channels_desc')}
                   </p>
                   <div className="notif-channel-options">
                     <label className={`notif-channel-option${!ruleForm.channel_in_app ? ' disabled' : ''}`}>
@@ -1075,9 +1077,9 @@ export default function NotificationSettings() {
               )}
             </div>
             <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => setShowRuleModal(false)}>Annuler</button>
+              <button className="btn btn-secondary" onClick={() => setShowRuleModal(false)}>{t('rule_modal_cancel')}</button>
               <button className="btn btn-primary" onClick={saveRule} disabled={saving}>
-                {saving ? 'Enregistrement...' : editingRule ? 'Modifier' : 'Creer'}
+                {saving ? t('rule_modal_saving') : editingRule ? t('rule_modal_save_edit') : t('rule_modal_save_create')}
               </button>
             </div>
           </div>
@@ -1089,36 +1091,36 @@ export default function NotificationSettings() {
         <div className="modal-overlay" onClick={() => setShowWebhookModal(false)}>
           <div className="modal notif-modal-webhook" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{editingWebhook ? 'Modifier le webhook' : 'Nouveau webhook'}</h2>
+              <h2>{editingWebhook ? t('webhook_modal_title_edit') : t('webhook_modal_title_create')}</h2>
               <button className="modal-close" onClick={() => setShowWebhookModal(false)}>&times;</button>
             </div>
             <div className="modal-body">
               {error && <div className="alert alert-error notif-alert-spaced">{error}</div>}
 
               <div className="form-group">
-                <label>Nom (optionnel)</label>
+                <label>{t('webhook_modal_label_name')}</label>
                 <input
                   type="text"
                   value={webhookForm.name}
                   onChange={e => setWebhookForm(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Ex: Slack notifications"
+                  placeholder={t('webhook_modal_name_placeholder')}
                 />
               </div>
 
               <div className="form-group">
-                <label>Format</label>
+                <label>{t('webhook_modal_label_format')}</label>
                 <select
                   value={webhookForm.format}
                   onChange={e => setWebhookForm(prev => ({ ...prev, format: e.target.value }))}
                 >
-                  <option value="custom">Custom (JSON brut)</option>
-                  <option value="slack">Slack</option>
-                  <option value="discord">Discord</option>
+                  <option value="custom">{t('webhook_modal_format_custom')}</option>
+                  <option value="slack">{t('webhook_modal_format_slack')}</option>
+                  <option value="discord">{t('webhook_modal_format_discord')}</option>
                 </select>
               </div>
 
               <div className="form-group">
-                <label>URL</label>
+                <label>{t('webhook_modal_label_url')}</label>
                 <input
                   type="text"
                   value={webhookForm.url}
@@ -1128,33 +1130,33 @@ export default function NotificationSettings() {
               </div>
 
               <div className="form-group">
-                <label>Secret HMAC (optionnel)</label>
+                <label>{t('webhook_modal_label_secret')}</label>
                 <input
                   type="text"
                   value={webhookForm.secret}
                   onChange={e => setWebhookForm(prev => ({ ...prev, secret: e.target.value }))}
-                  placeholder="Secret pour la signature HMAC"
+                  placeholder={t('webhook_modal_secret_placeholder')}
                 />
               </div>
 
               <div className="form-group">
-                <label>Prefixe (optionnel)</label>
+                <label>{t('webhook_modal_label_prefix')}</label>
                 <input
                   type="text"
                   value={webhookForm.prefix}
                   onChange={e => setWebhookForm(prev => ({ ...prev, prefix: e.target.value }))}
-                  placeholder="Ex: @canal"
+                  placeholder={t('webhook_modal_prefix_placeholder')}
                 />
                 <small className="notif-form-hint">
-                  Ajoute en premiere ligne de chaque message envoye
+                  {t('webhook_modal_prefix_hint')}
                 </small>
               </div>
 
             </div>
             <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => setShowWebhookModal(false)}>Annuler</button>
+              <button className="btn btn-secondary" onClick={() => setShowWebhookModal(false)}>{t('webhook_modal_cancel')}</button>
               <button className="btn btn-primary" onClick={saveWebhook} disabled={saving}>
-                {saving ? 'Enregistrement...' : editingWebhook ? 'Modifier' : 'Creer'}
+                {saving ? t('webhook_modal_saving') : editingWebhook ? t('webhook_modal_save_edit') : t('webhook_modal_save_create')}
               </button>
             </div>
           </div>

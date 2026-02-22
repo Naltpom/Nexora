@@ -1,24 +1,26 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useDraftPreference } from '../DraftPreferenceContext'
 import { applyLayoutPrefs, type LayoutPrefs } from '../applyPreferences'
 import './layout.scss'
 
-const DENSITY_OPTIONS = [
-  { value: 'compact', label: 'Compact' },
-  { value: 'normal', label: 'Normal' },
-  { value: 'airy', label: 'Aere' },
+const DENSITY_OPTION_KEYS = [
+  { value: 'compact', key: 'density_compact' },
+  { value: 'normal', key: 'density_normal' },
+  { value: 'airy', key: 'density_airy' },
 ]
 
-const WIDTH_OPTIONS = [
-  { value: 'narrow', label: 'Etroit (720px)' },
-  { value: 'normal', label: 'Normal (960px)' },
-  { value: 'wide', label: 'Large (1200px)' },
-  { value: 'full', label: 'Pleine largeur' },
+const WIDTH_OPTION_KEYS = [
+  { value: 'narrow', key: 'width_narrow' },
+  { value: 'normal', key: 'width_normal' },
+  { value: 'wide', key: 'width_wide' },
+  { value: 'full', key: 'width_full' },
 ]
 
 const DEFAULTS: LayoutPrefs = { density: 'normal', radius: 8, maxWidth: 'normal', sectionGap: 16 }
 
 export default function LayoutSection() {
+  const { t } = useTranslation('preference.layout')
   const { getDraftPreference, setDraftPreference, resetVersion } = useDraftPreference()
 
   const [prefs, setPrefs] = useState<LayoutPrefs>(() => {
@@ -52,21 +54,21 @@ export default function LayoutSection() {
 
   return (
     <div className="unified-card card-padded">
-      <h2 className="title-sm">Mise en page</h2>
-      <p className="text-secondary">Ajustez la densite, les arrondis et la largeur du contenu.</p>
+      <h2 className="title-sm">{t('section_title')}</h2>
+      <p className="text-secondary">{t('section_description')}</p>
 
       <div className="layout-section__grid">
         <div className="layout-section__field">
-          <label className="layout-section__label">Densite</label>
+          <label className="layout-section__label">{t('label_density')}</label>
           <div className="layout-section__radio-group">
-            {DENSITY_OPTIONS.map((opt) => (
+            {DENSITY_OPTION_KEYS.map((opt) => (
               <button
                 key={opt.value}
                 className={`layout-section__radio-btn${prefs.density === opt.value ? ' layout-section__radio-btn--active' : ''}`}
                 onClick={() => update({ density: opt.value })}
                 type="button"
               >
-                {opt.label}
+                {t(opt.key)}
               </button>
             ))}
           </div>
@@ -74,7 +76,7 @@ export default function LayoutSection() {
 
         <div className="layout-section__field">
           <label className="layout-section__label">
-            Border-radius
+            {t('label_border_radius')}
             <span className="layout-section__value">{prefs.radius ?? 8}px</span>
           </label>
           <input
@@ -99,21 +101,21 @@ export default function LayoutSection() {
         </div>
 
         <div className="layout-section__field">
-          <label className="layout-section__label">Largeur max du contenu</label>
+          <label className="layout-section__label">{t('label_max_width')}</label>
           <select
             className="input"
             value={prefs.maxWidth || 'normal'}
             onChange={(e) => update({ maxWidth: e.target.value })}
           >
-            {WIDTH_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            {WIDTH_OPTION_KEYS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{t(opt.key)}</option>
             ))}
           </select>
         </div>
 
         <div className="layout-section__field">
           <label className="layout-section__label">
-            Espacement sections
+            {t('label_section_spacing')}
             <span className="layout-section__value">{prefs.sectionGap ?? 16}px</span>
           </label>
           <input
@@ -135,7 +137,7 @@ export default function LayoutSection() {
       {isModified && (
         <div className="layout-section__actions">
           <button className="btn btn-secondary" onClick={handleReset} type="button">
-            Reinitialiser
+            {t('btn_reset')}
           </button>
         </div>
       )}

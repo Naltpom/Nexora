@@ -1,8 +1,10 @@
 import { useState, useEffect, FormEvent } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import axios from 'axios'
 
 export default function ResetPassword() {
+  const { t } = useTranslation('_identity')
   const [searchParams] = useSearchParams()
   const token = searchParams.get('token') || ''
 
@@ -29,7 +31,7 @@ export default function ResetPassword() {
       setTokenValid(true)
       setUserEmail(response.data.email)
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Token invalide ou expire')
+      setError(err.response?.data?.detail || t('reset_password.error_token_invalid'))
       setTokenValid(false)
     } finally {
       setVerifying(false)
@@ -41,12 +43,12 @@ export default function ResetPassword() {
     setError('')
 
     if (newPassword.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caracteres')
+      setError(t('reset_password.error_password_min_6'))
       return
     }
 
     if (newPassword !== confirmPassword) {
-      setError('Les mots de passe ne correspondent pas')
+      setError(t('reset_password.error_password_mismatch'))
       return
     }
 
@@ -58,7 +60,7 @@ export default function ResetPassword() {
       })
       setSuccess(true)
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Erreur lors de la reinitialisation')
+      setError(err.response?.data?.detail || t('reset_password.error_default'))
     } finally {
       setLoading(false)
     }
@@ -71,7 +73,7 @@ export default function ResetPassword() {
         <div className="reset-password-card">
           <div className="reset-password-header">
             <div className="spinner" />
-            <p>Verification du lien...</p>
+            <p>{t('reset_password.verifying')}</p>
           </div>
         </div>
       </div>
@@ -88,11 +90,11 @@ export default function ResetPassword() {
               <rect width="32" height="32" rx="6" fill="var(--danger)" />
               <text x="16" y="22" textAnchor="middle" fill="white" fontSize="18" fontWeight="bold">!</text>
             </svg>
-            <h1>Lien invalide</h1>
-            <p>{error || 'Ce lien de reinitialisation est invalide, expire ou a deja ete utilise.'}</p>
+            <h1>{t('reset_password.invalid_link_title')}</h1>
+            <p>{error || t('reset_password.invalid_link_message')}</p>
           </div>
           <Link to="/login" className="btn btn-primary btn-block">
-            Retour a la connexion
+            {t('common.back_to_login')}
           </Link>
         </div>
       </div>
@@ -109,11 +111,11 @@ export default function ResetPassword() {
               <rect width="32" height="32" rx="6" fill="var(--success)" />
               <text x="16" y="22" textAnchor="middle" fill="white" fontSize="18" fontWeight="bold">&#10003;</text>
             </svg>
-            <h1>Mot de passe modifie</h1>
-            <p>Votre mot de passe a ete reinitialise avec succes. Vous pouvez maintenant vous connecter.</p>
+            <h1>{t('reset_password.success_title')}</h1>
+            <p>{t('reset_password.success_message')}</p>
           </div>
           <Link to="/login" className="btn btn-primary btn-block">
-            Se connecter
+            {t('login.submit')}
           </Link>
         </div>
       </div>
@@ -129,40 +131,40 @@ export default function ResetPassword() {
             <rect width="32" height="32" rx="6" fill="var(--primary)" />
             <text x="16" y="22" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold">K</text>
           </svg>
-          <h1>Nouveau mot de passe</h1>
-          <p>Definissez un nouveau mot de passe pour <strong>{userEmail}</strong></p>
+          <h1>{t('reset_password.form_title')}</h1>
+          <p>{t('reset_password.form_subtitle_prefix')} <strong>{userEmail}</strong></p>
         </div>
 
         <form onSubmit={handleSubmit}>
           {error && <div className="alert alert-error">{error}</div>}
 
           <div className="form-group">
-            <label htmlFor="new-password">Nouveau mot de passe</label>
+            <label htmlFor="new-password">{t('common.new_password')}</label>
             <input
               id="new-password"
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Minimum 6 caracteres"
+              placeholder={t('common.password_min_6')}
               required
               autoFocus
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="confirm-password">Confirmer le mot de passe</label>
+            <label htmlFor="confirm-password">{t('common.confirm_password')}</label>
             <input
               id="confirm-password"
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirmez votre mot de passe"
+              placeholder={t('common.confirm_password_placeholder')}
               required
             />
           </div>
 
           <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
-            {loading ? 'Modification...' : 'Modifier le mot de passe'}
+            {loading ? t('reset_password.submitting') : t('reset_password.submit')}
           </button>
         </form>
       </div>

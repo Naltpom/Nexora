@@ -1,5 +1,6 @@
 import { useState, useEffect, FormEvent, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import api from '../../api'
 import { useAuth } from '../../core/AuthContext'
 import './_identity.scss'
@@ -14,6 +15,7 @@ interface InvitationInfo {
 }
 
 export default function AcceptInvitation() {
+  const { t } = useTranslation('_identity')
   const { token } = useParams<{ token: string }>()
   const navigate = useNavigate()
   const { refreshUser } = useAuth()
@@ -52,7 +54,7 @@ export default function AcceptInvitation() {
       setInvitation(response.data)
       setStep('form')
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Invitation invalide ou expiree')
+      setError(err.response?.data?.detail || t('accept_invitation.error_invalid_or_expired'))
       setStep('invalid')
     }
   }
@@ -82,12 +84,12 @@ export default function AcceptInvitation() {
         payload = { password }
       } else {
         if (newPassword !== confirmPassword) {
-          setError('Les mots de passe ne correspondent pas')
+          setError(t('accept_invitation.error_password_mismatch'))
           setSubmitting(false)
           return
         }
         if (newPassword.length < 6) {
-          setError('Le mot de passe doit contenir au moins 6 caracteres')
+          setError(t('accept_invitation.error_password_min_6'))
           setSubmitting(false)
           return
         }
@@ -102,7 +104,7 @@ export default function AcceptInvitation() {
       setStep('verify')
       startCooldown()
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Erreur')
+      setError(err.response?.data?.detail || t('accept_invitation.error_default'))
     } finally {
       setSubmitting(false)
     }
@@ -114,7 +116,7 @@ export default function AcceptInvitation() {
       await api.post(`/invitations/${token}/send-code`)
       startCooldown()
     } catch (err: any) {
-      setVerifyError(err.response?.data?.detail || 'Erreur lors du renvoi')
+      setVerifyError(err.response?.data?.detail || t('accept_invitation.error_resend'))
     }
   }
 
@@ -139,7 +141,7 @@ export default function AcceptInvitation() {
       // Redirect after 2 seconds
       setTimeout(() => navigate('/'), 2000)
     } catch (err: any) {
-      setVerifyError(err.response?.data?.detail || 'Code incorrect')
+      setVerifyError(err.response?.data?.detail || t('accept_invitation.error_code_incorrect'))
     } finally {
       setSubmitting(false)
     }
@@ -152,7 +154,7 @@ export default function AcceptInvitation() {
         <div className="login-card">
           <div className="text-center">
             <div className="spinner spinner-centered" />
-            <p>Verification de l'invitation...</p>
+            <p>{t('accept_invitation.loading_message')}</p>
           </div>
         </div>
       </div>
@@ -165,16 +167,16 @@ export default function AcceptInvitation() {
       <div className="login-container">
         <div className="login-card">
           <div className="login-header">
-            <h1>Invitation invalide</h1>
+            <h1>{t('accept_invitation.invalid_title')}</h1>
           </div>
           <div className="alert alert-error mb-16">
             {error}
           </div>
           <p className="text-gray-500 mb-16">
-            Cette invitation n'est plus valide. Elle a peut-etre expire ou a deja ete utilisee.
+            {t('accept_invitation.invalid_message')}
           </p>
           <Link to="/login" className="btn btn-primary btn-block">
-            Retour a la connexion
+            {t('common.back_to_login')}
           </Link>
         </div>
       </div>
@@ -192,13 +194,13 @@ export default function AcceptInvitation() {
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
-            <h1>Bienvenue !</h1>
+            <h1>{t('accept_invitation.success_title')}</h1>
           </div>
           <p className="text-center text-gray-500 mb-16">
-            Vous avez accepte l'invitation avec succes.
+            {t('accept_invitation.success_message')}
           </p>
           <p className="text-center text-gray-500">
-            Redirection en cours...
+            {t('common.redirecting')}
           </p>
         </div>
       </div>
@@ -211,9 +213,9 @@ export default function AcceptInvitation() {
       <div className="login-container">
         <div className="login-card">
           <div className="login-header">
-            <h1>Verification</h1>
+            <h1>{t('accept_invitation.verify_title')}</h1>
             <p className="text-gray-500">
-              Un code de verification a ete envoye a <strong>{invitation?.email}</strong>
+              {t('accept_invitation.verify_code_sent_to')} <strong>{invitation?.email}</strong>
             </p>
           </div>
 
@@ -221,7 +223,7 @@ export default function AcceptInvitation() {
             {verifyError && <div className="alert alert-error">{verifyError}</div>}
 
             <div className="form-group">
-              <label>Code de verification</label>
+              <label>{t('accept_invitation.verify_code_label')}</label>
               <input
                 type="text"
                 value={verificationCode}
@@ -236,7 +238,7 @@ export default function AcceptInvitation() {
             </div>
 
             <button type="submit" className="btn btn-primary btn-block" disabled={submitting || verificationCode.length !== 6}>
-              {submitting ? 'Verification...' : 'Valider'}
+              {submitting ? t('accept_invitation.verify_submitting') : t('accept_invitation.verify_submit')}
             </button>
 
             <div className="text-center mt-16">
@@ -247,13 +249,13 @@ export default function AcceptInvitation() {
                 className={resendCooldown > 0 ? 'verify-resend-btn verify-resend-btn--disabled' : 'verify-resend-btn verify-resend-btn--active'}
               >
                 {resendCooldown > 0
-                  ? `Renvoyer le code (${resendCooldown}s)`
-                  : 'Renvoyer le code'}
+                  ? t('accept_invitation.verify_resend_cooldown', { seconds: resendCooldown })
+                  : t('accept_invitation.verify_resend')}
               </button>
             </div>
 
             <p className="text-muted text-center mt-16">
-              Le code est valable 5 minutes.
+              {t('accept_invitation.verify_code_validity')}
             </p>
           </form>
         </div>
@@ -274,11 +276,11 @@ export default function AcceptInvitation() {
               <path d="M16 3.13a4 4 0 0 1 0 7.75" />
             </svg>
           </div>
-          <h1>Invite par {invitation?.inviter_name}</h1>
+          <h1>{t('accept_invitation.form_title_prefix')} {invitation?.inviter_name}</h1>
           <p className="text-gray-500">
             {invitation?.user_exists
-              ? 'Connectez-vous pour accepter l\'invitation'
-              : 'Creez votre compte pour continuer'}
+              ? t('accept_invitation.existing_user_subtitle')
+              : t('accept_invitation.new_user_subtitle')}
           </p>
         </div>
 
@@ -286,7 +288,7 @@ export default function AcceptInvitation() {
           {error && <div className="alert alert-error">{error}</div>}
 
           <div className="form-group">
-            <label>Email</label>
+            <label>{t('common.email')}</label>
             <input
               type="email"
               value={invitation?.email || ''}
@@ -298,12 +300,12 @@ export default function AcceptInvitation() {
           {invitation?.user_exists ? (
             // Existing user - just needs password
             <div className="form-group">
-              <label>Mot de passe</label>
+              <label>{t('common.password')}</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Votre mot de passe"
+                placeholder={t('accept_invitation.password_placeholder')}
                 required
                 autoFocus
                 disabled={submitting}
@@ -314,47 +316,47 @@ export default function AcceptInvitation() {
             <>
               <div className="form-grid-2col">
                 <div className="form-group">
-                  <label>Prenom</label>
+                  <label>{t('common.first_name')}</label>
                   <input
                     type="text"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
-                    placeholder="Jean"
+                    placeholder={t('accept_invitation.first_name_placeholder')}
                     required
                     autoFocus
                     disabled={submitting}
                   />
                 </div>
                 <div className="form-group">
-                  <label>Nom</label>
+                  <label>{t('common.last_name')}</label>
                   <input
                     type="text"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
-                    placeholder="Dupont"
+                    placeholder={t('accept_invitation.last_name_placeholder')}
                     required
                     disabled={submitting}
                   />
                 </div>
               </div>
               <div className="form-group">
-                <label>Mot de passe</label>
+                <label>{t('common.password')}</label>
                 <input
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Minimum 6 caracteres"
+                  placeholder={t('common.password_min_6')}
                   required
                   disabled={submitting}
                 />
               </div>
               <div className="form-group">
-                <label>Confirmer le mot de passe</label>
+                <label>{t('common.confirm_password')}</label>
                 <input
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirmer le mot de passe"
+                  placeholder={t('common.confirm_password_placeholder_short')}
                   required
                   disabled={submitting}
                 />
@@ -363,13 +365,13 @@ export default function AcceptInvitation() {
           )}
 
           <button type="submit" className="btn btn-primary btn-block" disabled={submitting}>
-            {submitting ? 'Chargement...' : invitation?.user_exists ? 'Se connecter' : 'Creer mon compte'}
+            {submitting ? t('accept_invitation.submitting') : invitation?.user_exists ? t('accept_invitation.submit_existing_user') : t('accept_invitation.submit_new_user')}
           </button>
         </form>
 
         <div className="login-footer">
           <Link to="/login" className="text-gray-500">
-            Annuler et retourner a la connexion
+            {t('accept_invitation.cancel_link')}
           </Link>
         </div>
       </div>

@@ -237,7 +237,6 @@ class FeatureResponse(BaseModel):
     name: str
     label: str
     description: str
-    version: str
     parent: str | None = None
     children: list[str] = []
     depends: list[str] = []

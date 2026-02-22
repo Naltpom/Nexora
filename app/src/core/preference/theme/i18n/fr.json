@@ -1,0 +1,9 @@
+{
+  "section_title": "Theme et Apparence",
+  "label_mode": "Mode",
+  "btn_light": "Clair",
+  "btn_dark": "Sombre",
+  "label_wallpaper": "Fond d'ecran",
+  "btn_choose_wallpaper": "Choisir un fond",
+  "hint_shortcut": "ou Alt + T"
+}

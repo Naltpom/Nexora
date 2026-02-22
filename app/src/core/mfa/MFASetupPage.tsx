@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import Layout from '../../core/Layout'
 import { useAuth } from '../../core/AuthContext'
 import api from '../../api'
@@ -27,6 +28,7 @@ interface AvailableMethod {
 }
 
 export default function MFASetupPage() {
+  const { t } = useTranslation('mfa')
   const { clearMfaSetupRequired } = useAuth()
   const [status, setStatus] = useState<MFAStatus | null>(null)
   const [availableMethods, setAvailableMethods] = useState<AvailableMethod[]>([])
@@ -56,7 +58,7 @@ export default function MFASetupPage() {
       const res = await api.get('/mfa/status')
       setStatus(res.data)
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Erreur lors du chargement du statut MFA')
+      setError(err.response?.data?.detail || t('setup_error_loading_status'))
     }
   }, [])
 
@@ -97,7 +99,7 @@ export default function MFASetupPage() {
       const res = await api.post('/mfa/totp/setup')
       setTotpSetupData(res.data)
     } catch (err: any) {
-      setTotpError(err.response?.data?.detail || 'Erreur lors de la configuration TOTP')
+      setTotpError(err.response?.data?.detail || t('setup_totp_error_setup'))
     } finally {
       setTotpSaving(false)
     }
@@ -105,7 +107,7 @@ export default function MFASetupPage() {
 
   const handleTotpVerify = async () => {
     if (!totpCode || totpCode.length !== 6) {
-      setTotpError('Entrez un code a 6 chiffres')
+      setTotpError(t('setup_totp_error_6_digits'))
       return
     }
     setTotpError('')
@@ -120,9 +122,9 @@ export default function MFASetupPage() {
       }
       await fetchStatus()
       clearMfaSetupRequired()
-      showSuccess('TOTP active avec succes')
+      showSuccess(t('setup_totp_success'))
     } catch (err: any) {
-      setTotpError(err.response?.data?.detail || 'Code invalide')
+      setTotpError(err.response?.data?.detail || t('setup_totp_error_invalid_code'))
     } finally {
       setTotpSaving(false)
     }
@@ -133,9 +135,9 @@ export default function MFASetupPage() {
     try {
       await api.post('/mfa/totp/disable')
       await fetchStatus()
-      showSuccess('TOTP desactive')
+      showSuccess(t('setup_totp_disabled_success'))
     } catch (err: any) {
-      setTotpError(err.response?.data?.detail || 'Erreur lors de la desactivation')
+      setTotpError(err.response?.data?.detail || t('setup_totp_error_disabling'))
     } finally {
       setTotpDisabling(false)
     }
@@ -149,9 +151,9 @@ export default function MFASetupPage() {
       await api.post('/mfa/email/enable')
       await fetchStatus()
       clearMfaSetupRequired()
-      showSuccess('MFA par email active')
+      showSuccess(t('setup_email_success'))
     } catch (err: any) {
-      setError(err.response?.data?.detail || "Erreur lors de l'activation email")
+      setError(err.response?.data?.detail || t('setup_email_error_activation'))
     } finally {
       setEmailSaving(false)
     }
@@ -162,9 +164,9 @@ export default function MFASetupPage() {
     try {
       await api.post('/mfa/email/disable')
       await fetchStatus()
-      showSuccess('MFA par email desactive')
+      showSuccess(t('setup_email_disabled_success'))
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Erreur lors de la desactivation email')
+      setError(err.response?.data?.detail || t('setup_email_error_disabling'))
     } finally {
       setEmailDisabling(false)
     }
@@ -179,7 +181,7 @@ export default function MFASetupPage() {
       setBackupCodes(res.data.codes || [])
       await fetchStatus()
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Erreur lors de la generation des codes')
+      setError(err.response?.data?.detail || t('setup_backup_error_generating'))
     } finally {
       setBackupGenerating(false)
     }
@@ -187,10 +189,10 @@ export default function MFASetupPage() {
 
   if (loading) {
     return (
-      <Layout breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Mon profil', path: '/profile' }, { label: 'MFA' }]} title="Configuration MFA">
+      <Layout breadcrumb={[{ label: t('setup_breadcrumb_home'), path: '/' }, { label: t('setup_breadcrumb_profile'), path: '/profile' }, { label: t('setup_breadcrumb_mfa') }]} title={t('setup_page_title_breadcrumb')}>
         <div className="loading-screen">
           <div className="spinner" />
-          <p>Chargement...</p>
+          <p>{t('loading')}</p>
         </div>
       </Layout>
     )
@@ -200,12 +202,12 @@ export default function MFASetupPage() {
   const emailEnabled = isMethodEnabled('email')
 
   return (
-    <Layout breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Mon profil', path: '/profile' }, { label: 'MFA' }]} title="Configuration MFA">
+    <Layout breadcrumb={[{ label: t('setup_breadcrumb_home'), path: '/' }, { label: t('setup_breadcrumb_profile'), path: '/profile' }, { label: t('setup_breadcrumb_mfa') }]} title={t('setup_page_title_breadcrumb')}>
       <div className="mfa-setup-page-layout">
         <div>
-          <h1 className="mfa-setup-page-title">Authentification multi-facteurs</h1>
+          <h1 className="mfa-setup-page-title">{t('setup_page_title')}</h1>
           <p className="mfa-setup-page-desc">
-            Configurez vos methodes de verification pour renforcer la securite de votre compte.
+            {t('setup_page_description')}
           </p>
         </div>
 
@@ -229,16 +231,16 @@ export default function MFASetupPage() {
                   </svg>
                 </div>
                 <div>
-                  <h3>Application d'authentification (TOTP)</h3>
+                  <h3>{t('setup_totp_title')}</h3>
                   <p className="mfa-setup-section-desc">
-                    Utilisez une application comme Google Authenticator ou Authy pour generer des codes.
+                    {t('setup_totp_description')}
                   </p>
                 </div>
               </div>
               {totpEnabled ? (
-                <span className="mfa-badge mfa-badge-active">Actif</span>
+                <span className="mfa-badge mfa-badge-active">{t('badge_status_active')}</span>
               ) : (
-                <span className="mfa-badge mfa-badge-inactive">Inactif</span>
+                <span className="mfa-badge mfa-badge-inactive">{t('badge_status_inactive')}</span>
               )}
             </div>
 
@@ -248,14 +250,14 @@ export default function MFASetupPage() {
               {totpEnabled && !totpSetupData && (
                 <div className="mfa-setup-actions">
                   <p className="text-gray-500-sm">
-                    Votre application d'authentification est configuree et active.
+                    {t('setup_totp_active_message')}
                   </p>
                   <button
                     className="btn btn-danger btn-sm"
                     onClick={handleTotpDisable}
                     disabled={totpDisabling}
                   >
-                    {totpDisabling ? 'Desactivation...' : 'Desactiver'}
+                    {totpDisabling ? t('setup_totp_disabling') : t('setup_totp_disable')}
                   </button>
                 </div>
               )}
@@ -266,33 +268,33 @@ export default function MFASetupPage() {
                   onClick={handleTotpSetup}
                   disabled={totpSaving}
                 >
-                  {totpSaving ? 'Chargement...' : 'Configurer'}
+                  {totpSaving ? t('setup_totp_setup_loading') : t('setup_totp_setup')}
                 </button>
               )}
 
               {totpSetupData && (
                 <div className="mfa-totp-setup">
                   <p className="mfa-setup-totp-instructions">
-                    Scannez ce QR code avec votre application d'authentification, puis entrez le code genere pour confirmer.
+                    {t('setup_totp_instructions')}
                   </p>
 
                   <div className="mfa-qr-container">
                     <img
                       src={`data:image/png;base64,${totpSetupData.qr_code_base64}`}
-                      alt="QR Code TOTP"
+                      alt={t('setup_totp_qr_alt')}
                       className="mfa-qr-image"
                     />
                   </div>
 
                   <div className="mfa-secret-container">
                     <label className="mfa-secret-label">
-                      Cle manuelle :
+                      {t('setup_totp_manual_key')}
                     </label>
                     <code className="mfa-secret-code">{totpSetupData.secret}</code>
                   </div>
 
                   <div className="form-group mt-16">
-                    <label>Code de verification</label>
+                    <label>{t('setup_totp_verification_label')}</label>
                     <input
                       type="text"
                       inputMode="numeric"
@@ -311,14 +313,14 @@ export default function MFASetupPage() {
                       onClick={handleTotpVerify}
                       disabled={totpSaving || totpCode.length !== 6}
                     >
-                      {totpSaving ? 'Verification...' : 'Confirmer'}
+                      {totpSaving ? t('setup_totp_verifying') : t('setup_totp_confirm')}
                     </button>
                     <button
                       className="btn btn-secondary"
                       onClick={() => { setTotpSetupData(null); setTotpCode(''); setTotpError('') }}
                       type="button"
                     >
-                      Annuler
+                      {t('setup_totp_cancel')}
                     </button>
                   </div>
                 </div>
@@ -339,16 +341,16 @@ export default function MFASetupPage() {
                   </svg>
                 </div>
                 <div>
-                  <h3>Verification par email</h3>
+                  <h3>{t('setup_email_title')}</h3>
                   <p className="mfa-setup-section-desc">
-                    Recevez un code de verification sur votre adresse email a chaque connexion.
+                    {t('setup_email_description')}
                   </p>
                 </div>
               </div>
               {emailEnabled ? (
-                <span className="mfa-badge mfa-badge-active">Actif</span>
+                <span className="mfa-badge mfa-badge-active">{t('badge_status_active')}</span>
               ) : (
-                <span className="mfa-badge mfa-badge-inactive">Inactif</span>
+                <span className="mfa-badge mfa-badge-inactive">{t('badge_status_inactive')}</span>
               )}
             </div>
 
@@ -356,14 +358,14 @@ export default function MFASetupPage() {
               {emailEnabled ? (
                 <div className="mfa-setup-actions">
                   <p className="text-gray-500-sm">
-                    La verification par email est active sur votre compte.
+                    {t('setup_email_active_message')}
                   </p>
                   <button
                     className="btn btn-danger btn-sm"
                     onClick={handleEmailDisable}
                     disabled={emailDisabling}
                   >
-                    {emailDisabling ? 'Desactivation...' : 'Desactiver'}
+                    {emailDisabling ? t('setup_email_disabling') : t('setup_email_disable')}
                   </button>
                 </div>
               ) : (
@@ -372,7 +374,7 @@ export default function MFASetupPage() {
                   onClick={handleEmailEnable}
                   disabled={emailSaving}
                 >
-                  {emailSaving ? 'Activation...' : 'Activer'}
+                  {emailSaving ? t('setup_email_activating') : t('setup_email_activate')}
                 </button>
               )}
             </div>
@@ -390,15 +392,15 @@ export default function MFASetupPage() {
                 </svg>
               </div>
               <div>
-                <h3>Codes de secours</h3>
+                <h3>{t('setup_backup_title')}</h3>
                 <p className="mfa-setup-section-desc">
-                  Codes a usage unique pour acceder a votre compte si vous perdez l'acces a vos autres methodes.
+                  {t('setup_backup_description')}
                 </p>
               </div>
             </div>
             {status && status.backup_codes_remaining > 0 && (
               <span className="mfa-badge mfa-badge-active">
-                {status.backup_codes_remaining} restant{status.backup_codes_remaining > 1 ? 's' : ''}
+                {status.backup_codes_remaining} {status.backup_codes_remaining > 1 ? t('setup_backup_remaining_plural') : t('setup_backup_remaining')}
               </span>
             )}
           </div>
@@ -406,7 +408,7 @@ export default function MFASetupPage() {
           <div className="mfa-setup-section-body">
             {status && status.backup_codes_remaining === 0 && (
               <p className="mfa-setup-no-backup-warning">
-                Vous n'avez aucun code de secours. Nous vous recommandons d'en generer.
+                {t('setup_backup_no_codes_warning')}
               </p>
             )}
             <button
@@ -414,7 +416,7 @@ export default function MFASetupPage() {
               onClick={handleGenerateBackupCodes}
               disabled={backupGenerating}
             >
-              {backupGenerating ? 'Generation...' : (status && status.backup_codes_remaining > 0 ? 'Regenerer les codes' : 'Generer des codes')}
+              {backupGenerating ? t('setup_backup_generating') : (status && status.backup_codes_remaining > 0 ? t('setup_backup_regenerate') : t('setup_backup_generate'))}
             </button>
           </div>
         </div>

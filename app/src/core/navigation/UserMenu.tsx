@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../AuthContext'
 import { useNavigationItems, type AdminGroupData } from './useNavigationItems'
 import { NavIcon } from './icons'
@@ -7,6 +8,7 @@ import type { NavItem } from './types'
 import './UserMenu.scss'
 
 export default function UserMenu() {
+  const { t } = useTranslation('common')
   const { user, logout } = useAuth()
   const { userItems, adminGroups } = useNavigationItems()
   const [open, setOpen] = useState(false)
@@ -123,7 +125,7 @@ export default function UserMenu() {
             onClick={handleLogout}
           >
             <NavIcon name="log-out" />
-            Deconnexion
+            {t('logout')}
           </div>
         </div>
       )}

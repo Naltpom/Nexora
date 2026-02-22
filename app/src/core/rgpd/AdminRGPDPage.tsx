@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 import Layout from '../Layout'
 import { usePermission } from '../PermissionContext'
@@ -61,27 +62,35 @@ interface LegalPageVersionItem {
   created_at: string
 }
 
-const TYPE_LABELS: Record<string, string> = {
-  access: 'Acces', rectification: 'Rectification', erasure: 'Effacement',
-  portability: 'Portabilite', opposition: 'Opposition', limitation: 'Limitation',
+const TYPE_LABEL_KEYS: Record<string, string> = {
+  access: 'admin_rgpd_page.type_access', rectification: 'admin_rgpd_page.type_rectification', erasure: 'admin_rgpd_page.type_erasure',
+  portability: 'admin_rgpd_page.type_portability', opposition: 'admin_rgpd_page.type_opposition', limitation: 'admin_rgpd_page.type_limitation',
 }
 
-const STATUS_LABELS: Record<string, { label: string; className: string }> = {
-  pending: { label: 'En attente', className: 'rgpd-status-pending' },
-  processing: { label: 'En cours', className: 'rgpd-status-processing' },
-  completed: { label: 'Traitee', className: 'rgpd-status-completed' },
-  rejected: { label: 'Refusee', className: 'rgpd-status-rejected' },
+const STATUS_CLASSNAMES: Record<string, string> = {
+  pending: 'rgpd-status-pending',
+  processing: 'rgpd-status-processing',
+  completed: 'rgpd-status-completed',
+  rejected: 'rgpd-status-rejected',
+}
+
+const STATUS_LABEL_KEYS: Record<string, string> = {
+  pending: 'admin_rgpd_page.status_pending',
+  processing: 'admin_rgpd_page.status_processing',
+  completed: 'admin_rgpd_page.status_completed',
+  rejected: 'admin_rgpd_page.status_rejected',
 }
 
 export default function AdminRGPDPage() {
+  const { t } = useTranslation('rgpd')
   const { can } = usePermission()
   const [searchParams, setSearchParams] = useSearchParams()
 
   const tabs: { key: Tab; label: string; permission?: string }[] = [
-    { key: 'registre', label: 'Registre', permission: 'rgpd.registre.read' },
-    { key: 'droits', label: 'Demandes de droits', permission: 'rgpd.droits.read' },
-    { key: 'audit', label: 'Audit', permission: 'rgpd.audit.read' },
-    { key: 'pages', label: 'Pages legales', permission: 'rgpd.politique.read' },
+    { key: 'registre', label: t('admin_rgpd_page.tab_registre'), permission: 'rgpd.registre.read' },
+    { key: 'droits', label: t('admin_rgpd_page.tab_droits'), permission: 'rgpd.droits.read' },
+    { key: 'audit', label: t('admin_rgpd_page.tab_audit'), permission: 'rgpd.audit.read' },
+    { key: 'pages', label: t('admin_rgpd_page.tab_pages'), permission: 'rgpd.politique.read' },
   ]
 
   const visibleTabs = tabs.filter(t => !t.permission || can(t.permission))
@@ -106,14 +115,14 @@ export default function AdminRGPDPage() {
 
   return (
     <Layout
-      title="Administration RGPD"
-      breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Admin RGPD' }]}
+      title={t('admin_rgpd_page.page_title')}
+      breadcrumb={[{ label: t('admin_rgpd_page.breadcrumb_home'), path: '/' }, { label: t('admin_rgpd_page.breadcrumb_label') }]}
     >
       <div className="unified-card page-header-card">
         <div className="unified-page-header">
           <div className="unified-page-header-info">
-            <h1>RGPD & Conformite</h1>
-            <p>Gestion de la conformite RGPD : registre des traitements, demandes de droits, audit, pages legales.</p>
+            <h1>{t('admin_rgpd_page.heading')}</h1>
+            <p>{t('admin_rgpd_page.description')}</p>
           </div>
         </div>
       </div>
@@ -141,6 +150,7 @@ export default function AdminRGPDPage() {
 /* ---- Register Tab ---- */
 
 function RegisterTab() {
+  const { t } = useTranslation('rgpd')
   const { can } = usePermission()
   const [entries, setEntries] = useState<RegisterEntry[]>([])
   const [loading, setLoading] = useState(true)
@@ -192,7 +202,7 @@ function RegisterTab() {
   }
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Supprimer cette entree du registre ?')) return
+    if (!confirm(t('admin_register_tab.confirm_delete'))) return
     await api.delete(`/rgpd/register/${id}`)
     load()
   }
@@ -202,69 +212,69 @@ function RegisterTab() {
   return (
     <div>
       <div className="rgpd-section-header">
-        <h2>Registre des traitements (Article 30)</h2>
+        <h2>{t('admin_register_tab.heading')}</h2>
         {can('rgpd.registre.manage') && (
           <button className="btn btn-primary btn-sm" onClick={() => { resetForm(); setShowForm(true) }}>
-            Ajouter un traitement
+            {t('admin_register_tab.btn_add')}
           </button>
         )}
       </div>
 
       {showForm && (
         <div className="unified-card rgpd-register-form">
-          <h3>{editId ? 'Modifier' : 'Nouveau'} traitement</h3>
+          <h3>{editId ? t('admin_register_tab.form_title_edit') : t('admin_register_tab.form_title_new')}</h3>
           <div className="settings-grid">
             <div className="form-group">
-              <label>Nom du traitement</label>
+              <label>{t('admin_register_tab.label_name')}</label>
               <input type="text" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />
             </div>
             <div className="form-group">
-              <label>Base legale</label>
+              <label>{t('admin_register_tab.label_legal_basis')}</label>
               <select value={form.legal_basis} onChange={e => setForm(p => ({ ...p, legal_basis: e.target.value }))}>
-                <option value="consentement">Consentement</option>
-                <option value="contrat">Execution d'un contrat</option>
-                <option value="obligation_legale">Obligation legale</option>
-                <option value="interet_vital">Interet vital</option>
-                <option value="interet_public">Mission d'interet public</option>
-                <option value="interet_legitime">Interet legitime</option>
+                <option value="consentement">{t('admin_register_tab.option_consentement')}</option>
+                <option value="contrat">{t('admin_register_tab.option_contrat')}</option>
+                <option value="obligation_legale">{t('admin_register_tab.option_obligation_legale')}</option>
+                <option value="interet_vital">{t('admin_register_tab.option_interet_vital')}</option>
+                <option value="interet_public">{t('admin_register_tab.option_interet_public')}</option>
+                <option value="interet_legitime">{t('admin_register_tab.option_interet_legitime')}</option>
               </select>
             </div>
             <div className="form-group">
-              <label>Finalite</label>
+              <label>{t('admin_register_tab.label_purpose')}</label>
               <textarea value={form.purpose} onChange={e => setForm(p => ({ ...p, purpose: e.target.value }))} rows={2} />
             </div>
             <div className="form-group">
-              <label>Categories de donnees</label>
+              <label>{t('admin_register_tab.label_data_categories')}</label>
               <input type="text" value={form.data_categories} onChange={e => setForm(p => ({ ...p, data_categories: e.target.value }))} />
             </div>
             <div className="form-group">
-              <label>Personnes concernees</label>
+              <label>{t('admin_register_tab.label_data_subjects')}</label>
               <input type="text" value={form.data_subjects} onChange={e => setForm(p => ({ ...p, data_subjects: e.target.value }))} />
             </div>
             <div className="form-group">
-              <label>Destinataires</label>
+              <label>{t('admin_register_tab.label_recipients')}</label>
               <input type="text" value={form.recipients} onChange={e => setForm(p => ({ ...p, recipients: e.target.value }))} />
             </div>
             <div className="form-group">
-              <label>Duree de conservation</label>
+              <label>{t('admin_register_tab.label_retention_period')}</label>
               <input type="text" value={form.retention_period} onChange={e => setForm(p => ({ ...p, retention_period: e.target.value }))} />
             </div>
             <div className="form-group">
-              <label>Mesures de securite</label>
+              <label>{t('admin_register_tab.label_security_measures')}</label>
               <textarea value={form.security_measures} onChange={e => setForm(p => ({ ...p, security_measures: e.target.value }))} rows={2} />
             </div>
           </div>
           <div className="form-actions">
-            <button className="btn btn-secondary" onClick={resetForm}>Annuler</button>
+            <button className="btn btn-secondary" onClick={resetForm}>{t('admin_register_tab.btn_cancel')}</button>
             <button className="btn btn-primary" onClick={handleSave} disabled={saving || !form.name}>
-              {saving ? 'Enregistrement...' : 'Enregistrer'}
+              {saving ? t('admin_register_tab.btn_saving') : t('admin_register_tab.btn_save')}
             </button>
           </div>
         </div>
       )}
 
       {entries.length === 0 ? (
-        <div className="unified-card"><p className="text-center text-secondary">Aucun traitement enregistre.</p></div>
+        <div className="unified-card"><p className="text-center text-secondary">{t('admin_register_tab.no_entries')}</p></div>
       ) : (
         <div className="rgpd-register-list">
           {entries.map(entry => (
@@ -273,22 +283,22 @@ function RegisterTab() {
                 <h3>{entry.name}</h3>
                 {can('rgpd.registre.manage') && (
                   <div className="rgpd-register-actions">
-                    <button className="btn-icon btn-icon-secondary" onClick={() => handleEdit(entry)} title="Modifier">
+                    <button className="btn-icon btn-icon-secondary" onClick={() => handleEdit(entry)} title={t('admin_register_tab.btn_edit_title')}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     </button>
-                    <button className="btn-icon btn-icon-danger" onClick={() => handleDelete(entry.id)} title="Supprimer">
+                    <button className="btn-icon btn-icon-danger" onClick={() => handleDelete(entry.id)} title={t('admin_register_tab.btn_delete_title')}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                     </button>
                   </div>
                 )}
               </div>
               <div className="rgpd-register-item-details">
-                <div><strong>Finalite :</strong> {entry.purpose}</div>
-                <div><strong>Base legale :</strong> {entry.legal_basis}</div>
-                <div><strong>Donnees :</strong> {entry.data_categories}</div>
-                <div><strong>Personnes :</strong> {entry.data_subjects}</div>
-                <div><strong>Conservation :</strong> {entry.retention_period}</div>
-                {entry.recipients && <div><strong>Destinataires :</strong> {entry.recipients}</div>}
+                <div><strong>{t('admin_register_tab.detail_purpose')}</strong> {entry.purpose}</div>
+                <div><strong>{t('admin_register_tab.detail_legal_basis')}</strong> {entry.legal_basis}</div>
+                <div><strong>{t('admin_register_tab.detail_data')}</strong> {entry.data_categories}</div>
+                <div><strong>{t('admin_register_tab.detail_subjects')}</strong> {entry.data_subjects}</div>
+                <div><strong>{t('admin_register_tab.detail_retention')}</strong> {entry.retention_period}</div>
+                {entry.recipients && <div><strong>{t('admin_register_tab.detail_recipients')}</strong> {entry.recipients}</div>}
               </div>
             </div>
           ))}
@@ -301,6 +311,7 @@ function RegisterTab() {
 /* ---- Rights Tab ---- */
 
 function RightsTab() {
+  const { t } = useTranslation('rgpd')
   const { can } = usePermission()
   const [requests, setRequests] = useState<RightsRequest[]>([])
   const [loading, setLoading] = useState(true)
@@ -336,51 +347,53 @@ function RightsTab() {
 
   return (
     <div>
-      <h2>Demandes d'exercice de droits</h2>
+      <h2>{t('admin_rights_tab.heading')}</h2>
       {requests.length === 0 ? (
-        <div className="unified-card"><p className="text-center text-secondary">Aucune demande.</p></div>
+        <div className="unified-card"><p className="text-center text-secondary">{t('admin_rights_tab.no_requests')}</p></div>
       ) : (
         <div className="rgpd-requests-admin-list">
           {requests.map(req => {
-            const statusInfo = STATUS_LABELS[req.status] || STATUS_LABELS.pending
+            const statusClassName = STATUS_CLASSNAMES[req.status] || STATUS_CLASSNAMES.pending
+            const statusLabelKey = STATUS_LABEL_KEYS[req.status] || STATUS_LABEL_KEYS.pending
+            const typeLabelKey = TYPE_LABEL_KEYS[req.request_type]
             return (
               <div key={req.id} className="unified-card rgpd-request-admin-item">
                 <div className="rgpd-request-header">
                   <div>
-                    <h3>{TYPE_LABELS[req.request_type] || req.request_type}</h3>
+                    <h3>{typeLabelKey ? t(typeLabelKey) : req.request_type}</h3>
                     <span className="text-secondary">
-                      {req.user_email || 'Utilisateur inconnu'} — {new Date(req.created_at).toLocaleDateString('fr-FR')}
+                      {req.user_email || t('admin_rights_tab.unknown_user')} — {new Date(req.created_at).toLocaleDateString('fr-FR')}
                     </span>
                   </div>
-                  <span className={`rgpd-status ${statusInfo.className}`}>{statusInfo.label}</span>
+                  <span className={`rgpd-status ${statusClassName}`}>{t(statusLabelKey)}</span>
                 </div>
                 {req.description && <p className="rgpd-request-description">{req.description}</p>}
                 {req.admin_response && (
-                  <div className="rgpd-request-response"><strong>Reponse :</strong> {req.admin_response}</div>
+                  <div className="rgpd-request-response"><strong>{t('admin_rights_tab.response_label')}</strong> {req.admin_response}</div>
                 )}
                 {can('rgpd.droits.manage') && (req.status === 'pending' || req.status === 'processing') ? (
                   processingId === req.id ? (
                     <div className="rgpd-process-form">
                       <div className="form-group">
-                        <label>Statut</label>
+                        <label>{t('admin_rights_tab.form_status_label')}</label>
                         <select value={responseStatus} onChange={e => setResponseStatus(e.target.value)}>
-                          <option value="processing">En cours de traitement</option>
-                          <option value="completed">Traitee</option>
-                          <option value="rejected">Refusee</option>
+                          <option value="processing">{t('admin_rights_tab.option_processing')}</option>
+                          <option value="completed">{t('admin_rights_tab.option_completed')}</option>
+                          <option value="rejected">{t('admin_rights_tab.option_rejected')}</option>
                         </select>
                       </div>
                       <div className="form-group">
-                        <label>Reponse</label>
-                        <textarea value={responseText} onChange={e => setResponseText(e.target.value)} rows={2} placeholder="Reponse au demandeur..." />
+                        <label>{t('admin_rights_tab.form_response_label')}</label>
+                        <textarea value={responseText} onChange={e => setResponseText(e.target.value)} rows={2} placeholder={t('admin_rights_tab.form_response_placeholder')} />
                       </div>
                       <div className="form-actions">
-                        <button className="btn btn-secondary btn-sm" onClick={() => setProcessingId(null)}>Annuler</button>
-                        <button className="btn btn-primary btn-sm" onClick={() => handleProcess(req.id)}>Valider</button>
+                        <button className="btn btn-secondary btn-sm" onClick={() => setProcessingId(null)}>{t('admin_rights_tab.btn_cancel')}</button>
+                        <button className="btn btn-primary btn-sm" onClick={() => handleProcess(req.id)}>{t('admin_rights_tab.btn_validate')}</button>
                       </div>
                     </div>
                   ) : (
                     <button className="btn btn-primary btn-sm" onClick={() => { setProcessingId(req.id); setResponseStatus(req.status === 'pending' ? 'processing' : 'completed') }}>
-                      Traiter
+                      {t('admin_rights_tab.btn_process')}
                     </button>
                   )
                 ) : null}
@@ -391,9 +404,9 @@ function RightsTab() {
       )}
       {total > 25 && (
         <div className="rgpd-pagination">
-          <button className="btn btn-secondary btn-sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Precedent</button>
-          <span>Page {page}</span>
-          <button className="btn btn-secondary btn-sm" disabled={requests.length < 25} onClick={() => setPage(p => p + 1)}>Suivant</button>
+          <button className="btn btn-secondary btn-sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>{t('admin_rights_tab.btn_previous')}</button>
+          <span>{t('admin_rights_tab.page_label')} {page}</span>
+          <button className="btn btn-secondary btn-sm" disabled={requests.length < 25} onClick={() => setPage(p => p + 1)}>{t('admin_rights_tab.btn_next')}</button>
         </div>
       )}
     </div>
@@ -403,6 +416,7 @@ function RightsTab() {
 /* ---- Audit Tab ---- */
 
 function AuditTab() {
+  const { t } = useTranslation('rgpd')
   const [logs, setLogs] = useState<AuditLog[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
@@ -422,19 +436,19 @@ function AuditTab() {
 
   return (
     <div>
-      <h2>Journal d'audit des acces</h2>
+      <h2>{t('admin_audit_tab.heading')}</h2>
       {logs.length === 0 ? (
-        <div className="unified-card"><p className="text-center text-secondary">Aucun log d'acces.</p></div>
+        <div className="unified-card"><p className="text-center text-secondary">{t('admin_audit_tab.no_logs')}</p></div>
       ) : (
         <div className="table-container">
           <table className="rgpd-audit-table">
             <thead>
               <tr>
-                <th>Date</th>
-                <th>Utilisateur</th>
-                <th>Action</th>
-                <th>Ressource</th>
-                <th>Details</th>
+                <th>{t('admin_audit_tab.col_date')}</th>
+                <th>{t('admin_audit_tab.col_user')}</th>
+                <th>{t('admin_audit_tab.col_action')}</th>
+                <th>{t('admin_audit_tab.col_resource')}</th>
+                <th>{t('admin_audit_tab.col_details')}</th>
               </tr>
             </thead>
             <tbody>
@@ -453,9 +467,9 @@ function AuditTab() {
       )}
       {total > 25 && (
         <div className="rgpd-pagination">
-          <button className="btn btn-secondary btn-sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Precedent</button>
-          <span>Page {page}</span>
-          <button className="btn btn-secondary btn-sm" disabled={logs.length < 25} onClick={() => setPage(p => p + 1)}>Suivant</button>
+          <button className="btn btn-secondary btn-sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>{t('admin_audit_tab.btn_previous')}</button>
+          <span>{t('admin_audit_tab.page_label')} {page}</span>
+          <button className="btn btn-secondary btn-sm" disabled={logs.length < 25} onClick={() => setPage(p => p + 1)}>{t('admin_audit_tab.btn_next')}</button>
         </div>
       )}
     </div>
@@ -465,6 +479,7 @@ function AuditTab() {
 /* ---- Legal Pages Tab ---- */
 
 function LegalPagesTab() {
+  const { t } = useTranslation('rgpd')
   const { can } = usePermission()
   const [pages, setPages] = useState<LegalPageItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -526,41 +541,41 @@ function LegalPagesTab() {
 
   return (
     <div>
-      <h2>Pages legales</h2>
+      <h2>{t('admin_legal_pages_tab.heading')}</h2>
 
       {editingSlug && (
         <div className="unified-card rgpd-legal-form">
-          <h3>Editer : {editingSlug}</h3>
+          <h3>{t('admin_legal_pages_tab.form_title_prefix')} {editingSlug}</h3>
           {showUpdateWarning && (
             <div className="alert alert-warning mb-16">
-              Attention : la modification de ce document invalidera toutes les acceptations existantes. Tous les utilisateurs devront re-accepter.
+              {t('admin_legal_pages_tab.warning_acceptance_invalidation')}
             </div>
           )}
           <div className="form-group">
-            <label>Titre</label>
+            <label>{t('admin_legal_pages_tab.label_title')}</label>
             <input type="text" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} />
           </div>
           <div className="form-group">
-            <label>Contenu (HTML)</label>
+            <label>{t('admin_legal_pages_tab.label_content_html')}</label>
             <textarea value={form.content_html} onChange={e => setForm(p => ({ ...p, content_html: e.target.value }))} rows={12} className="rgpd-html-editor" />
           </div>
           <div className="form-group">
             <label className="rgpd-checkbox-label">
               <input type="checkbox" checked={form.is_published} onChange={e => setForm(p => ({ ...p, is_published: e.target.checked }))} />
-              Publiee
+              {t('admin_legal_pages_tab.label_published')}
             </label>
           </div>
           <div className="form-group">
             <label className="rgpd-checkbox-label">
               <input type="checkbox" checked={form.requires_acceptance} onChange={e => setForm(p => ({ ...p, requires_acceptance: e.target.checked }))} />
-              Acceptation obligatoire
+              {t('admin_legal_pages_tab.label_requires_acceptance')}
             </label>
-            <p className="text-secondary text-sm">Si active, les utilisateurs devront accepter ce document pour acceder au site.</p>
+            <p className="text-secondary text-sm">{t('admin_legal_pages_tab.acceptance_hint')}</p>
           </div>
           <div className="form-actions">
-            <button className="btn btn-secondary" onClick={() => setEditingSlug(null)}>Annuler</button>
+            <button className="btn btn-secondary" onClick={() => setEditingSlug(null)}>{t('admin_legal_pages_tab.btn_cancel')}</button>
             <button className="btn btn-primary" onClick={handleSave} disabled={saving || !form.title}>
-              {saving ? 'Enregistrement...' : 'Enregistrer'}
+              {saving ? t('admin_legal_pages_tab.btn_saving') : t('admin_legal_pages_tab.btn_save')}
             </button>
           </div>
         </div>
@@ -576,17 +591,17 @@ function LegalPagesTab() {
               </div>
               <div className="rgpd-legal-item-actions">
                 {page.requires_acceptance && (
-                  <span className="rgpd-badge rgpd-badge-warning">Obligatoire</span>
+                  <span className="rgpd-badge rgpd-badge-warning">{t('admin_legal_pages_tab.badge_required')}</span>
                 )}
                 <span className={`rgpd-badge ${page.is_published ? 'rgpd-badge-success' : 'rgpd-badge-draft'}`}>
-                  {page.is_published ? 'Publiee' : 'Brouillon'}
+                  {page.is_published ? t('admin_legal_pages_tab.badge_published') : t('admin_legal_pages_tab.badge_draft')}
                 </span>
                 <button className="btn btn-secondary btn-sm" onClick={() => handleShowVersions(page.slug)}>
-                  Historique
+                  {t('admin_legal_pages_tab.btn_history')}
                 </button>
                 {can('rgpd.politique.manage') && (
                   <button className="btn btn-secondary btn-sm" onClick={() => handleEdit(page)}>
-                    Editer
+                    {t('admin_legal_pages_tab.btn_edit')}
                   </button>
                 )}
               </div>
@@ -597,13 +612,13 @@ function LegalPagesTab() {
                 {loadingVersions ? (
                   <div className="text-center"><div className="spinner spinner-sm" /></div>
                 ) : versions.length === 0 ? (
-                  <p className="text-secondary">Aucune version precedente.</p>
+                  <p className="text-secondary">{t('admin_legal_pages_tab.no_previous_versions')}</p>
                 ) : (
                   <div className="legal-version-list">
                     {versions.map(v => (
                       <div key={v.version} className="legal-version-item">
                         <div className="legal-version-item-header">
-                          <strong>Version {v.version}</strong>
+                          <strong>{t('admin_legal_pages_tab.version_label')} {v.version}</strong>
                           <span className="text-secondary">{formatDate(v.created_at)}</span>
                         </div>
                         <p className="text-secondary text-sm">{v.title}</p>

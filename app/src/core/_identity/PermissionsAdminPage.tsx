@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import './_identity.scss'
 import Layout from '../../core/Layout'
 import { usePermission } from '../PermissionContext'
@@ -26,6 +27,7 @@ interface GlobalPermission {
 /* ------------------------------------------------------------------ */
 
 export default function PermissionsAdminPage() {
+  const { t } = useTranslation('_identity')
   const { can } = usePermission()
   const [permissions, setPermissions] = useState<Permission[]>([])
   const [globalPermissions, setGlobalPermissions] = useState<GlobalPermission[]>([])
@@ -103,21 +105,21 @@ export default function PermissionsAdminPage() {
           granted: g.granted,
         })),
       })
-      setMessage({ type: 'success', text: 'Permissions globales enregistrees' })
+      setMessage({ type: 'success', text: t('permissions_admin.global_save_success') })
     } catch {
-      setMessage({ type: 'error', text: 'Erreur lors de la sauvegarde des permissions globales' })
+      setMessage({ type: 'error', text: t('permissions_admin.global_save_error') })
     } finally {
       setSavingGlobal(false)
     }
   }
 
   return (
-    <Layout breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Permissions' }]} title="Permissions">
+    <Layout breadcrumb={[{ label: t('common.home'), path: '/' }, { label: t('permissions_admin.breadcrumb_permissions') }]} title={t('permissions_admin.breadcrumb_permissions')}>
       <div className="unified-card page-header-card">
         <div className="unified-page-header">
           <div className="unified-page-header-info">
-            <h1>Gestion des permissions</h1>
-            <p>Consultez les permissions et configurez les permissions globales</p>
+            <h1>{t('permissions_admin.page_title')}</h1>
+            <p>{t('permissions_admin.subtitle')}</p>
           </div>
         </div>
       </div>
@@ -128,13 +130,13 @@ export default function PermissionsAdminPage() {
           onClick={() => setActiveTab('permissions')}
           className={`tab-button ${activeTab === 'permissions' ? 'tab-button--active' : 'tab-button--inactive'}`}
         >
-          Permissions
+          {t('permissions_admin.tab_permissions')}
         </button>
         <button
           onClick={() => setActiveTab('global')}
           className={`tab-button ${activeTab === 'global' ? 'tab-button--active' : 'tab-button--inactive'}`}
         >
-          Permissions globales
+          {t('permissions_admin.tab_global')}
         </button>
       </div>
 
@@ -150,7 +152,7 @@ export default function PermissionsAdminPage() {
           <div className="spinner" />
         ) : Object.keys(permissionsByFeature).length === 0 ? (
           <div className="unified-card empty-state">
-            Aucune permission trouvee
+            {t('permissions_admin.empty_state')}
           </div>
         ) : (
           Object.entries(permissionsByFeature).map(([feature, perms]) => (
@@ -163,9 +165,9 @@ export default function PermissionsAdminPage() {
                   <table className="unified-table">
                     <thead>
                       <tr>
-                        <th className="col-200">Code</th>
-                        <th className="col-200">Label</th>
-                        <th>Description</th>
+                        <th className="col-200">{t('permissions_admin.th_code')}</th>
+                        <th className="col-200">{t('permissions_admin.th_label')}</th>
+                        <th>{t('permissions_admin.th_description')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -195,7 +197,7 @@ export default function PermissionsAdminPage() {
           <div className="spinner" />
         ) : Object.keys(permissionsByFeature).length === 0 ? (
           <div className="unified-card empty-state">
-            Aucune permission trouvee
+            {t('permissions_admin.empty_state')}
           </div>
         ) : (
           <>
@@ -227,7 +229,7 @@ export default function PermissionsAdminPage() {
                           <button
                             onClick={() => toggleGlobalPermission(perm.id)}
                             className={`toggle-switch ${granted ? 'toggle-switch--on' : 'toggle-switch--off'}`}
-                            title={granted ? 'Desactiver' : 'Activer'}
+                            title={granted ? t('permissions_admin.tooltip_deactivate') : t('permissions_admin.tooltip_activate')}
                             disabled={!can('permissions.manage')}
                           >
                             <span
@@ -245,7 +247,7 @@ export default function PermissionsAdminPage() {
             {can('permissions.manage') && (
               <div className="flex-end mt-8">
                 <button className="btn btn-primary" onClick={saveGlobalPermissions} disabled={savingGlobal}>
-                  {savingGlobal ? 'Enregistrement...' : 'Enregistrer les permissions globales'}
+                  {savingGlobal ? t('permissions_admin.global_saving') : t('permissions_admin.global_save')}
                 </button>
               </div>
             )}

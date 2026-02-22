@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import './mfa.scss'
 
 interface Props {
@@ -7,6 +8,7 @@ interface Props {
 }
 
 export default function MFABackupCodes({ codes, onClose }: Props) {
+  const { t } = useTranslation('mfa')
   const [copied, setCopied] = useState(false)
 
   const handleCopyAll = async () => {
@@ -29,15 +31,15 @@ export default function MFABackupCodes({ codes, onClose }: Props) {
 
   const handleDownload = () => {
     const content = [
-      'Codes de secours MFA',
-      '====================',
+      t('backup_title_download'),
+      t('backup_download_separator'),
       '',
-      'Conservez ces codes en lieu sur.',
-      'Chaque code ne peut etre utilise qu\'une seule fois.',
+      t('backup_download_keep_safe'),
+      t('backup_download_single_use'),
       '',
       ...codes,
       '',
-      `Generes le ${new Date().toLocaleDateString('fr-FR')} a ${new Date().toLocaleTimeString('fr-FR')}`,
+      `${t('backup_download_generated_prefix')} ${new Date().toLocaleDateString('fr-FR')} ${t('backup_download_generated_time_prefix')} ${new Date().toLocaleTimeString('fr-FR')}`,
     ].join('\n')
 
     const blob = new Blob([content], { type: 'text/plain' })
@@ -59,7 +61,7 @@ export default function MFABackupCodes({ codes, onClose }: Props) {
           <line x1="12" y1="9" x2="12" y2="13" />
           <line x1="12" y1="17" x2="12.01" y2="17" />
         </svg>
-        <span>Ces codes ne seront affiches qu'une seule fois. Conservez-les en lieu sur.</span>
+        <span>{t('backup_warning')}</span>
       </div>
 
       <div className="mfa-backup-grid">
@@ -76,7 +78,7 @@ export default function MFABackupCodes({ codes, onClose }: Props) {
             <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
           </svg>
-          {copied ? 'Copie !' : 'Copier tout'}
+          {copied ? t('backup_copied') : t('backup_copy_all')}
         </button>
         <button className="btn btn-secondary btn-sm" onClick={handleDownload}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -84,14 +86,14 @@ export default function MFABackupCodes({ codes, onClose }: Props) {
             <polyline points="7 10 12 15 17 10" />
             <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
-          Telecharger
+          {t('backup_download')}
         </button>
       </div>
 
       {onClose && (
         <div className="mfa-backup-close-row">
           <button className="btn btn-primary btn-sm" onClick={onClose}>
-            J'ai sauvegarde mes codes
+            {t('backup_saved_button')}
           </button>
         </div>
       )}

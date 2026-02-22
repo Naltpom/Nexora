@@ -107,7 +107,7 @@ async def issue_tokens_for_sso_user(db: AsyncSession, user) -> dict:
 
     Returns a dict suitable for SSOCallbackResponse.
     """
-    token_data = {"sub": str(user.id), "email": user.email}
+    token_data = {"sub": str(user.id), "email": user.email, "lang": user.language}
 
     # Check MFA requirement (dynamic import, only if feature active)
     mfa_required = False

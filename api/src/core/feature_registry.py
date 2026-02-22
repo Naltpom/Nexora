@@ -26,7 +26,6 @@ class FeatureManifest:
     name: str
     label: str
     description: str = ""
-    version: str = "1.0.0"
 
     # Hierarchy
     parent: str | None = None
@@ -299,7 +298,6 @@ class FeatureRegistry:
                 "name": manifest.name,
                 "label": manifest.label,
                 "description": manifest.description,
-                "version": manifest.version,
                 "parent": manifest.parent,
                 "children": manifest.children,
                 "depends": manifest.depends,

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import Layout from '../../core/Layout'
 import { useAuth } from '../../core/AuthContext'
 import { useScrollReveal, useCountUp } from '../../core/hooks'
@@ -13,6 +14,7 @@ interface Stats {
 }
 
 export default function Home() {
+  const { t } = useTranslation('_identity')
   const { user } = useAuth()
   const [stats, setStats] = useState<Stats>({ active_users: 0, unread_notifications: 0, invitations_sent: 0 })
   const [loading, setLoading] = useState(true)
@@ -61,12 +63,12 @@ export default function Home() {
   }
 
   return (
-    <Layout title="Accueil">
+    <Layout title={t('home.page_title')}>
       <div className="page-wide">
         {/* Welcome */}
         <div className="section-mb-xl">
           <h1 className="title-lg">
-            Bonjour {user?.first_name} !
+            {t('home.greeting', { name: user?.first_name })}
           </h1>
           <p className="text-gray-500">
             {today}
@@ -86,7 +88,7 @@ export default function Home() {
             </div>
             <div className="stat-card-info">
               <div className="stat-card-value" ref={usersCount.ref}>{usersCount.value}</div>
-              <div className="stat-card-label">Utilisateurs actifs</div>
+              <div className="stat-card-label">{t('home.stat_active_users')}</div>
             </div>
           </Link>
           <Link to="/notifications" className="stat-card stat-card--notifs stat-glow card-hover-lift reveal-child">
@@ -98,7 +100,7 @@ export default function Home() {
             </div>
             <div className="stat-card-info">
               <div className="stat-card-value" ref={notifsCount.ref}>{notifsCount.value}</div>
-              <div className="stat-card-label">Notifications non lues</div>
+              <div className="stat-card-label">{t('home.stat_unread_notifications')}</div>
             </div>
             {stats.unread_notifications > 0 && <div className="stat-card-pulse" />}
           </Link>
@@ -111,14 +113,14 @@ export default function Home() {
             </div>
             <div className="stat-card-info">
               <div className="stat-card-value" ref={invitesCount.ref}>{invitesCount.value}</div>
-              <div className="stat-card-label">Invitations envoyees</div>
+              <div className="stat-card-label">{t('home.stat_invitations_sent')}</div>
             </div>
           </div>
         </div>
 
         {/* Quick start */}
         <div className="unified-card card-padded">
-          <h2 className="title-sm">Acces rapide</h2>
+          <h2 className="title-sm">{t('home.quick_access_title')}</h2>
           <div className="auto-grid-sm reveal-stagger" ref={quickGridRef}>
             <Link to="/profile" className="card-link-item reveal-child card-hover-lift">
               <div className="unified-card">
@@ -127,7 +129,7 @@ export default function Home() {
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                     <circle cx="12" cy="7" r="4" />
                   </svg>
-                  <span className="card-link-item-label">Mon profil</span>
+                  <span className="card-link-item-label">{t('home.link_profile')}</span>
                 </div>
               </div>
             </Link>
@@ -138,7 +140,7 @@ export default function Home() {
                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
                     <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                   </svg>
-                  <span className="card-link-item-label">Mes notifications</span>
+                  <span className="card-link-item-label">{t('home.link_notifications')}</span>
                 </div>
               </div>
             </Link>
@@ -149,7 +151,7 @@ export default function Home() {
                     <circle cx="12" cy="12" r="3" />
                     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
                   </svg>
-                  <span className="card-link-item-label">Parametres de notification</span>
+                  <span className="card-link-item-label">{t('home.link_notification_settings')}</span>
                 </div>
               </div>
             </Link>
@@ -163,7 +165,7 @@ export default function Home() {
                       <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
                       <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                     </svg>
-                    <span className="card-link-item-label">Gestion des utilisateurs</span>
+                    <span className="card-link-item-label">{t('home.link_user_management')}</span>
                   </div>
                 </div>
               </Link>

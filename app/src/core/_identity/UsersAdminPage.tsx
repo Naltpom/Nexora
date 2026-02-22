@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, FormEvent } from 'react'
 import { useNavigate, Link, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import Layout from '../../core/Layout'
 import { useAuth } from '../../core/AuthContext'
 import { useConfirm } from '../../core/ConfirmModal'
@@ -34,6 +35,7 @@ type PendingChanges = Record<number, FieldChanges>
 type UsersTab = 'users' | 'invitations'
 
 export default function Users() {
+  const { t } = useTranslation('_identity')
   const navigate = useNavigate()
   const { startImpersonation } = useAuth()
   const { confirm, alert } = useConfirm()
@@ -92,7 +94,7 @@ export default function Users() {
       setInviteEmail('')
       loadInvitations()
     } catch (err: any) {
-      setInviteError(err.response?.data?.detail || 'Erreur lors de l\'envoi')
+      setInviteError(err.response?.data?.detail || t('users_admin.inv_error_send'))
     } finally {
       setInviteSaving(false)
     }
@@ -100,9 +102,9 @@ export default function Users() {
 
   const handleDeleteInvitation = async (id: number) => {
     const confirmed = await confirm({
-      title: 'Annuler l\'invitation',
-      message: 'Etes-vous sur de vouloir annuler cette invitation ?',
-      confirmText: 'Annuler l\'invitation',
+      title: t('users_admin.inv_confirm_cancel_title'),
+      message: t('users_admin.inv_confirm_cancel_message'),
+      confirmText: t('users_admin.inv_confirm_cancel_btn'),
       variant: 'danger',
     })
     if (!confirmed) return
@@ -110,7 +112,7 @@ export default function Users() {
       await api.delete(`/identity/invitations/${id}`)
       loadInvitations()
     } catch (err: any) {
-      await alert({ message: err.response?.data?.detail || 'Erreur', variant: 'danger' })
+      await alert({ message: err.response?.data?.detail || t('common.error'), variant: 'danger' })
     }
   }
 
@@ -259,11 +261,11 @@ export default function Users() {
         let oldDisplay = String((user as any)[field])
         let newDisplay = String(newVal)
         if (field === 'is_active') {
-          oldDisplay = user.is_active ? 'Actif' : 'Inactif'
-          newDisplay = newVal ? 'Actif' : 'Inactif'
+          oldDisplay = user.is_active ? t('common.active') : t('common.inactive')
+          newDisplay = newVal ? t('common.active') : t('common.inactive')
         } else if (field === 'is_super_admin') {
-          oldDisplay = user.is_super_admin ? 'Oui' : 'Non'
-          newDisplay = newVal ? 'Oui' : 'Non'
+          oldDisplay = user.is_super_admin ? t('common.yes') : t('common.no')
+          newDisplay = newVal ? t('common.yes') : t('common.no')
         }
         items.push({ userId, userName, field, oldValue: oldDisplay, newValue: newDisplay })
       }
@@ -273,11 +275,11 @@ export default function Users() {
 
   const fieldLabel = (field: string) => {
     const labels: Record<string, string> = {
-      email: 'Email',
-      first_name: 'Prenom',
-      last_name: 'Nom',
-      is_active: 'Statut',
-      is_super_admin: 'Admin',
+      email: t('users_admin.field_label_email'),
+      first_name: t('users_admin.field_label_first_name'),
+      last_name: t('users_admin.field_label_last_name'),
+      is_active: t('users_admin.field_label_status'),
+      is_super_admin: t('users_admin.field_label_admin'),
     }
     return labels[field] || field
   }
@@ -298,7 +300,7 @@ export default function Users() {
       setShowRecapModal(false)
       await loadData()
     } catch (err: any) {
-      await alert({ message: err.response?.data?.detail || 'Erreur lors de la sauvegarde', variant: 'danger' })
+      await alert({ message: err.response?.data?.detail || t('users_admin.save_error'), variant: 'danger' })
     } finally {
       setSaving(false)
     }
@@ -329,16 +331,16 @@ export default function Users() {
       setShowCreateModal(false)
       loadData()
     } catch (err: any) {
-      setCreateError(err.response?.data?.detail || 'Erreur')
+      setCreateError(err.response?.data?.detail || t('common.error'))
     }
   }
 
   // --- Delete user ---
   const handleDelete = async (id: number) => {
     const confirmed = await confirm({
-      title: 'Supprimer l\'utilisateur',
-      message: 'Etes-vous sur de vouloir supprimer cet utilisateur ?',
-      confirmText: 'Supprimer',
+      title: t('users_admin.confirm_delete_title'),
+      message: t('users_admin.confirm_delete_message'),
+      confirmText: t('users_admin.confirm_delete_btn'),
       variant: 'danger',
     })
     if (!confirmed) return
@@ -346,36 +348,36 @@ export default function Users() {
       await api.delete(`/users/${id}`)
       loadData()
     } catch (err: any) {
-      await alert({ message: err.response?.data?.detail || 'Erreur', variant: 'danger' })
+      await alert({ message: err.response?.data?.detail || t('common.error'), variant: 'danger' })
     }
   }
 
   // --- Reset password ---
   const handleResetPassword = async (user: User) => {
     const confirmed = await confirm({
-      title: 'Reinitialiser le mot de passe',
-      message: `Envoyer un email de reinitialisation du mot de passe a ${user.email} ?`,
-      confirmText: 'Envoyer',
+      title: t('users_admin.confirm_reset_title'),
+      message: t('users_admin.confirm_reset_message', { email: user.email }),
+      confirmText: t('users_admin.confirm_reset_btn'),
       variant: 'warning',
     })
     if (!confirmed) return
     try {
       const res = await api.post(`/users/${user.id}/reset-password`)
       await alert({
-        title: 'Succes',
+        title: t('common.success'),
         message: res.data.message + (res.data.token ? `\n\nToken: ${res.data.token}` : ''),
       })
     } catch (err: any) {
-      await alert({ message: err.response?.data?.detail || 'Erreur', variant: 'danger' })
+      await alert({ message: err.response?.data?.detail || t('common.error'), variant: 'danger' })
     }
   }
 
   // --- Impersonate ---
   const handleImpersonate = async (user: User) => {
     const confirmed = await confirm({
-      title: 'Impersonation',
-      message: `Se connecter en tant que ${user.first_name} ${user.last_name} ?`,
-      confirmText: 'Confirmer',
+      title: t('users_admin.confirm_impersonate_title'),
+      message: t('users_admin.confirm_impersonate_message', { name: `${user.first_name} ${user.last_name}` }),
+      confirmText: t('users_admin.confirm_impersonate_btn'),
       variant: 'warning',
     })
     if (!confirmed) return
@@ -384,17 +386,17 @@ export default function Users() {
       await startImpersonation(user.id)
       navigate('/')
     } catch (error: any) {
-      await alert({ message: error.message || "Erreur lors de l'impersonation", variant: 'danger' })
+      await alert({ message: error.message || t('users_admin.impersonate_error'), variant: 'danger' })
     }
   }
 
   return (
-    <Layout breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Utilisateurs' }]} title="Utilisateurs">
+    <Layout breadcrumb={[{ label: t('common.home'), path: '/' }, { label: t('users_admin.breadcrumb_users') }]} title={t('users_admin.breadcrumb_users')}>
       <div className="unified-card page-header-card">
         <div className="unified-page-header">
           <div className="unified-page-header-info">
-            <h1>Gestion des utilisateurs</h1>
-            <p>Gerez les comptes, acces et invitations des utilisateurs</p>
+            <h1>{t('users_admin.page_title')}</h1>
+            <p>{t('users_admin.subtitle')}</p>
           </div>
         </div>
       </div>
@@ -406,14 +408,14 @@ export default function Users() {
             onClick={() => setActiveTab('users')}
             type="button"
           >
-            Utilisateurs
+            {t('users_admin.tab_users')}
           </button>
           <button
             className={`tab-button ${activeTab === 'invitations' ? 'tab-button--active' : 'tab-button--inactive'}`}
             onClick={() => setActiveTab('invitations')}
             type="button"
           >
-            Invitations
+            {t('users_admin.tab_invitations')}
           </button>
         </div>
       )}
@@ -423,7 +425,7 @@ export default function Users() {
           <div className="unified-card page-header-card">
             <div className="unified-page-header">
               <div className="unified-page-header-info">
-                <h2>Invitations en attente</h2>
+                <h2>{t('users_admin.invitations_title')}</h2>
               </div>
               <div className="unified-page-header-actions">
                 {can('invitations.create') && (
@@ -431,7 +433,7 @@ export default function Users() {
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M12 5v14M5 12h14" />
                     </svg>
-                    Inviter
+                    {t('users_admin.btn_invite')}
                   </button>
                 )}
               </div>
@@ -446,17 +448,17 @@ export default function Users() {
                 <table className="unified-table invitations-table">
                   <thead>
                     <tr>
-                      <th>Email</th>
-                      <th>Invite par</th>
-                      <th>Envoyee le</th>
-                      <th>Expire le</th>
-                      <th>Statut</th>
-                      {can('invitations.delete') && <th>Actions</th>}
+                      <th>{t('users_admin.inv_th_email')}</th>
+                      <th>{t('users_admin.inv_th_invited_by')}</th>
+                      <th>{t('users_admin.inv_th_sent_at')}</th>
+                      <th>{t('users_admin.inv_th_expires_at')}</th>
+                      <th>{t('users_admin.inv_th_status')}</th>
+                      {can('invitations.delete') && <th>{t('users_admin.inv_th_actions')}</th>}
                     </tr>
                   </thead>
                   <tbody>
                     {invitations.length === 0 ? (
-                      <tr><td colSpan={can('invitations.delete') ? 6 : 5} className="text-center text-secondary">Aucune invitation en attente</td></tr>
+                      <tr><td colSpan={can('invitations.delete') ? 6 : 5} className="text-center text-secondary">{t('users_admin.inv_empty')}</td></tr>
                     ) : invitations.map(inv => {
                       const isExpired = new Date(inv.expires_at) < new Date()
                       return (
@@ -467,7 +469,7 @@ export default function Users() {
                           <td className="nowrap">{new Date(inv.expires_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
                           <td>
                             <span className={`badge-status ${isExpired ? 'badge-status-offline' : 'badge-status-online'}`}>
-                              {isExpired ? 'Expiree' : 'En attente'}
+                              {isExpired ? t('users_admin.inv_status_expired') : t('users_admin.inv_status_pending')}
                             </span>
                           </td>
                           {can('invitations.delete') && (
@@ -475,7 +477,7 @@ export default function Users() {
                               <button
                                 className="btn-icon btn-icon-danger"
                                 onClick={() => handleDeleteInvitation(inv.id)}
-                                title="Annuler l'invitation"
+                                title={t('users_admin.inv_tooltip_cancel')}
                               >
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                   <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
@@ -497,27 +499,27 @@ export default function Users() {
             <div className="modal-overlay" onClick={() => setShowInviteModal(false)}>
               <div className="modal" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
-                  <h2>Inviter un utilisateur</h2>
+                  <h2>{t('users_admin.inv_modal_title')}</h2>
                   <button className="modal-close" onClick={() => setShowInviteModal(false)}>&times;</button>
                 </div>
                 <form onSubmit={handleInvite}>
                   <div className="modal-body">
                     {inviteError && <div className="alert alert-error">{inviteError}</div>}
                     <div className="form-group">
-                      <label>Adresse email</label>
+                      <label>{t('users_admin.inv_modal_email_label')}</label>
                       <input
                         type="email"
                         value={inviteEmail}
                         onChange={(e) => setInviteEmail(e.target.value)}
-                        placeholder="utilisateur@example.com"
+                        placeholder={t('users_admin.inv_modal_email_placeholder')}
                         required
                       />
                     </div>
                   </div>
                   <div className="modal-footer">
-                    <button type="button" className="btn btn-secondary" onClick={() => setShowInviteModal(false)}>Annuler</button>
+                    <button type="button" className="btn btn-secondary" onClick={() => setShowInviteModal(false)}>{t('common.cancel')}</button>
                     <button type="submit" className="btn btn-primary" disabled={inviteSaving}>
-                      {inviteSaving ? 'Envoi...' : 'Envoyer l\'invitation'}
+                      {inviteSaving ? t('users_admin.inv_modal_submitting') : t('users_admin.inv_modal_submit')}
                     </button>
                   </div>
                 </form>
@@ -537,7 +539,7 @@ export default function Users() {
                     checked={showInactive}
                     onChange={handleToggleInactive}
                   />
-                  Afficher les inactifs
+                  {t('users_admin.show_inactive')}
                 </label>
                 <div className="unified-search-box">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -545,7 +547,7 @@ export default function Users() {
                   </svg>
                   <input
                     type="text"
-                    placeholder="Rechercher..."
+                    placeholder={t('common.search')}
                     value={search}
                     onChange={(e) => handleSearchChange(e.target.value)}
                   />
@@ -555,7 +557,7 @@ export default function Users() {
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M12 5v14M5 12h14" />
                     </svg>
-                    Nouvel utilisateur
+                    {t('users_admin.btn_new_user')}
                   </button>
                 )}
               </div>
@@ -572,19 +574,19 @@ export default function Users() {
                 <thead>
                   <tr>
                     <th className="col-email th-sortable" onClick={() => handleSort('email')}>
-                      Email {sortBy === 'email' && <span className="sort-indicator">{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span>}
+                      {t('users_admin.th_email')} {sortBy === 'email' && <span className="sort-indicator">{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span>}
                     </th>
                     <th className="col-name th-sortable" onClick={() => handleSort('first_name')}>
-                      Prenom {sortBy === 'first_name' && <span className="sort-indicator">{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span>}
+                      {t('users_admin.th_first_name')} {sortBy === 'first_name' && <span className="sort-indicator">{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span>}
                     </th>
                     <th className="col-name th-sortable" onClick={() => handleSort('last_name')}>
-                      Nom {sortBy === 'last_name' && <span className="sort-indicator">{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span>}
+                      {t('users_admin.th_last_name')} {sortBy === 'last_name' && <span className="sort-indicator">{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span>}
                     </th>
-                    <th>Admin</th>
-                    <th>Actif</th>
-                    <th>Derniere activite</th>
-                    <th>Statut</th>
-                    <th>Actions</th>
+                    <th>{t('users_admin.th_admin')}</th>
+                    <th>{t('users_admin.th_active')}</th>
+                    <th>{t('users_admin.th_last_activity')}</th>
+                    <th>{t('users_admin.th_status')}</th>
+                    <th>{t('users_admin.th_actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -617,7 +619,7 @@ export default function Users() {
                           onClick={() => setFieldChange(u.id, 'is_super_admin', !getEffectiveValue(u, 'is_super_admin'))}
                           disabled={!can('users.update')}
                         >
-                          {getEffectiveValue(u, 'is_super_admin') ? 'Admin' : 'Non'}
+                          {getEffectiveValue(u, 'is_super_admin') ? t('common.admin') : t('common.no')}
                         </button>
                       </td>
                       <td className={isFieldModified(u.id, 'is_active') ? 'cell-modified' : ''}>
@@ -626,7 +628,7 @@ export default function Users() {
                           onClick={() => setFieldChange(u.id, 'is_active', !getEffectiveValue(u, 'is_active'))}
                           disabled={!can('users.update')}
                         >
-                          {getEffectiveValue(u, 'is_active') ? 'Actif' : 'Inactif'}
+                          {getEffectiveValue(u, 'is_active') ? t('common.active') : t('common.inactive')}
                         </button>
                       </td>
                       <td className="text-gray-500-sm nowrap">
@@ -636,11 +638,11 @@ export default function Users() {
                       </td>
                       <td>
                         {(() => {
-                          if (!u.last_active) return <span className="badge-status badge-status-offline">Hors ligne</span>
+                          if (!u.last_active) return <span className="badge-status badge-status-offline">{t('users_admin.status_offline')}</span>
                           const diff = Date.now() - new Date(u.last_active).getTime()
-                          if (diff < 5 * 60 * 1000) return <span className="badge-status badge-status-online">En ligne</span>
-                          if (diff < 10 * 60 * 1000) return <span className="badge-status badge-status-away">Absent</span>
-                          return <span className="badge-status badge-status-offline">Hors ligne</span>
+                          if (diff < 5 * 60 * 1000) return <span className="badge-status badge-status-online">{t('users_admin.status_online')}</span>
+                          if (diff < 10 * 60 * 1000) return <span className="badge-status badge-status-away">{t('users_admin.status_away')}</span>
+                          return <span className="badge-status badge-status-offline">{t('users_admin.status_offline')}</span>
                         })()}
                       </td>
                       <td>
@@ -649,7 +651,7 @@ export default function Users() {
                           <Link
                             to={`/admin/users/${u.uuid}`}
                             className="btn-icon btn-icon-secondary"
-                            title="Voir le detail"
+                            title={t('users_admin.tooltip_view_detail')}
                           >
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
@@ -662,7 +664,7 @@ export default function Users() {
                             <button
                               className="btn-icon btn-icon-primary impersonate-btn"
                               onClick={() => handleImpersonate(u)}
-                              title="Se connecter en tant que"
+                              title={t('users_admin.tooltip_impersonate')}
                             >
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -679,7 +681,7 @@ export default function Users() {
                             <button
                               className="btn-icon btn-icon-warning"
                               onClick={() => handleResetPassword(u)}
-                              title="Reset mot de passe"
+                              title={t('users_admin.tooltip_reset_password')}
                             >
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
@@ -691,7 +693,7 @@ export default function Users() {
                             <button
                               className="btn-icon btn-icon-danger"
                               onClick={() => handleDelete(u.id)}
-                              title="Supprimer"
+                              title={t('users_admin.tooltip_delete')}
                             >
                               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
@@ -708,7 +710,7 @@ export default function Users() {
           </div>
 
           <div className="unified-pagination">
-            <span className="unified-pagination-info">{total} utilisateur{total > 1 ? 's' : ''}</span>
+            <span className="unified-pagination-info">{total > 1 ? t('users_admin.pagination_count_plural', { count: total }) : t('users_admin.pagination_count', { count: total })}</span>
             <div className="unified-pagination-controls">
               <select
                 className="per-page-select"
@@ -720,10 +722,10 @@ export default function Users() {
                   loadData(1, search, newPerPage)
                 }}
               >
-                <option value={10}>10 / page</option>
-                <option value={25}>25 / page</option>
-                <option value={50}>50 / page</option>
-                <option value={100}>100 / page</option>
+                <option value={10}>{t('users_admin.per_page_10')}</option>
+                <option value={25}>{t('users_admin.per_page_25')}</option>
+                <option value={50}>{t('users_admin.per_page_50')}</option>
+                <option value={100}>{t('users_admin.per_page_100')}</option>
               </select>
               {totalPages > 1 && (
                 <>
@@ -776,14 +778,14 @@ export default function Users() {
             <div className="unified-changes-bar">
               <span className="unified-changes-bar-text">
                 <span className="unified-changes-bar-dot" />
-                {Object.keys(pendingChanges).length} utilisateur(s) modifie(s)
+                {t('users_admin.changes_bar_text', { count: Object.keys(pendingChanges).length })}
               </span>
               <div className="unified-changes-bar-actions">
                 <button className="btn-unified-secondary btn-padded" onClick={cancelChanges}>
-                  Annuler
+                  {t('users_admin.changes_bar_cancel')}
                 </button>
                 <button className="btn-unified-primary btn-padded" onClick={() => setShowRecapModal(true)}>
-                  Valider les changements
+                  {t('users_admin.changes_bar_validate')}
                 </button>
               </div>
             </div>
@@ -796,14 +798,14 @@ export default function Users() {
         <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Nouvel utilisateur</h2>
+              <h2>{t('users_admin.modal_create_title')}</h2>
               <button className="modal-close" onClick={() => setShowCreateModal(false)}>&times;</button>
             </div>
             <form onSubmit={handleCreate}>
               <div className="modal-body">
                 {createError && <div className="alert alert-error">{createError}</div>}
                 <div className="form-group">
-                  <label>Email</label>
+                  <label>{t('common.email')}</label>
                   <input
                     type="email"
                     value={createForm.email}
@@ -812,7 +814,7 @@ export default function Users() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Mot de passe</label>
+                  <label>{t('users_admin.modal_create_password_label')}</label>
                   <input
                     type="password"
                     value={createForm.password}
@@ -821,7 +823,7 @@ export default function Users() {
                 </div>
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Prenom</label>
+                    <label>{t('common.first_name')}</label>
                     <input
                       value={createForm.first_name}
                       onChange={(e) => setCreateForm({ ...createForm, first_name: e.target.value })}
@@ -829,7 +831,7 @@ export default function Users() {
                     />
                   </div>
                   <div className="form-group">
-                    <label>Nom</label>
+                    <label>{t('common.last_name')}</label>
                     <input
                       value={createForm.last_name}
                       onChange={(e) => setCreateForm({ ...createForm, last_name: e.target.value })}
@@ -844,7 +846,7 @@ export default function Users() {
                       checked={createForm.is_super_admin}
                       onChange={(e) => setCreateForm({ ...createForm, is_super_admin: e.target.checked })}
                     />
-                    Super Admin
+                    {t('users_admin.modal_create_super_admin')}
                   </label>
                   <label className="flex-center">
                     <input
@@ -852,16 +854,16 @@ export default function Users() {
                       checked={createForm.must_change_password}
                       onChange={(e) => setCreateForm({ ...createForm, must_change_password: e.target.checked })}
                     />
-                    Forcer changement MDP
+                    {t('users_admin.modal_create_force_change_pwd')}
                   </label>
                 </div>
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowCreateModal(false)}>
-                  Annuler
+                  {t('common.cancel')}
                 </button>
                 <button type="submit" className="btn btn-primary">
-                  Creer
+                  {t('common.create')}
                 </button>
               </div>
             </form>
@@ -874,7 +876,7 @@ export default function Users() {
         <div className="modal-overlay" onClick={() => setShowRecapModal(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Recapitulatif des changements</h2>
+              <h2>{t('users_admin.modal_recap_title')}</h2>
               <button className="modal-close" onClick={() => setShowRecapModal(false)}>&times;</button>
             </div>
             <div className="modal-body">
@@ -892,10 +894,10 @@ export default function Users() {
             </div>
             <div className="modal-footer">
               <button className="btn btn-secondary" onClick={() => setShowRecapModal(false)}>
-                Annuler
+                {t('common.cancel')}
               </button>
               <button className="btn btn-primary" onClick={saveChanges} disabled={saving}>
-                {saving ? 'Enregistrement...' : 'Confirmer'}
+                {saving ? t('users_admin.modal_recap_submitting') : t('users_admin.modal_recap_submit')}
               </button>
             </div>
           </div>

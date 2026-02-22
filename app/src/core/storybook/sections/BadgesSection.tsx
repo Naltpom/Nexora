@@ -1,43 +1,47 @@
+import { useTranslation } from 'react-i18next'
+
 export default function BadgesSection() {
+  const { t } = useTranslation('storybook')
+
   return (
     <div className="storybook-section">
-      <h2>Badges et Alertes</h2>
+      <h2>{t('badges_title')}</h2>
 
-      <h3>Badges generiques</h3>
+      <h3>{t('badges_generic_title')}</h3>
       <div className="storybook-row">
-        <span className="badge badge-secondary">Secondaire</span>
-        <span className="badge badge-success">Succes</span>
-        <span className="badge badge-warning">Avertissement</span>
-        <span className="badge badge-error">Erreur</span>
-        <span className="badge badge-info">Information</span>
+        <span className="badge badge-secondary">{t('badges_secondary')}</span>
+        <span className="badge badge-success">{t('badges_success')}</span>
+        <span className="badge badge-warning">{t('badges_warning')}</span>
+        <span className="badge badge-error">{t('badges_error')}</span>
+        <span className="badge badge-info">{t('badges_info')}</span>
       </div>
 
-      <h3>Badges actif / inactif</h3>
+      <h3>{t('badges_active_title')}</h3>
       <div className="storybook-row">
-        <span className="badge-active badge-active-on">Actif</span>
-        <span className="badge-active badge-active-off">Inactif</span>
+        <span className="badge-active badge-active-on">{t('badges_active_on')}</span>
+        <span className="badge-active badge-active-off">{t('badges_active_off')}</span>
       </div>
 
-      <h3>Badge administrateur</h3>
+      <h3>{t('badges_admin_title')}</h3>
       <div className="storybook-row">
-        <span className="badge-admin badge-admin-on">Admin</span>
-        <span className="badge-admin badge-admin-off">Non admin</span>
+        <span className="badge-admin badge-admin-on">{t('badges_admin_on')}</span>
+        <span className="badge-admin badge-admin-off">{t('badges_admin_off')}</span>
       </div>
 
-      <h3>Badges de statut</h3>
+      <h3>{t('badges_status_title')}</h3>
       <div className="storybook-row">
-        <span className="badge-status badge-status-online">En ligne</span>
-        <span className="badge-status badge-status-away">Absent</span>
-        <span className="badge-status badge-status-offline">Hors ligne</span>
+        <span className="badge-status badge-status-online">{t('badges_status_online')}</span>
+        <span className="badge-status badge-status-away">{t('badges_status_away')}</span>
+        <span className="badge-status badge-status-offline">{t('badges_status_offline')}</span>
       </div>
 
-      <h3>Alertes</h3>
+      <h3>{t('badges_alerts_title')}</h3>
       <div className="storybook-preview">
         <div className="alert alert-error">
-          Une erreur est survenue lors de la sauvegarde. Veuillez reessayer.
+          {t('badges_alert_error')}
         </div>
         <div className="alert alert-success">
-          Les modifications ont ete enregistrees avec succes.
+          {t('badges_alert_success')}
         </div>
       </div>
     </div>

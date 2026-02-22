@@ -1,4 +1,4 @@
-// Service Worker for Web Push Notifications - Kertios Template
+// Service Worker for Web Push Notifications - Nexora
 
 self.addEventListener('push', function(event) {
   if (!event.data) return;
@@ -14,7 +14,7 @@ self.addEventListener('push', function(event) {
     body: data.body || '',
     icon: '/logo_full.svg',
     badge: '/logo_full.svg',
-    tag: data.tag || 'kertios-notification',
+    tag: data.tag || 'nexora-notification',
     data: {
       url: data.url || '/',
     },

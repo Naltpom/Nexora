@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import Layout from '../Layout'
 import api from '../../api'
 import { cleanupFunctionalStorage } from './consentManager'
@@ -13,27 +14,15 @@ interface ConsentState {
 
 const CONSENT_KEY = 'rgpd_consent_given'
 
-const CONSENT_LABELS: Record<string, { label: string; description: string; required?: boolean }> = {
-  necessary: {
-    label: 'Strictement necessaires',
-    description: 'Cookies et traceurs indispensables au fonctionnement du site (authentification, securite). Ne peuvent pas etre desactives.',
-    required: true,
-  },
-  functional: {
-    label: 'Fonctionnels',
-    description: 'Cookies et traceurs qui permettent de memoriser vos preferences (theme, langue, affichage).',
-  },
-  analytics: {
-    label: 'Analytiques',
-    description: 'Cookies et traceurs qui nous aident a comprendre comment vous utilisez le site pour l\'ameliorer.',
-  },
-  marketing: {
-    label: 'Marketing',
-    description: 'Cookies et traceurs utilises pour afficher des publicites pertinentes. Aucun pour le moment.',
-  },
-}
+const CONSENT_TYPES: { key: string; labelKey: string; descriptionKey: string; required?: boolean }[] = [
+  { key: 'necessary', labelKey: 'consent_page.consent_necessary_label', descriptionKey: 'consent_page.consent_necessary_description', required: true },
+  { key: 'functional', labelKey: 'consent_page.consent_functional_label', descriptionKey: 'consent_page.consent_functional_description' },
+  { key: 'analytics', labelKey: 'consent_page.consent_analytics_label', descriptionKey: 'consent_page.consent_analytics_description' },
+  { key: 'marketing', labelKey: 'consent_page.consent_marketing_label', descriptionKey: 'consent_page.consent_marketing_description' },
+]
 
 export default function ConsentPage() {
+  const { t } = useTranslation('rgpd')
   const [consent, setConsent] = useState<ConsentState>({
     necessary: true, functional: false, analytics: false, marketing: false,
   })
@@ -91,7 +80,7 @@ export default function ConsentPage() {
       if (!consent.functional) {
         cleanupFunctionalStorage()
       }
-      setSuccess('Preferences de consentement mises a jour.')
+      setSuccess(t('consent_page.success_message'))
       setTimeout(() => setSuccess(''), 3000)
     } catch {
       // silently fail
@@ -102,19 +91,19 @@ export default function ConsentPage() {
 
   if (loading) {
     return (
-      <Layout title="Preferences de consentement" breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Consentement' }]}>
+      <Layout title={t('consent_page.page_title')} breadcrumb={[{ label: t('consent_page.breadcrumb_home'), path: '/' }, { label: t('consent_page.breadcrumb_label') }]}>
         <div className="text-center loading-pad-lg"><div className="spinner" /></div>
       </Layout>
     )
   }
 
   return (
-    <Layout title="Preferences de consentement" breadcrumb={[{ label: 'Accueil', path: '/' }, { label: 'Consentement' }]}>
+    <Layout title={t('consent_page.page_title')} breadcrumb={[{ label: t('consent_page.breadcrumb_home'), path: '/' }, { label: t('consent_page.breadcrumb_label') }]}>
       <div className="unified-card page-header-card">
         <div className="unified-page-header">
           <div className="unified-page-header-info">
-            <h1>Preferences de consentement</h1>
-            <p>Gerez vos preferences de cookies et traceurs et de traitement de donnees.</p>
+            <h1>{t('consent_page.heading')}</h1>
+            <p>{t('consent_page.description')}</p>
           </div>
         </div>
       </div>
@@ -122,20 +111,20 @@ export default function ConsentPage() {
       {success && <div className="alert alert-success mb-16">{success}</div>}
 
       <div className="rgpd-consent-list">
-        {Object.entries(CONSENT_LABELS).map(([type, info]) => (
-          <div key={type} className="unified-card rgpd-consent-item">
+        {CONSENT_TYPES.map((info) => (
+          <div key={info.key} className="unified-card rgpd-consent-item">
             <div className="rgpd-consent-item-info">
               <div className="rgpd-consent-item-header">
-                <h3>{info.label}</h3>
-                {info.required && <span className="rgpd-badge rgpd-badge-required">Obligatoire</span>}
+                <h3>{t(info.labelKey)}</h3>
+                {info.required && <span className="rgpd-badge rgpd-badge-required">{t('consent_page.badge_required')}</span>}
               </div>
-              <p>{info.description}</p>
+              <p>{t(info.descriptionKey)}</p>
             </div>
             <label className="rgpd-toggle">
               <input
                 type="checkbox"
-                checked={consent[type as keyof ConsentState]}
-                onChange={() => handleToggle(type)}
+                checked={consent[info.key as keyof ConsentState]}
+                onChange={() => handleToggle(info.key)}
                 disabled={info.required}
               />
               <span className="rgpd-toggle-slider" />
@@ -146,7 +135,7 @@ export default function ConsentPage() {
 
       <div className="form-actions">
         <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
-          {saving ? 'Enregistrement...' : 'Enregistrer mes preferences'}
+          {saving ? t('consent_page.btn_saving') : t('consent_page.btn_save')}
         </button>
       </div>
     </Layout>
