@@ -29,6 +29,7 @@ import UserDetailPage from './core/_identity/UserDetailPage'
 import CommandsAdminPage from './core/_identity/CommandsAdminPage'
 import CommandHistoryPage from './core/_identity/CommandHistoryPage'
 import AcceptLegalPage from './core/rgpd/AcceptLegalPage'
+import SSOCallbackPage from './core/sso/SSOCallbackPage'
 
 // Feature manifests (auto-discovered from core + project features)
 const coreModules = import.meta.glob('./core/*/index.ts', { eager: true }) as Record<string, any>
@@ -94,6 +95,7 @@ export default function App() {
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/verify-email" element={user ? <Navigate to="/" /> : <VerifyEmailPage />} />
       <Route path="/invitation/:token" element={<AcceptInvitationPage />} />
+      <Route path="/sso/callback/:provider" element={<SSOCallbackPage />} />
       <Route path="/change-password" element={user ? <ForceChangePasswordPage /> : <Navigate to="/login" />} />
       <Route path="/accept-legal" element={user ? <AcceptLegalPage /> : <Navigate to="/login" />} />
 

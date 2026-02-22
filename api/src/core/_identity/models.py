@@ -88,7 +88,8 @@ class Role(Base):
     __tablename__ = "roles"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    name: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+    slug: Mapped[str] = mapped_column(String(100), nullable=False)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
@@ -100,6 +101,11 @@ class Role(Base):
     )
 
     permissions = relationship("Permission", secondary="role_permissions", back_populates="roles")
+
+    __table_args__ = (
+        UniqueConstraint("slug", name="uq_roles_slug"),
+        Index("ix_roles_slug", "slug", unique=True),
+    )
 
 
 class Permission(Base):

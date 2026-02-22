@@ -297,19 +297,34 @@ async def get_impersonation_status(
 @router.get(
     "/search-users",
     response_model=list[UserSearchResult],
-    dependencies=[Depends(require_permission("impersonation.read"))],
 )
 async def search_users_for_impersonation(
     q: str = Query(..., min_length=2, description="Search query"),
-    current_admin=Depends(get_current_user),
+    current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    # During impersonation, resolve the original admin for permission check
+    if is_impersonating(current_user):
+        admin_id = get_original_admin_id(current_user)
+    else:
+        admin_id = current_user.id
+
+    # Check that the real admin has impersonation.read
+    from ..permissions import load_user_permissions
+    perms = await load_user_permissions(db, admin_id)
+    if perms.get("impersonation.read") is not True:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission requise: impersonation.read")
+
+    # Exclude admin + currently impersonated user
+    excluded_ids = {admin_id, current_user.id}
+
     like = f"%{q}%"
     result = await db.execute(
         select(User)
         .where(
-            User.id != current_admin.id,
+            User.id.notin_(excluded_ids),
             User.is_active.is_(True),
+            User.is_super_admin.is_(False),
             or_(
                 User.email.ilike(like),
                 User.first_name.ilike(like),

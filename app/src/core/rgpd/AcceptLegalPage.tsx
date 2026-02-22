@@ -41,8 +41,14 @@ export default function AcceptLegalPage() {
   // Registration mode state
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
 
+  // Redirect when all legal pages accepted (side-effect, not during render)
+  useEffect(() => {
+    if (!pending.length) {
+      navigate('/', { replace: true })
+    }
+  }, [pending.length, navigate])
+
   if (!pending.length) {
-    navigate('/', { replace: true })
     return null
   }
 

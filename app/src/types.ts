@@ -46,6 +46,7 @@ export interface FeatureManifest {
 
 export interface Role {
   id: number
+  slug: string
   name: string
   description: string | null
   permissions: string[]

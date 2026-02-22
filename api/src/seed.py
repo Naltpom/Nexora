@@ -1,21 +1,97 @@
-"""Seed script with demo data: super admin, demo users, default feature states, demo notifications."""
+"""Seed script with demo data: super admin, demo users, role assignments, demo notifications.
+
+Data definitions are imported from ``alembic.fixtures`` so this script
+stays thin and focused on the insertion logic.
+"""
 
 import asyncio
+import importlib.util
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .core._identity.models import User
+from .core._identity.models import Permission, Role, RolePermission, User, UserRole
 from .core.config import settings as app_settings
 from .core.database import Base, async_session, engine
 from .core.event.models import Event
 from .core.notification.models import Notification
 from .core.security import hash_password
 
+# ── Load fixtures via importlib (avoids clash with installed ``alembic`` pkg) ─
+_FIXTURES_DIR = Path(__file__).resolve().parent.parent / "alembic" / "fixtures"
+
+
+def _load_fixture(name: str):
+    spec = importlib.util.spec_from_file_location(name, _FIXTURES_DIR / f"{name}.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+_evt = _load_fixture("demo_events")
+ADMIN_EVENTS, ALICE_EVENTS = _evt.ADMIN_EVENTS, _evt.ALICE_EVENTS
+BOB_EVENTS, CHARLIE_EVENTS = _evt.BOB_EVENTS, _evt.CHARLIE_EVENTS
+
+_notif = _load_fixture("demo_notifications")
+ADMIN_NOTIFICATIONS, ALICE_NOTIFICATIONS = _notif.ADMIN_NOTIFICATIONS, _notif.ALICE_NOTIFICATIONS
+BOB_NOTIFICATIONS, CHARLIE_NOTIFICATIONS = _notif.BOB_NOTIFICATIONS, _notif.CHARLIE_NOTIFICATIONS
+
+GLOBAL_PERMISSION_CODES = _load_fixture("global_permissions").GLOBAL_PERMISSION_CODES
+_role_perms = _load_fixture("role_permissions")
+ROLE_PERMISSION_MAP = _role_perms.ROLE_PERMISSION_MAP
+ROLES = _load_fixture("roles").ROLES
+DEMO_USERS = _load_fixture("users").DEMO_USERS
+
 
 def ago(days: int) -> datetime:
     return datetime.now(timezone.utc) - timedelta(days=days)
+
+
+def _build_event(tmpl: dict, user_map: dict[str, User]) -> Event:
+    actor = user_map[tmpl["actor"]]
+    resource = user_map[tmpl["resource"]]
+    return Event(
+        event_type=tmpl["event_type"],
+        actor_id=actor.id,
+        resource_type=tmpl["resource_type"],
+        resource_id=resource.id,
+        payload=tmpl["payload"],
+        created_at=ago(tmpl["days_ago"]),
+    )
+
+
+def _build_notification(
+    tmpl: dict, user_id: int, events: list[Event],
+) -> Notification:
+    now = datetime.now(timezone.utc)
+    kwargs: dict = {
+        "user_id": user_id,
+        "event_id": events[tmpl["event_idx"]].id,
+        "title": tmpl["title"],
+        "body": tmpl.get("body"),
+        "is_read": tmpl["is_read"],
+        "created_at": ago(tmpl["days_ago"]),
+    }
+    if tmpl.get("read_days_ago") is not None:
+        kwargs["read_at"] = ago(tmpl["read_days_ago"]) if tmpl["read_days_ago"] > 0 else now
+    if tmpl.get("deleted_days_ago") is not None:
+        kwargs["deleted_at"] = ago(tmpl["deleted_days_ago"]) if tmpl["deleted_days_ago"] > 0 else now
+    return Notification(**kwargs)
+
+
+async def _assign_role(session: AsyncSession, user_id: int, role_slug: str) -> None:
+    """Assign a role (by slug) to a user if not already assigned."""
+    result = await session.execute(select(Role).where(Role.slug == role_slug))
+    role = result.scalar_one_or_none()
+    if not role:
+        return
+    existing = await session.execute(
+        select(UserRole).where(UserRole.user_id == user_id, UserRole.role_id == role.id)
+    )
+    if not existing.scalar_one_or_none():
+        session.add(UserRole(user_id=user_id, role_id=role.id))
 
 
 async def seed():
@@ -31,12 +107,10 @@ async def seed():
             print("Les donnees de demo existent deja, seed annule.")
             return
 
-        # Check if admin already exists (e.g. created by intranet login)
+        # ── Admin user ────────────────────────────────────────────────
         admin_email = app_settings.DEFAULT_ADMIN_EMAIL
         result = await session.execute(select(User).where(User.email == admin_email))
         existing_admin = result.scalar_one_or_none()
-
-        # ── USERS ────────────────────────────────────────────────────
 
         if existing_admin:
             admin = existing_admin
@@ -57,254 +131,102 @@ async def seed():
             session.add(admin)
         await session.flush()
 
-        alice = User(
-            email="alice@example.com",
-            password_hash=hash_password("demo123"),
-            first_name="Alice",
-            last_name="Martin",
-            auth_source="local",
-            is_super_admin=False,
-            must_change_password=False,
-            created_at=ago(100),
-        )
-        session.add(alice)
+        # Assign super_admin role
+        await _assign_role(session, admin.id, app_settings.SUPER_ADMIN_ROLE_SLUG)
 
-        bob = User(
-            email="bob@example.com",
-            password_hash=hash_password("demo123"),
-            first_name="Bob",
-            last_name="Durand",
-            auth_source="local",
-            is_super_admin=False,
-            must_change_password=False,
-            created_at=ago(80),
-        )
-        session.add(bob)
+        # ── Roles from fixtures ────────────────────────────────────────
+        for role_data in ROLES:
+            existing_role = await session.execute(
+                select(Role).where(Role.slug == role_data["slug"])
+            )
+            if not existing_role.scalar_one_or_none():
+                session.add(Role(
+                    slug=role_data["slug"],
+                    name=role_data["name"],
+                    description=role_data["description"],
+                ))
+        await session.flush()
 
-        charlie = User(
-            email="charlie@example.com",
-            password_hash=hash_password("demo123"),
-            first_name="Charlie",
-            last_name="Dupont",
-            auth_source="local",
-            is_super_admin=False,
-            must_change_password=False,
-            created_at=ago(60),
-        )
-        session.add(charlie)
+        # Assign role permissions (from ROLE_PERMISSION_MAP + global codes)
+        for role_slug, perm_codes in ROLE_PERMISSION_MAP.items():
+            role_result = await session.execute(
+                select(Role).where(Role.slug == role_slug)
+            )
+            role_obj = role_result.scalar_one_or_none()
+            if not role_obj:
+                continue
+            all_codes = list(set(perm_codes + GLOBAL_PERMISSION_CODES))
+            for code in all_codes:
+                perm_result = await session.execute(
+                    select(Permission).where(Permission.code == code)
+                )
+                perm = perm_result.scalar_one_or_none()
+                if perm:
+                    existing_rp = await session.execute(
+                        select(RolePermission).where(
+                            RolePermission.role_id == role_obj.id,
+                            RolePermission.permission_id == perm.id,
+                        )
+                    )
+                    if not existing_rp.scalar_one_or_none():
+                        session.add(RolePermission(
+                            role_id=role_obj.id, permission_id=perm.id,
+                        ))
+        await session.flush()
+
+        # ── Demo users (from fixtures) ────────────────────────────────
+        demo_user_objects: dict[str, User] = {}
+        for u in DEMO_USERS:
+            user = User(
+                email=u["email"],
+                password_hash=hash_password(u["password"]),
+                first_name=u["first_name"],
+                last_name=u["last_name"],
+                auth_source=u["auth_source"],
+                is_super_admin=u["is_super_admin"],
+                must_change_password=False,
+                created_at=ago(u["created_days_ago"]),
+            )
+            session.add(user)
+            # Key = first name lowercase (alice, bob, charlie)
+            demo_user_objects[u["first_name"].lower()] = user
 
         await session.flush()
 
-        # ── DEMO EVENTS + NOTIFICATIONS (pour Nathan admin) ───────────
+        # Assign roles to demo users
+        for u in DEMO_USERS:
+            user_obj = demo_user_objects[u["first_name"].lower()]
+            await _assign_role(session, user_obj.id, u["role_slug"])
+        await session.flush()
 
-        demo_events = [
-            Event(
-                event_type="user.registered",
-                actor_id=alice.id,
-                resource_type="user",
-                resource_id=alice.id,
-                payload={"actor_name": "Alice Martin", "user_name": "Alice Martin", "email": "alice@example.com"},
-                created_at=ago(10),
-            ),
-            Event(
-                event_type="user.registered",
-                actor_id=bob.id,
-                resource_type="user",
-                resource_id=bob.id,
-                payload={"actor_name": "Bob Durand", "user_name": "Bob Durand", "email": "bob@example.com"},
-                created_at=ago(8),
-            ),
-            Event(
-                event_type="user.registered",
-                actor_id=charlie.id,
-                resource_type="user",
-                resource_id=charlie.id,
-                payload={"actor_name": "Charlie Dupont", "user_name": "Charlie Dupont", "email": "charlie@example.com"},
-                created_at=ago(6),
-            ),
-            Event(
-                event_type="user.updated",
-                actor_id=alice.id,
-                resource_type="user",
-                resource_id=alice.id,
-                payload={"actor_name": "Alice Martin"},
-                created_at=ago(5),
-            ),
-            Event(
-                event_type="user.invited",
-                actor_id=admin.id,
-                resource_type="user",
-                resource_id=bob.id,
-                payload={"actor_name": "Nathan Provost", "invited_email": "nouveau@example.com"},
-                created_at=ago(4),
-            ),
-            Event(
-                event_type="user.updated",
-                actor_id=bob.id,
-                resource_type="user",
-                resource_id=bob.id,
-                payload={"actor_name": "Bob Durand"},
-                created_at=ago(3),
-            ),
-            Event(
-                event_type="user.deactivated",
-                actor_id=admin.id,
-                resource_type="user",
-                resource_id=charlie.id,
-                payload={"actor_name": "Nathan Provost", "target_name": "Charlie Dupont"},
-                created_at=ago(2),
-            ),
-            Event(
-                event_type="admin.impersonation_started",
-                actor_id=admin.id,
-                resource_type="user",
-                resource_id=alice.id,
-                payload={"actor_name": "Nathan Provost", "target_name": "Alice Martin"},
-                created_at=ago(1),
-            ),
-            Event(
-                event_type="user.registered",
-                actor_id=alice.id,
-                resource_type="user",
-                resource_id=alice.id,
-                payload={"actor_name": "Alice Martin", "user_name": "Diane Leroy", "email": "diane@example.com"},
-                created_at=ago(0),
-            ),
-            Event(
-                event_type="user.updated",
-                actor_id=charlie.id,
-                resource_type="user",
-                resource_id=charlie.id,
-                payload={"actor_name": "Charlie Dupont"},
-                created_at=ago(0),
-            ),
-        ]
-        for ev in demo_events:
+        # User map for event building
+        alice = demo_user_objects["alice"]
+        bob = demo_user_objects["bob"]
+        charlie = demo_user_objects["charlie"]
+        user_map = {"admin": admin, "alice": alice, "bob": bob, "charlie": charlie}
+
+        # ── Events (from fixtures) ────────────────────────────────────
+        admin_events = [_build_event(t, user_map) for t in ADMIN_EVENTS]
+        for ev in admin_events:
             session.add(ev)
         await session.flush()
 
-        now = datetime.now(timezone.utc)
-
-        demo_notifications = [
-            # ── Unread ──
-            Notification(
-                user_id=admin.id, event_id=demo_events[0].id,
-                title="Alice Martin s'est inscrit",
-                body="Nouvel utilisateur enregistre sur la plateforme.",
-                is_read=False, created_at=ago(10),
-            ),
-            Notification(
-                user_id=admin.id, event_id=demo_events[1].id,
-                title="Bob Durand s'est inscrit",
-                body=None,
-                is_read=False, created_at=ago(8),
-            ),
-            Notification(
-                user_id=admin.id, event_id=demo_events[2].id,
-                title="Charlie Dupont s'est inscrit",
-                body="Inscription via lien d'invitation.",
-                is_read=False, created_at=ago(6),
-            ),
-            Notification(
-                user_id=admin.id, event_id=demo_events[8].id,
-                title="Diane Leroy s'est inscrit",
-                body=None,
-                is_read=False, created_at=ago(0),
-            ),
-            # ── Read ──
-            Notification(
-                user_id=admin.id, event_id=demo_events[3].id,
-                title="Alice Martin a mis a jour son profil",
-                body=None,
-                is_read=True, read_at=ago(4), created_at=ago(5),
-            ),
-            Notification(
-                user_id=admin.id, event_id=demo_events[5].id,
-                title="Bob Durand a mis a jour son profil",
-                body="Changement d'adresse email.",
-                is_read=True, read_at=ago(2), created_at=ago(3),
-            ),
-            Notification(
-                user_id=admin.id, event_id=demo_events[9].id,
-                title="Charlie Dupont a mis a jour son profil",
-                body=None,
-                is_read=True, read_at=now, created_at=ago(0),
-            ),
-            # ── Soft-deleted ──
-            Notification(
-                user_id=admin.id, event_id=demo_events[4].id,
-                title="Nathan Provost a invite nouveau@example.com",
-                body="Invitation envoyee par email.",
-                is_read=True, read_at=ago(3),
-                deleted_at=ago(2), created_at=ago(4),
-            ),
-            Notification(
-                user_id=admin.id, event_id=demo_events[6].id,
-                title="Nathan Provost a desactive Charlie Dupont",
-                body="Compte utilisateur desactive.",
-                is_read=False,
-                deleted_at=ago(1), created_at=ago(2),
-            ),
-            Notification(
-                user_id=admin.id, event_id=demo_events[7].id,
-                title="Nathan Provost impersonifie Alice Martin",
-                body=None,
-                is_read=True, read_at=ago(0),
-                deleted_at=now, created_at=ago(1),
-            ),
-        ]
-        for notif in demo_notifications:
-            session.add(notif)
-
-        # ── Extra events for Alice, Bob, Charlie notifications ──────
-
-        extra_events = [
-            # Alice notifications
-            Event(event_type="user.registered", actor_id=bob.id, resource_type="user", resource_id=bob.id, payload={"actor_name": "Bob Durand", "user_name": "Bob Durand"}, created_at=ago(9)),
-            Event(event_type="user.updated", actor_id=admin.id, resource_type="user", resource_id=admin.id, payload={"actor_name": "Nathan Provost"}, created_at=ago(7)),
-            Event(event_type="user.invited", actor_id=admin.id, resource_type="user", resource_id=alice.id, payload={"actor_name": "Nathan Provost", "invited_email": "alice@example.com"}, created_at=ago(5)),
-            Event(event_type="user.registered", actor_id=charlie.id, resource_type="user", resource_id=charlie.id, payload={"actor_name": "Charlie Dupont", "user_name": "Charlie Dupont"}, created_at=ago(3)),
-            Event(event_type="user.deactivated", actor_id=admin.id, resource_type="user", resource_id=bob.id, payload={"actor_name": "Nathan Provost", "target_name": "Bob Durand"}, created_at=ago(1)),
-            # Bob notifications
-            Event(event_type="user.registered", actor_id=alice.id, resource_type="user", resource_id=alice.id, payload={"actor_name": "Alice Martin", "user_name": "Alice Martin"}, created_at=ago(11)),
-            Event(event_type="user.updated", actor_id=charlie.id, resource_type="user", resource_id=charlie.id, payload={"actor_name": "Charlie Dupont"}, created_at=ago(8)),
-            Event(event_type="user.invited", actor_id=admin.id, resource_type="user", resource_id=bob.id, payload={"actor_name": "Nathan Provost", "invited_email": "bob@example.com"}, created_at=ago(6)),
-            Event(event_type="user.registered", actor_id=charlie.id, resource_type="user", resource_id=charlie.id, payload={"actor_name": "Charlie Dupont", "user_name": "Charlie Dupont"}, created_at=ago(4)),
-            Event(event_type="admin.impersonation_started", actor_id=admin.id, resource_type="user", resource_id=bob.id, payload={"actor_name": "Nathan Provost", "target_name": "Bob Durand"}, created_at=ago(2)),
-            Event(event_type="user.updated", actor_id=alice.id, resource_type="user", resource_id=alice.id, payload={"actor_name": "Alice Martin"}, created_at=ago(0)),
-            # Charlie notifications
-            Event(event_type="user.registered", actor_id=alice.id, resource_type="user", resource_id=alice.id, payload={"actor_name": "Alice Martin", "user_name": "Alice Martin"}, created_at=ago(12)),
-            Event(event_type="user.registered", actor_id=bob.id, resource_type="user", resource_id=bob.id, payload={"actor_name": "Bob Durand", "user_name": "Bob Durand"}, created_at=ago(10)),
-            Event(event_type="user.updated", actor_id=admin.id, resource_type="user", resource_id=admin.id, payload={"actor_name": "Nathan Provost"}, created_at=ago(7)),
-            Event(event_type="user.invited", actor_id=admin.id, resource_type="user", resource_id=charlie.id, payload={"actor_name": "Nathan Provost", "invited_email": "charlie@example.com"}, created_at=ago(4)),
-        ]
-        for ev in extra_events:
+        alice_events = [_build_event(t, user_map) for t in ALICE_EVENTS]
+        bob_events = [_build_event(t, user_map) for t in BOB_EVENTS]
+        charlie_events = [_build_event(t, user_map) for t in CHARLIE_EVENTS]
+        for ev in alice_events + bob_events + charlie_events:
             session.add(ev)
         await session.flush()
 
-        ex = extra_events  # shorthand
-        extra_notifications = [
-            # ── Alice (2 unread, 2 read, 1 deleted) ──
-            Notification(user_id=alice.id, event_id=ex[0].id, title="Bob Durand s'est inscrit", body="Nouveau membre dans votre equipe.", is_read=False, created_at=ago(9)),
-            Notification(user_id=alice.id, event_id=ex[1].id, title="Nathan Provost a mis a jour son profil", is_read=False, created_at=ago(7)),
-            Notification(user_id=alice.id, event_id=ex[2].id, title="Vous avez ete invite par Nathan Provost", body="Verifiez vos parametres.", is_read=True, read_at=ago(4), created_at=ago(5)),
-            Notification(user_id=alice.id, event_id=ex[3].id, title="Charlie Dupont s'est inscrit", is_read=True, read_at=ago(2), created_at=ago(3)),
-            Notification(user_id=alice.id, event_id=ex[4].id, title="Nathan Provost a desactive Bob Durand", body="Compte desactive.", is_read=True, read_at=ago(0), deleted_at=ago(0), created_at=ago(1)),
-            # ── Bob (3 unread, 2 read, 1 deleted) ──
-            Notification(user_id=bob.id, event_id=ex[5].id, title="Alice Martin s'est inscrit", is_read=True, read_at=ago(10), created_at=ago(11)),
-            Notification(user_id=bob.id, event_id=ex[6].id, title="Charlie Dupont a mis a jour son profil", is_read=True, read_at=ago(7), created_at=ago(8)),
-            Notification(user_id=bob.id, event_id=ex[7].id, title="Vous avez ete invite par Nathan Provost", body="Bienvenue sur la plateforme.", is_read=False, created_at=ago(6)),
-            Notification(user_id=bob.id, event_id=ex[8].id, title="Charlie Dupont s'est inscrit", body="Nouveau collegue.", is_read=False, created_at=ago(4)),
-            Notification(user_id=bob.id, event_id=ex[9].id, title="Nathan Provost impersonifie votre compte", is_read=False, created_at=ago(2)),
-            Notification(user_id=bob.id, event_id=ex[10].id, title="Alice Martin a mis a jour son profil", is_read=True, read_at=now, deleted_at=ago(0), created_at=ago(0)),
-            # ── Charlie (2 unread, 2 read) ──
-            Notification(user_id=charlie.id, event_id=ex[11].id, title="Alice Martin s'est inscrit", is_read=True, read_at=ago(11), created_at=ago(12)),
-            Notification(user_id=charlie.id, event_id=ex[12].id, title="Bob Durand s'est inscrit", body="Nouveau membre.", is_read=True, read_at=ago(9), created_at=ago(10)),
-            Notification(user_id=charlie.id, event_id=ex[13].id, title="Nathan Provost a mis a jour son profil", is_read=False, created_at=ago(7)),
-            Notification(user_id=charlie.id, event_id=ex[14].id, title="Vous avez ete invite par Nathan Provost", is_read=False, created_at=ago(4)),
-        ]
-        for notif in extra_notifications:
-            session.add(notif)
+        # ── Notifications (from fixtures) ─────────────────────────────
+        for tmpl in ADMIN_NOTIFICATIONS:
+            session.add(_build_notification(tmpl, admin.id, admin_events))
+        for tmpl in ALICE_NOTIFICATIONS:
+            session.add(_build_notification(tmpl, alice.id, alice_events))
+        for tmpl in BOB_NOTIFICATIONS:
+            session.add(_build_notification(tmpl, bob.id, bob_events))
+        for tmpl in CHARLIE_NOTIFICATIONS:
+            session.add(_build_notification(tmpl, charlie.id, charlie_events))
 
         await session.commit()
 
@@ -316,9 +238,8 @@ async def seed():
         print("  Comptes demo disponibles :")
         print("  -----------------------------------------------------")
         print(f"  {admin_email}  Super Admin  (auth {'intranet' if admin.auth_source == 'intranet' else 'local'})")
-        print("  alice@example.com     Utilisateur  (mdp: demo123)")
-        print("  bob@example.com       Utilisateur  (mdp: demo123)")
-        print("  charlie@example.com   Utilisateur  (mdp: demo123)")
+        for u in DEMO_USERS:
+            print(f"  {u['email']:24s} {u['first_name']} {u['last_name']:12s} (mdp: {u['password']})")
         print()
 
 

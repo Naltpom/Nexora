@@ -1,15 +1,8 @@
-import { lazy } from 'react'
 import type { FeatureTutorial } from '../../types'
 
 export const manifest = {
   name: 'sso',
-  routes: [
-    {
-      path: '/sso/callback/:provider',
-      component: lazy(() => import('./SSOCallbackPage')),
-      public: true,
-    },
-  ],
+  routes: [],
   featureTutorial: {
     featureName: 'sso',
     label: 'Connexion SSO',

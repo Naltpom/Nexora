@@ -1,6 +1,7 @@
 """Role CRUD + permission assignment endpoints."""
 
 import math
+import re
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, or_, select
@@ -24,12 +25,26 @@ from .schemas import (
 router = APIRouter()
 
 
+def _slugify(name: str) -> str:
+    """Convert a display name to a slug (lowercase, underscores, ascii)."""
+    slug = name.lower().strip()
+    slug = re.sub(r"[àâä]", "a", slug)
+    slug = re.sub(r"[éèêë]", "e", slug)
+    slug = re.sub(r"[îï]", "i", slug)
+    slug = re.sub(r"[ôö]", "o", slug)
+    slug = re.sub(r"[ùûü]", "u", slug)
+    slug = re.sub(r"[ç]", "c", slug)
+    slug = re.sub(r"[^a-z0-9]+", "_", slug)
+    return slug.strip("_")
+
+
 def _role_to_response(role: Role, permission_codes: list[str] | None = None) -> RoleResponse:
     codes = permission_codes if permission_codes is not None else [
         p.code for p in role.permissions
     ]
     return RoleResponse(
         id=role.id,
+        slug=role.slug,
         name=role.name,
         description=role.description,
         permissions=codes,
@@ -51,7 +66,7 @@ def _role_to_response(role: Role, permission_codes: list[str] | None = None) -> 
 async def list_roles(db: AsyncSession = Depends(get_db)):
     """List all roles with their permission codes."""
     result = await db.execute(
-        select(Role).options(selectinload(Role.permissions)).order_by(Role.name)
+        select(Role).options(selectinload(Role.permissions)).order_by(Role.slug)
     )
     roles = result.scalars().unique().all()
     return [_role_to_response(r) for r in roles]
@@ -67,11 +82,18 @@ async def create_role(
     data: RoleCreate,
     db: AsyncSession = Depends(get_db),
 ):
+    # Check name uniqueness
     result = await db.execute(select(Role).where(Role.name == data.name))
     if result.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Un role avec ce nom existe deja")
 
-    role = Role(name=data.name, description=data.description)
+    # Generate or validate slug
+    slug = data.slug if data.slug else _slugify(data.name)
+    result = await db.execute(select(Role).where(Role.slug == slug))
+    if result.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail="Un role avec ce slug existe deja")
+
+    role = Role(slug=slug, name=data.name, description=data.description)
     db.add(role)
     await db.flush()
     return _role_to_response(role, permission_codes=[])

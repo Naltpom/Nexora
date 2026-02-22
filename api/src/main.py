@@ -71,7 +71,7 @@ def create_app() -> FastAPI:
     application = FastAPI(
         title="Nexora",
         description="Feature-based modular application template",
-        version="2026.02.30",
+        version="2026.02.31",
         docs_url="/api/docs",
         openapi_url="/api/openapi.json",
     )
@@ -136,7 +136,7 @@ def create_app() -> FastAPI:
         async with async_session() as db:
             try:
                 slug = settings.SUPER_ADMIN_ROLE_SLUG
-                role_result = await db.execute(select(Role).where(Role.name == slug))
+                role_result = await db.execute(select(Role).where(Role.slug == slug))
                 sa_role = role_result.scalar_one_or_none()
                 if sa_role:
                     all_perms = await db.execute(select(Permission.id))
@@ -167,7 +167,7 @@ def create_app() -> FastAPI:
                     if not admin_user.is_super_admin:
                         admin_user.is_super_admin = True
                         changed = True
-                    role_result = await db.execute(select(Role).where(Role.name == slug))
+                    role_result = await db.execute(select(Role).where(Role.slug == slug))
                     sa_role = role_result.scalar_one_or_none()
                     if sa_role:
                         existing = await db.execute(

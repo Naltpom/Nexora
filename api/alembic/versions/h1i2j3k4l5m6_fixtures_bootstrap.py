@@ -131,30 +131,6 @@ GLOBAL_PERMISSION_CODES = [
     "sso.link", "sso.google.login", "sso.github.login",
 ]
 
-# ── Admin role permissions (management, not super_admin) ─────────────────
-
-ADMIN_PERMISSION_CODES = [
-    "users.read", "users.create", "users.update", "users.delete",
-    "roles.read", "roles.create", "roles.update", "roles.delete",
-    "permissions.read", "permissions.manage",
-    "features.read", "features.manage",
-    "settings.read", "settings.manage",
-    "invitations.create", "invitations.read", "invitations.delete",
-    "impersonation.start", "impersonation.read",
-    "backups.create", "backups.restore", "backups.read",
-    "commands.read", "commands.manage",
-    "notification.admin",
-    "notification.rules.create", "notification.rules.update", "notification.rules.delete",
-    "notification.email.resend",
-    "notification.webhook.global.read", "notification.webhook.global.create",
-    "notification.webhook.global.update", "notification.webhook.global.delete",
-    "mfa.manage", "mfa.bypass",
-    "preference.didacticiel.manage",
-    "rgpd.consentement.manage", "rgpd.registre.read", "rgpd.registre.manage",
-    "rgpd.droits.manage", "rgpd.politique.manage", "rgpd.audit.read",
-]
-
-
 def upgrade() -> None:
     conn = op.get_bind()
 
@@ -169,12 +145,10 @@ def upgrade() -> None:
             {"code": code, "feature": feature},
         )
 
-    # ── 2. Create roles (super_admin, admin, user) ──────────────────────
+    # ── 2. Create super_admin role (only role created by migration) ─────
     conn.execute(sa.text(
         "INSERT INTO roles (name, description, created_at, updated_at) VALUES "
-        "('super_admin', 'Super administrateur — toutes les permissions', NOW(), NOW()), "
-        "('admin', 'Administrateur — permissions de gestion', NOW(), NOW()), "
-        "('user', 'Utilisateur — permissions de base', NOW(), NOW()) "
+        "('super_admin', 'Super administrateur — toutes les permissions', NOW(), NOW()) "
         "ON CONFLICT (name) DO NOTHING"
     ))
 
@@ -186,18 +160,7 @@ def upgrade() -> None:
         "ON CONFLICT DO NOTHING"
     ))
 
-    # ── 4. admin role → management permissions ────────────────────────────
-    # Admin also gets all global permissions (they're a user too)
-    admin_codes = list(set(ADMIN_PERMISSION_CODES + GLOBAL_PERMISSION_CODES))
-    codes_literal = ", ".join(f"'{c}'" for c in admin_codes)
-    conn.execute(sa.text(f"""
-        INSERT INTO role_permissions (role_id, permission_id)
-        SELECT r.id, p.id FROM roles r, permissions p
-        WHERE r.name = 'admin' AND p.code IN ({codes_literal})
-        ON CONFLICT DO NOTHING
-    """))
-
-    # ── 5. Global permissions (every authenticated user) ──────────────────
+    # ── 4. Global permissions (every authenticated user) ──────────────────
     codes_literal = ", ".join(f"'{c}'" for c in GLOBAL_PERMISSION_CODES)
     conn.execute(sa.text(f"""
         INSERT INTO global_permissions (permission_id, granted)
@@ -205,7 +168,7 @@ def upgrade() -> None:
         ON CONFLICT (permission_id) DO NOTHING
     """))
 
-    # ── 6. Default feature states ─────────────────────────────────────────
+    # ── 5. Default feature states ─────────────────────────────────────────
     conn.execute(sa.text("""
         INSERT INTO feature_states (name, is_active, updated_at) VALUES
             ('notification', true, NOW()),
@@ -215,7 +178,7 @@ def upgrade() -> None:
         ON CONFLICT (name) DO NOTHING
     """))
 
-    # ── 7. Default app settings ───────────────────────────────────────────
+    # ── 6. Default app settings ───────────────────────────────────────────
     conn.execute(sa.text("""
         INSERT INTO app_settings (key, value, updated_at) VALUES
             ('app_name', 'Nexora', NOW()),
@@ -246,9 +209,9 @@ def downgrade() -> None:
     # Remove global permissions
     conn.execute(sa.text("DELETE FROM global_permissions"))
 
-    # Remove role permissions and roles
+    # Remove role permissions and super_admin role
     conn.execute(sa.text(
         "DELETE FROM role_permissions WHERE role_id IN "
-        "(SELECT id FROM roles WHERE name IN ('super_admin', 'admin', 'user'))"
+        "(SELECT id FROM roles WHERE name = 'super_admin')"
     ))
-    conn.execute(sa.text("DELETE FROM roles WHERE name IN ('super_admin', 'admin', 'user')"))
+    conn.execute(sa.text("DELETE FROM roles WHERE name = 'super_admin'"))

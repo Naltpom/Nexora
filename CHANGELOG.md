@@ -1,5 +1,34 @@
 # Changelog
 
+## 2026.02.31
+
+### SSO — fix callback double-call et route statique
+
+- Route `/sso/callback/:provider` rendue statique dans `App.tsx` (ne depend plus du feature state)
+- Suppression de la route dupliquee dans le manifest SSO (`index.ts`)
+- Guard module-level `processedCodes` dans `SSOCallbackPage` (remplace `useRef` qui ne survit pas aux remontages)
+
+### Impersonation — fix permissions et UX
+
+- Fix 403 sur `/impersonation/search-users` : resolution de l'admin original pendant l'impersonation pour le check de permissions
+- Exclusion des super_admin et de l'utilisateur impersonne des resultats de recherche
+- Full page reload au demarrage de l'impersonation (charge les preferences du user impersonne)
+- Bypass des regles RGPD (accept-legal) et MFA (force-setup) pendant l'impersonation dans `ProtectedRoute`
+
+### AcceptLegalPage — fix React warning
+
+- Deplacement du `navigate()` de la phase de rendu vers `useEffect` (fix "Cannot update BrowserRouter while rendering")
+
+### Roles — slug technique et name non-unique
+
+- Contrainte unique retiree sur `roles.name` (name = nom d'affichage, peut etre duplique)
+- Migration `j3k4l5m6n7o8` : drop de la contrainte `roles_name_key`
+- Alignement du modele Role avec les contraintes DB (`__table_args__` explicite)
+
+### Fixtures et seed
+
+- Reorganisation des imports dans `seed.py` (fix E402 ruff)
+
 ## 2026.02.30
 
 ### CI/CD — Corrections et CI locale

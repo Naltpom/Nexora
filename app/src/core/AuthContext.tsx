@@ -239,7 +239,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('access_token', access_token)
       localStorage.setItem('refresh_token', refresh_token)
       localStorage.setItem('impersonation_active', 'true')
-      await fetchUser()
+      // Full reload to apply impersonated user's preferences from scratch
+      // (main.tsx IIFE reads preferences from the new token)
+      window.location.href = '/'
     } catch (error: any) {
       throw new Error(error.response?.data?.detail || i18next.t('common:impersonation_start_error'))
     }

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../core/AuthContext'
@@ -16,6 +16,10 @@ function parseJwtPayload(token: string): Record<string, any> | null {
   }
 }
 
+// Module-level guard: track already-processed OAuth codes so the same
+// code is never submitted twice (survives component unmount/remount).
+const processedCodes = new Set<string>()
+
 export default function SSOCallbackPage() {
   const { t } = useTranslation('sso')
   const { provider } = useParams<{ provider: string }>()
@@ -25,17 +29,16 @@ export default function SSOCallbackPage() {
 
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const called = useRef(false)
 
   useEffect(() => {
-    // Guard against StrictMode double-call
-    if (called.current) return
-    called.current = true
-
     const code = searchParams.get('code')
+
+    // Guard: skip if code already submitted (handles StrictMode + unmount/remount)
+    if (!code || processedCodes.has(code)) return
+    processedCodes.add(code)
     const state = searchParams.get('state')
 
-    if (!code || !provider) {
+    if (!provider) {
       setError(t('parametres_callback_manquants'))
       setLoading(false)
       return

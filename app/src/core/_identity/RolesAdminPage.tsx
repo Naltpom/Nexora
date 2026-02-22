@@ -12,6 +12,7 @@ import './_identity.scss'
 
 interface Role {
   id: number
+  slug: string
   name: string
   description: string
   permissions: string[]
@@ -50,7 +51,7 @@ export default function RolesAdminPage() {
   // Modal state (create / edit role)
   const [showModal, setShowModal] = useState(false)
   const [editingRole, setEditingRole] = useState<Role | null>(null)
-  const [form, setForm] = useState({ name: '', description: '' })
+  const [form, setForm] = useState({ name: '', slug: '', description: '' })
   const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -127,16 +128,23 @@ export default function RolesAdminPage() {
   /*  Create / Edit role                                              */
   /* ---------------------------------------------------------------- */
 
+  const slugify = (name: string) =>
+    name.toLowerCase().trim()
+      .replace(/[àâä]/g, 'a').replace(/[éèêë]/g, 'e')
+      .replace(/[îï]/g, 'i').replace(/[ôö]/g, 'o')
+      .replace(/[ùûü]/g, 'u').replace(/[ç]/g, 'c')
+      .replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')
+
   const openCreate = () => {
     setEditingRole(null)
-    setForm({ name: '', description: '' })
+    setForm({ name: '', slug: '', description: '' })
     setFormError('')
     setShowModal(true)
   }
 
   const openEdit = (role: Role) => {
     setEditingRole(role)
-    setForm({ name: role.name, description: role.description })
+    setForm({ name: role.name, slug: role.slug, description: role.description })
     setFormError('')
     setShowModal(true)
   }
@@ -147,9 +155,9 @@ export default function RolesAdminPage() {
     setSaving(true)
     try {
       if (editingRole) {
-        await api.put(`/roles/${editingRole.id}`, form)
+        await api.put(`/roles/${editingRole.id}`, { name: form.name, description: form.description })
       } else {
-        await api.post('/roles/', form)
+        await api.post('/roles/', { name: form.name, slug: form.slug || undefined, description: form.description })
       }
       setShowModal(false)
       loadRoles()
@@ -376,7 +384,10 @@ export default function RolesAdminPage() {
                         }}
                         onClick={isPermsMode ? () => openPerms(role) : undefined}
                       >
-                        <td><strong>{role.name}</strong></td>
+                        <td>
+                          <strong>{role.name}</strong>
+                          <div className="text-muted-xs">{role.slug}</div>
+                        </td>
 
                         {!isPermsMode && (
                           <td className="text-gray-500">{role.description || '\u2014'}</td>
@@ -578,10 +589,29 @@ export default function RolesAdminPage() {
                   <input
                     type="text"
                     value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    onChange={(e) => {
+                      const newName = e.target.value
+                      const update: typeof form = { ...form, name: newName }
+                      if (!editingRole) update.slug = slugify(newName)
+                      setForm(update)
+                    }}
                     required
                     placeholder={t('roles_admin.modal_name_placeholder')}
                   />
+                </div>
+                <div className="form-group">
+                  <label>{t('roles_admin.modal_slug_label')}</label>
+                  <input
+                    type="text"
+                    value={form.slug}
+                    onChange={(e) => !editingRole && setForm({ ...form, slug: e.target.value })}
+                    readOnly={!!editingRole}
+                    placeholder={t('roles_admin.modal_slug_placeholder')}
+                    className={editingRole ? 'input-readonly' : ''}
+                  />
+                  {!editingRole && (
+                    <span className="form-hint">{t('roles_admin.modal_slug_hint')}</span>
+                  )}
                 </div>
                 <div className="form-group">
                   <label>{t('roles_admin.modal_description_label')}</label>

@@ -12,6 +12,7 @@ import './_identity.scss'
 
 interface RoleBasic {
   id: number
+  slug: string
   name: string
   description: string | null
 }

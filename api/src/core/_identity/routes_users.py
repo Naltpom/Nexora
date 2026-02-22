@@ -45,7 +45,7 @@ async def _sync_super_admin_role(db: AsyncSession, user_id: int, is_super_admin:
     - is_super_admin=False → remove the super_admin role
     """
     slug = settings.SUPER_ADMIN_ROLE_SLUG
-    role_result = await db.execute(select(Role).where(Role.name == slug))
+    role_result = await db.execute(select(Role).where(Role.slug == slug))
     role = role_result.scalar_one_or_none()
     if not role:
         return

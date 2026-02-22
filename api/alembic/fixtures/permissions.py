@@ -1,0 +1,94 @@
+"""All base permissions (code, feature).
+
+Note: At runtime, permissions are synced from feature manifests via
+``sync_permissions_from_registry``.  This file is the single source of truth
+for the *initial* bootstrap set inserted by the Alembic data migration.
+"""
+
+ALL_PERMISSIONS: list[tuple[str, str]] = [
+    # _identity
+    ("users.read", "_identity"),
+    ("users.create", "_identity"),
+    ("users.update", "_identity"),
+    ("users.delete", "_identity"),
+    ("roles.read", "_identity"),
+    ("roles.create", "_identity"),
+    ("roles.update", "_identity"),
+    ("roles.delete", "_identity"),
+    ("permissions.read", "_identity"),
+    ("permissions.manage", "_identity"),
+    ("features.read", "_identity"),
+    ("features.manage", "_identity"),
+    ("settings.read", "_identity"),
+    ("settings.manage", "_identity"),
+    ("invitations.create", "_identity"),
+    ("invitations.read", "_identity"),
+    ("invitations.delete", "_identity"),
+    ("impersonation.start", "_identity"),
+    ("impersonation.read", "_identity"),
+    ("backups.create", "_identity"),
+    ("backups.restore", "_identity"),
+    ("backups.read", "_identity"),
+    ("search.global", "_identity"),
+    ("commands.read", "_identity"),
+    ("commands.manage", "_identity"),
+    # event
+    ("event.read", "event"),
+    # i18n
+    ("i18n.read", "i18n"),
+    # mfa
+    ("mfa.manage", "mfa"),
+    ("mfa.setup", "mfa"),
+    ("mfa.bypass", "mfa"),
+    ("mfa.totp.setup", "mfa.totp"),
+    ("mfa.email.setup", "mfa.email"),
+    # notification
+    ("notification.read", "notification"),
+    ("notification.delete", "notification"),
+    ("notification.admin", "notification"),
+    ("notification.rules.read", "notification"),
+    ("notification.rules.create", "notification"),
+    ("notification.rules.update", "notification"),
+    ("notification.rules.delete", "notification"),
+    ("notification.email.resend", "notification.email"),
+    ("notification.push.subscribe", "notification.push"),
+    ("notification.push.read", "notification.push"),
+    ("notification.webhook.read", "notification.webhook"),
+    ("notification.webhook.create", "notification.webhook"),
+    ("notification.webhook.update", "notification.webhook"),
+    ("notification.webhook.delete", "notification.webhook"),
+    ("notification.webhook.test", "notification.webhook"),
+    ("notification.webhook.global.read", "notification.webhook"),
+    ("notification.webhook.global.create", "notification.webhook"),
+    ("notification.webhook.global.update", "notification.webhook"),
+    ("notification.webhook.global.delete", "notification.webhook"),
+    # preference
+    ("preference.read", "preference"),
+    ("preference.theme.read", "preference.theme"),
+    ("preference.couleur.read", "preference.couleur"),
+    ("preference.langue.read", "preference.langue"),
+    ("preference.font.read", "preference.font"),
+    ("preference.layout.read", "preference.layout"),
+    ("preference.accessibilite.read", "preference.accessibilite"),
+    ("preference.composants.read", "preference.composants"),
+    ("preference.didacticiel.read", "preference.didacticiel"),
+    ("preference.didacticiel.manage", "preference.didacticiel"),
+    # rgpd
+    ("rgpd.read", "rgpd"),
+    ("rgpd.consentement.read", "rgpd.consentement"),
+    ("rgpd.consentement.manage", "rgpd.consentement"),
+    ("rgpd.registre.read", "rgpd.registre"),
+    ("rgpd.registre.manage", "rgpd.registre"),
+    ("rgpd.droits.read", "rgpd.droits"),
+    ("rgpd.droits.manage", "rgpd.droits"),
+    ("rgpd.export.read", "rgpd.export"),
+    ("rgpd.politique.read", "rgpd.politique"),
+    ("rgpd.politique.manage", "rgpd.politique"),
+    ("rgpd.audit.read", "rgpd.audit"),
+    # sso
+    ("sso.link", "sso"),
+    ("sso.google.login", "sso.google"),
+    ("sso.github.login", "sso.github"),
+    # storybook
+    ("storybook.read", "storybook"),
+]

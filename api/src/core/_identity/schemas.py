@@ -117,6 +117,7 @@ class UserResponse(BaseModel):
 
 class RoleBasic(BaseModel):
     id: int
+    slug: str
     name: str
     description: str | None = None
 
@@ -162,6 +163,7 @@ class UserPaginatedResponse(BaseModel):
 
 class RoleCreate(BaseModel):
     name: str
+    slug: str | None = None
     description: str | None = None
 
 
@@ -172,6 +174,7 @@ class RoleUpdate(BaseModel):
 
 class RoleResponse(BaseModel):
     id: int
+    slug: str
     name: str
     description: str | None = None
     permissions: list[str] = []

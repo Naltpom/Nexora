@@ -14,7 +14,7 @@ interface Props {
 
 export default function ProtectedRoute({ children, requireSuperAdmin = false, permission, feature, isPublic = false }: Props) {
   const { t } = useTranslation('common')
-  const { user, loading } = useAuth()
+  const { user, loading, isImpersonating } = useAuth()
   const { can } = usePermission()
   const { isActive } = useFeature()
   const location = useLocation()
@@ -45,16 +45,19 @@ export default function ProtectedRoute({ children, requireSuperAdmin = false, pe
     return <Navigate to="/change-password" replace />
   }
 
-  // Legal documents acceptance
-  if (user.pending_legal_acceptances?.length) {
-    return <Navigate to="/accept-legal" replace />
-  }
+  // Skip RGPD + MFA enforcement during impersonation
+  if (!isImpersonating) {
+    // Legal documents acceptance
+    if (user.pending_legal_acceptances?.length) {
+      return <Navigate to="/accept-legal" replace />
+    }
 
-  // MFA setup enforcement after grace period
-  if (localStorage.getItem('mfa_setup_required') === 'true') {
-    const raw = localStorage.getItem('mfa_grace_period_expires')
-    if (raw && new Date() >= new Date(raw)) {
-      return <Navigate to="/mfa/force-setup" replace />
+    // MFA setup enforcement after grace period
+    if (localStorage.getItem('mfa_setup_required') === 'true') {
+      const raw = localStorage.getItem('mfa_grace_period_expires')
+      if (raw && new Date() >= new Date(raw)) {
+        return <Navigate to="/mfa/force-setup" replace />
+      }
     }
   }
 

@@ -158,9 +158,9 @@ async def _is_super_admin(db: AsyncSession, user) -> bool:
     """Check if user has super_admin privileges via RBAC role (not the legacy flag)."""
     from ._identity.models import Role, UserRole
     result = await db.execute(
-        select(Role.name)
+        select(Role.slug)
         .join(UserRole, UserRole.role_id == Role.id)
-        .where(UserRole.user_id == user.id, Role.name == settings.SUPER_ADMIN_ROLE_SLUG)
+        .where(UserRole.user_id == user.id, Role.slug == settings.SUPER_ADMIN_ROLE_SLUG)
     )
     return result.scalar_one_or_none() is not None
 
