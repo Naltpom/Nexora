@@ -1,17 +1,17 @@
 """FastAPI application entry point with feature-based module loading."""
 
-import os
 import logging
+import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import select
 
-from .core.config import settings
-from .core.database import engine, async_session, Base
-from .core.feature_registry import FeatureRegistry, FeatureGateMiddleware
 from .core.command_registry import CommandRegistry
+from .core.config import settings
+from .core.database import async_session
+from .core.feature_registry import FeatureGateMiddleware, FeatureRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -32,10 +32,10 @@ def load_feature_states_sync() -> dict[str, bool]:
     states = {}
     try:
         with Session(sync_engine) as session:
-            from .core._identity.models import FeatureState
-
             # Check if table exists first
             from sqlalchemy import inspect
+
+            from .core._identity.models import FeatureState
             inspector = inspect(sync_engine)
             if "feature_states" in inspector.get_table_names():
                 rows = session.execute(select(FeatureState)).scalars().all()
@@ -51,8 +51,9 @@ def load_feature_states_sync() -> dict[str, bool]:
 def import_all_models():
     """Import all models from all features so Alembic can detect them."""
     import importlib
-    from .core.feature_registry import CORE_FEATURES_DIR, PROJECT_FEATURES_DIR
     from pathlib import Path
+
+    from .core.feature_registry import CORE_FEATURES_DIR, PROJECT_FEATURES_DIR
 
     for base_dir in [CORE_FEATURES_DIR, PROJECT_FEATURES_DIR]:
         if not base_dir.exists():
@@ -70,7 +71,7 @@ def create_app() -> FastAPI:
     application = FastAPI(
         title="Nexora",
         description="Feature-based modular application template",
-        version="2026.02.29",
+        version="2026.02.30",
         docs_url="/api/docs",
         openapi_url="/api/openapi.json",
     )
@@ -116,11 +117,13 @@ def create_app() -> FastAPI:
     application.state.feature_registry = registry
     application.state.command_registry = command_registry
 
-    # ── Startup event: sync permissions ──────────────────────────────
+    # ── Startup event: sync permissions + bootstrap ─────────────────
     @application.on_event("startup")
     async def on_startup():
+        from .core._identity.models import Permission, Role, RolePermission, User, UserRole
         from .core._identity.services import sync_permissions_from_registry
 
+        # 1. Sync permissions from feature manifests
         async with async_session() as db:
             try:
                 await sync_permissions_from_registry(db, registry)
@@ -128,6 +131,58 @@ def create_app() -> FastAPI:
                 logger.info("Permissions synced from feature manifests.")
             except Exception as e:
                 logger.warning(f"Could not sync permissions at startup: {e}")
+
+        # 2. Ensure super_admin role has ALL permissions (picks up new features)
+        async with async_session() as db:
+            try:
+                slug = settings.SUPER_ADMIN_ROLE_SLUG
+                role_result = await db.execute(select(Role).where(Role.name == slug))
+                sa_role = role_result.scalar_one_or_none()
+                if sa_role:
+                    all_perms = await db.execute(select(Permission.id))
+                    all_perm_ids = {row[0] for row in all_perms.all()}
+                    assigned = await db.execute(
+                        select(RolePermission.permission_id).where(RolePermission.role_id == sa_role.id)
+                    )
+                    assigned_ids = {row[0] for row in assigned.all()}
+                    missing = all_perm_ids - assigned_ids
+                    if missing:
+                        for pid in missing:
+                            db.add(RolePermission(role_id=sa_role.id, permission_id=pid))
+                        await db.commit()
+                        logger.info(f"Added {len(missing)} new permissions to {slug} role.")
+            except Exception as e:
+                logger.warning(f"Could not sync {settings.SUPER_ADMIN_ROLE_SLUG} role permissions: {e}")
+
+        # 3. Promote DEFAULT_ADMIN_EMAIL → super_admin role + flag
+        async with async_session() as db:
+            try:
+                slug = settings.SUPER_ADMIN_ROLE_SLUG
+                admin_result = await db.execute(
+                    select(User).where(User.email == settings.DEFAULT_ADMIN_EMAIL)
+                )
+                admin_user = admin_result.scalar_one_or_none()
+                if admin_user:
+                    changed = False
+                    if not admin_user.is_super_admin:
+                        admin_user.is_super_admin = True
+                        changed = True
+                    role_result = await db.execute(select(Role).where(Role.name == slug))
+                    sa_role = role_result.scalar_one_or_none()
+                    if sa_role:
+                        existing = await db.execute(
+                            select(UserRole).where(
+                                UserRole.user_id == admin_user.id, UserRole.role_id == sa_role.id
+                            )
+                        )
+                        if not existing.scalar_one_or_none():
+                            db.add(UserRole(user_id=admin_user.id, role_id=sa_role.id))
+                            changed = True
+                    if changed:
+                        await db.commit()
+                        logger.info(f"Promoted {settings.DEFAULT_ADMIN_EMAIL} to {slug}.")
+            except Exception as e:
+                logger.warning(f"Could not promote admin user: {e}")
 
     return application
 

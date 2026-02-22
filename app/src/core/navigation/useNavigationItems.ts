@@ -48,8 +48,8 @@ export function useNavigationItems() {
       const navItems: NavItem[] = manifest.navItems || []
       for (const item of navItems) {
         if (item.featureGate && !isActive(item.featureGate)) continue
-        if (item.requireSuperAdmin && !user?.is_super_admin) continue
-        if (item.permission && !user?.is_super_admin && !can(item.permission)) continue
+        if (item.requireSuperAdmin && !can('users.read')) continue
+        if (item.permission && !can(item.permission)) continue
         allItems.push(item)
       }
     }

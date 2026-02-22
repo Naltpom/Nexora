@@ -71,5 +71,7 @@ backups/*.dump
 docs/plans
 docs/analyses
 
+.claude/**
 !.claude/CLAUDE.md
-.claude/
+!.claude/commands/
+!.claude/commands/**

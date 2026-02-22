@@ -7,8 +7,8 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..security import create_access_token, create_refresh_token, create_mfa_token
 from .._identity.models import User
+from ..security import create_access_token, create_mfa_token, create_refresh_token
 from .models import SSOAccount
 
 logger = logging.getLogger(__name__)

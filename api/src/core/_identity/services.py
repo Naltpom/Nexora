@@ -17,7 +17,6 @@ from ..security import (
     create_access_token,
     create_mfa_token,
     create_refresh_token,
-    hash_password,
     verify_password,
 )
 from .models import Permission, SecurityToken, User
@@ -416,7 +415,6 @@ async def find_pending_invitation(db: AsyncSession, token: str):
 
 import asyncio  # noqa: E402
 import os  # noqa: E402
-import shutil  # noqa: E402
 
 RETENTION_DAYS = 7
 INITIAL_BACKUP_FILENAME = "backup_template_db_initial.dump"

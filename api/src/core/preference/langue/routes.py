@@ -7,7 +7,7 @@ from sqlalchemy.orm import attributes
 from ...config import settings
 from ...database import get_db
 from ...security import get_current_user
-from .schemas import LanguageUpdateRequest, LanguageResponse
+from .schemas import LanguageResponse, LanguageUpdateRequest
 
 router = APIRouter()
 

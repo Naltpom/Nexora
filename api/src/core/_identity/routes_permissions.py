@@ -10,7 +10,6 @@ from .models import (
     GlobalPermission,
     Permission,
     Role,
-    RolePermission,
     UserPermission,
     UserRole,
 )

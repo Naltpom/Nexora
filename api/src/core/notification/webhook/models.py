@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 
-from sqlalchemy import String, Integer, Boolean, ForeignKey, DateTime, Text, Index
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -33,6 +33,10 @@ class Webhook(Base):
     )
 
     user = relationship("User", foreign_keys=[user_id])
+
+    __table_args__ = (
+        Index("ix_webhooks_event_types_gin", "event_types", postgresql_using="gin"),
+    )
 
 
 class WebhookDeliveryLog(Base):

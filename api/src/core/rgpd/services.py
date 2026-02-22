@@ -6,9 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 async def collect_user_data(db: AsyncSession, user_id: int) -> dict:
     """Collect all personal data stored about a user, grouped by section."""
-    from .._identity.models import User, UserRole, UserPermission, UserSession
-    from ..notification.models import Notification, NotificationRule, UserRulePreference
+    from .._identity.models import User, UserPermission, UserRole, UserSession
     from ..event.models import Event
+    from ..notification.models import Notification, NotificationRule, UserRulePreference
     from .models import ConsentRecord, RightsRequest
 
     data = {}

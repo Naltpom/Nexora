@@ -6,9 +6,9 @@ import importlib
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Any
+from typing import Any, Callable
 
-from fastapi import FastAPI, APIRouter
+from fastapi import APIRouter, FastAPI
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request as StarletteRequest
 from starlette.responses import JSONResponse
@@ -91,7 +91,6 @@ class FeatureRegistry:
             if not base_dir.exists():
                 continue
             for manifest_path in base_dir.rglob("manifest.py"):
-                package_dir = manifest_path.parent
                 # Build module path: src.core.xxx.manifest or src.features.xxx.manifest
                 rel = manifest_path.relative_to(Path(__file__).resolve().parent.parent)
                 module_name = "src." + str(rel.with_suffix("")).replace("\\", ".").replace("/", ".")

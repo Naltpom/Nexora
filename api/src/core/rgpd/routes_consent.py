@@ -61,8 +61,8 @@ async def record_consent(
     auth_header = request.headers.get("authorization", "")
     if auth_header.startswith("Bearer "):
         try:
-            from ..security import decode_token
             from .._identity.models import User
+            from ..security import decode_token
 
             payload = decode_token(auth_header[7:])
             if payload.get("type") == "access" and payload.get("sub"):

@@ -4,11 +4,12 @@ import random
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
+from ..events import event_bus
 from ..permissions import require_permission
 from ..security import (
     create_access_token,
@@ -27,13 +28,12 @@ from .schemas import (
     InvitationVerify,
 )
 from .services import (
-    find_pending_invitation,
-    create_security_token,
-    verify_security_token,
     consume_security_token,
+    create_security_token,
+    find_pending_invitation,
     get_latest_security_token,
+    verify_security_token,
 )
-from ..events import event_bus
 
 router = APIRouter()
 

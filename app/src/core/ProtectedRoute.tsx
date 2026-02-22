@@ -58,7 +58,7 @@ export default function ProtectedRoute({ children, requireSuperAdmin = false, pe
     }
   }
 
-  if (requireSuperAdmin && !user.is_super_admin) {
+  if (requireSuperAdmin && !can('users.read')) {
     return <Navigate to="/" replace />
   }
 
@@ -66,7 +66,7 @@ export default function ProtectedRoute({ children, requireSuperAdmin = false, pe
     return <Navigate to="/" replace />
   }
 
-  if (permission && !user.is_super_admin && !can(permission)) {
+  if (permission && !can(permission)) {
     return <Navigate to="/" replace />
   }
 

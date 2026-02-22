@@ -1,5 +1,7 @@
 """TOTP-specific routes: setup, verify-setup, disable."""
 
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -7,11 +9,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ...database import get_db
 from ...security import get_current_user
 from ..models import UserMFA
-from ..schemas import TOTPSetupResponse, TOTPVerifySetupRequest, BackupCodesResponse
+from ..schemas import BackupCodesResponse, TOTPSetupResponse, TOTPVerifySetupRequest
 from ..services import generate_backup_codes
-from .services import generate_totp_secret, get_totp_provisioning_uri, generate_qr_code_base64, verify_totp
-
-from datetime import datetime, timezone
+from .services import generate_qr_code_base64, generate_totp_secret, get_totp_provisioning_uri, verify_totp
 
 router = APIRouter()
 

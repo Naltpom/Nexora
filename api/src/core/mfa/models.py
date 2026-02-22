@@ -2,9 +2,9 @@
 
 from datetime import datetime, timezone
 
-from sqlalchemy import String, Boolean, Integer, ForeignKey, DateTime, Text, Index, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..database import Base
 

@@ -1,5 +1,51 @@
 # Changelog
 
+## 2026.02.30
+
+### CI/CD — Corrections et CI locale
+
+- Ajout du `bun.lock` (requis pour `bun install --frozen-lockfile`)
+- Ajout de `ruff.toml` : configuration linter Python (regles E, W, F, I — ignore E712 pour SQLAlchemy)
+- Fix de 51 erreurs ruff (imports non tries, imports inutilises, variable non utilisee)
+- Restructuration du workflow CI : fusion des jobs `build` et `migrations-check` en un seul
+- CI executable en local via `act push` (nektos/act) — ajout `.actrc` a la racine
+- `ci.yml` : utilise `-f docker-compose.yml` pour skip l'override dev en CI
+
+### Fix modeles SQLAlchemy — alignement DB/models pour alembic check
+
+- `Event.actor_id` : ajout `ForeignKey("users.id")` manquant
+- `NotificationRule` : ajout index GIN `ix_notification_rules_event_types_gin` sur `event_types`
+- `Webhook` : ajout index GIN `ix_webhooks_event_types_gin` sur `event_types`
+- `SecurityToken.uuid` : declaration explicite `UniqueConstraint` + `Index(unique=True)` dans `__table_args__` (fix reflection Alembic UUID)
+
+### Bootstrap automatique — start pret a l'emploi
+
+- `api/entrypoint.sh` (NEW) : lance `alembic upgrade head` automatiquement au demarrage Docker
+- `api/Dockerfile` : utilise `entrypoint.sh` au lieu d'un CMD direct, alembic bake dans l'image
+- Migration Alembic `fixtures_bootstrap` : insere roles, permissions, global_permissions, feature states, app settings — une seule fois
+- `SUPER_ADMIN_ROLE_SLUG` configurable dans `.env` (defaut: `super_admin`)
+- Promotion auto de `DEFAULT_ADMIN_EMAIL` → role super_admin + flag au demarrage
+
+### Refonte securite : is_super_admin → role-based
+
+- `is_super_admin` ne bypasse plus les permissions — c'est un marqueur visuel uniquement
+- Seules les permissions (via roles + global_permissions) autorisent l'acces
+- `permissions.py` : retire le bypass `is_super_admin` dans `require_permission()` et `get_user_permission_codes()`
+- `security.py` : `_is_super_admin()` verifie le role uniquement, plus le flag
+- Routes notification/webhook/event : remplace `is_super_admin` par des checks de permissions
+- Frontend (`ProtectedRoute`, `useNavigationItems`) : utilise `can(permission)` au lieu de `is_super_admin`
+
+### Deplacement alembic dans api/ + Docker dev/CI split
+
+- `alembic/` deplace de la racine vers `api/alembic/` (tout le backend regroupe)
+- `docker-compose.yml` : config base sans bind mounts (fonctionne en CI/act/prod)
+- `docker-compose.override.yml` (NEW) : volumes dev hot-reload (charge auto en local)
+
+### Commande /commit
+
+- Nouvelle commande `/commit` : detection auto de `act`, CI complete via `act push`, version bump, git add/commit
+- `seed.py` simplifie (fixtures gerees par la migration)
+
 ## 2026.02.29
 
 ### Simplification du versioning et des changelogs

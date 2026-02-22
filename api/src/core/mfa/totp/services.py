@@ -37,8 +37,9 @@ def verify_totp(secret: str, code: str) -> bool:
 
 async def verify_totp_code(db, user_id: int, code: str) -> bool:
     """Verify a TOTP code for a specific user by loading their secret from DB."""
-    from ..models import UserMFA
     from sqlalchemy import select
+
+    from ..models import UserMFA
 
     result = await db.execute(
         select(UserMFA).where(

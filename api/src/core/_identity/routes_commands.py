@@ -2,15 +2,15 @@
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..command_registry import get_command_registry
 from ..database import get_db
 from ..permissions import require_permission
-from ..command_registry import get_command_registry
-from .models import CommandState, CommandExecution, User
-from .schemas import CommandExecutionResponse
+from .models import CommandExecution, CommandState, User
 from .routes_auth import get_current_user
+from .schemas import CommandExecutionResponse
 
 router = APIRouter()
 

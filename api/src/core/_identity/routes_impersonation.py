@@ -8,6 +8,8 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
+from ..events import event_bus
+from ..permissions import require_permission
 from ..security import (
     create_access_token,
     create_impersonation_token,
@@ -16,7 +18,6 @@ from ..security import (
     get_original_admin_id,
     is_impersonating,
 )
-from ..permissions import require_permission
 from .models import ImpersonationLog, User
 from .schemas import (
     ImpersonationLogResponse,
@@ -25,7 +26,6 @@ from .schemas import (
     ImpersonationStopResponse,
     UserSearchResult,
 )
-from ..events import event_bus
 
 router = APIRouter()
 

@@ -6,7 +6,6 @@ from pydantic import BaseModel, EmailStr
 
 from ..rgpd.schemas import PendingLegalAcceptance
 
-
 # ── Auth ─────────────────────────────────────────────────────────────────
 
 class LoginRequest(BaseModel):

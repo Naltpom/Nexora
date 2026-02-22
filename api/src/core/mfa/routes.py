@@ -4,36 +4,36 @@ import json
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlalchemy import select, delete
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from .._identity.models import Role, User, UserRole
 from ..database import get_db
+from ..permissions import require_permission
 from ..security import (
-    get_current_user,
     create_access_token,
     create_refresh_token,
     decode_mfa_token,
+    get_current_user,
     verify_password,
 )
-from ..permissions import require_permission
-from .._identity.models import User, Role, UserRole
-from .models import UserMFA, MFABackupCode, MFARolePolicy
+from .models import MFABackupCode, MFARolePolicy, UserMFA
 from .schemas import (
-    MFAStatusResponse,
+    BackupCodesResponse,
+    MFADisableRequest,
     MFAMethodInfo,
     MFAMethodsResponse,
-    MFAVerifyRequest,
-    MFAVerifyResponse,
-    MFADisableRequest,
-    BackupCodesResponse,
     MFAPolicyRequest,
     MFAPolicyResponse,
+    MFAStatusResponse,
+    MFAVerifyRequest,
+    MFAVerifyResponse,
 )
 from .services import (
-    is_mfa_required_for_user,
-    verify_mfa_code,
     generate_backup_codes,
     get_backup_codes_count,
+    is_mfa_required_for_user,
+    verify_mfa_code,
 )
 
 router = APIRouter()

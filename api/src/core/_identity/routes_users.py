@@ -2,16 +2,18 @@
 
 import math
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import delete as sa_delete, func, or_, select
+from sqlalchemy import delete as sa_delete
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..config import settings
 from ..database import get_db
+from ..events import event_bus
 from ..permissions import require_permission
 from ..security import get_current_super_admin, hash_password
-from .services import create_security_token
 from .models import (
     GlobalPermission,
     Permission,
@@ -31,9 +33,36 @@ from .schemas import (
     UserRolesUpdateRequest,
     UserUpdate,
 )
-from ..events import event_bus
+from .services import create_security_token
 
 router = APIRouter()
+
+
+async def _sync_super_admin_role(db: AsyncSession, user_id: int, is_super_admin: bool) -> None:
+    """Sync the super_admin role with the is_super_admin flag.
+
+    - is_super_admin=True → assign the super_admin role
+    - is_super_admin=False → remove the super_admin role
+    """
+    slug = settings.SUPER_ADMIN_ROLE_SLUG
+    role_result = await db.execute(select(Role).where(Role.name == slug))
+    role = role_result.scalar_one_or_none()
+    if not role:
+        return
+
+    existing = await db.execute(
+        select(UserRole).where(UserRole.user_id == user_id, UserRole.role_id == role.id)
+    )
+    has_role = existing.scalar_one_or_none() is not None
+
+    if is_super_admin and not has_role:
+        db.add(UserRole(user_id=user_id, role_id=role.id))
+        await db.flush()
+    elif not is_super_admin and has_role:
+        await db.execute(
+            sa_delete(UserRole).where(UserRole.user_id == user_id, UserRole.role_id == role.id)
+        )
+        await db.flush()
 
 
 def _user_to_response(user: User) -> UserResponse:
@@ -140,6 +169,10 @@ async def create_user(
     db.add(user)
     await db.flush()
 
+    # Sync super_admin role with flag
+    if data.is_super_admin:
+        await _sync_super_admin_role(db, user.id, True)
+
     await event_bus.emit(
         "user.registered",
         db=db,
@@ -184,6 +217,7 @@ async def update_user(
         user.is_active = data.is_active
     if data.is_super_admin is not None:
         user.is_super_admin = data.is_super_admin
+        await _sync_super_admin_role(db, user.id, data.is_super_admin)
     if data.must_change_password is not None:
         user.must_change_password = data.must_change_password
 
@@ -416,6 +450,7 @@ async def update_user_by_uuid(
         user.is_active = data.is_active
     if data.is_super_admin is not None:
         user.is_super_admin = data.is_super_admin
+        await _sync_super_admin_role(db, user.id, data.is_super_admin)
     if data.must_change_password is not None:
         user.must_change_password = data.must_change_password
 

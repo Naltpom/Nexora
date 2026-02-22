@@ -8,10 +8,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.attributes import flag_modified
 
+from ..._identity.models import AppSetting, User
 from ...database import get_db
 from ...permissions import require_permission
 from ...security import get_current_user
-from ..._identity.models import AppSetting, User
 from .schemas import (
     PermissionSeenRequest,
     PermissionSeenResponse,

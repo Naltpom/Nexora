@@ -1,7 +1,7 @@
 """Email OTP services: generation, sending, verification."""
 
 import secrets
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 
 from ...config import settings
 from ...security import hash_password, verify_password

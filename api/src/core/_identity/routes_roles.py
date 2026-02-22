@@ -9,7 +9,7 @@ from sqlalchemy.orm import selectinload
 
 from ..database import get_db
 from ..permissions import require_permission
-from .models import Permission, Role, RolePermission, UserRole, User
+from .models import Permission, Role, RolePermission, User, UserRole
 from .schemas import (
     AssignPermissionsRequest,
     PermissionWithGranted,

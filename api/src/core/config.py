@@ -48,6 +48,7 @@ class Settings(BaseSettings):
 
     # Seed defaults
     DEFAULT_ADMIN_EMAIL: str = "admin@example.com"
+    SUPER_ADMIN_ROLE_SLUG: str = "super_admin"
 
     # SSO - Google OAuth2
     SSO_GOOGLE_CLIENT_ID: str = ""

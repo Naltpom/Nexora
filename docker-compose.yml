@@ -28,12 +28,8 @@ services:
     ports:
       - "5471:8000"
     volumes:
-      - ./api/src:/app/src
       - upload_files:/app/uploads
       - rich_text_images:/app/rich_text_images
-      - ./alembic:/app/alembic
-      - ./alembic/alembic.ini:/app/alembic.ini
-      - ./backups:/app/backups
     depends_on:
       db:
         condition: service_healthy
@@ -49,12 +45,6 @@ services:
       - VITE_ENV=${ENV}
     ports:
       - "5472:3000"
-    volumes:
-      - ./app/src:/app/src
-      - ./app/public:/app/public
-      - ./app/index.html:/app/index.html
-      - ./app/vite.config.ts:/app/vite.config.ts
-      - ./app/package.json:/app/package.json
     depends_on:
       - api
 

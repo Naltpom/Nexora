@@ -5,7 +5,7 @@ The Event model is owned by the ``event`` feature.
 
 from datetime import datetime, timezone
 
-from sqlalchemy import String, Integer, Text, Boolean, ForeignKey, DateTime, Index, UniqueConstraint
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -81,6 +81,10 @@ class NotificationRule(Base):
     )
 
     created_by = relationship("User", foreign_keys=[created_by_id])
+
+    __table_args__ = (
+        Index("ix_notification_rules_event_types_gin", "event_types", postgresql_using="gin"),
+    )
 
     def matches_event(self, event_type: str) -> bool:
         if self.event_types == ["*"]:

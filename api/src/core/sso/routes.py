@@ -1,7 +1,7 @@
 """SSO parent routes: list providers, list/unlink SSO accounts."""
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlalchemy import select, delete
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db

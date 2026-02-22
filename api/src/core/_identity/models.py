@@ -1,16 +1,14 @@
 """Core models: User, Role, Permission, FeatureState, Invitation, Impersonation, SecurityToken."""
 
-from datetime import datetime, timezone, timedelta
 import hashlib
-
 import uuid as uuid_mod
+from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import String, Boolean, Integer, Float, ForeignKey, DateTime, Text, Index
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..database import Base
-
 
 # ── Users ────────────────────────────────────────────────────────────────
 
@@ -52,7 +50,7 @@ class SecurityToken(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     uuid: Mapped[uuid_mod.UUID] = mapped_column(
-        UUID(as_uuid=True), unique=True, nullable=False, default=uuid_mod.uuid4, index=True
+        UUID(as_uuid=True), nullable=False, default=uuid_mod.uuid4
     )
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     token_type: Mapped[str] = mapped_column(String(30), nullable=False)
@@ -64,6 +62,8 @@ class SecurityToken(Base):
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
     __table_args__ = (
+        UniqueConstraint("uuid", name="security_tokens_uuid_key"),
+        Index("ix_security_tokens_uuid", "uuid", unique=True),
         Index("ix_security_tokens_user_type", "user_id", "token_type"),
         Index("ix_security_tokens_type_expires", "token_type", "expires_at"),
         Index("ix_security_tokens_hash_type", "token_hash", "token_type"),
@@ -73,6 +73,7 @@ class SecurityToken(Base):
     def hash_value(raw_value: str) -> str:
         """HMAC-SHA256 hash for token storage and lookup."""
         import hmac
+
         from ..config import settings
         return hmac.new(
             settings.SECRET_KEY.encode(),

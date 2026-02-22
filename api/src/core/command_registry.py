@@ -7,7 +7,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Awaitable
+from typing import Any, Awaitable, Callable
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -83,13 +83,15 @@ class CommandRegistry:
         """Load command enabled/disabled states from DB at startup (sync)."""
         from sqlalchemy import create_engine
         from sqlalchemy.orm import Session
+
         from .config import settings
 
         sync_engine = create_engine(settings.database_url_sync)
         try:
             with Session(sync_engine) as session:
-                from ._identity.models import CommandState
                 from sqlalchemy import inspect as sa_inspect
+
+                from ._identity.models import CommandState
 
                 inspector = sa_inspect(sync_engine)
                 if "command_states" not in inspector.get_table_names():

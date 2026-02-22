@@ -3,7 +3,7 @@
 import secrets
 from datetime import datetime, timezone
 
-from sqlalchemy import select, delete, func
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..security import hash_password, verify_password
@@ -17,10 +17,10 @@ async def is_mfa_required_for_user(db: AsyncSession, user) -> dict:
     Only returns methods whose sub-feature is active (mfa.totp, mfa.email).
     Users with the mfa.bypass permission skip MFA entirely.
     """
-    from .models import UserMFA, MFARolePolicy
     from .._identity.models import UserRole
     from ..feature_registry import get_registry
     from ..permissions import load_user_permissions
+    from .models import MFARolePolicy, UserMFA
 
     # Check mfa.bypass permission
     user_perms = await load_user_permissions(db, user.id)

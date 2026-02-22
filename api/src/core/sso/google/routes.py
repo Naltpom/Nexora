@@ -11,9 +11,9 @@ from ...config import settings
 from ...database import get_db
 from ...security import get_current_user
 from ..models import SSOAccount
-from ..schemas import SSOAuthorizeResponse, SSOCallbackRequest, SSOCallbackResponse, SSOAccountResponse
+from ..schemas import SSOAccountResponse, SSOAuthorizeResponse, SSOCallbackRequest, SSOCallbackResponse
 from ..services import find_or_create_user_from_sso, issue_tokens_for_sso_user
-from .services import get_google_authorize_url, exchange_google_code
+from .services import exchange_google_code, get_google_authorize_url
 
 router = APIRouter()
 

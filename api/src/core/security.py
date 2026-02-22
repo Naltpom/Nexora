@@ -4,11 +4,12 @@ from datetime import datetime, timedelta, timezone
 
 # Workaround: passlib 1.7.4 expects bcrypt.__about__ removed in bcrypt >= 4.x
 import bcrypt as _bcrypt
+
 if not hasattr(_bcrypt, "__about__"):
     _bcrypt.__about__ = type("about", (), {"__version__": _bcrypt.__version__})()
 
 from fastapi import Depends, HTTPException, Query, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy import select
@@ -114,7 +115,7 @@ async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security_scheme),
     db: AsyncSession = Depends(get_db),
 ):
-    from ._identity.models import User, ImpersonationLog
+    from ._identity.models import ImpersonationLog, User
 
     payload = decode_token(credentials.credentials)
     if payload.get("type") != "access":
@@ -154,16 +155,12 @@ async def get_current_user(
 
 
 async def _is_super_admin(db: AsyncSession, user) -> bool:
-    """Check if user has super_admin privileges via RBAC role or legacy flag."""
-    # Legacy flag (kept for transition period)
-    if user.is_super_admin:
-        return True
-    # RBAC: check if user has the 'super_admin' role
+    """Check if user has super_admin privileges via RBAC role (not the legacy flag)."""
     from ._identity.models import Role, UserRole
     result = await db.execute(
         select(Role.name)
         .join(UserRole, UserRole.role_id == Role.id)
-        .where(UserRole.user_id == user.id, Role.name == "super_admin")
+        .where(UserRole.user_id == user.id, Role.name == settings.SUPER_ADMIN_ROLE_SLUG)
     )
     return result.scalar_one_or_none() is not None
 

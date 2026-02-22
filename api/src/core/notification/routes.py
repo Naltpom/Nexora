@@ -9,12 +9,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sse_starlette.sse import EventSourceResponse
 
-from ..security import get_current_user, get_current_user_from_query_token, decode_query_token_lightweight
 from ..database import get_db
-from ..permissions import require_permission
-from ..events import event_bus
-from ..exceptions import EntityNotFoundError, AuthorizationError
 from ..event.models import Event
+from ..events import event_bus
+from ..permissions import load_user_permissions, require_permission
+from ..security import decode_query_token_lightweight, get_current_user
 from .models import Notification, NotificationRule, UserRulePreference
 from .schemas import (
     AdminNotificationListResponse,
@@ -29,15 +28,31 @@ from .schemas import (
     UserRulePreferenceResponse,
 )
 from .services import (
-    sse_broadcaster,
-    list_notifications as svc_list_notifications,
-    get_unread_count as svc_get_unread_count,
-    mark_notification_read as svc_mark_notification_read,
-    mark_notification_unread as svc_mark_notification_unread,
-    mark_all_notifications_read as svc_mark_all_notifications_read,
     delete_notification as svc_delete_notification,
+)
+from .services import (
+    get_unread_count as svc_get_unread_count,
+)
+from .services import (
     list_all_rules as svc_list_all_rules,
+)
+from .services import (
     list_my_rules as svc_list_my_rules,
+)
+from .services import (
+    list_notifications as svc_list_notifications,
+)
+from .services import (
+    mark_all_notifications_read as svc_mark_all_notifications_read,
+)
+from .services import (
+    mark_notification_read as svc_mark_notification_read,
+)
+from .services import (
+    mark_notification_unread as svc_mark_notification_unread,
+)
+from .services import (
+    sse_broadcaster,
 )
 
 router = APIRouter()
@@ -551,7 +566,8 @@ async def update_rule(
     rule = result.scalar_one_or_none()
     if not rule:
         raise HTTPException(status_code=404, detail="Regle introuvable")
-    if not current_user.is_super_admin and rule.created_by_id != current_user.id:
+    user_perms = await load_user_permissions(db, current_user.id)
+    if user_perms.get("notification.admin") is not True and rule.created_by_id != current_user.id:
         raise HTTPException(status_code=403, detail="Acces refuse")
 
     provided = data.model_dump(exclude_unset=True)
@@ -577,7 +593,8 @@ async def delete_rule(
     rule = result.scalar_one_or_none()
     if not rule:
         raise HTTPException(status_code=404, detail="Regle introuvable")
-    if not current_user.is_super_admin and rule.created_by_id != current_user.id:
+    user_perms = await load_user_permissions(db, current_user.id)
+    if user_perms.get("notification.admin") is not True and rule.created_by_id != current_user.id:
         raise HTTPException(status_code=403, detail="Acces refuse")
     await db.delete(rule)
     await db.flush()
@@ -595,7 +612,8 @@ async def toggle_rule(
     rule = result.scalar_one_or_none()
     if not rule:
         raise HTTPException(status_code=404, detail="Regle introuvable")
-    if not current_user.is_super_admin and rule.created_by_id != current_user.id:
+    user_perms = await load_user_permissions(db, current_user.id)
+    if user_perms.get("notification.admin") is not True and rule.created_by_id != current_user.id:
         raise HTTPException(status_code=403, detail="Acces refuse")
     rule.is_active = not rule.is_active
     await db.flush()

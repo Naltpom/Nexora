@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config import settings
 from ..database import get_db
+from ..events import event_bus
 from ..permissions import get_user_permission_codes
 from ..security import (
     create_access_token,
@@ -36,13 +37,12 @@ from .schemas import (
     VerifyEmailRequest,
     VerifyTokenRequest,
 )
-from ..events import event_bus
 from .services import (
     authenticate_user,
-    create_security_token,
-    verify_security_token,
     consume_security_token,
+    create_security_token,
     get_latest_security_token,
+    verify_security_token,
 )
 
 router = APIRouter()

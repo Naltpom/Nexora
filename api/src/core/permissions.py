@@ -16,11 +16,11 @@ async def load_user_permissions(db: AsyncSession, user_id: int) -> dict[str, boo
     Returns dict of {permission_code: True/False/None}.
     """
     from ._identity.models import (
+        GlobalPermission,
         Permission,
+        RolePermission,
         UserPermission,
         UserRole,
-        RolePermission,
-        GlobalPermission,
     )
 
     effective: dict[str, bool | None] = {}
@@ -68,9 +68,6 @@ def require_permission(*codes: str):
         current_user=Depends(get_current_user),
         db: AsyncSession = Depends(get_db),
     ):
-        if current_user.is_super_admin:
-            return current_user
-
         user_perms = await load_user_permissions(db, current_user.id)
         for code in codes:
             granted = user_perms.get(code)
@@ -111,11 +108,5 @@ async def get_user_permission_codes(
     db: AsyncSession = Depends(get_db),
 ) -> list[str]:
     """Return list of permission codes the current user has. Used by /auth/me endpoint."""
-    if current_user.is_super_admin:
-        from ._identity.models import Permission
-
-        result = await db.execute(select(Permission.code))
-        return [code for (code,) in result.all()]
-
     perms = await load_user_permissions(db, current_user.id)
     return [code for code, granted in perms.items() if granted is True]

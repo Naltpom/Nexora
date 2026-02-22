@@ -1,17 +1,17 @@
 """Seed script with demo data: super admin, demo users, default feature states, demo notifications."""
 
 import asyncio
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import select, func
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from .core._identity.models import User
 from .core.config import settings as app_settings
-from .core.database import engine, async_session, Base
-from .core.security import hash_password
-from .core._identity.models import User, FeatureState, AppSetting
+from .core.database import Base, async_session, engine
 from .core.event.models import Event
 from .core.notification.models import Notification
+from .core.security import hash_password
 
 
 def ago(days: int) -> datetime:
@@ -25,29 +25,36 @@ async def seed():
     async with async_session() as session:
         session: AsyncSession
 
-        # Check if data already exists
-        result = await session.execute(select(func.count(User.id)))
-        if result.scalar() > 0:
-            print("Des donnees existent deja, seed annule.")
+        # Check if demo users already exist
+        result = await session.execute(select(User).where(User.email == "alice@example.com"))
+        if result.scalar_one_or_none():
+            print("Les donnees de demo existent deja, seed annule.")
             return
+
+        # Check if admin already exists (e.g. created by intranet login)
+        admin_email = app_settings.DEFAULT_ADMIN_EMAIL
+        result = await session.execute(select(User).where(User.email == admin_email))
+        existing_admin = result.scalar_one_or_none()
 
         # ── USERS ────────────────────────────────────────────────────
 
-        admin_email = app_settings.DEFAULT_ADMIN_EMAIL
-        admin_parts = admin_email.split("@")[0].split(".")
-        admin_first = admin_parts[0].capitalize() if len(admin_parts) > 0 else "Admin"
-        admin_last = admin_parts[1].capitalize() if len(admin_parts) > 1 else ""
-
-        admin = User(
-            email=admin_email,
-            first_name=admin_first,
-            last_name=admin_last,
-            auth_source="intranet" if app_settings.INTRANET_EMAIL_DOMAIN and admin_email.endswith(f"@{app_settings.INTRANET_EMAIL_DOMAIN}") else "local",
-            is_super_admin=True,
-            must_change_password=False,
-            created_at=ago(120),
-        )
-        session.add(admin)
+        if existing_admin:
+            admin = existing_admin
+            admin.is_super_admin = True
+        else:
+            admin_parts = admin_email.split("@")[0].split(".")
+            admin_first = admin_parts[0].capitalize() if len(admin_parts) > 0 else "Admin"
+            admin_last = admin_parts[1].capitalize() if len(admin_parts) > 1 else ""
+            admin = User(
+                email=admin_email,
+                first_name=admin_first,
+                last_name=admin_last,
+                auth_source="intranet" if app_settings.INTRANET_EMAIL_DOMAIN and admin_email.endswith(f"@{app_settings.INTRANET_EMAIL_DOMAIN}") else "local",
+                is_super_admin=True,
+                must_change_password=False,
+                created_at=ago(120),
+            )
+            session.add(admin)
         await session.flush()
 
         alice = User(
@@ -85,30 +92,6 @@ async def seed():
             created_at=ago(60),
         )
         session.add(charlie)
-
-        # ── DEFAULT FEATURE STATES ───────────────────────────────────
-
-        default_features = [
-            FeatureState(name="notification", is_active=True),
-            FeatureState(name="notification.email", is_active=True),
-            FeatureState(name="notification.push", is_active=False),
-            FeatureState(name="notification.webhook", is_active=True),
-        ]
-        for fs in default_features:
-            session.add(fs)
-
-        # ── DEFAULT APP SETTINGS ────────────────────────────────────
-
-        default_settings = [
-            AppSetting(key="app_name", value="Nexora"),
-            AppSetting(key="app_description", value=""),
-            AppSetting(key="app_logo", value="/logo_full.svg"),
-            AppSetting(key="app_favicon", value="/favicon.svg"),
-            AppSetting(key="primary_color", value="#1E40AF"),
-            AppSetting(key="support_email", value=""),
-        ]
-        for s in default_settings:
-            session.add(s)
 
         await session.flush()
 
@@ -330,16 +313,12 @@ async def seed():
         print("  Seed termine avec succes !")
         print("===================================================")
         print()
-        print("  Comptes disponibles :")
+        print("  Comptes demo disponibles :")
         print("  -----------------------------------------------------")
         print(f"  {admin_email}  Super Admin  (auth {'intranet' if admin.auth_source == 'intranet' else 'local'})")
         print("  alice@example.com     Utilisateur  (mdp: demo123)")
         print("  bob@example.com       Utilisateur  (mdp: demo123)")
         print("  charlie@example.com   Utilisateur  (mdp: demo123)")
-        print()
-        print("  Features actives par defaut :")
-        print("  notification, notification.email, notification.webhook")
-        print("  notification.push (desactive)")
         print()
 
 

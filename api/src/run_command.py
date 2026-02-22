@@ -16,8 +16,8 @@ import logging
 import sys
 from pathlib import Path
 
+from .core.command_registry import CORE_FEATURES_DIR, PROJECT_FEATURES_DIR, CommandRegistry
 from .core.database import async_session
-from .core.command_registry import CommandRegistry, CORE_FEATURES_DIR, PROJECT_FEATURES_DIR
 
 logger = logging.getLogger(__name__)
 

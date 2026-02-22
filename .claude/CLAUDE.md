@@ -44,6 +44,63 @@ Quand tu crees une feature :
 - Docker : 3 services (db:5470, api:5471, app:5472)
 - Hot reload en dev (uvicorn --reload + vite)
 
+## Securite & Autorisation (RBAC)
+
+L'autorisation est **100% role-based**. Le champ `is_super_admin` sur le modele `User` est un **marqueur visuel uniquement** — il ne bypasse aucune permission.
+
+### Modele
+
+| Concept | Table | Description |
+|---------|-------|-------------|
+| Permission | `permissions` | Code unique (`feature.action`), declaree dans `manifest.py` |
+| Role | `roles` | Groupe de permissions (ex: `super_admin`, `admin`, `user`) |
+| RolePermission | `role_permissions` | Lien role ↔ permission |
+| UserRole | `user_roles` | Lien user ↔ role |
+| GlobalPermission | `global_permissions` | Permissions accordees a TOUT user authentifie (lectures de base, MFA, SSO) |
+
+### Roles par defaut
+
+- **`super_admin`** : toutes les permissions (slug configurable via `SUPER_ADMIN_ROLE_SLUG` dans `.env`)
+- **`admin`** : permissions de gestion (users, roles, settings, etc.)
+- **`user`** : pas de role_permissions directes (tout passe par GlobalPermission)
+
+### Regles
+
+- **Ne JAMAIS checker `user.is_super_admin`** dans le code d'autorisation — utiliser `require_permission()` ou `load_user_permissions()`
+- Quand on toggle `is_super_admin` dans l'UI → le role `super_admin` est assigne/retire automatiquement (sync dans `routes_users.py`)
+- Un pirate qui flip `is_super_admin=True` en DB sans le role → aucun acces
+- `_is_super_admin()` dans `security.py` verifie le **role**, pas le flag
+
+### Nouvelles permissions
+
+Quand tu ajoutes des permissions dans un `manifest.py` :
+1. Elles sont auto-sync en DB au demarrage de l'API (`sync_permissions_from_registry`)
+2. Le role `super_admin` recoit automatiquement les nouvelles permissions (`on_startup` step 2)
+3. Si necessaire, ajouter les permissions au role `admin` ou en GlobalPermission via une migration Alembic
+
+## Bootstrap & Docker
+
+### Demarrage automatique
+
+Le container API utilise `entrypoint.sh` qui execute :
+1. `alembic upgrade head` — applique toutes les migrations (schema + data)
+2. `uvicorn` — demarre l'API
+
+### Fixtures (migration Alembic one-shot)
+
+Les donnees de base (roles, permissions, global_permissions, feature_states, app_settings) sont inserees via une **migration Alembic data** (`h1i2j3k4l5m6_fixtures_bootstrap.py`). Elle s'execute une seule fois, comme toute migration Alembic.
+
+### Bootstrap au demarrage de l'API (`on_startup`)
+
+A chaque demarrage, 3 etapes idempotentes :
+1. **Sync permissions** depuis les manifests des features
+2. **Sync role super_admin** : s'assure qu'il a TOUTES les permissions (gere les nouvelles features)
+3. **Promotion admin** : si `DEFAULT_ADMIN_EMAIL` existe en DB → set `is_super_admin=True` + assigne le role `super_admin`
+
+### Ajout de fixtures
+
+Pour ajouter des donnees de bootstrap (nouveaux roles, nouvelles global_permissions, etc.) : creer une **nouvelle migration Alembic data** (`op.execute(sa.text(...))`), pas de code dans `on_startup`.
+
 ## Tests
 
 Aucun framework de tests configure. Ne pas en ajouter sauf demande explicite.
@@ -277,6 +334,52 @@ Le **namespace** i18next = le nom de la feature (deduit du chemin). Ex : `prefer
 - Le JWT contient un claim `lang` avec la preference de langue de l'utilisateur
 - Le middleware `I18nMiddleware` set `request.state.locale` sur chaque requete
 
+## CI / Linting
+
+La CI est definie dans `.github/workflows/ci.yml` (source unique de verite). Elle est executable en local via `act` (nektos/act) qui lit directement le YAML GitHub Actions.
+
+### Prerequis (une seule fois)
+
+```bash
+# Installer act (Windows)
+winget install nektos.act
+```
+
+La config projet est dans `.actrc` a la racine (image Docker, env file). Rien d'autre a configurer.
+
+### Verification locale obligatoire avant commit
+
+```bash
+# CI complete (identique a GitHub Actions)
+act push
+
+# Lints seuls (plus rapide, suffisant pour le dev courant)
+act -j lint-backend -j lint-frontend
+
+# Alembic check (necessite la DB locale demarree)
+docker compose run --rm api alembic check
+```
+
+- **Ne jamais commit si les lints echouent**
+- Si ruff echoue : corriger les erreurs (ruff --fix gere la plupart), relancer
+- Si tsc echoue : corriger les erreurs TypeScript, relancer
+- Si alembic check echoue : les modeles SQLAlchemy ne matchent pas la DB, corriger les models.py
+
+### Config ruff
+
+- Fichier : `ruff.toml` a la racine du projet
+- Regles actives : `E` (pycodestyle errors), `W` (warnings), `F` (pyflakes), `I` (isort)
+- Ignore : `E501` (longueur de ligne, geree par `line-length = 120`), `E712` (`== True/False` requis par SQLAlchemy)
+- Tri des imports : `known-first-party = ["src"]`
+
+## Commandes slash
+
+| Commande | Description |
+|----------|-------------|
+| `/commit` | Procedure complete de commit : lints CI → alembic check → version bump → git add/commit |
+
+**Quand l'utilisateur demande un git add/commit** : toujours executer `/commit` au lieu de faire les etapes manuellement.
+
 ## Regles de dev
 
 - Toujours supporter dark + light theme
@@ -285,5 +388,5 @@ Le **namespace** i18next = le nom de la feature (deduit du chemin). Ex : `prefer
 - Utiliser **Bun** (pas npm/yarn)
 - Ne pas ajouter de tests sauf demande explicite
 - Apres chaque modification, mettre a jour le `CHANGELOG.md` racine
-- **Toujours utiliser Docker** pour executer des commandes (build, install, run, migrations, etc.). Ne jamais executer directement sur la machine hote. Exception : les commandes `git` s'executent sur la machine hote.
-- **Avant chaque git add/commit** : verifier et mettre a jour le changelog global et bumper les versions (`package.json` + `main.py`)
+- **Toujours utiliser Docker** pour executer des commandes (build, install, run, migrations, etc.). Ne jamais executer directement sur la machine hote. Exception : les commandes `git` et `act` s'executent sur la machine hote.
+- **Pour commit** : utiliser la commande `/commit` qui gere les lints, alembic check, version bump et commit

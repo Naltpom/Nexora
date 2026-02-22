@@ -1,19 +1,16 @@
 """Webhook CRUD routes: user webhooks and global (admin) webhooks."""
 
-from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...security import get_current_user
 from ...database import get_db
-from ...permissions import require_permission
-from ...exceptions import EntityNotFoundError, AuthorizationError
+from ...permissions import load_user_permissions, require_permission
+from ...security import get_current_user
 from .models import Webhook
-from .schemas import WebhookCreate, WebhookUpdate, WebhookResponse
+from .schemas import WebhookCreate, WebhookResponse, WebhookUpdate
 from .services import HttpWebhookSender
-from ..services import build_notification_content, build_webhook_payload
 
 router = APIRouter()
 
@@ -104,7 +101,8 @@ async def update_webhook(
     webhook = result.scalar_one_or_none()
     if not webhook:
         raise HTTPException(status_code=404, detail="Webhook introuvable")
-    if not current_user.is_super_admin and webhook.user_id != current_user.id:
+    user_perms = await load_user_permissions(db, current_user.id)
+    if user_perms.get("notification.webhook.global.update") is not True and webhook.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Acces refuse")
 
     provided = data.model_dump(exclude_unset=True)
@@ -132,7 +130,8 @@ async def delete_webhook(
     webhook = result.scalar_one_or_none()
     if not webhook:
         raise HTTPException(status_code=404, detail="Webhook introuvable")
-    if not current_user.is_super_admin and webhook.user_id != current_user.id:
+    user_perms = await load_user_permissions(db, current_user.id)
+    if user_perms.get("notification.webhook.global.update") is not True and webhook.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Acces refuse")
     await db.delete(webhook)
     await db.flush()
@@ -152,7 +151,8 @@ async def test_webhook(
     webhook = result.scalar_one_or_none()
     if not webhook:
         raise HTTPException(status_code=404, detail="Webhook introuvable")
-    if not current_user.is_super_admin and webhook.user_id != current_user.id:
+    user_perms = await load_user_permissions(db, current_user.id)
+    if user_perms.get("notification.webhook.global.update") is not True and webhook.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Acces refuse")
 
     actor_name = f"{current_user.first_name} {current_user.last_name}"
