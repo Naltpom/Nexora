@@ -13,7 +13,6 @@ export interface User {
   last_name: string
   auth_source: string
   is_active: boolean
-  is_super_admin: boolean
   must_change_password: boolean
   preferences?: Record<string, any>
   last_login?: string | null
@@ -49,6 +48,7 @@ export interface Role {
   slug: string
   name: string
   description: string | null
+  color: string | null
   permissions: string[]
   created_at: string
   updated_at: string

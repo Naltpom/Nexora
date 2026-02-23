@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { useAuth } from '../../core/AuthContext'
 import { usePermission } from '../../core/PermissionContext'
 import Layout from '../../core/Layout'
 import api from '../../api'
@@ -94,9 +93,8 @@ const emptyRuleForm: RuleForm = {
 
 export default function NotificationSettings() {
   const { t } = useTranslation('notification')
-  const { user } = useAuth()
   const { can } = usePermission()
-  const isSuperAdmin = user?.is_super_admin ?? false
+  const isNotifAdmin = can('notification.admin')
   // Data
   const [eventTypes, setEventTypes] = useState<EventType[]>([])
   const [myRules, setMyRules] = useState<NotificationRule[]>([])
@@ -151,7 +149,7 @@ export default function NotificationSettings() {
         api.get('/notifications/webhooks/'),
       ]
 
-      if (isSuperAdmin) {
+      if (isNotifAdmin) {
         promises.push(
           api.get('/notifications/rules'),
           api.get('/notifications/webhooks/global'),
@@ -164,7 +162,7 @@ export default function NotificationSettings() {
       setMyRules(results[1].data || [])
       setMyWebhooks(results[2].data || [])
 
-      if (isSuperAdmin) {
+      if (isNotifAdmin) {
         setAllRules(results[3].data || [])
         setGlobalWebhooks(results[4].data || [])
       }
@@ -173,7 +171,7 @@ export default function NotificationSettings() {
     } finally {
       setLoading(false)
     }
-  }, [isSuperAdmin])
+  }, [isNotifAdmin])
 
   useEffect(() => { loadData() }, [loadData])
 
@@ -192,7 +190,7 @@ export default function NotificationSettings() {
   /* -- Event types grouped by category -- */
 
   const eventsByCategory = eventTypes.reduce<Record<string, EventType[]>>((acc, et) => {
-    if (et.admin_only && !isSuperAdmin) return acc
+    if (et.admin_only && !isNotifAdmin) return acc
     if (!acc[et.category]) acc[et.category] = []
     acc[et.category].push(et)
     return acc
@@ -452,7 +450,7 @@ export default function NotificationSettings() {
   }
 
   const toggleAllEvents = () => {
-    const allTypes = eventTypes.filter(et => !et.admin_only || isSuperAdmin).map(et => et.event_type)
+    const allTypes = eventTypes.filter(et => !et.admin_only || isNotifAdmin).map(et => et.event_type)
     if (ruleForm.event_types.length === allTypes.length) {
       setRuleForm(prev => ({ ...prev, event_types: [] }))
     } else {
@@ -464,7 +462,7 @@ export default function NotificationSettings() {
 
   const renderRuleRow = (rule: NotificationRule, scope: 'my' | 'global') => {
     const locked = rule.is_default_template && scope === 'my'
-    const showBadges = scope !== 'my' || isSuperAdmin
+    const showBadges = scope !== 'my' || isNotifAdmin
 
     return (
       <tr key={rule.id} className={locked ? 'notif-rule-locked' : ''}>
@@ -944,7 +942,7 @@ export default function NotificationSettings() {
                 <label>
                   {t('rule_modal_label_event_types')}
                   <button type="button" onClick={toggleAllEvents} className="notif-toggle-all">
-                    {ruleForm.event_types.length === eventTypes.filter(et => !et.admin_only || isSuperAdmin).length ? t('rule_modal_toggle_all_uncheck') : t('rule_modal_toggle_all_check')}
+                    {ruleForm.event_types.length === eventTypes.filter(et => !et.admin_only || isNotifAdmin).length ? t('rule_modal_toggle_all_uncheck') : t('rule_modal_toggle_all_check')}
                   </button>
                 </label>
                 <div className="notif-event-checkboxes">
@@ -1024,7 +1022,7 @@ export default function NotificationSettings() {
               </div>
 
               {/* Default template toggle */}
-              {ruleScope === 'global' && isSuperAdmin && (
+              {ruleScope === 'global' && isNotifAdmin && (
                 <div className="form-group">
                   <label className="notif-channel-option">
                     <input
@@ -1038,7 +1036,7 @@ export default function NotificationSettings() {
               )}
 
               {/* Default channels for users (only for templates) */}
-              {ruleScope === 'global' && isSuperAdmin && ruleForm.is_default_template && (
+              {ruleScope === 'global' && isNotifAdmin && ruleForm.is_default_template && (
                 <div className="form-group">
                   <label>{t('rule_modal_label_default_channels')}</label>
                   <p className="notif-default-channels-desc">

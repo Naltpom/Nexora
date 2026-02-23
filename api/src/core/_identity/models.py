@@ -26,7 +26,6 @@ class User(Base):
     auth_source: Mapped[str] = mapped_column(String(20), nullable=False, default="local")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     email_verified: Mapped[bool] = mapped_column(Boolean, default=True)
-    is_super_admin: Mapped[bool] = mapped_column(Boolean, default=False)
     must_change_password: Mapped[bool] = mapped_column(Boolean, default=False)
     preferences: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     language: Mapped[str] = mapped_column(String(10), nullable=False, default="fr")
@@ -91,6 +90,7 @@ class Role(Base):
     slug: Mapped[str] = mapped_column(String(100), nullable=False)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    color: Mapped[str | None] = mapped_column(String(7), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )

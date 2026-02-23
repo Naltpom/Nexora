@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026.02.33
+
+### _identity
+
+- **Colonne Roles** dans la page admin Users : badges colores avec couleur dynamique depuis la DB
+- **Filtre par role** : composant MultiSelect dans la toolbar (multi-selection, recherche, dots de couleur)
+- **Bouton Impersonate masque** pour les utilisateurs immuns (`impersonation.immune`) et pour soi-meme
+- **Champ `color`** sur le modele Role (hex `#RRGGBB`, migration Alembic avec couleurs par defaut)
+- **Color picker** dans les modals create/edit de la page Roles admin avec preview badge
+- **Backend `list_users`** reecrit : batch-load roles, calcul immunite impersonation, filtre `role_ids`
+- **Nouveaux schemas** : `UserListItem`, `UserListPaginatedResponse`, `RoleBasic.color`
+- **Composant `MultiSelect.tsx`** reutilisable (dropdown, search, checkboxes, color dots)
+- **SCSS** : `.badge-role` avec `color-mix()` + dark theme, `.color-picker-row`
+- **Exception CLAUDE.md** : CSS custom properties `--var-name` autorisees pour valeurs DB
+
 ## 2026.02.32
 
 ### Background tasks (ARQ + Redis)

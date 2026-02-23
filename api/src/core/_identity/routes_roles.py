@@ -47,6 +47,7 @@ def _role_to_response(role: Role, permission_codes: list[str] | None = None) -> 
         slug=role.slug,
         name=role.name,
         description=role.description,
+        color=role.color,
         permissions=codes,
         created_at=role.created_at,
         updated_at=role.updated_at,
@@ -93,7 +94,7 @@ async def create_role(
     if result.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Un role avec ce slug existe deja")
 
-    role = Role(slug=slug, name=data.name, description=data.description)
+    role = Role(slug=slug, name=data.name, description=data.description, color=data.color)
     db.add(role)
     await db.flush()
     return _role_to_response(role, permission_codes=[])
@@ -126,6 +127,8 @@ async def update_role(
         role.name = data.name
     if data.description is not None:
         role.description = data.description
+    if data.color is not None:
+        role.color = data.color
 
     await db.flush()
     return _role_to_response(role)
@@ -144,6 +147,10 @@ async def delete_role(
     role = result.scalar_one_or_none()
     if not role:
         raise HTTPException(status_code=404, detail="Role introuvable")
+
+    PROTECTED_ROLE_SLUGS = {"super_admin", "admin", "user"}
+    if role.slug in PROTECTED_ROLE_SLUGS:
+        raise HTTPException(status_code=403, detail="Impossible de supprimer un role systeme")
 
     await db.delete(role)
     await db.flush()
@@ -235,10 +242,11 @@ async def list_role_permissions_paginated(
     count_query = select(func.count(Permission.id))
 
     if search:
+        search_escaped = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
         search_filter = or_(
-            Permission.code.ilike(f"%{search}%"),
-            Permission.label.ilike(f"%{search}%"),
-            Permission.description.ilike(f"%{search}%"),
+            Permission.code.ilike(f"%{search_escaped}%"),
+            Permission.label.ilike(f"%{search_escaped}%"),
+            Permission.description.ilike(f"%{search_escaped}%"),
         )
         query = query.where(search_filter)
         count_query = count_query.where(search_filter)
@@ -347,7 +355,6 @@ async def list_role_users(
             last_name=u.last_name,
             auth_source=u.auth_source,
             is_active=u.is_active,
-            is_super_admin=u.is_super_admin,
             must_change_password=u.must_change_password,
             last_login=u.last_login,
             last_active=u.last_active,

@@ -28,7 +28,7 @@ interface GlobalPermission {
 
 export default function PermissionsAdminPage() {
   const { t } = useTranslation('_identity')
-  const { can } = usePermission()
+  const { can, refreshPermissions } = usePermission()
   const [permissions, setPermissions] = useState<Permission[]>([])
   const [globalPermissions, setGlobalPermissions] = useState<GlobalPermission[]>([])
   const [loading, setLoading] = useState(true)
@@ -105,6 +105,7 @@ export default function PermissionsAdminPage() {
           granted: g.granted,
         })),
       })
+      await refreshPermissions()
       setMessage({ type: 'success', text: t('permissions_admin.global_save_success') })
     } catch {
       setMessage({ type: 'error', text: t('permissions_admin.global_save_error') })

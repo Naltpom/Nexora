@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import importlib
 import logging
 from dataclasses import dataclass, field
@@ -29,6 +30,7 @@ class CommandDefinition:
     schedule: str = ""
     config_keys: list[str] = field(default_factory=list)
     enabled: bool = True
+    timeout: int = 30  # seconds
 
 
 _command_registry_instance: "CommandRegistry | None" = None
@@ -144,7 +146,11 @@ class CommandRegistry:
         status = "success"
 
         try:
-            result_dict = await cmd.handler(db)
+            result_dict = await asyncio.wait_for(cmd.handler(db), timeout=cmd.timeout)
+        except asyncio.TimeoutError:
+            status = "error"
+            error_msg = f"Command '{name}' timed out after {cmd.timeout}s"
+            logger.error(error_msg)
         except Exception as e:
             status = "error"
             error_msg = str(e)

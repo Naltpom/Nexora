@@ -73,7 +73,7 @@ def create_app() -> FastAPI:
     application = FastAPI(
         title="Nexora",
         description="Feature-based modular application template",
-        version="2026.02.32",
+        version="2026.02.33",
         docs_url="/api/docs",
         openapi_url="/api/openapi.json",
     )
@@ -169,7 +169,7 @@ def create_app() -> FastAPI:
             except Exception as e:
                 logger.warning(f"Could not sync {settings.SUPER_ADMIN_ROLE_SLUG} role permissions: {e}")
 
-        # 3. Promote DEFAULT_ADMIN_EMAIL → super_admin role + flag
+        # 3. Promote DEFAULT_ADMIN_EMAIL → super_admin role
         async with async_session() as db:
             try:
                 slug = settings.SUPER_ADMIN_ROLE_SLUG
@@ -179,9 +179,6 @@ def create_app() -> FastAPI:
                 admin_user = admin_result.scalar_one_or_none()
                 if admin_user:
                     changed = False
-                    if not admin_user.is_super_admin:
-                        admin_user.is_super_admin = True
-                        changed = True
                     role_result = await db.execute(select(Role).where(Role.slug == slug))
                     sa_role = role_result.scalar_one_or_none()
                     if sa_role:

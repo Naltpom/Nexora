@@ -6,18 +6,19 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import delete as sa_delete
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config import settings
 from ..database import get_db
 from ..events import event_bus
-from ..permissions import invalidate_permission_cache, require_permission
-from ..security import get_current_super_admin, hash_password
+from ..permissions import invalidate_permission_cache, load_user_permissions, require_permission
+from ..security import get_current_user, hash_password
 from .models import (
     GlobalPermission,
     Permission,
     Role,
+    RolePermission,
     User,
     UserPermission,
     UserRole,
@@ -27,7 +28,8 @@ from .schemas import (
     RoleBasic,
     UserCreate,
     UserDetailResponse,
-    UserPaginatedResponse,
+    UserListItem,
+    UserListPaginatedResponse,
     UserPermissionOverrideRequest,
     UserResponse,
     UserRolesUpdateRequest,
@@ -36,33 +38,6 @@ from .schemas import (
 from .services import create_security_token
 
 router = APIRouter()
-
-
-async def _sync_super_admin_role(db: AsyncSession, user_id: int, is_super_admin: bool) -> None:
-    """Sync the super_admin role with the is_super_admin flag.
-
-    - is_super_admin=True → assign the super_admin role
-    - is_super_admin=False → remove the super_admin role
-    """
-    slug = settings.SUPER_ADMIN_ROLE_SLUG
-    role_result = await db.execute(select(Role).where(Role.slug == slug))
-    role = role_result.scalar_one_or_none()
-    if not role:
-        return
-
-    existing = await db.execute(
-        select(UserRole).where(UserRole.user_id == user_id, UserRole.role_id == role.id)
-    )
-    has_role = existing.scalar_one_or_none() is not None
-
-    if is_super_admin and not has_role:
-        db.add(UserRole(user_id=user_id, role_id=role.id))
-        await db.flush()
-    elif not is_super_admin and has_role:
-        await db.execute(
-            sa_delete(UserRole).where(UserRole.user_id == user_id, UserRole.role_id == role.id)
-        )
-        await db.flush()
 
 
 def _user_to_response(user: User) -> UserResponse:
@@ -74,7 +49,6 @@ def _user_to_response(user: User) -> UserResponse:
         last_name=user.last_name,
         auth_source=user.auth_source,
         is_active=user.is_active,
-        is_super_admin=user.is_super_admin,
         must_change_password=user.must_change_password,
         last_login=user.last_login,
         last_active=user.last_active,
@@ -84,7 +58,7 @@ def _user_to_response(user: User) -> UserResponse:
 
 @router.get(
     "/",
-    response_model=UserPaginatedResponse,
+    response_model=UserListPaginatedResponse,
     dependencies=[Depends(require_permission("users.read"))],
 )
 async def list_users(
@@ -94,6 +68,7 @@ async def list_users(
     active_only: bool = Query(True, description="Filter active users only"),
     sort_by: str = Query("email", description="Sort field: email, first_name, last_name"),
     sort_dir: str = Query("asc", description="Sort direction: asc or desc"),
+    role_ids: str = Query("", description="Comma-separated role IDs to filter by"),
     db: AsyncSession = Depends(get_db),
 ):
     query = select(User).where(User.deleted_at.is_(None))
@@ -102,7 +77,8 @@ async def list_users(
         query = query.where(User.is_active.is_(True))
 
     if search:
-        like = f"%{search}%"
+        search_escaped = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        like = f"%{search_escaped}%"
         query = query.where(
             or_(
                 User.email.ilike(like),
@@ -110,6 +86,14 @@ async def list_users(
                 User.last_name.ilike(like),
             )
         )
+
+    # Filter by role IDs
+    if role_ids:
+        ids = [int(x) for x in role_ids.split(",") if x.strip().isdigit()]
+        if ids:
+            query = query.where(
+                User.id.in_(select(UserRole.user_id).where(UserRole.role_id.in_(ids)))
+            )
 
     # Count total
     count_q = select(func.count()).select_from(query.subquery())
@@ -129,10 +113,77 @@ async def list_users(
 
     result = await db.execute(query)
     users = result.scalars().all()
+    user_ids = [u.id for u in users]
+
+    # Batch-load roles for all users on this page
+    user_roles_map: dict[int, list[RoleBasic]] = {}
+    if user_ids:
+        role_result = await db.execute(
+            select(UserRole.user_id, Role)
+            .join(Role, Role.id == UserRole.role_id)
+            .where(UserRole.user_id.in_(user_ids))
+        )
+        for uid, role in role_result.all():
+            user_roles_map.setdefault(uid, []).append(
+                RoleBasic(id=role.id, slug=role.slug, name=role.name, color=role.color)
+            )
+
+    # Batch-compute impersonation immunity
+    immune_user_ids: set[int] = set()
+    if user_ids:
+        immune_perm = await db.execute(
+            select(Permission.id).where(Permission.code == "impersonation.immune")
+        )
+        immune_perm_id = immune_perm.scalar_one_or_none()
+
+        if immune_perm_id:
+            # Check via roles
+            immune_role_result = await db.execute(
+                select(RolePermission.role_id).where(RolePermission.permission_id == immune_perm_id)
+            )
+            immune_role_ids = {r for (r,) in immune_role_result.all()}
+            if immune_role_ids:
+                immune_via_role = await db.execute(
+                    select(UserRole.user_id).where(
+                        UserRole.user_id.in_(user_ids),
+                        UserRole.role_id.in_(immune_role_ids),
+                    )
+                )
+                immune_user_ids.update(r for (r,) in immune_via_role.all())
+
+            # Check via user permission overrides
+            immune_via_user = await db.execute(
+                select(UserPermission.user_id).where(
+                    UserPermission.user_id.in_(user_ids),
+                    UserPermission.permission_id == immune_perm_id,
+                    UserPermission.granted.is_(True),
+                )
+            )
+            immune_user_ids.update(r for (r,) in immune_via_user.all())
+
+            # Check via global permissions
+            global_immune = await db.execute(
+                select(GlobalPermission.granted).where(
+                    GlobalPermission.permission_id == immune_perm_id
+                )
+            )
+            global_immune_val = global_immune.scalar_one_or_none()
+            if global_immune_val is True:
+                immune_user_ids.update(user_ids)
+
+    # Build response items
+    items = []
+    for u in users:
+        item = UserListItem(
+            **_user_to_response(u).model_dump(),
+            roles=user_roles_map.get(u.id, []),
+            is_impersonation_immune=u.id in immune_user_ids,
+        )
+        items.append(item)
 
     pages = max(1, math.ceil(total / per_page))
-    return UserPaginatedResponse(
-        items=[_user_to_response(u) for u in users],
+    return UserListPaginatedResponse(
+        items=items,
         total=total,
         page=page,
         per_page=per_page,
@@ -159,7 +210,6 @@ async def create_user(
         first_name=data.first_name,
         last_name=data.last_name,
         auth_source=data.auth_source,
-        is_super_admin=data.is_super_admin,
         must_change_password=data.must_change_password,
         is_active=True,
     )
@@ -168,11 +218,6 @@ async def create_user(
 
     db.add(user)
     await db.flush()
-
-    # Sync super_admin role with flag
-    if data.is_super_admin:
-        await _sync_super_admin_role(db, user.id, True)
-        invalidate_permission_cache(user.id)
 
     await event_bus.emit(
         "user.registered",
@@ -216,10 +261,6 @@ async def update_user(
         user.last_name = data.last_name
     if data.is_active is not None:
         user.is_active = data.is_active
-    if data.is_super_admin is not None:
-        user.is_super_admin = data.is_super_admin
-        await _sync_super_admin_role(db, user.id, data.is_super_admin)
-        invalidate_permission_cache(user.id)
     if data.must_change_password is not None:
         user.must_change_password = data.must_change_password
 
@@ -261,7 +302,7 @@ async def update_user(
 )
 async def delete_user(
     user_id: int,
-    current_user=Depends(get_current_super_admin),
+    current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     if user_id == current_user.id:
@@ -336,37 +377,47 @@ async def _get_user_by_uuid(user_uuid: str, db: AsyncSession) -> User:
 
 
 async def _resolve_permissions(db: AsyncSession, user_id: int) -> list[ResolvedPermission]:
-    """Build the full resolved permission list for a user."""
-    # 1. All permissions
-    result = await db.execute(select(Permission).order_by(Permission.feature, Permission.code))
-    all_perms = result.scalars().all()
+    """Build the full resolved permission list for a user.
 
-    # 2. User's role IDs
-    result = await db.execute(select(UserRole.role_id).where(UserRole.user_id == user_id))
-    user_role_ids = [r for (r,) in result.all()]
+    Uses a dedicated REPEATABLE READ session for a consistent snapshot
+    across all queries (prevents race conditions during concurrent
+    permission modifications).
+    """
+    from ..database import async_session
 
-    # 3. Role-granted permission IDs
-    role_perm_ids: set[int] = set()
-    if user_role_ids:
-        from .models import RolePermission
-        result = await db.execute(
-            select(RolePermission.permission_id).where(
-                RolePermission.role_id.in_(user_role_ids)
+    async with async_session() as rr_db:
+        await rr_db.execute(text("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ"))
+
+        # 1. All permissions
+        result = await rr_db.execute(select(Permission).order_by(Permission.feature, Permission.code))
+        all_perms = result.scalars().all()
+
+        # 2. User's role IDs
+        result = await rr_db.execute(select(UserRole.role_id).where(UserRole.user_id == user_id))
+        user_role_ids = [r for (r,) in result.all()]
+
+        # 3. Role-granted permission IDs
+        role_perm_ids: set[int] = set()
+        if user_role_ids:
+            from .models import RolePermission
+            result = await rr_db.execute(
+                select(RolePermission.permission_id).where(
+                    RolePermission.role_id.in_(user_role_ids)
+                )
             )
+            role_perm_ids = {r for (r,) in result.all()}
+
+        # 4. User overrides
+        result = await rr_db.execute(
+            select(UserPermission).where(UserPermission.user_id == user_id)
         )
-        role_perm_ids = {r for (r,) in result.all()}
+        user_overrides: dict[int, bool] = {up.permission_id: up.granted for up in result.scalars().all()}
 
-    # 4. User overrides
-    result = await db.execute(
-        select(UserPermission).where(UserPermission.user_id == user_id)
-    )
-    user_overrides: dict[int, bool] = {up.permission_id: up.granted for up in result.scalars().all()}
+        # 5. Global permissions
+        result = await rr_db.execute(select(GlobalPermission))
+        global_perms: dict[int, bool] = {gp.permission_id: gp.granted for gp in result.scalars().all()}
 
-    # 5. Global permissions
-    result = await db.execute(select(GlobalPermission))
-    global_perms: dict[int, bool] = {gp.permission_id: gp.granted for gp in result.scalars().all()}
-
-    # 6. Resolve
+    # 6. Resolve (in memory, outside the session)
     resolved = []
     for perm in all_perms:
         user_ov = user_overrides.get(perm.id)
@@ -450,10 +501,6 @@ async def update_user_by_uuid(
         user.last_name = data.last_name
     if data.is_active is not None:
         user.is_active = data.is_active
-    if data.is_super_admin is not None:
-        user.is_super_admin = data.is_super_admin
-        await _sync_super_admin_role(db, user.id, data.is_super_admin)
-        invalidate_permission_cache(user.id)
     if data.must_change_password is not None:
         user.must_change_password = data.must_change_password
 
@@ -495,10 +542,25 @@ async def update_user_by_uuid(
 async def update_user_roles(
     user_uuid: str,
     data: UserRolesUpdateRequest,
+    current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Replace all roles for a user."""
     user = await _get_user_by_uuid(user_uuid, db)
+
+    # Only a user with roles.assign_super_admin can assign the super_admin role
+    if data.role_ids:
+        sa_role_result = await db.execute(
+            select(Role).where(Role.slug == settings.SUPER_ADMIN_ROLE_SLUG)
+        )
+        sa_role = sa_role_result.scalar_one_or_none()
+        if sa_role and sa_role.id in data.role_ids:
+            perms = await load_user_permissions(db, current_user.id)
+            if not perms.get("roles.assign_super_admin"):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Permission requise: roles.assign_super_admin",
+                )
 
     # Remove existing roles
     await db.execute(sa_delete(UserRole).where(UserRole.user_id == user.id))

@@ -33,6 +33,7 @@ Quand tu crees une feature :
 - Dark theme et light theme obligatoires (toute UI doit supporter les deux)
 - Decouverte dynamique des routes via `import.meta.glob`
 - **AUCUN style inline dans les TSX** (`style={{}}` interdit) — tous les styles dans des fichiers `.scss` uniquement
+  - **Exception unique** : `style={{ '--var-name': dbValue }}` est autorise pour injecter des valeurs dynamiques venant de la base de donnees (ex: couleur de role). Le style visuel reste dans les fichiers SCSS via `var(--var-name)`.
 
 ### Backend
 - FastAPI + Python 3.11
@@ -377,8 +378,10 @@ docker compose run --rm api alembic check
 | Commande | Description |
 |----------|-------------|
 | `/commit` | Procedure complete de commit : lints CI → alembic check → version bump → git add/commit |
+| `/issue` | Creer une issue dans `./issues/` : guide la redaction, check les logs Docker, formate le fichier |
 
 **Quand l'utilisateur demande un git add/commit** : toujours executer `/commit` au lieu de faire les etapes manuellement.
+**Quand l'utilisateur signale un bug ou veut noter un probleme** : utiliser `/issue` pour creer le fichier formate dans `./issues/`.
 
 ## Regles de dev
 

@@ -114,7 +114,6 @@ async def seed():
 
         if existing_admin:
             admin = existing_admin
-            admin.is_super_admin = True
         else:
             admin_parts = admin_email.split("@")[0].split(".")
             admin_first = admin_parts[0].capitalize() if len(admin_parts) > 0 else "Admin"
@@ -124,7 +123,6 @@ async def seed():
                 first_name=admin_first,
                 last_name=admin_last,
                 auth_source="intranet" if app_settings.INTRANET_EMAIL_DOMAIN and admin_email.endswith(f"@{app_settings.INTRANET_EMAIL_DOMAIN}") else "local",
-                is_super_admin=True,
                 must_change_password=False,
                 created_at=ago(120),
             )
@@ -183,7 +181,6 @@ async def seed():
                 first_name=u["first_name"],
                 last_name=u["last_name"],
                 auth_source=u["auth_source"],
-                is_super_admin=u["is_super_admin"],
                 must_change_password=False,
                 created_at=ago(u["created_days_ago"]),
             )

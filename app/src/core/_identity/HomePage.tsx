@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Layout from '../../core/Layout'
 import { useAuth } from '../../core/AuthContext'
+import { usePermission } from '../PermissionContext'
 import { useScrollReveal, useCountUp } from '../../core/hooks'
 import api from '../../api'
 import './_identity.scss'
@@ -16,6 +17,7 @@ interface Stats {
 export default function Home() {
   const { t } = useTranslation('_identity')
   const { user } = useAuth()
+  const { can } = usePermission()
   const [stats, setStats] = useState<Stats>({ active_users: 0, unread_notifications: 0, invitations_sent: 0 })
   const [loading, setLoading] = useState(true)
 
@@ -155,7 +157,7 @@ export default function Home() {
                 </div>
               </div>
             </Link>
-            {user?.is_super_admin && (
+            {can('users.read') && (
               <Link to="/admin/users" className="card-link-item reveal-child card-hover-lift">
                 <div className="unified-card">
                   <div className="card-link-item-content">

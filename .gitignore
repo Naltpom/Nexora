@@ -75,3 +75,5 @@ docs/analyses
 !.claude/CLAUDE.md
 !.claude/commands/
 !.claude/commands/**
+
+issues/

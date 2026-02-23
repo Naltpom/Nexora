@@ -195,7 +195,6 @@ async def authenticate_user(
                     last_name=intranet_data["last_name"],
                     auth_source="intranet",
                     is_active=True,
-                    is_super_admin=False,
                     must_change_password=False,
                 )
                 db.add(user)

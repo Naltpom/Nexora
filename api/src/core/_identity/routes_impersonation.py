@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
 from ..events import event_bus
-from ..permissions import require_permission
+from ..permissions import load_user_permissions, require_permission
 from ..security import (
     create_access_token,
     create_impersonation_token,
@@ -67,10 +67,11 @@ async def start_impersonation(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Impossible d'impersonifier un utilisateur inactif",
         )
-    if target.is_super_admin:
+    target_perms = await load_user_permissions(db, target.id)
+    if target_perms.get("impersonation.immune"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Impossible d'impersonifier un autre super administrateur",
+            detail="Cet utilisateur ne peut pas etre impersonifie",
         )
 
     session_id = str(uuid.uuid4())
@@ -215,10 +216,11 @@ async def switch_impersonation(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Impossible d'impersonifier un utilisateur inactif",
         )
-    if target.is_super_admin:
+    target_perms = await load_user_permissions(db, target.id)
+    if target_perms.get("impersonation.immune"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Impossible d'impersonifier un autre super administrateur",
+            detail="Cet utilisateur ne peut pas etre impersonifie",
         )
 
     # Start new session
@@ -310,7 +312,6 @@ async def search_users_for_impersonation(
         admin_id = current_user.id
 
     # Check that the real admin has impersonation.read
-    from ..permissions import load_user_permissions
     perms = await load_user_permissions(db, admin_id)
     if perms.get("impersonation.read") is not True:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission requise: impersonation.read")
@@ -324,7 +325,6 @@ async def search_users_for_impersonation(
         .where(
             User.id.notin_(excluded_ids),
             User.is_active.is_(True),
-            User.is_super_admin.is_(False),
             or_(
                 User.email.ilike(like),
                 User.first_name.ilike(like),

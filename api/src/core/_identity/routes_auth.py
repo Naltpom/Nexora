@@ -116,10 +116,12 @@ async def refresh_token(
         )
     user_id = int(payload.get("sub", 0))
 
-    # Look up session by token hash
+    # Look up session by token hash (FOR UPDATE prevents concurrent reuse)
     old_hash = hash_refresh_token(request.refresh_token)
     sess_result = await db.execute(
-        select(UserSession).where(UserSession.refresh_token_hash == old_hash)
+        select(UserSession)
+        .where(UserSession.refresh_token_hash == old_hash)
+        .with_for_update()
     )
     old_session = sess_result.scalar_one_or_none()
 
@@ -183,7 +185,6 @@ async def get_me(
         last_name=current_user.last_name,
         auth_source=current_user.auth_source,
         is_active=current_user.is_active,
-        is_super_admin=current_user.is_super_admin,
         must_change_password=current_user.must_change_password,
         preferences=current_user.preferences,
         last_login=current_user.last_login,
@@ -233,7 +234,6 @@ async def update_me(
         last_name=user.last_name,
         auth_source=user.auth_source,
         is_active=user.is_active,
-        is_super_admin=user.is_super_admin,
         must_change_password=user.must_change_password,
         preferences=user.preferences,
         last_login=user.last_login,

@@ -38,7 +38,6 @@ interface UserDetail {
   last_name: string
   auth_source: string
   is_active: boolean
-  is_super_admin: boolean
   last_login: string | null
   last_active: string | null
   created_at: string
@@ -53,7 +52,7 @@ interface UserDetail {
 export default function UserDetailPage() {
   const { t } = useTranslation('_identity')
   const { uuid } = useParams<{ uuid: string }>()
-  const { can } = usePermission()
+  const { can, refreshPermissions } = usePermission()
 
   const [user, setUser] = useState<UserDetail | null>(null)
   const [allRoles, setAllRoles] = useState<RoleBasic[]>([])
@@ -68,7 +67,6 @@ export default function UserDetailPage() {
     first_name: '',
     last_name: '',
     is_active: true,
-    is_super_admin: false,
   })
 
   const showMessage = (type: 'success' | 'error', text: string) => {
@@ -89,7 +87,6 @@ export default function UserDetailPage() {
         first_name: u.first_name,
         last_name: u.last_name,
         is_active: u.is_active,
-        is_super_admin: u.is_super_admin,
       })
       setAllRoles(rolesRes.data.map((r: any) => ({ id: r.id, name: r.name, description: r.description })))
     } catch {
@@ -129,6 +126,7 @@ export default function UserDetailPage() {
     try {
       await api.put(`/users/by-uuid/${uuid}/roles`, { role_ids: newIds })
       await loadUser()
+      await refreshPermissions()
     } catch (err: any) {
       showMessage('error', err.response?.data?.detail || t('common.error'))
     }
@@ -157,6 +155,7 @@ export default function UserDetailPage() {
         await api.delete(`/users/by-uuid/${uuid}/permissions/override/${perm.permission_id}`)
       }
       await loadUser()
+      await refreshPermissions()
     } catch (err: any) {
       showMessage('error', err.response?.data?.detail || t('common.error'))
     }
@@ -235,9 +234,6 @@ export default function UserDetailPage() {
             <span className={`badge ${user.is_active ? 'badge-success' : 'badge-warning'} text-xs`}>
               {user.is_active ? t('common.active') : t('common.inactive')}
             </span>
-            {user.is_super_admin && (
-              <span className="badge badge-info text-xs">{t('common.admin')}</span>
-            )}
             <span className="badge badge-secondary text-xs">
               {user.auth_source}
             </span>
@@ -286,13 +282,6 @@ export default function UserDetailPage() {
               </label>
             </div>
             <div className="ud-toggle-row">
-              <label className="ud-toggle-label">
-                <span className="text-gray-500-sm font-medium">{t('user_detail.field_admin')}</span>
-                <label className="toggle">
-                  <input type="checkbox" checked={form.is_super_admin} onChange={e => setForm(f => ({ ...f, is_super_admin: e.target.checked }))} />
-                  <span className="toggle-slider" />
-                </label>
-              </label>
               <label className="ud-toggle-label">
                 <span className="text-gray-500-sm font-medium">{t('user_detail.field_active')}</span>
                 <label className="toggle">

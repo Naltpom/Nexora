@@ -43,6 +43,10 @@
   gap: 4px;
 }
 
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
 .flex-row-sm {
   display: flex;
   gap: 8px;
@@ -1301,6 +1305,28 @@
 }
 
 [data-theme="dark"] .color-picker-input {
+  border-color: rgba(255, 255, 255, 0.15);
+  background: #1e1b2e;
+}
+
+.color-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  input[type="color"] {
+    width: 44px;
+    min-width: 44px;
+    height: 38px;
+    padding: 2px;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+}
+
+[data-theme="dark"] .color-picker-row input[type="color"] {
   border-color: rgba(255, 255, 255, 0.15);
   background: #1e1b2e;
 }

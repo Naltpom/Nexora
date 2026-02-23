@@ -15,6 +15,7 @@ interface Role {
   slug: string
   name: string
   description: string
+  color: string | null
   permissions: string[]
   created_at: string
   updated_at: string
@@ -44,14 +45,14 @@ interface PermsPaginated {
 export default function RolesAdminPage() {
   const { t } = useTranslation('_identity')
   const { confirm } = useConfirm()
-  const { can } = usePermission()
+  const { can, refreshPermissions } = usePermission()
   const [roles, setRoles] = useState<Role[]>([])
   const [loading, setLoading] = useState(true)
 
   // Modal state (create / edit role)
   const [showModal, setShowModal] = useState(false)
   const [editingRole, setEditingRole] = useState<Role | null>(null)
-  const [form, setForm] = useState({ name: '', slug: '', description: '' })
+  const [form, setForm] = useState({ name: '', slug: '', description: '', color: '#6B7280' })
   const [formError, setFormError] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -137,14 +138,14 @@ export default function RolesAdminPage() {
 
   const openCreate = () => {
     setEditingRole(null)
-    setForm({ name: '', slug: '', description: '' })
+    setForm({ name: '', slug: '', description: '', color: '#6B7280' })
     setFormError('')
     setShowModal(true)
   }
 
   const openEdit = (role: Role) => {
     setEditingRole(role)
-    setForm({ name: role.name, slug: role.slug, description: role.description })
+    setForm({ name: role.name, slug: role.slug, description: role.description, color: role.color || '#6B7280' })
     setFormError('')
     setShowModal(true)
   }
@@ -155,9 +156,9 @@ export default function RolesAdminPage() {
     setSaving(true)
     try {
       if (editingRole) {
-        await api.put(`/roles/${editingRole.id}`, { name: form.name, description: form.description })
+        await api.put(`/roles/${editingRole.id}`, { name: form.name, description: form.description, color: form.color })
       } else {
-        await api.post('/roles/', { name: form.name, slug: form.slug || undefined, description: form.description })
+        await api.post('/roles/', { name: form.name, slug: form.slug || undefined, description: form.description, color: form.color })
       }
       setShowModal(false)
       loadRoles()
@@ -254,6 +255,7 @@ export default function RolesAdminPage() {
           : r.permissions.filter(c => c !== perm.code)
         return { ...r, permissions: newPermissions }
       }))
+      await refreshPermissions()
     } catch {
       console.error('Erreur lors du toggle de la permission')
     } finally {
@@ -385,7 +387,12 @@ export default function RolesAdminPage() {
                         onClick={isPermsMode ? () => openPerms(role) : undefined}
                       >
                         <td>
-                          <strong>{role.name}</strong>
+                          <span
+                            className="badge-role"
+                            {...(role.color ? { style: { '--role-color': role.color } as React.CSSProperties } : {})}
+                          >
+                            {role.name}
+                          </span>
                           <div className="text-muted-xs">{role.slug}</div>
                         </td>
 
@@ -621,6 +628,22 @@ export default function RolesAdminPage() {
                     rows={3}
                     placeholder={t('roles_admin.modal_description_placeholder')}
                   />
+                </div>
+                <div className="form-group">
+                  <label>{t('roles_admin.modal_color_label')}</label>
+                  <div className="color-picker-row">
+                    <input
+                      type="color"
+                      value={form.color}
+                      onChange={(e) => setForm({ ...form, color: e.target.value })}
+                    />
+                    <span
+                      className="badge-role"
+                      {...(form.color ? { style: { '--role-color': form.color } as React.CSSProperties } : {})}
+                    >
+                      {form.name || 'Preview'}
+                    </span>
+                  </div>
                 </div>
               </div>
               <div className="modal-footer">

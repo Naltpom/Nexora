@@ -20,7 +20,8 @@ async def global_search(
     db: AsyncSession = Depends(get_db),
 ):
     """Search users by name or email."""
-    like = f"%{q}%"
+    q_escaped = q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    like = f"%{q_escaped}%"
     result = await db.execute(
         select(User)
         .where(

@@ -212,3 +212,21 @@
 [data-theme="dark"] .badge-status-offline::before {
   background: #6B7280;
 }
+
+/* Role badge — color driven by --role-color CSS variable */
+.badge-role {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--role-color, var(--gray-400)) 15%, transparent);
+  color: var(--role-color, var(--gray-600));
+}
+
+[data-theme="dark"] .badge-role {
+  background: color-mix(in srgb, var(--role-color, var(--gray-400)) 25%, transparent);
+  color: color-mix(in srgb, var(--role-color, var(--gray-400)) 70%, white);
+}

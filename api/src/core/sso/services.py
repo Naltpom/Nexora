@@ -74,7 +74,6 @@ async def find_or_create_user_from_sso(
             auth_source=provider,
             password_hash=None,
             is_active=True,
-            is_super_admin=False,
             must_change_password=False,
         )
         db.add(user)

@@ -141,6 +141,14 @@ async def get_current_user(
         if not session:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Session d'impersonation expirée")
 
+        # CRITICAL-03: verify the original admin is still active and has impersonation permission
+        admin_result = await db.execute(select(User).where(User.id == int(impersonated_by)))
+        admin_user = admin_result.scalar_one_or_none()
+        if admin_user is None or not admin_user.is_active or admin_user.deleted_at is not None:
+            session.ended_at = datetime.now(timezone.utc)
+            await db.flush()
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Administrateur source désactivé")
+
         session.last_activity_at = datetime.now(timezone.utc)
         await db.flush()
 
@@ -152,36 +160,6 @@ async def get_current_user(
     user._impersonated_by = impersonated_by
     user._impersonation_session_id = payload.get("impersonation_session_id")
     return user
-
-
-async def _is_super_admin(db: AsyncSession, user) -> bool:
-    """Check if user has super_admin privileges via RBAC role (not the legacy flag)."""
-    from ._identity.models import Role, UserRole
-    result = await db.execute(
-        select(Role.slug)
-        .join(UserRole, UserRole.role_id == Role.id)
-        .where(UserRole.user_id == user.id, Role.slug == settings.SUPER_ADMIN_ROLE_SLUG)
-    )
-    return result.scalar_one_or_none() is not None
-
-
-async def get_current_super_admin(
-    current_user=Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    if is_impersonating(current_user):
-        original_admin_id = get_original_admin_id(current_user)
-        if original_admin_id:
-            from ._identity.models import User
-
-            result = await db.execute(select(User).where(User.id == original_admin_id))
-            original_admin = result.scalar_one_or_none()
-            if original_admin and await _is_super_admin(db, original_admin):
-                return current_user
-
-    if not await _is_super_admin(db, current_user):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès réservé aux super administrateurs")
-    return current_user
 
 
 def is_impersonating(user) -> bool:

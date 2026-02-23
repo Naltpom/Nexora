@@ -5,8 +5,16 @@ import Layout from '../../core/Layout'
 import { useAuth } from '../../core/AuthContext'
 import { useConfirm } from '../../core/ConfirmModal'
 import { usePermission } from '../PermissionContext'
+import MultiSelect, { MultiSelectOption } from '../../core/MultiSelect'
 import api from '../../api'
 import './_identity.scss'
+
+interface RoleCompact {
+  id: number
+  slug: string
+  name: string
+  color: string | null
+}
 
 interface User {
   id: number
@@ -15,10 +23,11 @@ interface User {
   first_name: string
   last_name: string
   is_active: boolean
-  is_super_admin: boolean
   must_change_password: boolean
   last_login: string | null
   last_active: string | null
+  roles: RoleCompact[]
+  is_impersonation_immune: boolean
 }
 
 interface Invitation {
@@ -37,9 +46,13 @@ type UsersTab = 'users' | 'invitations'
 export default function Users() {
   const { t } = useTranslation('_identity')
   const navigate = useNavigate()
-  const { startImpersonation } = useAuth()
+  const { user: currentUser, startImpersonation } = useAuth()
   const { confirm, alert } = useConfirm()
-  const { can } = usePermission()
+  const { can, refreshPermissions } = usePermission()
+
+  // Role filter
+  const [availableRoles, setAvailableRoles] = useState<MultiSelectOption[]>([])
+  const [filterRoleIds, setFilterRoleIds] = useState<string[]>([])
 
   // Tab state synced with URL
   const [searchParams, setSearchParams] = useSearchParams()
@@ -142,31 +155,48 @@ export default function Users() {
     password: '',
     first_name: '',
     last_name: '',
-    is_super_admin: false,
     must_change_password: false,
   })
   const [createError, setCreateError] = useState('')
+
+  // Load available roles for filter
+  useEffect(() => {
+    if (can('roles.read')) {
+      api.get('/roles/').then(res => {
+        setAvailableRoles((res.data || []).map((r: any) => ({
+          value: String(r.id),
+          label: r.name,
+          color: r.color || undefined,
+        })))
+      }).catch(() => { /* ignore */ })
+    }
+  }, [])
 
   useEffect(() => {
     loadData()
   }, [])
 
-  const loadData = async (p?: number, s?: string, pp?: number, sb?: string, sd?: string, inactive?: boolean) => {
+  const loadData = async (p?: number, s?: string, pp?: number, sb?: string, sd?: string, inactive?: boolean, roles?: string[]) => {
     const currentPage = p ?? page
     const currentSearch = s ?? search
     const currentPerPage = pp ?? perPage
     const currentSortBy = sb ?? sortBy
     const currentSortDir = sd ?? sortDir
     const currentShowInactive = inactive ?? showInactive
+    const currentRoleIds = roles ?? filterRoleIds
     try {
-      const usersRes = await api.get('/users/', { params: {
+      const params: Record<string, any> = {
         page: currentPage,
         per_page: currentPerPage,
         search: currentSearch,
         active_only: !currentShowInactive,
         sort_by: currentSortBy,
         sort_dir: currentSortDir,
-      } })
+      }
+      if (currentRoleIds.length > 0) {
+        params.role_ids = currentRoleIds.join(',')
+      }
+      const usersRes = await api.get('/users/', { params })
       setUsers(usersRes.data.items)
       setTotal(usersRes.data.total)
       setTotalPages(usersRes.data.pages)
@@ -209,6 +239,12 @@ export default function Users() {
     setShowInactive(next)
     setPage(1)
     loadData(1, undefined, undefined, undefined, undefined, next)
+  }
+
+  const handleFilterRolesChange = (values: string[]) => {
+    setFilterRoleIds(values)
+    setPage(1)
+    loadData(1, undefined, undefined, undefined, undefined, undefined, values)
   }
 
   const goToPage = (p: number) => {
@@ -263,9 +299,6 @@ export default function Users() {
         if (field === 'is_active') {
           oldDisplay = user.is_active ? t('common.active') : t('common.inactive')
           newDisplay = newVal ? t('common.active') : t('common.inactive')
-        } else if (field === 'is_super_admin') {
-          oldDisplay = user.is_super_admin ? t('common.yes') : t('common.no')
-          newDisplay = newVal ? t('common.yes') : t('common.no')
         }
         items.push({ userId, userName, field, oldValue: oldDisplay, newValue: newDisplay })
       }
@@ -279,7 +312,6 @@ export default function Users() {
       first_name: t('users_admin.field_label_first_name'),
       last_name: t('users_admin.field_label_last_name'),
       is_active: t('users_admin.field_label_status'),
-      is_super_admin: t('users_admin.field_label_admin'),
     }
     return labels[field] || field
   }
@@ -299,6 +331,7 @@ export default function Users() {
       setUserSnapshots({})
       setShowRecapModal(false)
       await loadData()
+      await refreshPermissions()
     } catch (err: any) {
       await alert({ message: err.response?.data?.detail || t('users_admin.save_error'), variant: 'danger' })
     } finally {
@@ -313,7 +346,6 @@ export default function Users() {
       password: '',
       first_name: '',
       last_name: '',
-      is_super_admin: false,
       must_change_password: false,
     })
     setCreateError('')
@@ -541,6 +573,14 @@ export default function Users() {
                   />
                   {t('users_admin.show_inactive')}
                 </label>
+                {can('roles.read') && availableRoles.length > 0 && (
+                  <MultiSelect
+                    options={availableRoles}
+                    values={filterRoleIds}
+                    onChange={handleFilterRolesChange}
+                    placeholder={t('users_admin.filter_roles_placeholder')}
+                  />
+                )}
                 <div className="unified-search-box">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
@@ -582,7 +622,7 @@ export default function Users() {
                     <th className="col-name th-sortable" onClick={() => handleSort('last_name')}>
                       {t('users_admin.th_last_name')} {sortBy === 'last_name' && <span className="sort-indicator">{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span>}
                     </th>
-                    <th>{t('users_admin.th_admin')}</th>
+                    <th>{t('users_admin.th_roles')}</th>
                     <th>{t('users_admin.th_active')}</th>
                     <th>{t('users_admin.th_last_activity')}</th>
                     <th>{t('users_admin.th_status')}</th>
@@ -613,14 +653,18 @@ export default function Users() {
                           onChange={(e) => setFieldChange(u.id, 'last_name', e.target.value)}
                         />
                       </td>
-                      <td className={isFieldModified(u.id, 'is_super_admin') ? 'cell-modified' : ''}>
-                        <button
-                          className={`badge-admin ${getEffectiveValue(u, 'is_super_admin') ? 'badge-admin-on' : 'badge-admin-off'}`}
-                          onClick={() => setFieldChange(u.id, 'is_super_admin', !getEffectiveValue(u, 'is_super_admin'))}
-                          disabled={!can('users.update')}
-                        >
-                          {getEffectiveValue(u, 'is_super_admin') ? t('common.admin') : t('common.no')}
-                        </button>
+                      <td>
+                        <div className="flex-row-xs flex-wrap">
+                          {u.roles.map(r => (
+                            <span
+                              key={r.id}
+                              className="badge-role"
+                              {...(r.color ? { style: { '--role-color': r.color } as React.CSSProperties } : {})}
+                            >
+                              {r.name}
+                            </span>
+                          ))}
+                        </div>
                       </td>
                       <td className={isFieldModified(u.id, 'is_active') ? 'cell-modified' : ''}>
                         <button
@@ -659,8 +703,8 @@ export default function Users() {
                             </svg>
                           </Link>
 
-                          {/* Impersonate button - hidden for super admins */}
-                          {can('impersonation.start') && !u.is_super_admin ? (
+                          {/* Impersonate button - hidden for immune users and self */}
+                          {can('impersonation.start') && !u.is_impersonation_immune && u.id !== currentUser?.id ? (
                             <button
                               className="btn-icon btn-icon-primary impersonate-btn"
                               onClick={() => handleImpersonate(u)}
@@ -840,14 +884,6 @@ export default function Users() {
                   </div>
                 </div>
                 <div className="form-group flex-row-xl">
-                  <label className="flex-center">
-                    <input
-                      type="checkbox"
-                      checked={createForm.is_super_admin}
-                      onChange={(e) => setCreateForm({ ...createForm, is_super_admin: e.target.checked })}
-                    />
-                    {t('users_admin.modal_create_super_admin')}
-                  </label>
                   <label className="flex-center">
                     <input
                       type="checkbox"

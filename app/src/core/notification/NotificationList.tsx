@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Layout from '../../core/Layout'
-import { useAuth } from '../../core/AuthContext'
+import { usePermission } from '../PermissionContext'
 import { useNotifications } from './NotificationContext'
 import { useConfirm } from '../../core/ConfirmModal'
 import api from '../../api'
@@ -58,15 +58,14 @@ interface AdminNotificationItem extends NotificationItem {
 
 export default function NotificationList() {
   const { t } = useTranslation('notification')
-  const { user } = useAuth()
-  const isSuperAdmin = user?.is_super_admin ?? false
+  const { can } = usePermission()
 
   return (
     <Layout
       breadcrumb={[{ label: t('breadcrumb_home'), path: '/' }, { label: t('breadcrumb_notifications') }]}
       title={t('breadcrumb_notifications')}
     >
-      {isSuperAdmin ? <AdminNotificationList /> : <UserNotificationList />}
+      {can('notification.admin') ? <AdminNotificationList /> : <UserNotificationList />}
     </Layout>
   )
 }

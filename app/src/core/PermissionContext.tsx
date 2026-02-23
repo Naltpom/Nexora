@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import api from '../api'
+import { useAuth } from './AuthContext'
 
 interface PermissionContextType {
   permissions: string[]
@@ -15,6 +16,7 @@ const PermissionContext = createContext<PermissionContextType | undefined>(undef
 export function PermissionProvider({ children }: { children: ReactNode }) {
   const [permissions, setPermissions] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
+  const { user } = useAuth()
 
   const fetchPermissions = async () => {
     try {
@@ -35,7 +37,7 @@ export function PermissionProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     fetchPermissions()
-  }, [])
+  }, [user?.id])
 
   const can = (code: string): boolean => permissions.includes(code)
   const canAny = (...codes: string[]): boolean => codes.some(c => permissions.includes(c))
