@@ -158,9 +158,9 @@ Cela s'applique dans **tous les contextes** :
 
 | # | Check | Feature | Type | Dependances | Chemins API | Chemins APP | Notes |
 |---|-------|---------|------|-------------|-------------|-------------|-------|
-| 4 | [ ] | `sso` | parent | _identity | `api/src/core/sso/` | `app/src/core/sso/` | OAuth2, SSOButtons, SSOCallbackPage |
-| 5 | [ ] | `sso.github` | child | sso | `api/src/core/sso/github/` | (dans sso/) | GitHub OAuth2, config SSO_GITHUB_* |
-| 6 | [ ] | `sso.google` | child | sso | `api/src/core/sso/google/` | (dans sso/) | Google OAuth2, config SSO_GOOGLE_* |
+| 4 | [x] | `sso` | parent | _identity | `api/src/core/sso/` | `app/src/core/sso/` | OAuth2, SSOButtons, SSOCallbackPage — 1 perm (`sso.link`), 8 events, 9 endpoints, hardening comptes desactives, auto-link audit, modal confirm i18n |
+| 5 | [x] | `sso.github` | child | sso | `api/src/core/sso/github/` | (dans sso/) | GitHub OAuth2, config SSO_GITHUB_* — state JWTError, perm sso.link sur /link, IP dans audit |
+| 6 | [x] | `sso.google` | child | sso | `api/src/core/sso/google/` | (dans sso/) | Google OAuth2, config SSO_GOOGLE_* — state JWTError, perm sso.link sur /link, IP dans audit |
 
 ### Phase 3 — Securite MFA
 

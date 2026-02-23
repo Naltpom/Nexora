@@ -4,13 +4,14 @@ import logging
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from jose import jwt
+from jose import JWTError, jwt
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...config import settings
 from ...database import get_db
 from ...events import event_bus
+from ...permissions import require_permission
 from ...security import get_current_user
 from ..models import SSOAccount
 from ..schemas import SSOAccountResponse, SSOAuthorizeResponse, SSOCallbackRequest, SSOCallbackResponse
@@ -55,15 +56,15 @@ async def github_callback(
                 settings.SECRET_KEY,
                 algorithms=[settings.ALGORITHM],
             )
-            if payload.get("provider") != "github":
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="State SSO invalide",
-                )
-        except Exception:
+        except JWTError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="State SSO invalide ou expire",
+            )
+        if payload.get("provider") != "github":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="State SSO invalide",
             )
 
     # Exchange code for user info
@@ -117,7 +118,11 @@ async def github_callback(
     return SSOCallbackResponse(is_new_user=is_new, **result)
 
 
-@router.post("/link", response_model=SSOAccountResponse)
+@router.post(
+    "/link",
+    response_model=SSOAccountResponse,
+    dependencies=[Depends(require_permission("sso.link"))],
+)
 async def github_link(
     request: SSOCallbackRequest,
     req: Request,

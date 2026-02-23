@@ -1,6 +1,4 @@
 {
-  "continuer_avec_google": "Continue with Google",
-  "continuer_avec_github": "Continue with GitHub",
   "continuer_avec_provider": "Continue with {{label}}",
   "erreur_connexion_provider": "Error connecting with {{provider}}.",
   "parametres_callback_manquants": "Missing callback parameters.",
@@ -10,6 +8,7 @@
   "echec_connexion": "Login failed",
   "retour_connexion": "Back to login",
   "erreur_chargement_comptes_lies": "Error loading linked accounts.",
+  "confirmer_delier_titre": "Unlink external account",
   "confirmer_delier_compte": "Are you sure you want to unlink your account {{email}} ({{provider}})?",
   "erreur_suppression_lien": "Error removing link.",
   "erreur_liaison_provider": "Error linking {{provider}}.",

@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .._identity.models import User
+from ..events import event_bus
 from ..security import create_access_token, create_mfa_token, create_refresh_token
 from .models import SSOAccount
 
@@ -91,6 +92,7 @@ async def find_or_create_user_from_sso(
         is_new_user = True
 
     # Create SSO account link
+    auto_linked = not is_new_user  # existing user found by email → auto-link
     sso_account = SSOAccount(
         user_id=user.id,
         provider=provider,
@@ -104,6 +106,22 @@ async def find_or_create_user_from_sso(
 
     user.last_login = datetime.now(timezone.utc)
     await db.flush()
+
+    # Audit: emit sso.account_linked when auto-linking an existing user by email
+    if auto_linked:
+        await event_bus.emit(
+            "sso.account_linked",
+            db=db,
+            actor_id=user.id,
+            resource_type="sso_account",
+            resource_id=sso_account.id,
+            payload={
+                "provider": provider,
+                "provider_email": email,
+                "provider_user_id": provider_user_id,
+                "auto_linked": True,
+            },
+        )
 
     return user, is_new_user
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import api from '../../api'
+import { useConfirm } from '../ConfirmContext'
 import './sso.scss'
 
 interface SSOAccount {
@@ -21,6 +22,7 @@ interface SSOProvider {
 
 export default function SSOAccountLinks() {
   const { t, i18n } = useTranslation('sso')
+  const { confirm } = useConfirm()
   const [accounts, setAccounts] = useState<SSOAccount[]>([])
   const [providers, setProviders] = useState<SSOProvider[]>([])
   const [loading, setLoading] = useState(true)
@@ -52,9 +54,12 @@ export default function SSOAccountLinks() {
   }, [])
 
   const handleUnlink = async (account: SSOAccount) => {
-    const confirmed = window.confirm(
-      t('confirmer_delier_compte', { email: account.provider_email || account.provider, provider: account.provider })
-    )
+    const confirmed = await confirm({
+      title: t('confirmer_delier_titre'),
+      message: t('confirmer_delier_compte', { email: account.provider_email || account.provider, provider: account.provider }),
+      confirmText: t('delier'),
+      variant: 'danger',
+    })
     if (!confirmed) return
 
     setUnlinkingId(account.id)

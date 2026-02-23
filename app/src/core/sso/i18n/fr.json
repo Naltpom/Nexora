@@ -1,6 +1,4 @@
 {
-  "continuer_avec_google": "Continuer avec Google",
-  "continuer_avec_github": "Continuer avec GitHub",
   "continuer_avec_provider": "Continuer avec {{label}}",
   "erreur_connexion_provider": "Erreur lors de la connexion {{provider}}.",
   "parametres_callback_manquants": "Parametres de callback manquants.",
@@ -10,6 +8,7 @@
   "echec_connexion": "Echec de la connexion",
   "retour_connexion": "Retour a la connexion",
   "erreur_chargement_comptes_lies": "Erreur lors du chargement des comptes lies.",
+  "confirmer_delier_titre": "Delier le compte externe",
   "confirmer_delier_compte": "Voulez-vous vraiment delier votre compte {{email}} ({{provider}}) ?",
   "erreur_suppression_lien": "Erreur lors de la suppression du lien.",
   "erreur_liaison_provider": "Erreur lors de la liaison {{provider}}.",

@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026.02.35
+
+### sso (revue + corrections)
+
+- **Permission `sso.link`** ajoutee sur `POST /sso/google/link` et `POST /sso/github/link` — coherence avec GET/DELETE `/sso/accounts`
+- **State validation** : `except JWTError` au lieu de `except Exception` — le check de provider mismatch n'est plus avale par le catch generique
+- **IP dans payload `sso.login`** : Google inclut desormais l'IP comme GitHub — audit trail coherent
+- **Permissions mortes retirees** : `sso.google.login` et `sso.github.login` supprimees des manifests (declarees mais jamais verifiees)
+- **Auto-link audite** : emission `sso.account_linked` (avec `auto_linked: true`) quand un user existant est lie automatiquement par email
+- **Modal localisee** : `window.confirm()` remplace par `useConfirm()` (ConfirmModal i18n) dans SSOAccountLinks
+- **i18n cleanup** : cles inutilisees `continuer_avec_google` / `continuer_avec_github` supprimees
+
 ## 2026.02.34
 
 ### event (refonte)

@@ -4,13 +4,14 @@ import logging
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from jose import jwt
+from jose import JWTError, jwt
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...config import settings
 from ...database import get_db
 from ...events import event_bus
+from ...permissions import require_permission
 from ...security import get_current_user
 from ..models import SSOAccount
 from ..schemas import SSOAccountResponse, SSOAuthorizeResponse, SSOCallbackRequest, SSOCallbackResponse
@@ -45,6 +46,8 @@ async def google_callback(
     db: AsyncSession = Depends(get_db),
 ):
     """Echange le code d'autorisation Google OAuth2 contre des tokens."""
+    ip = request.client.host if request.client else "unknown"
+
     # Validate state if provided
     if body.state:
         try:
@@ -53,22 +56,21 @@ async def google_callback(
                 settings.SECRET_KEY,
                 algorithms=[settings.ALGORITHM],
             )
-            if payload.get("provider") != "google":
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="State SSO invalide",
-                )
-        except Exception:
+        except JWTError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="State SSO invalide ou expire",
+            )
+        if payload.get("provider") != "google":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="State SSO invalide",
             )
 
     # Exchange code for user info
     try:
         user_info = await exchange_google_code(body.code)
     except Exception:
-        ip = request.client.host if request.client else "unknown"
         logger.warning("sso.login_failed provider=google ip=%s", ip)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -99,6 +101,7 @@ async def google_callback(
             "provider": "google",
             "email": user_info["email"],
             "provider_user_id": user_info["provider_user_id"],
+            "ip": ip,
         },
     )
 
@@ -115,7 +118,11 @@ async def google_callback(
     return SSOCallbackResponse(is_new_user=is_new, **result)
 
 
-@router.post("/link", response_model=SSOAccountResponse)
+@router.post(
+    "/link",
+    response_model=SSOAccountResponse,
+    dependencies=[Depends(require_permission("sso.link"))],
+)
 async def google_link(
     body: SSOCallbackRequest,
     request: Request,
