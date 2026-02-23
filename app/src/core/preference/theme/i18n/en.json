@@ -1,9 +1,9 @@
 {
-  "section_title": "",
-  "label_mode": "",
-  "btn_light": "",
-  "btn_dark": "",
-  "label_wallpaper": "",
-  "btn_choose_wallpaper": "",
-  "hint_shortcut": ""
+  "section_title": "Theme & Appearance",
+  "label_mode": "Mode",
+  "btn_light": "Light",
+  "btn_dark": "Dark",
+  "label_wallpaper": "Wallpaper",
+  "btn_choose_wallpaper": "Choose a wallpaper",
+  "hint_shortcut": "or Alt + T"
 }

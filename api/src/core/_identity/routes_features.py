@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
+from ..events import event_bus
 from ..permissions import require_permission
 from ..security import get_current_user
 from .models import FeatureState
@@ -93,6 +94,15 @@ async def toggle_feature(
         registry.toggle(fname, data.active)
 
     await db.flush()
+
+    await event_bus.emit(
+        "admin.feature_toggled",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="feature",
+        resource_id=0,
+        payload={"feature": name, "active": data.active, "cascaded": names_to_toggle[1:], "toggled_by": current_user.email},
+    )
 
     return {"name": name, "active": data.active, "cascaded": names_to_toggle[1:]}
 

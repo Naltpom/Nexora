@@ -26,6 +26,7 @@ class User(Base):
     auth_source: Mapped[str] = mapped_column(String(20), nullable=False, default="local")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     email_verified: Mapped[bool] = mapped_column(Boolean, default=True)
+    email_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     must_change_password: Mapped[bool] = mapped_column(Boolean, default=False)
     preferences: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     language: Mapped[str] = mapped_column(String(10), nullable=False, default="fr")

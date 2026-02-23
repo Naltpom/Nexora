@@ -163,6 +163,15 @@ async def stop_impersonation(
             detail="Utilisateur administrateur introuvable",
         )
 
+    await event_bus.emit(
+        "admin.impersonation_stopped",
+        db=db,
+        actor_id=admin_user_id,
+        resource_type="user",
+        resource_id=current_user.id,
+        payload={"admin_email": admin.email, "target_id": current_user.id},
+    )
+
     token_data = {"sub": str(admin.id), "email": admin.email, "lang": admin.language}
     return ImpersonationStopResponse(
         access_token=create_access_token(token_data),
@@ -191,6 +200,7 @@ async def switch_impersonation(
 
     admin_user_id = get_original_admin_id(current_user)
     old_session_id = current_user._impersonation_session_id
+    old_target_id = current_user.id
 
     # Stop the current session
     result = await db.execute(
@@ -237,6 +247,29 @@ async def switch_impersonation(
     )
     db.add(log)
     await db.flush()
+
+    await event_bus.emit(
+        "admin.impersonation_stopped",
+        db=db,
+        actor_id=admin_user_id,
+        resource_type="user",
+        resource_id=old_target_id,
+        payload={"target_id": old_target_id, "reason": "switch"},
+    )
+    await event_bus.emit(
+        "admin.impersonation_started",
+        db=db,
+        actor_id=admin_user_id,
+        resource_type="user",
+        resource_id=target.id,
+        payload={
+            "actor_name": "admin",
+            "target_email": target.email,
+            "target_id": target.id,
+            "ip_address": ip_address,
+            "reason": "switch",
+        },
+    )
 
     access_token = create_impersonation_token(
         target_user_id=target.id,

@@ -9,7 +9,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from ..database import get_db
+from ..events import event_bus
 from ..permissions import invalidate_permission_cache, require_permission
+from ..security import get_current_user
 from .models import Permission, Role, RolePermission, User, UserRole
 from .schemas import (
     AssignPermissionsRequest,
@@ -81,6 +83,7 @@ async def list_roles(db: AsyncSession = Depends(get_db)):
 )
 async def create_role(
     data: RoleCreate,
+    current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     # Check name uniqueness
@@ -97,6 +100,15 @@ async def create_role(
     role = Role(slug=slug, name=data.name, description=data.description, color=data.color)
     db.add(role)
     await db.flush()
+
+    await event_bus.emit(
+        "role.created",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="role",
+        resource_id=role.id,
+        payload={"slug": role.slug, "name": role.name},
+    )
     return _role_to_response(role, permission_codes=[])
 
 
@@ -108,6 +120,7 @@ async def create_role(
 async def update_role(
     role_id: int,
     data: RoleUpdate,
+    current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
@@ -131,6 +144,15 @@ async def update_role(
         role.color = data.color
 
     await db.flush()
+
+    await event_bus.emit(
+        "role.updated",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="role",
+        resource_id=role.id,
+        payload={"slug": role.slug, "name": role.name},
+    )
     return _role_to_response(role)
 
 
@@ -141,6 +163,7 @@ async def update_role(
 )
 async def delete_role(
     role_id: int,
+    current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(select(Role).where(Role.id == role_id))
@@ -152,9 +175,20 @@ async def delete_role(
     if role.slug in PROTECTED_ROLE_SLUGS:
         raise HTTPException(status_code=403, detail="Impossible de supprimer un role systeme")
 
+    role_slug = role.slug
+    role_name = role.name
     await db.delete(role)
     await db.flush()
     invalidate_permission_cache()  # Role deletion affects all users with this role
+
+    await event_bus.emit(
+        "role.deleted",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="role",
+        resource_id=role_id,
+        payload={"slug": role_slug, "name": role_name},
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -170,6 +204,7 @@ async def delete_role(
 async def assign_permissions(
     role_id: int,
     data: AssignPermissionsRequest,
+    current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Replace the permission set on a role with the supplied list of permission IDs."""
@@ -200,6 +235,15 @@ async def assign_permissions(
         db.add(RolePermission(role_id=role_id, permission_id=pid))
     await db.flush()
     invalidate_permission_cache()  # Role permission change affects all users with this role
+
+    await event_bus.emit(
+        "role.permissions_updated",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="role",
+        resource_id=role_id,
+        payload={"permission_ids": data.permission_ids, "count": len(data.permission_ids)},
+    )
 
     # Reload with permissions
     result = await db.execute(
@@ -288,6 +332,7 @@ async def list_role_permissions_paginated(
 async def toggle_role_permission(
     role_id: int,
     data: TogglePermissionRequest,
+    current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Toggle a single permission on a role. Returns the new granted state."""
@@ -310,14 +355,23 @@ async def toggle_role_permission(
 
     if existing:
         await db.delete(existing)
-        await db.flush()
-        invalidate_permission_cache()  # Role permission change affects all users with this role
-        return {"granted": False}
+        granted = False
     else:
         db.add(RolePermission(role_id=role_id, permission_id=data.permission_id))
-        await db.flush()
-        invalidate_permission_cache()  # Role permission change affects all users with this role
-        return {"granted": True}
+        granted = True
+
+    await db.flush()
+    invalidate_permission_cache()
+
+    await event_bus.emit(
+        "role.permissions_updated",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="role",
+        resource_id=role_id,
+        payload={"permission_id": data.permission_id, "granted": granted},
+    )
+    return {"granted": granted}
 
 
 # ---------------------------------------------------------------------------

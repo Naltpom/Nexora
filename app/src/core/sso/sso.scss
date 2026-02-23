@@ -14,8 +14,8 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  padding: 10px 16px;
-  border-radius: 8px;
+  padding: var(--density-btn-padding, 8px 16px);
+  border-radius: var(--radius);
   cursor: pointer;
   font-size: 0.875rem;
   font-weight: 500;
@@ -162,7 +162,7 @@
   justify-content: space-between;
   padding: 12px 16px;
   border: 1px solid var(--border-color);
-  border-radius: 10px;
+  border-radius: var(--radius);
   gap: 12px;
   transition: border-color 0.15s;
 

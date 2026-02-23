@@ -20,7 +20,7 @@ interface SSOProvider {
 }
 
 export default function SSOAccountLinks() {
-  const { t } = useTranslation('sso')
+  const { t, i18n } = useTranslation('sso')
   const [accounts, setAccounts] = useState<SSOAccount[]>([])
   const [providers, setProviders] = useState<SSOProvider[]>([])
   const [loading, setLoading] = useState(true)
@@ -86,7 +86,7 @@ export default function SSOAccountLinks() {
 
   const formatDate = (dateStr: string): string => {
     const date = new Date(dateStr)
-    return date.toLocaleDateString('fr-FR', {
+    return date.toLocaleDateString(i18n.language, {
       day: 'numeric',
       month: 'long',
       year: 'numeric',

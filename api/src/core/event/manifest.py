@@ -9,6 +9,8 @@ manifest = FeatureManifest(
     description="Event bus persistence and event type catalog",
     permissions=[
         "event.read",
+        "event.read_all",
+        "event.types",
     ],
     router_module="src.core.event.routes",
     router_prefix="/api/events",

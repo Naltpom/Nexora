@@ -38,7 +38,7 @@ async def list_locales():
 
 @router.get("/translations", response_model=TranslationsResponse)
 async def get_translations_endpoint(
-    locale: str = Query(default="fr", description="Locale code"),
+    locale: str = Query(default=settings.I18N_DEFAULT_LOCALE, description="Locale code"),
     namespace: str = Query(default="common", description="Translation namespace"),
 ):
     """Return translations for a given locale and namespace."""
@@ -52,7 +52,7 @@ async def get_translations_endpoint(
 
 @router.get("/namespaces", response_model=list[str])
 async def list_namespaces(
-    locale: str = Query(default="fr", description="Locale code"),
+    locale: str = Query(default=settings.I18N_DEFAULT_LOCALE, description="Locale code"),
 ):
     """Return available namespaces for a locale."""
     return get_all_namespaces(locale)

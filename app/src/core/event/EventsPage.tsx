@@ -1,112 +1,148 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import Layout from '../../core/Layout'
 import api from '../../api'
+import { usePermission } from '../PermissionContext'
 import './events.scss'
 
 /* -- Types -- */
 
-interface EventType {
+interface EventItem {
+  id: number
   event_type: string
-  label: string
-  category: string
-  description: string | null
-  admin_only: boolean
-  feature: string
+  actor_id: number
+  actor_email: string
+  resource_type: string
+  resource_id: number
+  payload: Record<string, unknown>
+  created_at: string
+}
+
+interface EventListResponse {
+  items: EventItem[]
+  total: number
+  page: number
+  per_page: number
+  pages: number
 }
 
 /* -- Component -- */
 
 export default function EventsPage() {
   const { t } = useTranslation('event')
-  const [eventTypes, setEventTypes] = useState<EventType[]>([])
-  const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState('')
-  const [searchValue, setSearchValue] = useState('')
-  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [expandedFeatures, setExpandedFeatures] = useState<Set<string>>(new Set())
+  const { can } = usePermission()
+  const canReadAll = can('event.read_all')
 
-  const loadEventTypes = useCallback(async () => {
+  const [events, setEvents] = useState<EventItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [total, setTotal] = useState(0)
+  const [perPage, setPerPage] = useState(25)
+  const [search, setSearch] = useState('')
+  const [sortBy, setSortBy] = useState('created_at')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+  const [showAll, setShowAll] = useState(false)
+  const [expandedPayloads, setExpandedPayloads] = useState<Set<number>>(new Set())
+  const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const loadData = useCallback(async (
+    p?: number, s?: string, pp?: number, sb?: string, sd?: string, all?: boolean
+  ) => {
+    const currentPage = p ?? page
+    const currentSearch = s ?? search
+    const currentPerPage = pp ?? perPage
+    const currentSortBy = sb ?? sortBy
+    const currentSortDir = sd ?? sortDir
+    const currentShowAll = all ?? showAll
+
     try {
-      const res = await api.get('/events/event-types')
-      setEventTypes(res.data || [])
-      // Expand all features by default
-      const features = new Set(((res.data || []) as EventType[]).map((e: EventType) => e.feature))
-      setExpandedFeatures(features)
+      const res = await api.get<EventListResponse>('/events/', {
+        params: {
+          page: currentPage,
+          per_page: currentPerPage,
+          search: currentSearch,
+          sort_by: currentSortBy,
+          sort_dir: currentSortDir,
+          show_all: currentShowAll,
+        },
+      })
+      setEvents(res.data.items)
+      setTotal(res.data.total)
+      setTotalPages(res.data.pages)
     } catch {
       // silent
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [page, search, perPage, sortBy, sortDir, showAll])
 
-  useEffect(() => {
-    loadEventTypes()
-  }, [loadEventTypes])
+  useEffect(() => { loadData() }, [])  // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleSearchChange = (value: string) => {
-    setSearchValue(value)
-    if (searchTimeout.current) clearTimeout(searchTimeout.current)
-    searchTimeout.current = setTimeout(() => {
-      setSearch(value.toLowerCase())
-    }, 200)
+  const goToPage = (p: number) => {
+    setPage(p)
+    loadData(p)
   }
 
-  const toggleFeature = (feature: string) => {
-    setExpandedFeatures(prev => {
+  const handleSearchChange = (value: string) => {
+    setSearch(value)
+    if (searchTimeout.current) clearTimeout(searchTimeout.current)
+    searchTimeout.current = setTimeout(() => {
+      setPage(1)
+      loadData(1, value)
+    }, 300)
+  }
+
+  const handleSort = (field: string) => {
+    const newDir = sortBy === field && sortDir === 'asc' ? 'desc' : 'asc'
+    setSortBy(field)
+    setSortDir(newDir)
+    setPage(1)
+    loadData(1, undefined, undefined, field, newDir)
+  }
+
+  const handleToggleShowAll = () => {
+    const next = !showAll
+    setShowAll(next)
+    setPage(1)
+    loadData(1, undefined, undefined, undefined, undefined, next)
+  }
+
+  const handlePerPageChange = (pp: number) => {
+    setPerPage(pp)
+    setPage(1)
+    loadData(1, undefined, pp)
+  }
+
+  const togglePayload = (id: number) => {
+    setExpandedPayloads(prev => {
       const next = new Set(prev)
-      if (next.has(feature)) {
-        next.delete(feature)
+      if (next.has(id)) {
+        next.delete(id)
       } else {
-        next.add(feature)
+        next.add(id)
       }
       return next
     })
   }
 
-  // Group by feature
-  const grouped: Record<string, EventType[]> = {}
-  for (const evt of eventTypes) {
-    if (!grouped[evt.feature]) grouped[evt.feature] = []
-    grouped[evt.feature].push(evt)
+  const formatDate = (iso: string) => {
+    const d = new Date(iso)
+    return d.toLocaleString()
   }
-
-  // Filter
-  const filteredGroups: Record<string, EventType[]> = {}
-  for (const [feature, events] of Object.entries(grouped)) {
-    const filtered = search
-      ? events.filter(e =>
-          e.event_type.toLowerCase().includes(search) ||
-          e.label.toLowerCase().includes(search) ||
-          e.category.toLowerCase().includes(search) ||
-          (e.description || '').toLowerCase().includes(search) ||
-          feature.toLowerCase().includes(search)
-        )
-      : events
-    if (filtered.length > 0) {
-      filteredGroups[feature] = filtered
-    }
-  }
-
-  const totalEvents = Object.values(filteredGroups).reduce((sum, evts) => sum + evts.length, 0)
-  const featureCount = Object.keys(filteredGroups).length
 
   return (
     <Layout breadcrumb={[{ label: t('breadcrumb_accueil'), path: '/' }, { label: t('breadcrumb_events') }]} title={t('breadcrumb_events')}>
       <div className="unified-card page-header-card">
         <div className="unified-page-header">
           <div className="unified-page-header-info">
-            <h1>{t('titre_catalogue')}</h1>
-            <p>{t('sous_titre_catalogue')}</p>
+            <h1>{t('titre_journal')}</h1>
+            <p>{t('sous_titre_journal')}</p>
           </div>
           <div className="events-stats">
             <div className="events-stat">
-              <span className="events-stat-value">{totalEvents}</span>
+              <span className="events-stat-value">{total}</span>
               <span className="events-stat-label">{t('stat_events')}</span>
-            </div>
-            <div className="events-stat">
-              <span className="events-stat-value">{featureCount}</span>
-              <span className="events-stat-label">{t('stat_features')}</span>
             </div>
           </div>
         </div>
@@ -114,100 +150,165 @@ export default function EventsPage() {
 
       {loading ? (
         <div className="spinner" />
-      ) : eventTypes.length === 0 ? (
-        <div className="unified-card events-empty-state">
-          {t('aucun_type_declare')}
-        </div>
       ) : (
-        <div className="unified-card full-width-breakout">
-          <div className="events-search-bar">
-            <input
-              type="text"
-              className="events-search-input"
-              placeholder={t('rechercher_evenement')}
-              value={searchValue}
-              onChange={(e) => handleSearchChange(e.target.value)}
-            />
+        <>
+          <div className="unified-card full-width-breakout card-table">
+            <div className="events-toolbar">
+              <input
+                type="text"
+                className="events-search-input"
+                placeholder={t('rechercher_evenement')}
+                value={search}
+                onChange={(e) => handleSearchChange(e.target.value)}
+              />
+              {canReadAll && (
+                <label className="events-checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={showAll}
+                    onChange={handleToggleShowAll}
+                  />
+                  {t('afficher_tous')}
+                </label>
+              )}
+            </div>
+
+            {events.length === 0 ? (
+              <div className="events-no-match">
+                {t('aucun_event')}
+              </div>
+            ) : (
+              <>
+                <div className="table-container">
+                  <table className="unified-table">
+                    <colgroup>
+                      <col className="col-date" />
+                      <col className="col-evtype" />
+                      <col className="col-actor" />
+                      <col className="col-resource" />
+                      <col className="col-payload" />
+                    </colgroup>
+                    <thead>
+                      <tr>
+                        <th className="th-sortable" onClick={() => handleSort('created_at')}>
+                          {t('col_date')} {sortBy === 'created_at' && <span className="sort-indicator">{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span>}
+                        </th>
+                        <th className="th-sortable" onClick={() => handleSort('event_type')}>
+                          {t('col_type')} {sortBy === 'event_type' && <span className="sort-indicator">{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span>}
+                        </th>
+                        <th>{t('col_acteur')}</th>
+                        <th className="th-sortable" onClick={() => handleSort('resource_type')}>
+                          {t('col_ressource')} {sortBy === 'resource_type' && <span className="sort-indicator">{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span>}
+                        </th>
+                        <th>{t('col_payload')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {events.map(evt => (
+                        <tr key={evt.id}>
+                          <td className="text-gray-500-sm nowrap">{formatDate(evt.created_at)}</td>
+                          <td>
+                            <code className="badge-tag badge-tag--mono">{evt.event_type}</code>
+                          </td>
+                          <td>{evt.actor_email}</td>
+                          <td>
+                            <span className="events-resource">
+                              {evt.resource_type}
+                              <span className="events-resource-id">#{evt.resource_id}</span>
+                            </span>
+                          </td>
+                          <td>
+                            {Object.keys(evt.payload).length > 0 ? (
+                              <button
+                                className="events-payload-toggle"
+                                onClick={() => togglePayload(evt.id)}
+                              >
+                                {expandedPayloads.has(evt.id) ? t('masquer_payload') : t('voir_payload')}
+                              </button>
+                            ) : (
+                              <span className="text-gray-500">{'\u2014'}</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Expanded payloads */}
+                {events.filter(evt => expandedPayloads.has(evt.id)).map(evt => (
+                  <div key={`payload-${evt.id}`} className="events-payload-block">
+                    <div className="events-payload-header">
+                      <code className="badge-tag badge-tag--mono">{evt.event_type}</code>
+                      <span className="text-gray-500-sm">{formatDate(evt.created_at)}</span>
+                    </div>
+                    <pre className="events-payload-json">{JSON.stringify(evt.payload, null, 2)}</pre>
+                  </div>
+                ))}
+              </>
+            )}
           </div>
 
-          {Object.keys(filteredGroups).length === 0 ? (
-            <div className="events-no-match">
-              {t('aucun_evenement_correspondant')}
-            </div>
-          ) : (
-            <div className="events-list">
-              {Object.entries(filteredGroups).map(([feature, events]) => (
-                <div key={feature} className="events-feature-group">
-                  <div
-                    className="events-feature-header"
-                    onClick={() => toggleFeature(feature)}
+          <div className="unified-pagination">
+            <span className="unified-pagination-info">{total} {t('stat_events')}</span>
+            <div className="unified-pagination-controls">
+              <select
+                className="per-page-select"
+                value={perPage}
+                onChange={(e) => handlePerPageChange(parseInt(e.target.value))}
+              >
+                <option value={10}>{t('pagination_10')}</option>
+                <option value={25}>{t('pagination_25')}</option>
+                <option value={50}>{t('pagination_50')}</option>
+                <option value={100}>{t('pagination_100')}</option>
+              </select>
+              {totalPages > 1 && (
+                <>
+                  <button
+                    className="unified-pagination-btn"
+                    disabled={page <= 1}
+                    onClick={() => goToPage(page - 1)}
                   >
-                    <div className="events-feature-header-left">
-                      <svg
-                        className={`events-chevron ${expandedFeatures.has(feature) ? 'events-chevron-open' : ''}`}
-                        width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                      >
-                        <polyline points="9 18 15 12 9 6" />
-                      </svg>
-                      <span className="events-feature-name">{feature}</span>
-                      <span className="badge badge-secondary events-badge-sm">
-                        {events.length} {events.length > 1 ? t('event_count_plural') : t('event_count_singular')}
-                      </span>
-                    </div>
-                  </div>
-
-                  {expandedFeatures.has(feature) && (
-                    <div className="table-container">
-                      <table className="unified-table">
-                        <colgroup>
-                          <col className="col-type" />
-                          <col className="col-label" />
-                          <col className="col-category" />
-                          <col className="col-desc" />
-                          <col className="col-access" />
-                        </colgroup>
-                        <thead>
-                          <tr>
-                            <th>{t('colonne_event_type')}</th>
-                            <th>{t('colonne_label')}</th>
-                            <th>{t('colonne_categorie')}</th>
-                            <th>{t('colonne_description')}</th>
-                            <th>{t('colonne_acces')}</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {events.map(evt => (
-                            <tr key={evt.event_type}>
-                              <td>
-                                <code className="events-code">{evt.event_type}</code>
-                              </td>
-                              <td className="events-cell-label">{evt.label}</td>
-                              <td>
-                                <span className="badge badge-info events-badge-sm">
-                                  {evt.category}
-                                </span>
-                              </td>
-                              <td className="events-cell-desc">
-                                {evt.description || '\u2014'}
-                              </td>
-                              <td>
-                                {evt.admin_only ? (
-                                  <span className="badge badge-warning events-badge-sm">{t('badge_admin')}</span>
-                                ) : (
-                                  <span className="badge badge-success events-badge-sm">{t('badge_tous')}</span>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              ))}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="15 18 9 12 15 6" />
+                    </svg>
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+                    .reduce((acc: (number | string)[], p, idx, arr) => {
+                      if (idx > 0 && typeof arr[idx - 1] === 'number' && (p as number) - (arr[idx - 1] as number) > 1) {
+                        acc.push('...')
+                      }
+                      acc.push(p)
+                      return acc
+                    }, [])
+                    .map((p, i) =>
+                      typeof p === 'string' ? (
+                        <span key={`dots-${i}`} className="unified-pagination-dots">...</span>
+                      ) : (
+                        <button
+                          key={p}
+                          className={`unified-pagination-btn${p === page ? ' active' : ''}`}
+                          onClick={() => goToPage(p)}
+                        >
+                          {p}
+                        </button>
+                      )
+                    )}
+                  <button
+                    className="unified-pagination-btn"
+                    disabled={page >= totalPages}
+                    onClick={() => goToPage(page + 1)}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                  </button>
+                </>
+              )}
             </div>
-          )}
-        </div>
+          </div>
+        </>
       )}
     </Layout>
   )

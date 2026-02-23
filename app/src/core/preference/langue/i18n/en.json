@@ -1,5 +1,5 @@
 {
-  "title": "",
-  "description": "",
-  "default_badge": ""
+  "title": "Language",
+  "description": "Choose the interface language.",
+  "default_badge": "Default"
 }

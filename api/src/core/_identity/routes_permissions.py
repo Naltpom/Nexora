@@ -5,7 +5,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
+from ..events import event_bus
 from ..permissions import invalidate_permission_cache, require_permission
+from ..security import get_current_user
 from .models import (
     GlobalPermission,
     Permission,
@@ -80,6 +82,7 @@ async def list_global_permissions(db: AsyncSession = Depends(get_db)):
 )
 async def set_global_permission(
     data: GlobalPermissionSet,
+    current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Set a global permission (upsert)."""
@@ -101,6 +104,16 @@ async def set_global_permission(
 
     await db.flush()
     invalidate_permission_cache()  # Global permission change affects all users
+
+    await event_bus.emit(
+        "admin.global_permissions_updated",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="permission",
+        resource_id=data.permission_id,
+        payload={"code": perm.code, "granted": data.granted, "updated_by": current_user.email},
+    )
+
     return {"permission_id": data.permission_id, "code": perm.code, "granted": data.granted}
 
 

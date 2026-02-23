@@ -150,9 +150,9 @@ Cela s'applique dans **tous les contextes** :
 
 | # | Check | Feature | Type | Dependances | Chemins API | Chemins APP | Notes |
 |---|-------|---------|------|-------------|-------------|-------------|-------|
-| 1 | [ ] | `_identity` | parent | aucune | `api/src/core/_identity/` | `app/src/core/_identity/` | Auth, users, roles, permissions, features, settings, invitations, impersonation, backups, commands — 12 routers, 20 permissions |
-| 2 | [ ] | `i18n` | standalone | aucune | `api/src/core/i18n/` | `app/src/core/i18n/` | Middleware locale, API traductions, auto-decouverte JSON |
-| 3 | [ ] | `event` | standalone | aucune | `api/src/core/event/` | `app/src/core/event/` | Event bus, persistence, catalogue d'events |
+| 1 | [x] | `_identity` | parent | aucune | `api/src/core/_identity/` | `app/src/core/_identity/` | Auth, users, roles, permissions, features, settings, invitations, impersonation, backups, commands — 12 routers, 20 permissions |
+| 2 | [x] | `i18n` | standalone | aucune | `api/src/core/i18n/` | `app/src/core/i18n/` | Middleware locale, API traductions, auto-decouverte JSON |
+| 3 | [x] | `event` | standalone | aucune | `api/src/core/event/` | `app/src/core/event/` | Event bus, persistence, catalogue d'events — 3 perms, 2 pages (journal + types), sort whitelist, 22 events _identity |
 
 ### Phase 2 — Authentification externe
 

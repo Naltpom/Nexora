@@ -393,7 +393,6 @@ export default function RolesAdminPage() {
                           >
                             {role.name}
                           </span>
-                          <div className="text-muted-xs">{role.slug}</div>
                         </td>
 
                         {!isPermsMode && (

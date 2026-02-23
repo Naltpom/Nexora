@@ -1,6 +1,5 @@
 """Event feature models: persisted application events."""
 
-import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import DateTime, ForeignKey, Index, Integer, String
@@ -14,9 +13,6 @@ class Event(Base):
     __tablename__ = "events"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    redirect_token: Mapped[str] = mapped_column(
-        String(36), default=lambda: str(uuid.uuid4()), unique=True, nullable=False
-    )
     event_type: Mapped[str] = mapped_column(String(100), nullable=False)
     actor_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     resource_type: Mapped[str] = mapped_column(String(50), nullable=False)

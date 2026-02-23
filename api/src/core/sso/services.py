@@ -65,6 +65,14 @@ async def find_or_create_user_from_sso(
     else:
         user = None
 
+    # Block auto-link on deactivated/deleted user
+    if user and (not user.is_active or user.deleted_at is not None):
+        from fastapi import HTTPException, status
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Compte desactive",
+        )
+
     # 3. Create new user if needed
     if not user:
         user = User(
@@ -74,6 +82,8 @@ async def find_or_create_user_from_sso(
             auth_source=provider,
             password_hash=None,
             is_active=True,
+            email_verified=True,
+            email_verified_at=datetime.now(timezone.utc),
             must_change_password=False,
         )
         db.add(user)
@@ -106,6 +116,13 @@ async def issue_tokens_for_sso_user(db: AsyncSession, user) -> dict:
 
     Returns a dict suitable for SSOCallbackResponse.
     """
+    if not user.is_active or user.deleted_at is not None:
+        from fastapi import HTTPException, status
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Compte desactive",
+        )
+
     token_data = {"sub": str(user.id), "email": user.email, "lang": user.language}
 
     # Check MFA requirement (dynamic import, only if feature active)

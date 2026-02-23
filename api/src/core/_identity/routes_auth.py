@@ -101,6 +101,15 @@ async def login(data: LoginRequest, request: Request, db: AsyncSession = Depends
         if user_id:
             await _create_session(db, user_id, result["refresh_token"], request)
             await db.flush()
+
+            await event_bus.emit(
+                "user.login",
+                db=db,
+                actor_id=user_id,
+                resource_type="user",
+                resource_id=user_id,
+                payload={"email": data.email, "ip": ip},
+            )
     return TokenResponse(**result)
 
 
@@ -306,6 +315,15 @@ async def change_password(
     user.password_hash = hash_password(request.new_password)
     user.must_change_password = False
     await db.flush()
+
+    await event_bus.emit(
+        "user.password_changed",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="user",
+        resource_id=current_user.id,
+        payload={"email": user.email},
+    )
     return {"message": "Mot de passe modifie avec succes"}
 
 
@@ -374,6 +392,15 @@ async def reset_password(
     target_user.password_hash = hash_password(data.new_password)
     target_user.must_change_password = False
     await consume_security_token(db, token)
+
+    await event_bus.emit(
+        "user.password_reset",
+        db=db,
+        actor_id=target_user.id,
+        resource_type="user",
+        resource_id=target_user.id,
+        payload={"email": target_user.email},
+    )
     return {"message": "Mot de passe modifie avec succes"}
 
 
@@ -497,7 +524,17 @@ async def verify_email(
         raise HTTPException(status_code=400, detail="Code incorrect ou expire")
 
     user.email_verified = True
+    user.email_verified_at = datetime.now(timezone.utc)
     await consume_security_token(db, token)
+
+    await event_bus.emit(
+        "user.email_verified",
+        db=db,
+        actor_id=user.id,
+        resource_type="user",
+        resource_id=user.id,
+        payload={"email": user.email},
+    )
 
     token_data = {"sub": str(user.id), "email": user.email, "lang": user.language}
     refresh = create_refresh_token(token_data)
@@ -655,6 +692,15 @@ async def delete_my_account(
         .values(is_revoked=True)
     )
     await db.flush()
+
+    await event_bus.emit(
+        "user.account_deleted",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="user",
+        resource_id=current_user.id,
+        payload={"email": current_user.email},
+    )
 
     return {
         "message": "Votre compte a ete desactive. Vous pouvez le reactiver en vous reconnectant dans les 30 jours.",

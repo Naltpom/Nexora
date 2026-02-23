@@ -6,6 +6,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 from ...config import settings
+from ...i18n.translations import t
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +61,7 @@ class SmtpEmailSender:
             link_html = f"""
                 <div style="text-align: center; margin: 24px 0;">
                     <a href="{full_link}" style="background: #1E40AF; color: white; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">
-                        Voir le detail
+                        {t("email.notification_action", locale)}
                     </a>
                 </div>
         """
@@ -74,13 +75,13 @@ class SmtpEmailSender:
                 <h1 style="color: white; margin: 0; font-size: 20px;">{settings.SMTP_FROM_NAME}</h1>
             </div>
             <div style="padding: 32px;">
-                <p style="color: #374151; font-size: 15px;">Bonjour {to_name},</p>
+                <p style="color: #374151; font-size: 15px;">{t("email.greeting", locale, name=to_name)}</p>
                 <p style="color: #374151; font-size: 15px; font-weight: 600;">{title}</p>
                 <p style="color: #374151; font-size: 15px;">{body}</p>
                 {link_html}
             </div>
             <div style="background: #F9FAFB; padding: 16px; text-align: center; border-top: 1px solid #E5E7EB;">
-                <p style="color: #9CA3AF; font-size: 12px; margin: 0;">{settings.SMTP_FROM_NAME} - Ne pas repondre a cet email</p>
+                <p style="color: #9CA3AF; font-size: 12px; margin: 0;">{settings.SMTP_FROM_NAME} - {t("email.footer", locale)}</p>
             </div>
         </div>
     </body>
@@ -110,11 +111,11 @@ class SmtpEmailSender:
         reset_url = f"{settings.FRONTEND_URL}/reset-password?token={reset_token}"
 
         if initiated_by_user:
-            intro_text = "Vous avez demande la reinitialisation de votre mot de passe."
+            intro_text = t("email.reset_password_intro_user", locale)
         else:
-            intro_text = "Un administrateur a demande la reinitialisation de votre mot de passe."
+            intro_text = t("email.reset_password_intro_admin", locale)
 
-        subject = f"{settings.SMTP_FROM_NAME} - Reinitialisation de votre mot de passe"
+        subject = f"{settings.SMTP_FROM_NAME} - {t('email.reset_password_subject', locale)}"
         html_body = f"""
     <html>
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #F3F4F6; padding: 40px 0;">
@@ -123,20 +124,20 @@ class SmtpEmailSender:
                 <h1 style="color: white; margin: 0; font-size: 20px;">{settings.SMTP_FROM_NAME}</h1>
             </div>
             <div style="padding: 32px;">
-                <p style="color: #374151; font-size: 15px;">Bonjour {to_name},</p>
+                <p style="color: #374151; font-size: 15px;">{t("email.greeting", locale, name=to_name)}</p>
                 <p style="color: #374151; font-size: 15px;">{intro_text}</p>
-                <p style="color: #374151; font-size: 15px;">Cliquez sur le bouton ci-dessous pour definir un nouveau mot de passe :</p>
+                <p style="color: #374151; font-size: 15px;">{t("email.reset_password_cta", locale)}</p>
                 <div style="text-align: center; margin: 32px 0;">
                     <a href="{reset_url}" style="background: #1E40AF; color: white; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px;">
-                        Reinitialiser mon mot de passe
+                        {t("email.reset_password_action", locale)}
                     </a>
                 </div>
-                <p style="color: #6B7280; font-size: 13px;">Ce lien est valable 30 minutes. Si vous n'etes pas a l'origine de cette demande, ignorez cet email.</p>
-                <p style="color: #6B7280; font-size: 13px;">Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :</p>
+                <p style="color: #6B7280; font-size: 13px;">{t("email.reset_password_expiry", locale)}</p>
+                <p style="color: #6B7280; font-size: 13px;">{t("email.reset_password_fallback", locale)}</p>
                 <p style="color: #3B82F6; font-size: 12px; word-break: break-all;">{reset_url}</p>
             </div>
             <div style="background: #F9FAFB; padding: 16px; text-align: center; border-top: 1px solid #E5E7EB;">
-                <p style="color: #9CA3AF; font-size: 12px; margin: 0;">{settings.SMTP_FROM_NAME} - Ne pas repondre a cet email</p>
+                <p style="color: #9CA3AF; font-size: 12px; margin: 0;">{settings.SMTP_FROM_NAME} - {t("email.footer", locale)}</p>
             </div>
         </div>
     </body>
@@ -163,7 +164,7 @@ class SmtpEmailSender:
 
         invitation_url = f"{settings.FRONTEND_URL}/invitation/{invitation_token}"
 
-        subject = f"{settings.SMTP_FROM_NAME} - Invitation"
+        subject = f"{settings.SMTP_FROM_NAME} - {t('email.invitation_subject', locale)}"
         html_body = f"""
     <html>
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #F3F4F6; padding: 40px 0;">
@@ -172,20 +173,20 @@ class SmtpEmailSender:
                 <h1 style="color: white; margin: 0; font-size: 20px;">{settings.SMTP_FROM_NAME}</h1>
             </div>
             <div style="padding: 32px;">
-                <p style="color: #374151; font-size: 15px;">Bonjour,</p>
-                <p style="color: #374151; font-size: 15px;">Vous avez ete invite(e) par <strong>{invited_by_name}</strong> a rejoindre la plateforme.</p>
-                <p style="color: #374151; font-size: 15px;">Cliquez sur le bouton ci-dessous pour accepter l'invitation :</p>
+                <p style="color: #374151; font-size: 15px;">{t("email.greeting_generic", locale)}</p>
+                <p style="color: #374151; font-size: 15px;">{t("email.invitation_intro", locale, name=invited_by_name)}</p>
+                <p style="color: #374151; font-size: 15px;">{t("email.invitation_cta", locale)}</p>
                 <div style="text-align: center; margin: 32px 0;">
                     <a href="{invitation_url}" style="background: #1E40AF; color: white; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px;">
-                        Accepter l'invitation
+                        {t("email.invitation_action", locale)}
                     </a>
                 </div>
-                <p style="color: #6B7280; font-size: 13px;">Ce lien est valable 48 heures. Si vous n'etes pas a l'origine de cette demande, ignorez cet email.</p>
-                <p style="color: #6B7280; font-size: 13px;">Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :</p>
+                <p style="color: #6B7280; font-size: 13px;">{t("email.invitation_expiry", locale)}</p>
+                <p style="color: #6B7280; font-size: 13px;">{t("email.invitation_fallback", locale)}</p>
                 <p style="color: #3B82F6; font-size: 12px; word-break: break-all;">{invitation_url}</p>
             </div>
             <div style="background: #F9FAFB; padding: 16px; text-align: center; border-top: 1px solid #E5E7EB;">
-                <p style="color: #9CA3AF; font-size: 12px; margin: 0;">{settings.SMTP_FROM_NAME} - Ne pas repondre a cet email</p>
+                <p style="color: #9CA3AF; font-size: 12px; margin: 0;">{settings.SMTP_FROM_NAME} - {t("email.footer", locale)}</p>
             </div>
         </div>
     </body>
@@ -210,7 +211,7 @@ class SmtpEmailSender:
             logger.warning("Email disabled — skipping verification code email to %s", to_email)
             return False
 
-        subject = f"{settings.SMTP_FROM_NAME} - Code de verification"
+        subject = f"{settings.SMTP_FROM_NAME} - {t('email.verification_subject', locale)}"
         html_body = f"""
     <html>
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #F3F4F6; padding: 40px 0;">
@@ -219,17 +220,17 @@ class SmtpEmailSender:
                 <h1 style="color: white; margin: 0; font-size: 20px;">{settings.SMTP_FROM_NAME}</h1>
             </div>
             <div style="padding: 32px;">
-                <p style="color: #374151; font-size: 15px;">Bonjour {to_name},</p>
-                <p style="color: #374151; font-size: 15px;">Voici votre code de verification :</p>
+                <p style="color: #374151; font-size: 15px;">{t("email.greeting", locale, name=to_name)}</p>
+                <p style="color: #374151; font-size: 15px;">{t("email.verification_intro", locale)}</p>
                 <div style="text-align: center; margin: 32px 0;">
                     <div style="background: #F3F4F6; padding: 20px 40px; border-radius: 8px; display: inline-block;">
                         <span style="font-size: 32px; font-weight: 700; letter-spacing: 8px; color: #1E40AF;">{verification_code}</span>
                     </div>
                 </div>
-                <p style="color: #6B7280; font-size: 13px; text-align: center;">Ce code est valable 5 minutes.</p>
+                <p style="color: #6B7280; font-size: 13px; text-align: center;">{t("email.verification_expiry", locale)}</p>
             </div>
             <div style="background: #F9FAFB; padding: 16px; text-align: center; border-top: 1px solid #E5E7EB;">
-                <p style="color: #9CA3AF; font-size: 12px; margin: 0;">{settings.SMTP_FROM_NAME} - Ne pas repondre a cet email</p>
+                <p style="color: #9CA3AF; font-size: 12px; margin: 0;">{settings.SMTP_FROM_NAME} - {t("email.footer", locale)}</p>
             </div>
         </div>
     </body>

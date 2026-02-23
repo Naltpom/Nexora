@@ -313,10 +313,20 @@ async def delete_user(
     if not user:
         raise HTTPException(status_code=404, detail="Utilisateur introuvable")
 
+    original_email = user.email
     user.deleted_at = datetime.now(timezone.utc)
     user.is_active = False
     user.email = f"deleted_{user.id}_{user.email}"
     await db.flush()
+
+    await event_bus.emit(
+        "user.deleted",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="user",
+        resource_id=user_id,
+        payload={"email": original_email, "deleted_by": current_user.email},
+    )
 
 
 @router.post(
@@ -325,6 +335,7 @@ async def delete_user(
 )
 async def trigger_reset_password(
     user_id: int,
+    current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(select(User).where(User.id == user_id))
@@ -351,9 +362,34 @@ async def trigger_reset_password(
             reset_token=token,
         )
         if not sent:
+            await event_bus.emit(
+                "admin.password_reset_triggered",
+                db=db,
+                actor_id=current_user.id,
+                resource_type="user",
+                resource_id=user_id,
+                payload={"email": user.email, "triggered_by": current_user.email, "email_sent": False},
+            )
             return {"message": "Email desactive -- token genere mais email non envoye", "token": token}
     except Exception:
+        await event_bus.emit(
+            "admin.password_reset_triggered",
+            db=db,
+            actor_id=current_user.id,
+            resource_type="user",
+            resource_id=user_id,
+            payload={"email": user.email, "triggered_by": current_user.email, "email_sent": False},
+        )
         return {"message": "Email desactive -- token genere mais email non envoye", "token": token}
+
+    await event_bus.emit(
+        "admin.password_reset_triggered",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="user",
+        resource_id=user_id,
+        payload={"email": user.email, "triggered_by": current_user.email, "email_sent": True},
+    )
 
     return {"message": "Email de reinitialisation envoye"}
 
@@ -576,7 +612,22 @@ async def update_user_roles(
     result = await db.execute(
         select(Role).join(UserRole, UserRole.role_id == Role.id).where(UserRole.user_id == user.id)
     )
-    return {"roles": [RoleBasic.model_validate(r).model_dump() for r in result.scalars().all()]}
+    new_roles = result.scalars().all()
+
+    await event_bus.emit(
+        "user.roles_updated",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="user",
+        resource_id=user.id,
+        payload={
+            "email": user.email,
+            "role_ids": data.role_ids,
+            "updated_by": current_user.email,
+        },
+    )
+
+    return {"roles": [RoleBasic.model_validate(r).model_dump() for r in new_roles]}
 
 
 @router.post(

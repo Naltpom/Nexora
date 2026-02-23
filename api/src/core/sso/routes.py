@@ -5,6 +5,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
+from ..events import event_bus
+from ..permissions import require_permission
 from ..security import get_current_user
 from .models import SSOAccount
 from .schemas import SSOAccountResponse, SSOProviderInfo, SSOProvidersResponse
@@ -37,7 +39,11 @@ async def list_providers(request: Request):
     return SSOProvidersResponse(providers=providers)
 
 
-@router.get("/accounts", response_model=list[SSOAccountResponse])
+@router.get(
+    "/accounts",
+    response_model=list[SSOAccountResponse],
+    dependencies=[Depends(require_permission("sso.link"))],
+)
 async def list_sso_accounts(
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -61,7 +67,11 @@ async def list_sso_accounts(
     ]
 
 
-@router.delete("/accounts/{account_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/accounts/{account_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_permission("sso.link"))],
+)
 async def unlink_sso_account(
     account_id: int,
     current_user=Depends(get_current_user),
@@ -92,6 +102,17 @@ async def unlink_sso_account(
     other_accounts = other_accounts_result.scalars().all()
 
     if not current_user.password_hash and len(other_accounts) == 0:
+        await event_bus.emit(
+            "sso.unlink_blocked",
+            db=db,
+            actor_id=current_user.id,
+            resource_type="sso_account",
+            resource_id=account_id,
+            payload={
+                "provider": account.provider,
+                "account_id": account.id,
+            },
+        )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Impossible de supprimer le dernier moyen de connexion. "
@@ -100,3 +121,16 @@ async def unlink_sso_account(
 
     await db.delete(account)
     await db.flush()
+
+    await event_bus.emit(
+        "sso.account_unlinked",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="sso_account",
+        resource_id=account_id,
+        payload={
+            "provider": account.provider,
+            "provider_email": account.provider_email,
+            "account_id": account.id,
+        },
+    )

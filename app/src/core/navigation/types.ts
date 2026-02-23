@@ -11,4 +11,5 @@ export interface NavItem {
   requireSuperAdmin?: boolean
   order?: number
   featureGate?: string
+  exact?: boolean
 }

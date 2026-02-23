@@ -145,7 +145,7 @@ function AdminGroupTrigger({
   isOpen: boolean
   onEnter: (key: string) => void
   onLeave: () => void
-  isMenuActive: (path: string) => boolean
+  isMenuActive: (path: string, exact?: boolean) => boolean
   onClose: () => void
 }) {
   const hasActiveItem = group.items.some(item => isMenuActive(item.path))
@@ -182,7 +182,7 @@ function AdminGroupTrigger({
             <MenuItemLink
               key={item.path}
               item={item}
-              isActive={isMenuActive(item.path)}
+              isActive={isMenuActive(item.path, item.exact)}
               onClose={onClose}
             />
           ))}

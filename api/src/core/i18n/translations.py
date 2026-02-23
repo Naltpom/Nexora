@@ -81,7 +81,7 @@ def _derive_namespace(feature_dir: Path, base_dir: Path) -> str | None:
     """Derive namespace from feature directory relative to base."""
     try:
         rel = feature_dir.relative_to(base_dir)
-        parts = [p for p in rel.parts if not p.startswith("_") or p == "_identity"]
+        parts = [p for p in rel.parts if not p.startswith("__")]
         if not parts:
             return None
         return ".".join(parts)

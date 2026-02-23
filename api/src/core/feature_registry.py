@@ -255,10 +255,10 @@ class FeatureRegistry:
     }
 
     def collect_all_permissions(self) -> list[dict]:
-        """Gather all permissions from all manifests."""
+        """Gather all permissions from all manifests, sorted by feature then code."""
         perms = []
-        for manifest in self._manifests.values():
-            for perm_code in manifest.permissions:
+        for manifest in sorted(self._manifests.values(), key=lambda m: m.name):
+            for perm_code in sorted(manifest.permissions):
                 parts = perm_code.split(".")
                 action = parts[-1] if len(parts) > 1 else parts[0]
                 resource = ".".join(parts[:-1]) if len(parts) > 1 else manifest.name
@@ -273,12 +273,12 @@ class FeatureRegistry:
         return perms
 
     def collect_all_events(self, *, include_inactive: bool = False) -> list[dict]:
-        """Gather all event declarations from active feature manifests."""
+        """Gather all event declarations from active feature manifests, sorted by feature then event_type."""
         events = []
-        for manifest in self._manifests.values():
+        for manifest in sorted(self._manifests.values(), key=lambda m: m.name):
             if not include_inactive and not self.is_active(manifest.name):
                 continue
-            for evt in manifest.events:
+            for evt in sorted(manifest.events, key=lambda e: e["event_type"]):
                 events.append({**evt, "feature": manifest.name})
         return events
 
@@ -290,9 +290,9 @@ class FeatureRegistry:
         return None
 
     def get_manifest_data_for_frontend(self) -> list[dict]:
-        """Return feature data for the frontend manifest endpoint."""
+        """Return feature data for the frontend manifest endpoint, sorted by name."""
         result = []
-        for name, manifest in self._manifests.items():
+        for name, manifest in sorted(self._manifests.items()):
             result.append({
                 "name": manifest.name,
                 "label": manifest.label,

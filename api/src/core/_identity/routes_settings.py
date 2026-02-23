@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
+from ..events import event_bus
 from ..permissions import require_permission
 from ..security import get_current_user
 from .models import AppSetting
@@ -114,6 +115,15 @@ async def update_settings(
             db.add(AppSetting(key=key, value=value, updated_at=now, updated_by=current_user.id))
 
     await db.flush()
+
+    await event_bus.emit(
+        "admin.settings_updated",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="settings",
+        resource_id=0,
+        payload={"keys": list(data.settings.keys()), "updated_by": current_user.email},
+    )
 
     # Return all settings after update
     return await list_settings(db=db)

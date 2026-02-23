@@ -1,5 +1,51 @@
 # Changelog
 
+## 2026.02.34
+
+### event (refonte)
+
+- **Journal des evenements** : `EventsPage` redesigne — liste paginee des evenements reels (plus un catalogue), recherche, tri par colonne, toggle "tous les utilisateurs" (`event.read_all`), payloads expandables
+- **Page Types d'evenements** : nouveau `EventTypesPage.tsx` (catalogue des event types, permission `event.types`)
+- **Backend `list_events`** : nouvel endpoint `GET /api/events/` avec pagination, search, sort, filtre par type et par utilisateur
+- **Permissions** : ajout `event.read_all` et `event.types` dans le manifest
+- **Migration Alembic** : suppression de la colonne `redirect_token` sur le modele Event
+- **Suppression `admin_only`** sur les event types
+
+### _identity (audit trail complet)
+
+- **Emissions d'evenements** sur toutes les actions critiques : `user.login`, `user.password_changed`, `user.password_reset`, `user.email_verified`, `user.deleted`, `user.account_deleted`, `user.roles_updated`, `role.created`, `role.updated`, `role.deleted`, `role.permissions_updated`, `admin.impersonation_stopped`, `admin.password_reset_triggered`, `admin.global_permissions_updated`, `admin.feature_toggled`, `admin.settings_updated`
+- **Manifest events** : 20 event types declares (authentification, utilisateurs, roles, administration)
+- **`email_verified_at`** : nouveau champ timestamp sur User (migration Alembic), set lors de la verification email
+
+### sso (hardening + audit)
+
+- **Blocage comptes desactives** : SSO login et auto-link rejetes pour les utilisateurs desactives/supprimes
+- **Utilisateurs SSO verifies** : `email_verified=True` + `email_verified_at` a la creation
+- **Permissions ajoutees** : `sso.link` requis sur `GET /sso/accounts` et `DELETE /sso/accounts/{id}`
+- **Manifest events** : 8 event types declares (`sso.login`, `sso.user_created`, `sso.account_linked`, `sso.account_unlinked`, `sso.link_rejected`, `sso.unlink_blocked`, `sso.login_failed`, `sso.link_failed`)
+- **Emissions d'evenements** sur toutes les actions SSO (login, link, unlink, echecs)
+
+### feature_registry
+
+- **Tri deterministe** : `collect_all_permissions`, `collect_all_events`, `get_manifest_data_for_frontend` retournent des resultats tries par feature puis par code/event_type
+
+### navigation
+
+- **`exact` matching** : propriete `exact` sur `NavItem` pour match de route exact (evite les faux positifs sur routes parentes)
+- **Icone `list`** ajoutee dans le registre d'icones
+- **`UserMenu`** : `isMenuActive` supporte le 2e argument `exact`
+
+### i18n
+
+- **Accept-Language** : tri par quality factor (`q=`) — le middleware retourne desormais la locale preferee selon la priorite RFC, pas le premier match
+- **Routes API** : les defaults des Query params `/translations` et `/namespaces` utilisent `settings.I18N_DEFAULT_LOCALE` au lieu de `"fr"` hardcode
+- **Namespace discovery** : `_derive_namespace` filtre desormais uniquement `__*` (dirs Python internes) au lieu de `_*` — toute feature `_xxx` est decouverte sans hardcode
+- **Traductions EN** : toutes les features ont des traductions anglaises completes (en.json)
+
+### notification.email
+
+- **Templates email i18n** : les 4 methodes d'envoi (`send_notification`, `send_reset_password`, `send_invitation`, `send_verification_code`) utilisent desormais `t("email.*", locale)` au lieu de texte francais hardcode — les emails respectent la langue de l'utilisateur
+
 ## 2026.02.33
 
 ### _identity

@@ -95,7 +95,7 @@ export default function FeaturesAdminPage() {
   }
 
   // --- Group features: parents first, then children ---
-  const rootFeatures = features.filter(f => !f.parent)
+  const rootFeatures = features.filter(f => !f.parent).sort((a, b) => a.name.localeCompare(b.name))
   const childrenMap = features.reduce<Record<string, Feature[]>>((acc, f) => {
     if (f.parent) {
       if (!acc[f.parent]) acc[f.parent] = []
@@ -103,8 +103,11 @@ export default function FeaturesAdminPage() {
     }
     return acc
   }, {})
+  for (const children of Object.values(childrenMap)) {
+    children.sort((a, b) => a.name.localeCompare(b.name))
+  }
 
-  // Build ordered list: parent then its children
+  // Build ordered list: parent then its children (alpha sorted)
   const orderedFeatures: { feature: Feature; isChild: boolean }[] = []
   for (const root of rootFeatures) {
     orderedFeatures.push({ feature: root, isChild: false })

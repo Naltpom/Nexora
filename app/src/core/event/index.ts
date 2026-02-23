@@ -9,9 +9,15 @@ export const manifest = {
       component: lazy(() => import('./EventsPage')),
       permission: 'event.read',
     },
+    {
+      path: '/admin/events/types',
+      component: lazy(() => import('./EventTypesPage')),
+      permission: 'event.types',
+    },
   ],
   navItems: [
-    { label: 'Events', path: '/admin/events', icon: 'zap', section: 'admin', adminGroup: 'securite', permission: 'event.read', order: 10 },
+    { label: 'Journal', path: '/admin/events', icon: 'zap', section: 'admin', adminGroup: 'securite', permission: 'event.read', order: 10, exact: true },
+    { label: 'Types', path: '/admin/events/types', icon: 'list', section: 'admin', adminGroup: 'securite', permission: 'event.types', order: 11 },
   ],
   featureTutorial: {
     featureName: 'event',
@@ -20,15 +26,29 @@ export const manifest = {
     permissionTutorials: [
       {
         permission: 'event.read',
-        label: 'Consulter les evenements',
-        description: 'Decouvrez le journal des evenements systeme.',
+        label: 'Journal des evenements',
+        description: 'Consultez les evenements enregistres dans le systeme.',
+        steps: [
+          {
+            target: '.page-header-card',
+            title: 'Journal des evenements',
+            description: 'Consultez les evenements recus : connexions, modifications, actions des utilisateurs.',
+            position: 'bottom' as const,
+            navigateTo: '/admin/events',
+          },
+        ],
+      },
+      {
+        permission: 'event.types',
+        label: 'Catalogue des types',
+        description: 'Decouvrez les types d\'evenements declares par les features actives.',
         steps: [
           {
             target: '.page-header-card',
             title: 'Catalogue d\'evenements',
-            description: 'Consultez les types d\'evenements declares par les features actives : connexions, modifications, erreurs, etc.',
+            description: 'Consultez les types d\'evenements declares par les features actives.',
             position: 'bottom' as const,
-            navigateTo: '/admin/events',
+            navigateTo: '/admin/events/types',
           },
         ],
       },

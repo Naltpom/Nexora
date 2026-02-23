@@ -25,11 +25,26 @@ def _get_supported_locales() -> list[str]:
 
 
 def _parse_accept_language(header: str) -> str | None:
-    """Extract best matching locale from Accept-Language header."""
+    """Extract best matching locale from Accept-Language header.
+
+    Parses quality factors and returns the highest-priority supported locale.
+    """
     supported = _get_supported_locales()
+    entries: list[tuple[float, str]] = []
     for part in header.split(","):
-        tag = part.split(";")[0].strip().lower()
-        # Match exact or prefix (e.g. "fr-FR" -> "fr")
+        pieces = part.strip().split(";")
+        tag = pieces[0].strip().lower()
+        q = 1.0
+        for p in pieces[1:]:
+            p = p.strip()
+            if p.startswith("q="):
+                try:
+                    q = float(p[2:])
+                except ValueError:
+                    pass
+        entries.append((q, tag))
+    entries.sort(key=lambda x: x[0], reverse=True)
+    for _q, tag in entries:
         if tag in supported:
             return tag
         prefix = tag.split("-")[0]
