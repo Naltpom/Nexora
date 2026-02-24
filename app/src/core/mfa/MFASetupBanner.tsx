@@ -1,21 +1,31 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import i18next from 'i18next'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../core/AuthContext'
 import '../_identity/_identity.scss'
 import './mfa.scss'
 
 export default function MFASetupBanner() {
   const { t } = useTranslation('mfa')
+  const navigate = useNavigate()
   const { isMfaSetupRequired, getMfaGraceExpires } = useAuth()
   const [dismissed, setDismissed] = useState(() => sessionStorage.getItem('mfa_banner_dismissed') === 'true')
 
-  if (dismissed || !isMfaSetupRequired()) return null
-
   const expires = getMfaGraceExpires()
-  if (!expires || new Date() >= expires) return null
+  const isExpired = expires ? new Date() >= expires : false
 
-  const formattedDate = expires.toLocaleDateString('fr-FR', {
+  // Mid-session enforcement: redirect to force-setup when grace period expires
+  useEffect(() => {
+    if (isMfaSetupRequired() && isExpired) {
+      navigate('/mfa/force-setup', { replace: true })
+    }
+  }, [isMfaSetupRequired, isExpired, navigate])
+
+  if (dismissed || !isMfaSetupRequired()) return null
+  if (!expires || isExpired) return null
+
+  const formattedDate = expires.toLocaleDateString(i18next.language || 'fr', {
     day: '2-digit',
     month: 'long',
     year: 'numeric',

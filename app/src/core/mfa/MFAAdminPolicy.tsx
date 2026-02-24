@@ -187,8 +187,8 @@ export default function MFAAdminPolicy() {
           </p>
         </div>
 
-        {error && <div className="alert alert-error">{error}</div>}
-        {successMessage && <div className="alert alert-success">{successMessage}</div>}
+        {error && <div className="alert alert-error" role="alert">{error}</div>}
+        {successMessage && <div className="alert alert-success" aria-live="polite">{successMessage}</div>}
 
         <div className="unified-card">
           <div className="mfa-policy-table-wrapper">
@@ -229,6 +229,7 @@ export default function MFAAdminPolicy() {
                             type="checkbox"
                             checked={state?.mfa_required ?? false}
                             onChange={(e) => updateEditField(role.id, 'mfa_required', e.target.checked)}
+                            aria-label={`${t('admin_table_mfa_required')} — ${role.name}`}
                           />
                           <span className="mfa-toggle-slider" />
                         </label>

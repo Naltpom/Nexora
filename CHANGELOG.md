@@ -1,5 +1,43 @@
 # Changelog
 
+## 2026.02.37
+
+### _identity (assignment_rules DB-driven)
+
+- **`assignment_rules`** : nouveau champ JSONB sur la table `permissions` — controle ou une permission peut etre assignee (`user`, `role`, `global`). Defaut : tout autorise. Seules les exceptions sont configurees via le fichier fixtures `permission_assignment_rules.py`
+- **`mfa.bypass` user-only** : `{"user": true, "role": false, "global": false}` — ne peut etre assigne que sur le profil d'un utilisateur, jamais via un role ni en global
+- Suppression du hardcode `USER_ONLY_PERMISSIONS` dans 6 fichiers (backend + frontend) — remplace par lecture du champ `assignment_rules` en DB
+- Le frontend (`PermissionsAdminPage`) utilise `assignment_rules.global` de l'API pour masquer les permissions non-assignables globalement
+- **Sync au demarrage** : les rules des fixtures sont re-appliquees a chaque restart (idempotent)
+- **Migration Alembic** : ajout colonne + seed `mfa.bypass`
+- **`PermissionResponse`** : nouveau champ `assignment_rules` dans le schema API
+
+### mfa (events + corrections)
+
+- **4 nouveaux events** : `mfa.verify_failed`, `mfa.backup_code_used`, `mfa.policy_deleted`, `mfa.bypassed` (12 events total)
+- **`mfa.bypass`** : bypass absolu (ignore toutes les regles MFA y compris role policies), assigne uniquement per-user via `UserPermission`
+- **`/auth/me`** : retourne `mfa_setup_required` et `mfa_grace_period_expires` dynamiquement (sync F5)
+- **Fix 500 PUT /api/mfa/policy** : CHECK constraint `allowed_methods` accepte JSONB null
+- **Documentation** : `docs/core/mfa/README.md` mis a jour (12 events, bypass user-only, assignment_rules)
+
+### fix
+
+- **`main.tsx`** : suppression import `React` inutilise (TS6133)
+
+## 2026.02.36
+
+### backgrounds (9 fonds + random login)
+
+- **5 nouveaux fonds d'ecran** : Aurore boreale (CSS orbes + hue-rotate), Vagues (SVG layers animes), Grain degrade (CSS gradient + SVG noise filter), Grille neon (repeating-linear-gradient + pulse), Constellations (canvas etoiles + lignes connexion)
+- **Picker Alt+T en grille 3x3** : passage de 4 a 9 options, modal elargi, previews adaptes dark/light
+- **Fond aleatoire sur pages publiques** : sur login/register, un fond aleatoire parmi les 9 est choisi a chaque chargement de page
+- **Theme dark/light aleatoire sur pages publiques** : le theme bascule aleatoirement avec 75% de probabilite de garder le meme qu'au chargement precedent (sessionStorage)
+- **Chargement login sans flash** : theme random applique dans l'IIFE pre-render (main.tsx), skeleton login (shimmer) pendant le loading auth, placeholder SSO pour eviter le saut de layout
+- **Skeleton contextuel** : skeleton login uniquement sur pages publiques (pas de token), rien sur les pages authentifiees
+- **Transition login → preferences** : apres connexion, le fond et theme de l'utilisateur reprennent immediatement (lecture `data-bg-theme` au changement de mode)
+- **Deck shuffle** : les 9 fonds defilent sans repetition tant que tous n'ont pas ete affiches (sessionStorage)
+- **i18n** : traductions FR et EN pour les 5 nouveaux fonds
+
 ## 2026.02.35
 
 ### sso (revue + corrections)

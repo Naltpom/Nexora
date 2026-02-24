@@ -96,3 +96,100 @@
   0% { filter: hue-rotate(0deg); }
   100% { filter: hue-rotate(360deg); }
 }
+
+// ─── Aurora ───
+
+.aurora-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+}
+
+@keyframes auroraOrb1 {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(20vw, -15vh); }
+  50% { transform: translate(-10vw, 20vh); }
+  75% { transform: translate(15vw, 10vh); }
+}
+
+@keyframes auroraOrb2 {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-18vw, 12vh); }
+  50% { transform: translate(12vw, -20vh); }
+  75% { transform: translate(-8vw, -8vh); }
+}
+
+@keyframes auroraOrb3 {
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(15vw, 18vh); }
+  66% { transform: translate(-20vw, -10vh); }
+}
+
+@keyframes auroraHue {
+  0% { filter: blur(80px) hue-rotate(0deg); }
+  100% { filter: blur(80px) hue-rotate(360deg); }
+}
+
+// ─── Waves ───
+
+.wave-layer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 40%;
+  overflow: hidden;
+}
+
+.wave-svg {
+  display: block;
+  width: 200%;
+  height: 100%;
+}
+
+@keyframes waveSlide1 {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-25%); }
+}
+
+@keyframes waveSlide2 {
+  0%, 100% { transform: translateX(-10%); }
+  50% { transform: translateX(-35%); }
+}
+
+@keyframes waveSlide3 {
+  0%, 100% { transform: translateX(-5%); }
+  50% { transform: translateX(-30%); }
+}
+
+// ─── Noise Gradient ───
+
+.noise-svg-filter {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+.noise-overlay {
+  position: absolute;
+  inset: 0;
+  filter: url(#noiseFilter);
+  mix-blend-mode: overlay;
+}
+
+// ─── Neon Grid ───
+
+.neon-grid-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.neon-grid-glow {
+  position: absolute;
+  inset: 0;
+}
+
+@keyframes gridPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+

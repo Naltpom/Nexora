@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...database import get_db
+from ...events import event_bus
 from ...security import get_current_user
 from ..models import UserMFA
 from ..schemas import BackupCodesResponse, TOTPSetupResponse, TOTPVerifySetupRequest
@@ -119,10 +120,29 @@ async def totp_verify_setup(
     mfa_record.totp_verified = True
     mfa_record.is_primary = True
 
+    # Unset is_primary on other methods for this user
+    other_primary = await db.execute(
+        select(UserMFA).where(
+            UserMFA.user_id == current_user.id,
+            UserMFA.method != "totp",
+            UserMFA.is_primary == True,
+        )
+    )
+    for other in other_primary.scalars().all():
+        other.is_primary = False
+
     # Generate backup codes
     codes = await generate_backup_codes(db, current_user.id)
 
     await db.flush()
+
+    await event_bus.emit(
+        "mfa.totp_enabled",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="user",
+        resource_id=current_user.id,
+    )
 
     return BackupCodesResponse(
         codes=codes,
@@ -132,10 +152,11 @@ async def totp_verify_setup(
 
 @router.post("/disable")
 async def totp_disable(
+    request: TOTPVerifySetupRequest,
     db: AsyncSession = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    """Desactiver specifiquement le TOTP."""
+    """Desactiver specifiquement le TOTP. Necessite un code TOTP valide."""
     result = await db.execute(
         select(UserMFA).where(
             UserMFA.user_id == current_user.id,
@@ -150,10 +171,27 @@ async def totp_disable(
             detail="TOTP n'est pas active",
         )
 
+    # Verify TOTP code before disabling
+    from ...encryption import decrypt_value, is_encrypted
+    stored_secret = decrypt_value(mfa_record.totp_secret_encrypted) if is_encrypted(mfa_record.totp_secret_encrypted) else mfa_record.totp_secret_encrypted
+    if not verify_totp(stored_secret, request.code):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Code TOTP invalide",
+        )
+
     mfa_record.is_enabled = False
     mfa_record.is_primary = False
     mfa_record.totp_verified = False
     mfa_record.totp_secret_encrypted = None
     await db.flush()
+
+    await event_bus.emit(
+        "mfa.totp_disabled",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="user",
+        resource_id=current_user.id,
+    )
 
     return {"ok": True, "message": "TOTP desactive avec succes"}

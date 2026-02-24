@@ -71,6 +71,11 @@
   "bg_theme_particles": "Particles",
   "bg_theme_hue_rotation": "Hue rotation",
   "bg_theme_mesh_blobs": "Fluid blobs",
+  "bg_theme_aurora": "Aurora",
+  "bg_theme_waves": "Waves",
+  "bg_theme_noise_gradient": "Noise gradient",
+  "bg_theme_neon_grid": "Neon grid",
+  "bg_theme_constellations": "Constellations",
   "error_boundary_title": "Oops, something went wrong",
   "error_boundary_description": "An unexpected error occurred. Please reload the page.",
   "error_boundary_reload": "Reload page"

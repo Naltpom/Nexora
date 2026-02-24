@@ -42,9 +42,17 @@ export default function MFASetupPage() {
   const [totpSaving, setTotpSaving] = useState(false)
   const [totpDisabling, setTotpDisabling] = useState(false)
 
+  // TOTP disable confirmation
+  const [totpDisableCode, setTotpDisableCode] = useState('')
+  const [showTotpDisableConfirm, setShowTotpDisableConfirm] = useState(false)
+
   // Email
   const [emailSaving, setEmailSaving] = useState(false)
   const [emailDisabling, setEmailDisabling] = useState(false)
+  // Email disable confirmation
+  const [emailDisableCode, setEmailDisableCode] = useState('')
+  const [showEmailDisableConfirm, setShowEmailDisableConfirm] = useState(false)
+  const [emailDisableCodeSending, setEmailDisableCodeSending] = useState(false)
 
   // Backup codes
   const [backupCodes, setBackupCodes] = useState<string[] | null>(null)
@@ -131,9 +139,15 @@ export default function MFASetupPage() {
   }
 
   const handleTotpDisable = async () => {
+    if (!totpDisableCode || totpDisableCode.length !== 6) {
+      setTotpError(t('setup_totp_error_6_digits'))
+      return
+    }
     setTotpDisabling(true)
     try {
-      await api.post('/mfa/totp/disable')
+      await api.post('/mfa/totp/disable', { code: totpDisableCode })
+      setShowTotpDisableConfirm(false)
+      setTotpDisableCode('')
       await fetchStatus()
       showSuccess(t('setup_totp_disabled_success'))
     } catch (err: any) {
@@ -159,10 +173,29 @@ export default function MFASetupPage() {
     }
   }
 
+  const handleEmailDisableSendCode = async () => {
+    setEmailDisableCodeSending(true)
+    try {
+      // Send a verification code to user's email via a dedicated endpoint
+      await api.post('/mfa/email/send-disable-code')
+      setShowEmailDisableConfirm(true)
+    } catch (err: any) {
+      setError(err.response?.data?.detail || t('setup_email_error_disabling'))
+    } finally {
+      setEmailDisableCodeSending(false)
+    }
+  }
+
   const handleEmailDisable = async () => {
+    if (!emailDisableCode || emailDisableCode.length !== 6) {
+      setError(t('setup_totp_error_6_digits'))
+      return
+    }
     setEmailDisabling(true)
     try {
-      await api.post('/mfa/email/disable')
+      await api.post('/mfa/email/disable', { code: emailDisableCode })
+      setShowEmailDisableConfirm(false)
+      setEmailDisableCode('')
       await fetchStatus()
       showSuccess(t('setup_email_disabled_success'))
     } catch (err: any) {
@@ -211,8 +244,8 @@ export default function MFASetupPage() {
           </p>
         </div>
 
-        {error && <div className="alert alert-error">{error}</div>}
-        {successMessage && <div className="alert alert-success">{successMessage}</div>}
+        {error && <div className="alert alert-error" role="alert">{error}</div>}
+        {successMessage && <div className="alert alert-success" aria-live="polite">{successMessage}</div>}
 
         {/* Backup Codes Modal/Inline */}
         {backupCodes && (
@@ -245,20 +278,54 @@ export default function MFASetupPage() {
             </div>
 
             <div className="mfa-setup-section-body">
-              {totpError && <div className="alert alert-error alert-spaced">{totpError}</div>}
+              {totpError && <div className="alert alert-error alert-spaced" role="alert">{totpError}</div>}
 
-              {totpEnabled && !totpSetupData && (
+              {totpEnabled && !totpSetupData && !showTotpDisableConfirm && (
                 <div className="mfa-setup-actions">
                   <p className="text-gray-500-sm">
                     {t('setup_totp_active_message')}
                   </p>
                   <button
                     className="btn btn-danger btn-sm"
-                    onClick={handleTotpDisable}
-                    disabled={totpDisabling}
+                    onClick={() => setShowTotpDisableConfirm(true)}
                   >
-                    {totpDisabling ? t('setup_totp_disabling') : t('setup_totp_disable')}
+                    {t('setup_totp_disable')}
                   </button>
+                </div>
+              )}
+
+              {showTotpDisableConfirm && (
+                <div className="mfa-totp-setup">
+                  <p className="mfa-setup-totp-instructions">{t('setup_totp_disable_confirm_hint')}</p>
+                  <div className="form-group">
+                    <label>{t('verify_label_totp')}</label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      className="mfa-code-input"
+                      value={totpDisableCode}
+                      onChange={(e) => setTotpDisableCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      placeholder="000000"
+                      maxLength={6}
+                      autoFocus
+                    />
+                  </div>
+                  <div className="flex-row-sm">
+                    <button
+                      className="btn btn-danger"
+                      onClick={handleTotpDisable}
+                      disabled={totpDisabling || totpDisableCode.length !== 6}
+                    >
+                      {totpDisabling ? t('setup_totp_disabling') : t('setup_totp_disable_confirm')}
+                    </button>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => { setShowTotpDisableConfirm(false); setTotpDisableCode(''); setTotpError('') }}
+                      type="button"
+                    >
+                      {t('setup_totp_cancel')}
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -355,18 +422,51 @@ export default function MFASetupPage() {
             </div>
 
             <div className="mfa-setup-section-body">
-              {emailEnabled ? (
+              {emailEnabled && !showEmailDisableConfirm ? (
                 <div className="mfa-setup-actions">
                   <p className="text-gray-500-sm">
                     {t('setup_email_active_message')}
                   </p>
                   <button
                     className="btn btn-danger btn-sm"
-                    onClick={handleEmailDisable}
-                    disabled={emailDisabling}
+                    onClick={handleEmailDisableSendCode}
+                    disabled={emailDisableCodeSending}
                   >
-                    {emailDisabling ? t('setup_email_disabling') : t('setup_email_disable')}
+                    {emailDisableCodeSending ? t('verify_email_sending') : t('setup_email_disable')}
                   </button>
+                </div>
+              ) : emailEnabled && showEmailDisableConfirm ? (
+                <div className="mfa-totp-setup">
+                  <p className="mfa-setup-totp-instructions">{t('setup_email_disable_confirm_hint')}</p>
+                  <div className="form-group">
+                    <label>{t('verify_label_email')}</label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      className="mfa-code-input"
+                      value={emailDisableCode}
+                      onChange={(e) => setEmailDisableCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      placeholder="000000"
+                      maxLength={6}
+                      autoFocus
+                    />
+                  </div>
+                  <div className="flex-row-sm">
+                    <button
+                      className="btn btn-danger"
+                      onClick={handleEmailDisable}
+                      disabled={emailDisabling || emailDisableCode.length !== 6}
+                    >
+                      {emailDisabling ? t('setup_email_disabling') : t('setup_email_disable_confirm')}
+                    </button>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => { setShowEmailDisableConfirm(false); setEmailDisableCode('') }}
+                      type="button"
+                    >
+                      {t('setup_totp_cancel')}
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <button

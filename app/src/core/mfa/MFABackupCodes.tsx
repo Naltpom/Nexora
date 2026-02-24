@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import i18next from 'i18next'
 import './mfa.scss'
 
 interface Props {
@@ -39,7 +40,7 @@ export default function MFABackupCodes({ codes, onClose }: Props) {
       '',
       ...codes,
       '',
-      `${t('backup_download_generated_prefix')} ${new Date().toLocaleDateString('fr-FR')} ${t('backup_download_generated_time_prefix')} ${new Date().toLocaleTimeString('fr-FR')}`,
+      `${t('backup_download_generated_prefix')} ${new Date().toLocaleDateString(i18next.language || 'fr')} ${t('backup_download_generated_time_prefix')} ${new Date().toLocaleTimeString(i18next.language || 'fr')}`,
     ].join('\n')
 
     const blob = new Blob([content], { type: 'text/plain' })

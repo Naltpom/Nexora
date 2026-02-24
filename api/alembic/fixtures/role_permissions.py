@@ -36,7 +36,7 @@ DPO_PERMISSION_CODES: list[str] = [
     "rgpd.droits.manage",
     "rgpd.politique.manage",
     "rgpd.audit.read",
-    "mfa.manage", "mfa.bypass",
+    "mfa.manage",  # mfa.bypass is user-only (assigned per-user, never via role)
     "search.global",
 ]
 

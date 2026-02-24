@@ -2,6 +2,7 @@ import { useState, useEffect, Suspense, lazy } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './core/AuthContext'
 import { useFeature } from './core/FeatureContext'
+import { useAppSettings } from './core/AppSettingsContext'
 import ProtectedRoute from './core/ProtectedRoute'
 import MeshBackground from './core/MeshBackground'
 import BackgroundThemePicker from './core/BackgroundThemePicker'
@@ -36,19 +37,45 @@ const coreModules = import.meta.glob('./core/*/index.ts', { eager: true }) as Re
 const projectModules = import.meta.glob('./features/*/index.ts', { eager: true }) as Record<string, any>
 const featureModules = { ...coreModules, ...projectModules }
 
-function LoadingSpinner() {
+function LoginSkeleton() {
   return (
-    <div className="loading-screen">
-      <div className="spinner" />
-      <p>Chargement...</p>
+    <div className="login-container">
+      <div className="login-card">
+        <div className="login-header">
+          <div className="skeleton skeleton-circle" style={{ width: 48, height: 48, margin: '0 auto' }} />
+          <div className="skeleton skeleton-text skeleton-text-lg" />
+          <div className="skeleton skeleton-text skeleton-text-sm" />
+        </div>
+        <div className="skeleton-form">
+          <div className="skeleton skeleton-text skeleton-text-xs" />
+          <div className="skeleton skeleton-input" />
+          <div className="skeleton skeleton-text skeleton-text-xs" />
+          <div className="skeleton skeleton-input" />
+          <div className="skeleton skeleton-btn" />
+        </div>
+      </div>
     </div>
   )
 }
 
 export default function App() {
-  const { user, loading } = useAuth()
-  const { isActive } = useFeature()
+  const { user, loading: authLoading } = useAuth()
+  const { isActive, loading: featuresLoading } = useFeature()
+  const { loading: settingsLoading } = useAppSettings()
   const [showBgPicker, setShowBgPicker] = useState(false)
+  const [timedOut, setTimedOut] = useState(false)
+  const hasToken = !!localStorage.getItem('access_token')
+
+  // Skeleton timeout: max 1.5s even if APIs are slow
+  const anyLoading = authLoading || featuresLoading || settingsLoading
+  useEffect(() => {
+    if (!anyLoading) return
+    const id = setTimeout(() => setTimedOut(true), 1500)
+    return () => clearTimeout(id)
+  }, [anyLoading])
+
+  // Show skeleton on public pages while contexts load (or until timeout)
+  const showSkeleton = !hasToken && anyLoading && !timedOut
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -61,10 +88,6 @@ export default function App() {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [])
 
-  if (loading) {
-    return <LoadingSpinner />
-  }
-
   // Collect routes from active features
   const featureRoutes: Array<{
     path: string
@@ -74,15 +97,17 @@ export default function App() {
     public?: boolean
   }> = []
 
-  for (const [, mod] of Object.entries(featureModules)) {
-    const manifest = (mod as any).manifest
-    if (!manifest || !isActive(manifest.name)) continue
+  if (!anyLoading || timedOut) {
+    for (const [, mod] of Object.entries(featureModules)) {
+      const manifest = (mod as any).manifest
+      if (!manifest || !isActive(manifest.name)) continue
 
-    for (const route of manifest.routes || []) {
-      featureRoutes.push({
-        ...route,
-        feature: manifest.name,
-      })
+      for (const route of manifest.routes || []) {
+        featureRoutes.push({
+          ...route,
+          feature: manifest.name,
+        })
+      }
     }
   }
 
@@ -132,22 +157,28 @@ export default function App() {
 
   return (
     <>
-      <MeshBackground />
-      {user && (
-        <BackgroundThemePicker
-          isOpen={showBgPicker}
-          onClose={() => setShowBgPicker(false)}
-        />
-      )}
-      <Suspense fallback={<LoadingSpinner />}>
-        {isActive('preference.didacticiel') ? (
-          <TutorialWrapper>{routes}</TutorialWrapper>
-        ) : routes}
-      </Suspense>
-      {isActive('rgpd.consentement') && (
-        <Suspense fallback={null}>
-          <CookieBanner />
-        </Suspense>
+      <MeshBackground randomOnLoad={!hasToken} />
+      {showSkeleton ? (
+        <LoginSkeleton />
+      ) : (
+        <>
+          {user && (
+            <BackgroundThemePicker
+              isOpen={showBgPicker}
+              onClose={() => setShowBgPicker(false)}
+            />
+          )}
+          <Suspense fallback={<LoginSkeleton />}>
+            {isActive('preference.didacticiel') ? (
+              <TutorialWrapper>{routes}</TutorialWrapper>
+            ) : routes}
+          </Suspense>
+          {isActive('rgpd.consentement') && (
+            <Suspense fallback={null}>
+              <CookieBanner />
+            </Suspense>
+          )}
+        </>
       )}
     </>
   )

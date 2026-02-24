@@ -92,6 +92,10 @@ async def set_global_permission(
     if not perm:
         raise HTTPException(status_code=404, detail="Permission introuvable")
 
+    # Block permissions that cannot be set globally (assignment_rules.global=false)
+    if not perm.assignment_rules.get("global", True):
+        raise HTTPException(status_code=400, detail=f"Permission assignable uniquement par utilisateur : {perm.code}")
+
     result = await db.execute(
         select(GlobalPermission).where(GlobalPermission.permission_id == data.permission_id)
     )

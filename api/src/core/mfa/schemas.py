@@ -55,6 +55,10 @@ class MFADisableRequest(BaseModel):
     password: str
 
 
+class EmailDisableRequest(BaseModel):
+    code: str
+
+
 class BackupCodesResponse(BaseModel):
     codes: list[str]
     generated_at: datetime

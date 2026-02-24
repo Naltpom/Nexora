@@ -20,6 +20,8 @@ export interface User {
   created_at: string
   pending_legal_acceptances?: PendingLegalAcceptance[]
   has_previous_acceptances?: boolean
+  mfa_setup_required?: boolean
+  mfa_grace_period_expires?: string | null
 }
 
 export interface PaginatedResponse<T> {

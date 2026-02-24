@@ -2,9 +2,9 @@
 .bg-theme-picker {
   background: white;
   border-radius: 16px;
-  padding: 24px;
-  max-width: 420px;
-  width: 90%;
+  padding: 20px;
+  max-width: 560px;
+  width: 92%;
   box-shadow: 0 20px 60px rgba(0,0,0,0.3);
   animation: modalSlideIn 0.2s ease-out;
 }
@@ -18,8 +18,8 @@
 
 .bg-theme-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
 }
 
 .bg-theme-option {
@@ -47,10 +47,10 @@
 }
 
 .bg-theme-preview {
-  height: 80px;
+  height: 64px;
   border-radius: 8px;
   overflow: hidden;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .bg-theme-hint {

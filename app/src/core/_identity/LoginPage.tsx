@@ -115,7 +115,7 @@ export default function Login() {
               <span className="login-divider-text">{t('login.divider_or')}</span>
               <div className="login-divider-line" />
             </div>
-            <Suspense fallback={null}>
+            <Suspense fallback={<div className="sso-buttons-placeholder" />}>
               <SSOButtons />
             </Suspense>
           </>

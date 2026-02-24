@@ -83,3 +83,19 @@ class MFARolePolicy(Base):
     )
 
     role = relationship("Role", backref="mfa_policy")
+
+
+class MFAEmailCode(Base):
+    """Persistent email OTP codes (replaces in-memory store)."""
+    __tablename__ = "mfa_email_codes"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    code_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    is_used: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )

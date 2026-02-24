@@ -15,16 +15,29 @@ async def is_mfa_required_for_user(db: AsyncSession, user) -> dict:
     If not, check role policies -> return mfa_setup_required if policy requires MFA but not configured.
 
     Only returns methods whose sub-feature is active (mfa.totp, mfa.email).
-    Users with the mfa.bypass permission skip MFA entirely.
+    mfa.bypass is a user-only permission (assigned directly on user profile, never via role/global).
+    It overrides ALL MFA rules including role policies.
     """
-    from .._identity.models import UserRole
+    from .._identity.models import Permission as PermModel
+    from .._identity.models import UserPermission, UserRole
+    from ..events import event_bus
     from ..feature_registry import get_registry
-    from ..permissions import load_user_permissions
     from .models import MFARolePolicy, UserMFA
 
-    # Check mfa.bypass permission
-    user_perms = await load_user_permissions(db, user.id)
-    if user_perms.get("mfa.bypass") is True:
+    # Check mfa.bypass — user-only permission (direct UserPermission only, not roles/global)
+    bypass_result = await db.execute(
+        select(UserPermission.granted)
+        .join(PermModel, PermModel.id == UserPermission.permission_id)
+        .where(UserPermission.user_id == user.id, PermModel.code == "mfa.bypass", UserPermission.granted == True)
+    )
+    if bypass_result.scalar_one_or_none():
+        await event_bus.emit(
+            "mfa.bypassed",
+            db=db,
+            actor_id=user.id,
+            resource_type="user",
+            resource_id=user.id,
+        )
         return {"mfa_required": False, "available_methods": [], "mfa_bypassed": True}
 
     # Determine which MFA methods are available based on active sub-features
@@ -101,6 +114,17 @@ async def verify_backup_code(db: AsyncSession, user_id: int, code: str) -> bool:
             backup.is_used = True
             backup.used_at = datetime.now(timezone.utc)
             await db.flush()
+
+            from ..events import event_bus
+            remaining = await get_backup_codes_count(db, user_id)
+            await event_bus.emit(
+                "mfa.backup_code_used",
+                db=db,
+                actor_id=user_id,
+                resource_type="user",
+                resource_id=user_id,
+                payload={"remaining": remaining},
+            )
             return True
     return False
 

@@ -1,4 +1,3 @@
-import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
@@ -17,11 +16,10 @@ import './core/styles/global.scss'
 import './core/styles/animations.scss'
 
 // Apply theme + preferences before render to prevent flash
-// RGPD: skip if functional consent not granted (preferences not cached)
 ;(() => {
-  if (!hasConsent('functional')) return
   const token = localStorage.getItem('access_token')
-  if (token) {
+  if (token && hasConsent('functional')) {
+    // Authenticated: apply user preferences synchronously
     try {
       const payload = JSON.parse(atob(token.split('.')[1]))
       const userId = payload.sub
@@ -45,13 +43,20 @@ import './core/styles/animations.scss'
               }
             }
           }
-          // Apply font, layout, composants, accessibilite preferences
           applyAllPreferences(prefs)
         }
       }
     } catch {
       // ignore
     }
+  } else if (!token) {
+    // Public page (login/register): random theme applied synchronously (no flash)
+    const THEME_KEY = '_public_theme'
+    const prev = sessionStorage.getItem(THEME_KEY) || 'light'
+    const keepPrev = Math.random() < 0.75
+    const next = keepPrev ? prev : (prev === 'dark' ? 'light' : 'dark')
+    sessionStorage.setItem(THEME_KEY, next)
+    document.documentElement.setAttribute('data-theme', next)
   }
 })()
 
@@ -63,8 +68,7 @@ if ('serviceWorker' in navigator) {
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
+  <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
       <AppSettingsProvider>
         <AuthProvider>
           <I18nProvider>
@@ -82,6 +86,5 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           </I18nProvider>
         </AuthProvider>
       </AppSettingsProvider>
-    </BrowserRouter>
-  </React.StrictMode>,
+    </BrowserRouter>,
 )

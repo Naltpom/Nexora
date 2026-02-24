@@ -116,6 +116,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       setUser(userData)
       await checkImpersonationStatus()
+
+      // Sync MFA policy status from /me response (handles policy changes mid-session)
+      if (userData.mfa_setup_required) {
+        localStorage.setItem('mfa_setup_required', 'true')
+        if (userData.mfa_grace_period_expires) {
+          localStorage.setItem('mfa_grace_period_expires', userData.mfa_grace_period_expires)
+        }
+      } else {
+        localStorage.removeItem('mfa_setup_required')
+        localStorage.removeItem('mfa_grace_period_expires')
+      }
     } catch {
       setUser(null)
       localStorage.removeItem('access_token')

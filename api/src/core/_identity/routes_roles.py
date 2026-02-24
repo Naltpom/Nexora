@@ -223,6 +223,12 @@ async def assign_permissions(
     if missing:
         raise HTTPException(status_code=400, detail=f"Permission(s) introuvable(s): {missing}")
 
+    # Block permissions that cannot be assigned to roles (assignment_rules.role=false)
+    role_blocked = [p for p in permissions if not p.assignment_rules.get("role", True)]
+    if role_blocked:
+        codes = ", ".join(p.code for p in role_blocked)
+        raise HTTPException(status_code=400, detail=f"Permission(s) assignable(s) uniquement par utilisateur : {codes}")
+
     # Remove existing role permissions
     result = await db.execute(
         select(RolePermission).where(RolePermission.role_id == role_id)
@@ -281,9 +287,10 @@ async def list_role_permissions_paginated(
     )
     granted_ids = {row[0] for row in rp_result.all()}
 
-    # Build query
-    query = select(Permission).order_by(Permission.feature, Permission.code)
-    count_query = select(func.count(Permission.id))
+    # Build query — exclude permissions not assignable to roles (assignment_rules.role=false)
+    role_filter = Permission.assignment_rules["role"].as_boolean() == True
+    query = select(Permission).where(role_filter).order_by(Permission.feature, Permission.code)
+    count_query = select(func.count(Permission.id)).where(role_filter)
 
     if search:
         search_escaped = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
@@ -341,8 +348,13 @@ async def toggle_role_permission(
         raise HTTPException(status_code=404, detail="Role introuvable")
 
     result = await db.execute(select(Permission).where(Permission.id == data.permission_id))
-    if not result.scalar_one_or_none():
+    perm = result.scalar_one_or_none()
+    if not perm:
         raise HTTPException(status_code=404, detail="Permission introuvable")
+
+    # Block permissions that cannot be assigned to roles (assignment_rules.role=false)
+    if not perm.assignment_rules.get("role", True):
+        raise HTTPException(status_code=400, detail=f"Permission assignable uniquement par utilisateur : {perm.code}")
 
     # Check if already assigned
     result = await db.execute(

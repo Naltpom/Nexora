@@ -117,6 +117,11 @@ class Permission(Base):
     feature: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     label: Mapped[str | None] = mapped_column(String(255), nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    assignment_rules: Mapped[dict] = mapped_column(
+        JSONB,
+        server_default='{"user": true, "role": true, "global": true}',
+        nullable=False,
+    )
 
     roles = relationship("Role", secondary="role_permissions", back_populates="permissions")
 

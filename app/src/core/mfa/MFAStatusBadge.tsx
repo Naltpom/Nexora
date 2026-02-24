@@ -28,12 +28,12 @@ export default function MFAStatusBadge() {
   if (!status) return null
 
   if (status.is_mfa_enabled) {
-    return <span className="mfa-badge mfa-badge-active">{t('badge_active')}</span>
+    return <span className="mfa-badge mfa-badge-active" aria-live="polite">{t('badge_active')}</span>
   }
 
   if (status.mfa_required_by_policy) {
-    return <span className="mfa-badge mfa-badge-required">{t('badge_required')}</span>
+    return <span className="mfa-badge mfa-badge-required" aria-live="polite">{t('badge_required')}</span>
   }
 
-  return <span className="mfa-badge mfa-badge-inactive">{t('badge_inactive')}</span>
+  return <span className="mfa-badge mfa-badge-inactive" aria-live="polite">{t('badge_inactive')}</span>
 }

@@ -168,9 +168,9 @@ export default function MFAVerifyPage() {
         )}
 
         <form onSubmit={handleSubmit}>
-          {error && <div className="alert alert-error">{error}</div>}
+          {error && <div className="alert alert-error" role="alert">{error}</div>}
           {attemptsHint && (
-            <div className="mfa-attempts-hint">{attemptsHint}</div>
+            <div className="mfa-attempts-hint" aria-live="polite">{attemptsHint}</div>
           )}
 
           {activeMethod === 'email' && !emailSent && (

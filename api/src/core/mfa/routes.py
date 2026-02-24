@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .._identity.models import Role, User, UserRole
 from ..config import settings
 from ..database import get_db
+from ..events import event_bus
 from ..permissions import require_permission
 from ..rate_limit import limiter
 from ..security import (
@@ -80,7 +81,9 @@ async def get_mfa_status(
         policy = result.scalars().first()
         if policy and current_user.created_at:
             from datetime import timedelta
-            grace_period_expires = current_user.created_at + timedelta(days=policy.grace_period_days)
+            # Grace period starts from whichever is more recent: policy update or user creation
+            start = max(policy.updated_at, current_user.created_at) if policy.updated_at else current_user.created_at
+            grace_period_expires = start + timedelta(days=policy.grace_period_days)
 
     return MFAStatusResponse(
         is_mfa_enabled=len(enabled_methods) > 0,
@@ -109,6 +112,14 @@ async def verify_mfa(
     # Verify the code
     is_valid = await verify_mfa_code(db, user_id, data.code, data.method)
     if not is_valid:
+        await event_bus.emit(
+            "mfa.verify_failed",
+            db=db,
+            actor_id=user_id,
+            resource_type="user",
+            resource_id=user_id,
+            payload={"method": data.method},
+        )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Code MFA invalide",
@@ -122,6 +133,15 @@ async def verify_mfa(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Utilisateur introuvable",
         )
+
+    await event_bus.emit(
+        "mfa.verified",
+        db=db,
+        actor_id=user_id,
+        resource_type="user",
+        resource_id=user_id,
+        payload={"method": data.method},
+    )
 
     token_data = {"sub": str(user.id), "email": user.email, "lang": user.language}
     preferences = json.loads(user.preferences) if user.preferences else None
@@ -170,6 +190,15 @@ async def disable_mfa(
     )
     await db.flush()
 
+    await event_bus.emit(
+        "mfa.disabled",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="user",
+        resource_id=current_user.id,
+        payload={"scope": "all"},
+    )
+
     return {"ok": True, "message": "MFA desactive avec succes"}
 
 
@@ -195,6 +224,15 @@ async def generate_backup_codes_endpoint(
         )
 
     codes = await generate_backup_codes(db, current_user.id)
+
+    await event_bus.emit(
+        "mfa.backup_codes_generated",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="user",
+        resource_id=current_user.id,
+    )
+
     return BackupCodesResponse(
         codes=codes,
         generated_at=datetime.now(timezone.utc),
@@ -306,6 +344,14 @@ async def set_policy(
 
     await db.flush()
 
+    await event_bus.emit(
+        "mfa.policy_updated",
+        db=db,
+        resource_type="role",
+        resource_id=role_id,
+        payload={"role": role.name, "mfa_required": data.mfa_required, "grace_period_days": data.grace_period_days},
+    )
+
     return MFAPolicyResponse(
         role_id=policy.role_id,
         role_name=role.name,
@@ -324,6 +370,7 @@ async def set_policy(
 )
 async def delete_policy(
     role_id: int,
+    current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Supprimer la policy MFA pour un role."""
@@ -336,5 +383,19 @@ async def delete_policy(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Policy MFA introuvable pour ce role",
         )
+
+    # Get role name for event payload
+    role_result = await db.execute(select(Role).where(Role.id == role_id))
+    role = role_result.scalar_one_or_none()
+
     await db.delete(policy)
     await db.flush()
+
+    await event_bus.emit(
+        "mfa.policy_deleted",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="role",
+        resource_id=role_id,
+        payload={"role": role.name if role else str(role_id)},
+    )

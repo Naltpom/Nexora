@@ -255,6 +255,17 @@ async def update_user(
 
     if data.email is not None:
         user.email = data.email
+        # Sync MFA email address if mfa feature is active
+        try:
+            from ..mfa.models import UserMFA
+            mfa_result = await db.execute(
+                select(UserMFA).where(UserMFA.user_id == user.id, UserMFA.method == "email")
+            )
+            mfa_email_record = mfa_result.scalar_one_or_none()
+            if mfa_email_record:
+                mfa_email_record.email_address = data.email
+        except Exception:
+            pass  # MFA feature not active
     if data.first_name is not None:
         user.first_name = data.first_name
     if data.last_name is not None:
@@ -531,6 +542,17 @@ async def update_user_by_uuid(
 
     if data.email is not None:
         user.email = data.email
+        # Sync MFA email address if mfa feature is active
+        try:
+            from ..mfa.models import UserMFA
+            mfa_result = await db.execute(
+                select(UserMFA).where(UserMFA.user_id == user.id, UserMFA.method == "email")
+            )
+            mfa_email_record = mfa_result.scalar_one_or_none()
+            if mfa_email_record:
+                mfa_email_record.email_address = data.email
+        except Exception:
+            pass  # MFA feature not active
     if data.first_name is not None:
         user.first_name = data.first_name
     if data.last_name is not None:

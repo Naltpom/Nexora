@@ -114,6 +114,8 @@ class UserResponse(BaseModel):
     created_at: datetime
     pending_legal_acceptances: list[PendingLegalAcceptance] = []
     has_previous_acceptances: bool = False
+    mfa_setup_required: bool = False
+    mfa_grace_period_expires: str | None = None
 
     model_config = {"from_attributes": True}
 
@@ -212,6 +214,7 @@ class PermissionResponse(BaseModel):
     feature: str
     label: str | None = None
     description: str | None = None
+    assignment_rules: dict = {"user": True, "role": True, "global": True}
 
     model_config = {"from_attributes": True}
 

@@ -9,12 +9,19 @@ import api from '../../api'
 /*  Types                                                             */
 /* ------------------------------------------------------------------ */
 
+interface AssignmentRules {
+  user?: boolean
+  role?: boolean
+  global?: boolean
+}
+
 interface Permission {
   id: number
   code: string
   feature: string
   label: string
   description: string
+  assignment_rules?: AssignmentRules
 }
 
 interface GlobalPermission {
@@ -202,14 +209,17 @@ export default function PermissionsAdminPage() {
           </div>
         ) : (
           <>
-            {Object.entries(permissionsByFeature).map(([feature, perms]) => (
+            {Object.entries(permissionsByFeature).map(([feature, perms]) => {
+              const filteredPerms = perms.filter(p => p.assignment_rules?.global !== false)
+              if (filteredPerms.length === 0) return null
+              return (
               <div key={feature} className="section-mb-lg">
                 <h2 className="section-category-title">
                   {feature}
                 </h2>
                 <div className="unified-card p-16">
                   <div className="flex-col-md">
-                    {perms.map((perm) => {
+                    {filteredPerms.map((perm) => {
                       const granted = isGlobalGranted(perm.id)
                       return (
                         <div
@@ -243,7 +253,8 @@ export default function PermissionsAdminPage() {
                   </div>
                 </div>
               </div>
-            ))}
+              )
+            })}
 
             {can('permissions.manage') && (
               <div className="flex-end mt-8">

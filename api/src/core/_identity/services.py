@@ -375,6 +375,18 @@ async def sync_permissions_from_registry(db: AsyncSession, registry) -> None:
                 existing.label = perm_info["label"]
             if not existing.description and perm_info.get("description"):
                 existing.description = perm_info["description"]
+
+    # Sync assignment_rules from fixtures (only for permissions with non-default rules)
+    # Mirror of alembic/fixtures/permission_assignment_rules.py
+    PERMISSION_ASSIGNMENT_RULES: dict[str, dict[str, bool]] = {
+        "mfa.bypass": {"user": True, "role": False, "global": False},
+    }
+    for code, rules in PERMISSION_ASSIGNMENT_RULES.items():
+        result = await db.execute(select(Permission).where(Permission.code == code))
+        perm = result.scalar_one_or_none()
+        if perm and perm.assignment_rules != rules:
+            perm.assignment_rules = rules
+
     await db.flush()
 
 

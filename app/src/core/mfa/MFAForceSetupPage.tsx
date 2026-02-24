@@ -116,8 +116,8 @@ export default function MFAForceSetupPage() {
           </p>
         </div>
 
-        {error && <div className="alert alert-error">{error}</div>}
-        {successMessage && <div className="alert alert-success">{successMessage}</div>}
+        {error && <div className="alert alert-error" role="alert">{error}</div>}
+        {successMessage && <div className="alert alert-success" aria-live="polite">{successMessage}</div>}
 
         {!successMessage && (
           <div className="mfa-force-methods-col">
@@ -129,7 +129,7 @@ export default function MFAForceSetupPage() {
                   {t('force_totp_description')}
                 </p>
 
-                {totpError && <div className="alert alert-error alert-spaced">{totpError}</div>}
+                {totpError && <div className="alert alert-error alert-spaced" role="alert">{totpError}</div>}
 
                 {!totpSetupData ? (
                   <button className="btn btn-primary" onClick={handleTotpSetup} disabled={totpSaving}>

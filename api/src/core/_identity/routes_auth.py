@@ -187,6 +187,32 @@ async def get_me(
     pending, has_previous = await get_pending_acceptances_for_user(
         db, current_user.id, user_created_at=current_user.created_at,
     )
+
+    # Check MFA policy requirement (dynamic import, only if feature active)
+    mfa_setup_required = False
+    mfa_grace_period_expires = None
+    try:
+        from ..feature_registry import get_registry
+        registry = get_registry()
+        if registry and registry.is_active("mfa"):
+            from ..mfa.services import is_mfa_required_for_user
+            mfa_result = await is_mfa_required_for_user(db, current_user)
+            mfa_setup_required = mfa_result.get("mfa_setup_required", False)
+            if mfa_setup_required:
+                from datetime import timedelta
+                grace_days = mfa_result.get("grace_period_days", 7)
+                policy_updated = mfa_result.get("policy_updated_at")
+                if policy_updated:
+                    from datetime import datetime as _dt
+                    policy_dt = _dt.fromisoformat(policy_updated)
+                    start = max(policy_dt, current_user.created_at)
+                else:
+                    start = current_user.created_at
+                expires = start + timedelta(days=grace_days)
+                mfa_grace_period_expires = expires.isoformat()
+    except Exception:
+        pass  # MFA feature not active
+
     return UserResponse(
         id=current_user.id,
         email=current_user.email,
@@ -201,6 +227,8 @@ async def get_me(
         created_at=current_user.created_at,
         pending_legal_acceptances=pending,
         has_previous_acceptances=has_previous,
+        mfa_setup_required=mfa_setup_required,
+        mfa_grace_period_expires=mfa_grace_period_expires,
     )
 
 
@@ -225,6 +253,17 @@ async def update_me(
         if existing.scalar_one_or_none():
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Cet email est deja utilise")
         user.email = data.email
+        # Sync MFA email address if mfa feature is active
+        try:
+            from ..mfa.models import UserMFA
+            mfa_result = await db.execute(
+                select(UserMFA).where(UserMFA.user_id == user.id, UserMFA.method == "email")
+            )
+            mfa_email_record = mfa_result.scalar_one_or_none()
+            if mfa_email_record:
+                mfa_email_record.email_address = data.email
+        except Exception:
+            pass  # MFA feature not active
     if data.first_name is not None:
         user.first_name = data.first_name
     if data.last_name is not None:

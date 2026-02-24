@@ -3,16 +3,16 @@ Tu dois effectuer un commit propre en suivant cette procedure stricte :
 ## Etape 0 — Prerequis : verifier que `act` est disponible
 
 1. Tester si `act` est dans le PATH :
-   ```bash
-   act --version
-   ```
+    ```bash
+    act --version
+    ```
 2. Si `act` n'est pas trouve :
-   - Chercher l'executable sur le disque (WinGet, scoop, go/bin, etc.) :
-     ```bash
-     powershell.exe -NoProfile -Command "Get-ChildItem -Path 'C:\' -Filter 'act.exe' -Recurse -Depth 5 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName"
-     ```
-   - Si trouve : le copier dans un dossier deja dans le PATH (ex: `~/bin/`) et verifier avec `act --version`
-   - Si pas trouve : l'installer via `winget install nektos.act`, puis chercher l'exe installe et le copier dans `~/bin/`
+    - Chercher l'executable sur le disque (WinGet, scoop, go/bin, etc.) :
+        ```bash
+        powershell.exe -NoProfile -Command "Get-ChildItem -Path 'C:\' -Filter 'act.exe' -Recurse -Depth 5 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName"
+        ```
+    - Si trouve : le copier dans un dossier deja dans le PATH (ex: `~/bin/`) et verifier avec `act --version`
+    - Si pas trouve : l'installer via `winget install nektos.act`, puis chercher l'exe installe et le copier dans `~/bin/`
 3. Ne JAMAIS passer a l'etape suivante si `act --version` ne fonctionne pas
 
 ## Etape 1 — CI complete via act
@@ -32,9 +32,9 @@ Cette commande execute TOUS les jobs definis dans `.github/workflows/ci.yml` (li
 
 1. Lire `CHANGELOG.md` pour trouver la version actuelle
 2. Si les changements ne sont pas encore documentes dans le CHANGELOG :
-   - Incrementer la version N dans `CHANGELOG.md` (nouvelle section en haut)
-   - Bumper `app/package.json` → `"version"`
-   - Bumper `api/src/main.py` → `version=` dans `create_app()`
+    - Incrementer la version N dans `CHANGELOG.md` (nouvelle section en haut)
+    - Bumper `app/package.json` → `"version"`
+    - Bumper `api/src/main.py` → `version=` dans `create_app()`
 3. Si le CHANGELOG est deja a jour, verifier que les 3 fichiers sont coherents
 
 ## Etape 3 — Git add + commit
@@ -46,6 +46,7 @@ git commit -m "<message>"
 ```
 
 Format du message de commit :
+
 - Prefixe : `feat:`, `fix:`, `refactor:`, `docs:`, `chore:` selon le type
 - Inclure `— vYYYY.MM.N` a la fin de la premiere ligne
 - Description courte (1 ligne) + details en corps si necessaire
@@ -60,9 +61,6 @@ git log --oneline -1
 
 Confirmer que le commit est propre et que tout est ok.
 
-## Etape 5 — Continuer le developpement ?
+## Etape 5 — Continuer le developpement
 
-Demander a l'utilisateur : "Veux-tu relancer l'environnement de dev (docker + fixtures) ou s'arreter la ?"
-
-- Si oui : executer la commande `/dev-reset`
-- Si non : terminer
+executer la commande `/dev-reset`

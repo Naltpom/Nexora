@@ -166,7 +166,7 @@ Cela s'applique dans **tous les contextes** :
 
 | # | Check | Feature | Type | Dependances | Chemins API | Chemins APP | Notes |
 |---|-------|---------|------|-------------|-------------|-------------|-------|
-| 7 | [ ] | `mfa` | parent | _identity | `api/src/core/mfa/` | `app/src/core/mfa/` | MFA policy, verify page, force setup, admin policy |
+| 7 | [x] | `mfa` | parent | _identity | `api/src/core/mfa/` | `app/src/core/mfa/` | MFA policy, verify page, force setup, admin policy — 3 perms, 12 events, 13 bugs + bypass user-only (assignment_rules DB-driven), 500 policy fix, /me mfa_setup sync |
 | 8 | [ ] | `mfa.totp` | child | mfa | `api/src/core/mfa/totp/` | (dans mfa/) | Google Authenticator / TOTP apps |
 | 9 | [ ] | `notification` | parent | event | `api/src/core/notification/` | `app/src/core/notification/` | In-app notifs, rules engine, SSE, NotificationBell |
 | 10 | [ ] | `notification.email` | child | notification | `api/src/core/notification/email/` | (dans notification/) | SMTP delivery channel |

@@ -73,7 +73,7 @@ def create_app() -> FastAPI:
     application = FastAPI(
         title="Nexora",
         description="Feature-based modular application template",
-        version="2026.02.35",
+        version="2026.02.37",
         docs_url="/api/docs",
         openapi_url="/api/openapi.json",
     )
@@ -148,13 +148,18 @@ def create_app() -> FastAPI:
                 logger.warning(f"Could not sync permissions at startup: {e}")
 
         # 2. Ensure super_admin role has ALL permissions (picks up new features)
+        # Permissions with assignment_rules.role=false are excluded (user-only)
         async with async_session() as db:
             try:
                 slug = settings.SUPER_ADMIN_ROLE_SLUG
                 role_result = await db.execute(select(Role).where(Role.slug == slug))
                 sa_role = role_result.scalar_one_or_none()
                 if sa_role:
-                    all_perms = await db.execute(select(Permission.id))
+                    all_perms = await db.execute(
+                        select(Permission.id).where(
+                            Permission.assignment_rules["role"].as_boolean() == True
+                        )
+                    )
                     all_perm_ids = {row[0] for row in all_perms.all()}
                     assigned = await db.execute(
                         select(RolePermission.permission_id).where(RolePermission.role_id == sa_role.id)

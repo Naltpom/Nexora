@@ -2,17 +2,20 @@
 
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Body, Depends, HTTPException, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..._identity.models import User
+from ...config import settings
 from ...database import get_db
+from ...events import event_bus
+from ...rate_limit import limiter
 from ...security import decode_mfa_token, get_current_user
 from ..models import UserMFA
-from ..schemas import BackupCodesResponse, EmailOTPSendResponse
+from ..schemas import BackupCodesResponse, EmailDisableRequest, EmailOTPSendResponse
 from ..services import generate_backup_codes
-from .services import send_email_otp
+from .services import send_email_otp, verify_email_otp
 
 router = APIRouter()
 
@@ -75,14 +78,25 @@ async def email_enable(
 
     await db.flush()
 
+    await event_bus.emit(
+        "mfa.email_enabled",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="user",
+        resource_id=current_user.id,
+    )
+
     return BackupCodesResponse(
         codes=codes,
         generated_at=datetime.now(timezone.utc),
     )
 
 
+# Bug 8 fix: rate limit on send-code
 @router.post("/send-code", response_model=EmailOTPSendResponse)
+@limiter.limit(settings.RATE_LIMIT_MFA_VERIFY)
 async def send_code(
+    request: Request,
     mfa_token: str = Body(..., embed=True),
     db: AsyncSession = Depends(get_db),
 ):
@@ -100,7 +114,7 @@ async def send_code(
         )
 
     result_info = await send_email_otp(
-        user_id, user.email, f"{user.first_name} {user.last_name}"
+        db, user_id, user.email, f"{user.first_name} {user.last_name}"
     )
     return EmailOTPSendResponse(
         message="Code envoye par email",
@@ -108,12 +122,30 @@ async def send_code(
     )
 
 
-@router.post("/disable")
-async def email_disable(
+@router.post("/send-disable-code", response_model=EmailOTPSendResponse)
+@limiter.limit(settings.RATE_LIMIT_MFA_VERIFY)
+async def send_disable_code(
+    request: Request,
     db: AsyncSession = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    """Desactiver specifiquement le MFA par email."""
+    """Envoyer un code OTP par email pour confirmer la desactivation (authentifie)."""
+    result_info = await send_email_otp(
+        db, current_user.id, current_user.email, f"{current_user.first_name} {current_user.last_name}"
+    )
+    return EmailOTPSendResponse(
+        message="Code de confirmation envoye par email",
+        **result_info,
+    )
+
+
+@router.post("/disable")
+async def email_disable(
+    data: EmailDisableRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Desactiver specifiquement le MFA par email. Necessite un code email valide."""
     result = await db.execute(
         select(UserMFA).where(
             UserMFA.user_id == current_user.id,
@@ -128,8 +160,24 @@ async def email_disable(
             detail="MFA par email n'est pas active",
         )
 
+    # Verify email OTP code before disabling
+    is_valid = await verify_email_otp(db, current_user.id, data.code)
+    if not is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Code email invalide ou expire",
+        )
+
     mfa_record.is_enabled = False
     mfa_record.is_primary = False
     await db.flush()
+
+    await event_bus.emit(
+        "mfa.email_disabled",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="user",
+        resource_id=current_user.id,
+    )
 
     return {"ok": True, "message": "MFA par email desactive avec succes"}
