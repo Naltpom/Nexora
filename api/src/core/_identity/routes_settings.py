@@ -5,7 +5,7 @@ import shutil
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -47,9 +47,23 @@ async def _get_all_settings(db: AsyncSession) -> dict[str, str | None]:
 
 
 @router.get("/public")
-async def get_public_settings(db: AsyncSession = Depends(get_db)):
-    """Return app branding info. No authentication required."""
+async def get_public_settings(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Return app branding info + SSO providers. No authentication required."""
     all_settings = await _get_all_settings(db)
+
+    # SSO providers from feature registry
+    registry = request.app.state.feature_registry
+    providers = []
+    for provider_name, label in [("google", "Google"), ("github", "GitHub")]:
+        providers.append({
+            "name": provider_name,
+            "label": label,
+            "enabled": registry.is_active(f"sso.{provider_name}"),
+        })
+
     return {
         "app_name": all_settings.get("app_name"),
         "app_description": all_settings.get("app_description"),
@@ -58,6 +72,7 @@ async def get_public_settings(db: AsyncSession = Depends(get_db)):
         "primary_color": all_settings.get("primary_color"),
         "header_show_logo": all_settings.get("header_show_logo"),
         "header_show_name": all_settings.get("header_show_name"),
+        "providers": providers,
     }
 
 

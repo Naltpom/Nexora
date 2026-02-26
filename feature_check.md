@@ -171,7 +171,7 @@ Cela s'applique dans **tous les contextes** :
 | 9 | [x] | `notification` | parent | event | `api/src/core/notification/` | `app/src/core/notification/` | In-app notifs, rules engine, SSE, NotificationBell — 4 fixes (require_permission sur 9 endpoints, sort whitelist, SSE check user actif) |
 | 10 | [x] | `notification.email` | child | notification | `api/src/core/notification/email/` | (dans notification/) | SMTP delivery channel — 2 fixes (html.escape XSS sur titres/noms, permission resend alignee manifest+frontend) |
 | 11 | [x] | `mfa.email` | child | mfa, notification.email | `api/src/core/mfa/email/` | (dans mfa/) | OTP par email — 4 fixes (require_permission sur 3 endpoints, check EMAIL_ENABLED avant activation, propagation erreur SMTP, backup codes affiches au frontend) + fix transversal email case-sensitivity (update profile, admin create/update user) |
-| 12 | [ ] | `notification.push` | child | notification | `api/src/core/notification/push/` | (dans notification/) | Web Push (VAPID) |
+| 12 | [x] | `notification.push` | child | notification | `api/src/core/notification/push/` | (dans notification/) | Web Push (VAPID) — 6 fixes (push_sent_at, require_permission+DELETE unsubscribe, resend-push endpoint+UI, SCSS var(--radius), erreur push feedback) |
 | 13 | [ ] | `notification.webhook` | child | notification | `api/src/core/notification/webhook/` | (dans notification/) | HTTP webhooks |
 
 ### Phase 4 — Preferences utilisateur

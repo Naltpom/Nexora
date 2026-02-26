@@ -23,7 +23,6 @@ export default defineConfig({
     allowedHosts: ['localhost', '127.0.0.1'],
     hmr: {
       host: 'localhost',
-      port: 5472,
       clientPort: 5472,
     },
     proxy: {

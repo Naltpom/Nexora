@@ -416,6 +416,53 @@ async def resend_email(
 
 
 @router.post(
+    "/{notification_id}/resend-push",
+    dependencies=[Depends(require_permission("notification.push.resend"))],
+)
+async def resend_push(
+    notification_id: int,
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    from .push.services import WebPushSender
+
+    result = await db.execute(
+        select(Notification).where(Notification.id == notification_id)
+    )
+    notif = result.scalar_one_or_none()
+    if not notif:
+        raise HTTPException(status_code=404, detail="Notification introuvable")
+    if not notif.push_sent_at:
+        raise HTTPException(status_code=400, detail="Cette notification n'a pas ete envoyee via push")
+
+    push_sender = WebPushSender()
+    await push_sender.send(
+        user_id=notif.user_id,
+        title=notif.title,
+        body=notif.body,
+        link=notif.link,
+        db=db,
+    )
+
+    notif.push_sent_at = datetime.now(timezone.utc)
+    await db.flush()
+
+    await event_bus.emit(
+        "notification.push.resent",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="notification",
+        resource_id=notif.id,
+        payload={
+            "actor_name": f"{current_user.first_name} {current_user.last_name}",
+            "target_user_id": notif.user_id,
+        },
+    )
+
+    return {"ok": True, "message": "Push renvoye"}
+
+
+@router.post(
     "/{notification_id}/resend-webhook",
     dependencies=[Depends(require_permission("notification.admin"))],
 )

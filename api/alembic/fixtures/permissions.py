@@ -53,6 +53,7 @@ ALL_PERMISSIONS: list[tuple[str, str]] = [
     ("notification.email.resend", "notification.email"),
     ("notification.push.subscribe", "notification.push"),
     ("notification.push.read", "notification.push"),
+    ("notification.push.resend", "notification.push"),
     ("notification.webhook.read", "notification.webhook"),
     ("notification.webhook.create", "notification.webhook"),
     ("notification.webhook.update", "notification.webhook"),

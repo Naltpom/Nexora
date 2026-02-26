@@ -1,11 +1,9 @@
-import { useState, FormEvent, Suspense, lazy } from 'react'
+import { useState, FormEvent } from 'react'
 import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import './_identity.scss'
 import { useAuth } from '../../core/AuthContext'
-import { useFeature } from '../../core/FeatureContext'
-
-const SSOButtons = lazy(() => import('../sso/SSOButtons'))
+import SSOSection from '../sso/SSOSection'
 
 export default function Login() {
   const { t } = useTranslation('_identity')
@@ -14,7 +12,6 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
-  const { isActive } = useFeature()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
@@ -108,18 +105,7 @@ export default function Login() {
           </button>
         </form>
 
-        {isActive('sso') && (
-          <>
-            <div className="login-divider">
-              <div className="login-divider-line" />
-              <span className="login-divider-text">{t('login.divider_or')}</span>
-              <div className="login-divider-line" />
-            </div>
-            <Suspense fallback={<div className="sso-buttons-placeholder" />}>
-              <SSOButtons />
-            </Suspense>
-          </>
-        )}
+        <SSOSection />
 
         <div className="login-footer-flex">
           <Link to="/forgot-password" className="link-primary">

@@ -364,13 +364,22 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     return () => navigator.serviceWorker.removeEventListener('message', handler)
   }, [])
 
+  const [pushError, setPushError] = useState<string | null>(null)
+
   const handlePromptAccept = async () => {
+    setPushError(null)
     const success = await handleSubscribePush()
     if (success) {
       setShowPushPrompt(false)
     } else {
-      // Permission was denied by browser
-      setShowPushPrompt(false)
+      const perm = getPushPermission()
+      if (perm === 'denied') {
+        setPushError(t('push_prompt_error_denied'))
+        setTimeout(() => setShowPushPrompt(false), 3000)
+      } else {
+        setPushError(t('push_prompt_error_generic'))
+        setTimeout(() => setPushError(null), 4000)
+      }
     }
   }
 
@@ -414,6 +423,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
                 {t('push_prompt_desc')}
               </div>
             </div>
+            {pushError && (
+              <div className="push-prompt-error">{pushError}</div>
+            )}
             <div className="push-prompt-actions">
               <button className="push-prompt-btn push-prompt-btn-primary" onClick={handlePromptAccept}>
                 {t('push_prompt_accept')}

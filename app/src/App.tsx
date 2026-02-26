@@ -2,7 +2,6 @@ import { useState, useEffect, Suspense, lazy } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './core/AuthContext'
 import { useFeature } from './core/FeatureContext'
-import { useAppSettings } from './core/AppSettingsContext'
 import ProtectedRoute from './core/ProtectedRoute'
 import MeshBackground from './core/MeshBackground'
 import BackgroundThemePicker from './core/BackgroundThemePicker'
@@ -61,13 +60,12 @@ function LoginSkeleton() {
 export default function App() {
   const { user, loading: authLoading } = useAuth()
   const { isActive, loading: featuresLoading } = useFeature()
-  const { loading: settingsLoading } = useAppSettings()
   const [showBgPicker, setShowBgPicker] = useState(false)
   const [timedOut, setTimedOut] = useState(false)
   const hasToken = !!localStorage.getItem('access_token')
 
-  // Skeleton timeout: max 1.5s even if APIs are slow
-  const anyLoading = authLoading || featuresLoading || settingsLoading
+  // Public pages: render immediately (no skeleton). Authenticated: wait for auth+features.
+  const anyLoading = hasToken ? (authLoading || featuresLoading) : false
   useEffect(() => {
     if (!anyLoading) return
     const id = setTimeout(() => setTimedOut(true), 1500)
@@ -173,7 +171,7 @@ export default function App() {
             />
           )}
           <Suspense fallback={<LoginSkeleton />}>
-            {isActive('preference.didacticiel') ? (
+            {user && isActive('preference.didacticiel') ? (
               <TutorialWrapper>{routes}</TutorialWrapper>
             ) : routes}
           </Suspense>

@@ -19,9 +19,12 @@ import resourcesToBackend from 'i18next-resources-to-backend'
 import { initReactI18next } from 'react-i18next'
 
 // ---------------------------------------------------------------------------
-// 1. Eager: global common translations (used synchronously outside React tree)
+// 1. Eager: translations loaded synchronously (available before first render)
+//    - common: global shared translations
+//    - _identity: login/register pages (first thing the user sees)
 // ---------------------------------------------------------------------------
 const globalLocales = import.meta.glob('./locales/*/*.json', { eager: true }) as Record<string, { default: Record<string, string> }>
+const identityLocales = import.meta.glob('../_identity/i18n/*.json', { eager: true }) as Record<string, { default: Record<string, string> }>
 
 // ---------------------------------------------------------------------------
 // 2. Lazy: feature translations (loaded on demand when namespace is requested)
@@ -33,7 +36,7 @@ const coreSubFeatureLocales = import.meta.glob('../*/*/i18n/*.json') as Record<s
 const projectFeatureLocales = import.meta.glob('../../features/*/i18n/*.json') as Record<string, LazyModule>
 
 // ---------------------------------------------------------------------------
-// Build eager resources (common namespace only)
+// Build eager resources (common + _identity)
 // ---------------------------------------------------------------------------
 type Resources = Record<string, Record<string, Record<string, string>>>
 
@@ -52,6 +55,15 @@ function buildEagerResources(): Resources {
     if (match) {
       const [, locale, namespace] = match
       addTranslations(locale, namespace, (mod as any).default || mod)
+    }
+  }
+
+  // Identity locales: ../_identity/i18n/fr.json -> locale=fr, namespace=_identity
+  for (const [path, mod] of Object.entries(identityLocales)) {
+    const match = path.match(/\.\.\/_identity\/i18n\/([^/]+)\.json$/)
+    if (match) {
+      const locale = match[1]
+      addTranslations(locale, '_identity', (mod as any).default || mod)
     }
   }
 

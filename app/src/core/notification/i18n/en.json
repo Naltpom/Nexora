@@ -18,6 +18,8 @@
   "push_prompt_desc": "Receive alerts directly in your browser, even when the tab is closed.",
   "push_prompt_accept": "Enable",
   "push_prompt_dismiss": "Later",
+  "push_prompt_error_denied": "Notifications were blocked by your browser. You can re-enable them in the site settings.",
+  "push_prompt_error_generic": "Unable to enable push notifications. Please try again later.",
 
   "breadcrumb_home": "Home",
   "breadcrumb_notifications": "Notifications",
@@ -44,6 +46,7 @@
   "admin_column_read": "Read",
   "admin_column_email": "Email",
   "admin_column_webhook": "Webhook",
+  "admin_column_push": "Push",
   "admin_column_date": "Date",
   "admin_column_actions": "Actions",
   "admin_empty": "No notifications",
@@ -54,6 +57,7 @@
   "admin_delete": "Delete",
   "admin_resend_email_button": "Email",
   "admin_resend_webhook_button": "Webhook",
+  "admin_resend_push_button": "Push",
   "admin_last_sent": "Last sent: {{date}}",
 
   "confirm_delete_title": "Delete notification",
@@ -65,8 +69,12 @@
   "confirm_resend_webhook_title": "Resend webhook",
   "confirm_resend_webhook_message": "Resend the notification via webhook?",
   "confirm_resend_webhook_button": "Resend",
+  "confirm_resend_push_title": "Resend push notification",
+  "confirm_resend_push_message": "Resend the push notification to the user?",
+  "confirm_resend_push_button": "Resend",
   "alert_email_sent_title": "Email resent",
   "alert_webhook_sent_title": "Webhook resent",
+  "alert_push_sent_title": "Push resent",
   "alert_send_error": "Error while sending",
 
   "pagination_per_page_10": "10 / page",

@@ -1,6 +1,12 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
 import api from '../api'
 
+export interface SSOProvider {
+  name: string
+  label: string
+  enabled: boolean
+}
+
 interface PublicAppSettings {
   app_name: string
   app_description: string
@@ -9,6 +15,7 @@ interface PublicAppSettings {
   primary_color: string
   header_show_logo: string
   header_show_name: string
+  providers: SSOProvider[]
 }
 
 const DEFAULTS: PublicAppSettings = {
@@ -19,11 +26,13 @@ const DEFAULTS: PublicAppSettings = {
   primary_color: '#1E40AF',
   header_show_logo: 'true',
   header_show_name: 'true',
+  providers: [],
 }
 
 interface AppSettingsContextType {
   settings: PublicAppSettings
   loading: boolean
+  settled: boolean
   refreshSettings: () => Promise<void>
 }
 
@@ -31,7 +40,8 @@ const AppSettingsContext = createContext<AppSettingsContextType | undefined>(und
 
 export function AppSettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<PublicAppSettings>(DEFAULTS)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const [settled, setSettled] = useState(false)
 
   const fetchSettings = useCallback(async () => {
     try {
@@ -41,6 +51,7 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
       setSettings(DEFAULTS)
     } finally {
       setLoading(false)
+      setSettled(true)
     }
   }, [])
 
@@ -49,7 +60,7 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
   }, [fetchSettings])
 
   return (
-    <AppSettingsContext.Provider value={{ settings, loading, refreshSettings: fetchSettings }}>
+    <AppSettingsContext.Provider value={{ settings, loading, settled, refreshSettings: fetchSettings }}>
       {children}
     </AppSettingsContext.Provider>
   )

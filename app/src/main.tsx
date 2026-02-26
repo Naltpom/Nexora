@@ -50,13 +50,9 @@ import './core/styles/animations.scss'
       // ignore
     }
   } else if (!token) {
-    // Public page (login/register): random theme applied synchronously (no flash)
-    const THEME_KEY = '_public_theme'
-    const prev = sessionStorage.getItem(THEME_KEY) || 'light'
-    const keepPrev = Math.random() < 0.75
-    const next = keepPrev ? prev : (prev === 'dark' ? 'light' : 'dark')
-    sessionStorage.setItem(THEME_KEY, next)
-    document.documentElement.setAttribute('data-theme', next)
+    // Public page (login/register): follow browser preference
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light')
   }
 })()
 

@@ -307,6 +307,7 @@ async def process_notifications(
                     link=link,
                     email_sent_at=datetime.now(timezone.utc) if channels["email"] else None,
                     webhook_sent_at=datetime.now(timezone.utc) if channels["webhook"] else None,
+                    push_sent_at=datetime.now(timezone.utc) if channels["push"] else None,
                 )
                 db.add(notif)
                 await db.flush()

@@ -1,13 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import api from '../../api'
+import type { SSOProvider } from '../AppSettingsContext'
 import './sso.scss'
-
-interface SSOProvider {
-  name: string
-  label: string
-  enabled: boolean
-}
 
 const providerIcons: Record<string, JSX.Element> = {
   google: (
@@ -25,24 +20,14 @@ const providerIcons: Record<string, JSX.Element> = {
   ),
 }
 
-export default function SSOButtons() {
+interface SSOButtonsProps {
+  providers: SSOProvider[]
+}
+
+export default function SSOButtons({ providers }: SSOButtonsProps) {
   const { t } = useTranslation('sso')
-  const [providers, setProviders] = useState<SSOProvider[]>([])
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    const fetchProviders = async () => {
-      try {
-        const response = await api.get('/sso/providers')
-        const all: SSOProvider[] = response.data.providers || []
-        setProviders(all.filter(p => p.enabled))
-      } catch {
-        // SSO providers unavailable - silently fail
-      }
-    }
-    fetchProviders()
-  }, [])
 
   const handleSSO = async (provider: string) => {
     setError(null)

@@ -9,40 +9,10 @@ import NoiseGradientBg from './backgrounds/NoiseGradientBg'
 import NeonGridBg from './backgrounds/NeonGridBg'
 import ConstellationsBg from './backgrounds/ConstellationsBg'
 
-const TOTAL_VARIANTS = 9
-const STORAGE_KEY = '_bg_deck'
-
 function getVariant(): number {
   const attr = document.documentElement.getAttribute('data-bg-theme')
   const n = parseInt(attr || '4', 10)
-  return n >= 1 && n <= TOTAL_VARIANTS ? n : 4
-}
-
-/** Shuffle array in-place (Fisher-Yates) */
-function shuffle(arr: number[]): number[] {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]]
-  }
-  return arr
-}
-
-/** Pick next background from a shuffled deck stored in sessionStorage.
- *  All 9 variants are shown before any repeats. */
-function nextFromDeck(): number {
-  let deck: number[] = []
-  try {
-    const raw = sessionStorage.getItem(STORAGE_KEY)
-    if (raw) deck = JSON.parse(raw)
-  } catch { /* ignore */ }
-
-  if (!Array.isArray(deck) || deck.length === 0) {
-    deck = shuffle(Array.from({ length: TOTAL_VARIANTS }, (_, i) => i + 1))
-  }
-
-  const picked = deck.shift()!
-  sessionStorage.setItem(STORAGE_KEY, JSON.stringify(deck))
-  return picked
+  return n >= 1 && n <= 9 ? n : 4
 }
 
 function renderVariant(variant: number) {
@@ -66,7 +36,7 @@ interface MeshBackgroundProps {
 
 export default function MeshBackground({ randomOnLoad }: MeshBackgroundProps) {
   const [variant, setVariant] = useState(() =>
-    randomOnLoad ? nextFromDeck() : getVariant()
+    randomOnLoad ? 8 : getVariant()
   )
 
   useEffect(() => {

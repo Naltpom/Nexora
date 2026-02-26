@@ -1,5 +1,30 @@
 # Changelog
 
+## 2026.02.39
+
+### notification.push (resend + error handling)
+
+- **Colonne Push dans le tableau admin** : affichage de `push_sent_at` avec checkmark vert + date, bouton resend push (permission `notification.push.resend`)
+- **Gestion erreur push prompt** : si le navigateur bloque les notifications, affiche un message d'erreur contextuel (denied vs generic) au lieu de fermer silencieusement
+- **Traductions push** : ajout des cles `push_prompt_error_denied`, `push_prompt_error_generic`, `admin_column_push`, `admin_resend_push_button`, `confirm_resend_push_*`, `alert_push_sent_title` (fr + en)
+- **SCSS** : ajout `.push-prompt-error` + fix 4 `border-radius` hardcodes → `var(--radius)`
+
+### sso (refactoring SSO loading)
+
+- **`SSOSection` component** : nouveau composant qui encapsule le chargement SSO (lazy `SSOButtons` + providers depuis `AppSettingsContext`)
+- **`SSOButtons`** : recoit `providers` en props au lieu de fetch autonome — suppression du `useEffect` + `useState` interne
+- **`AppSettingsContext`** : expose `providers: SSOProvider[]` depuis `/api/settings/public` + `settled` (true apres premier fetch)
+- **`LoginPage`** : remplace le bloc SSO inline par `<SSOSection />`
+
+### fix (chargement login + theme public)
+
+- **Login sans skeleton** : les pages publiques ne bloquent plus sur `authLoading`/`featuresLoading` — rendu immediat
+- **Theme public** : suit la preference navigateur (`prefers-color-scheme`) au lieu d'un theme aleatoire
+- **i18n eager** : les traductions `_identity` sont chargees en synchrone (import eager) — plus de flash/fallback sur la page login
+- **MeshBackground** : suppression du deck shuffle (sessionStorage) — fond fixe variant 8 sur les pages publiques
+- **TutorialWrapper** : conditionne a `user` authentifie (evite crash sur pages publiques)
+- **Vite HMR** : suppression du `port` redondant dans la config HMR (seul `clientPort` est necessaire)
+
 ## 2026.02.38
 
 ### mfa.email (revue complete)

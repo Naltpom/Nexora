@@ -44,6 +44,7 @@ interface NotificationItem {
   is_read: boolean
   email_sent_at: string | null
   webhook_sent_at: string | null
+  push_sent_at: string | null
   created_at: string
 }
 
@@ -405,6 +406,22 @@ function AdminNotificationList() {
     }
   }
 
+  const handleResendPush = async (id: number) => {
+    const ok = await confirm({
+      title: t('confirm_resend_push_title'),
+      message: t('confirm_resend_push_message'),
+      confirmText: t('confirm_resend_push_button'),
+      variant: 'warning',
+    })
+    if (!ok) return
+    try {
+      const res = await api.post(`/notifications/${id}/resend-push`)
+      await alert({ title: t('alert_push_sent_title'), message: res.data.message })
+    } catch (err: any) {
+      await alert({ message: err.response?.data?.detail || t('alert_send_error'), variant: 'danger' })
+    }
+  }
+
   const handleResendWebhook = async (id: number) => {
     const ok = await confirm({
       title: t('confirm_resend_webhook_title'),
@@ -490,6 +507,7 @@ function AdminNotificationList() {
                     <SortHeader field="is_read">{t('admin_column_read')}</SortHeader>
                     <th>{t('admin_column_email')}</th>
                     <th>{t('admin_column_webhook')}</th>
+                    <th>{t('admin_column_push')}</th>
                     <SortHeader field="created_at">{t('admin_column_date')}</SortHeader>
                     <th>{t('admin_column_actions')}</th>
                   </tr>
@@ -497,7 +515,7 @@ function AdminNotificationList() {
                 <tbody>
                   {notifications.length === 0 ? (
                     <tr>
-                      <td colSpan={myOnly ? 7 : 8} className="notif-admin-empty-cell">
+                      <td colSpan={myOnly ? 8 : 9} className="notif-admin-empty-cell">
                         {t('admin_empty')}
                       </td>
                     </tr>
@@ -553,6 +571,18 @@ function AdminNotificationList() {
                                 <polyline points="20 6 9 17 4 12" />
                               </svg>
                               {' '}{formatDate(notif.webhook_sent_at)}
+                            </span>
+                          ) : (
+                            <span className="notif-dash-muted">{'\u2014'}</span>
+                          )}
+                        </td>
+                        <td className="notif-cell-nowrap">
+                          {notif.push_sent_at ? (
+                            <span className="notif-status-green" title={formatDate(notif.push_sent_at)}>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                              {' '}{formatDate(notif.push_sent_at)}
                             </span>
                           ) : (
                             <span className="notif-dash-muted">{'\u2014'}</span>
@@ -617,6 +647,19 @@ function AdminNotificationList() {
                                   <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
                                 </svg>
                                 {t('admin_resend_webhook_button')}
+                              </button>
+                            )}
+                            {notif.push_sent_at && can('notification.push.resend') && (
+                              <button
+                                className="btn-resend btn-resend-push"
+                                title={t('admin_last_sent', { date: formatDate(notif.push_sent_at) })}
+                                onClick={() => handleResendPush(notif.id)}
+                              >
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                                </svg>
+                                {t('admin_resend_push_button')}
                               </button>
                             )}
                           </div>

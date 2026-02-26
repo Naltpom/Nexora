@@ -18,6 +18,8 @@
   "push_prompt_desc": "Recevez les alertes directement dans votre navigateur, meme quand l'onglet est ferme.",
   "push_prompt_accept": "Activer",
   "push_prompt_dismiss": "Plus tard",
+  "push_prompt_error_denied": "Les notifications ont ete bloquees par votre navigateur. Vous pouvez les reactiver dans les parametres du site.",
+  "push_prompt_error_generic": "Impossible d'activer les notifications push. Reessayez plus tard.",
 
   "breadcrumb_home": "Accueil",
   "breadcrumb_notifications": "Notifications",
@@ -44,6 +46,7 @@
   "admin_column_read": "Lu",
   "admin_column_email": "Email",
   "admin_column_webhook": "Webhook",
+  "admin_column_push": "Push",
   "admin_column_date": "Date",
   "admin_column_actions": "Actions",
   "admin_empty": "Aucune notification",
@@ -54,6 +57,7 @@
   "admin_delete": "Supprimer",
   "admin_resend_email_button": "Email",
   "admin_resend_webhook_button": "Webhook",
+  "admin_resend_push_button": "Push",
   "admin_last_sent": "Dernier envoi: {{date}}",
 
   "confirm_delete_title": "Supprimer la notification",
@@ -65,8 +69,12 @@
   "confirm_resend_webhook_title": "Renvoyer le webhook",
   "confirm_resend_webhook_message": "Renvoyer la notification via webhook ?",
   "confirm_resend_webhook_button": "Renvoyer",
+  "confirm_resend_push_title": "Renvoyer la notification push",
+  "confirm_resend_push_message": "Renvoyer la notification push a l'utilisateur ?",
+  "confirm_resend_push_button": "Renvoyer",
   "alert_email_sent_title": "Email renvoye",
   "alert_webhook_sent_title": "Webhook renvoye",
+  "alert_push_sent_title": "Push renvoye",
   "alert_send_error": "Erreur lors de l'envoi",
 
   "pagination_per_page_10": "10 / page",

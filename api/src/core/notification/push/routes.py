@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...config import settings
 from ...database import get_db
+from ...events import event_bus
 from ...permissions import require_permission
 from ...security import get_current_user
 from .models import PushSubscription
@@ -19,7 +20,11 @@ from .schemas import (
 router = APIRouter()
 
 
-@router.get("/vapid-key", response_model=VapidKeyResponse)
+@router.get(
+    "/vapid-key",
+    response_model=VapidKeyResponse,
+    dependencies=[Depends(require_permission("notification.push.read"))],
+)
 async def get_vapid_public_key(
     current_user=Depends(get_current_user),
 ):
@@ -70,6 +75,19 @@ async def push_subscribe(
         db.add(sub)
         await db.flush()
 
+    await event_bus.emit(
+        "notification.push.subscribed",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="push_subscription",
+        resource_id=sub.id,
+        payload={
+            "actor_name": f"{current_user.first_name} {current_user.last_name}",
+            "browser": data.browser,
+            "is_update": existing is not None,
+        },
+    )
+
     return PushSubscriptionResponse(
         id=sub.id,
         endpoint=sub.endpoint,
@@ -79,7 +97,11 @@ async def push_subscribe(
     )
 
 
-@router.post("/unsubscribe", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/unsubscribe",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_permission("notification.push.subscribe"))],
+)
 async def push_unsubscribe(
     endpoint: str = Query(...),
     current_user=Depends(get_current_user),
@@ -96,6 +118,16 @@ async def push_unsubscribe(
     if sub:
         await db.delete(sub)
         await db.flush()
+
+    await event_bus.emit(
+        "notification.push.unsubscribed",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="push_subscription",
+        payload={
+            "actor_name": f"{current_user.first_name} {current_user.last_name}",
+        },
+    )
 
 
 @router.get(
