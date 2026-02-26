@@ -1,5 +1,6 @@
 """SMTP email sender service."""
 
+import html
 import logging
 import smtplib
 from email.mime.multipart import MIMEMultipart
@@ -51,6 +52,9 @@ class SmtpEmailSender:
         link: str | None,
         locale: str = "fr",
     ) -> bool:
+        title = html.escape(title)
+        to_name = html.escape(to_name)
+
         if not settings.EMAIL_ENABLED:
             logger.warning("Email disabled — skipping notification email to %s", to_email)
             return False
@@ -104,6 +108,8 @@ class SmtpEmailSender:
         initiated_by_user: bool = False,
         locale: str = "fr",
     ) -> bool:
+        to_name = html.escape(to_name)
+
         if not settings.EMAIL_ENABLED:
             logger.warning("Email disabled — skipping reset password email to %s", to_email)
             return False
@@ -158,6 +164,8 @@ class SmtpEmailSender:
         invitation_token: str,
         locale: str = "fr",
     ) -> bool:
+        invited_by_name = html.escape(invited_by_name)
+
         if not settings.EMAIL_ENABLED:
             logger.warning("Email disabled — skipping invitation email to %s", to_email)
             return False
@@ -207,6 +215,9 @@ class SmtpEmailSender:
         verification_code: str,
         locale: str = "fr",
     ) -> bool:
+        to_name = html.escape(to_name)
+        verification_code = html.escape(verification_code)
+
         if not settings.EMAIL_ENABLED:
             logger.warning("Email disabled — skipping verification code email to %s", to_email)
             return False

@@ -10,6 +10,7 @@ from ..._identity.models import User
 from ...config import settings
 from ...database import get_db
 from ...events import event_bus
+from ...permissions import require_permission
 from ...rate_limit import limiter
 from ...security import decode_mfa_token, get_current_user
 from ..models import UserMFA
@@ -20,12 +21,19 @@ from .services import send_email_otp, verify_email_otp
 router = APIRouter()
 
 
-@router.post("/enable", response_model=BackupCodesResponse)
+@router.post("/enable", response_model=BackupCodesResponse, dependencies=[Depends(require_permission("mfa.email.setup"))])
 async def email_enable(
     db: AsyncSession = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
     """Activer le MFA par email pour l'utilisateur courant."""
+    # Bug 2 fix: check EMAIL_ENABLED before allowing activation
+    if not settings.EMAIL_ENABLED:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="L'envoi d'emails n'est pas configure. Impossible d'activer le MFA par email.",
+        )
+
     # Check if email MFA already enabled
     result = await db.execute(
         select(UserMFA).where(
@@ -122,7 +130,7 @@ async def send_code(
     )
 
 
-@router.post("/send-disable-code", response_model=EmailOTPSendResponse)
+@router.post("/send-disable-code", response_model=EmailOTPSendResponse, dependencies=[Depends(require_permission("mfa.email.setup"))])
 @limiter.limit(settings.RATE_LIMIT_MFA_VERIFY)
 async def send_disable_code(
     request: Request,
@@ -139,7 +147,7 @@ async def send_disable_code(
     )
 
 
-@router.post("/disable")
+@router.post("/disable", dependencies=[Depends(require_permission("mfa.email.setup"))])
 async def email_disable(
     data: EmailDisableRequest,
     db: AsyncSession = Depends(get_db),

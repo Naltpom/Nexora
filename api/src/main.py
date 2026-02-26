@@ -73,7 +73,7 @@ def create_app() -> FastAPI:
     application = FastAPI(
         title="Nexora",
         description="Feature-based modular application template",
-        version="2026.02.37",
+        version="2026.02.38",
         docs_url="/api/docs",
         openapi_url="/api/openapi.json",
     )
@@ -179,7 +179,7 @@ def create_app() -> FastAPI:
             try:
                 slug = settings.SUPER_ADMIN_ROLE_SLUG
                 admin_result = await db.execute(
-                    select(User).where(User.email == settings.DEFAULT_ADMIN_EMAIL)
+                    select(User).where(User.email == settings.DEFAULT_ADMIN_EMAIL.lower())
                 )
                 admin_user = admin_result.scalar_one_or_none()
                 if admin_user:

@@ -4,7 +4,7 @@ import hashlib
 import uuid as uuid_mod
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Index, Integer, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Index, Integer, String, Text, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -19,7 +19,7 @@ class User(Base):
     uuid: Mapped[uuid_mod.UUID] = mapped_column(
         UUID(as_uuid=True), unique=True, nullable=False, default=uuid_mod.uuid4, index=True
     )
-    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
+    email: Mapped[str] = mapped_column(String(255), nullable=False)
     password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
     first_name: Mapped[str] = mapped_column(String(100), nullable=False)
     last_name: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -41,6 +41,10 @@ class User(Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    __table_args__ = (
+        Index("ix_users_email", func.lower(email), unique=True),
+    )
 
 
 # ── Security Tokens ──────────────────────────────────────────────────────

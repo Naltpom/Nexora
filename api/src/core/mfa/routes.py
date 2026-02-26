@@ -144,7 +144,7 @@ async def verify_mfa(
     )
 
     token_data = {"sub": str(user.id), "email": user.email, "lang": user.language}
-    preferences = json.loads(user.preferences) if user.preferences else None
+    preferences = user.preferences if isinstance(user.preferences, dict) else (json.loads(user.preferences) if user.preferences else None)
 
     return MFAVerifyResponse(
         access_token=create_access_token(token_data),

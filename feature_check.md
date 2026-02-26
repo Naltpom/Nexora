@@ -167,10 +167,10 @@ Cela s'applique dans **tous les contextes** :
 | # | Check | Feature | Type | Dependances | Chemins API | Chemins APP | Notes |
 |---|-------|---------|------|-------------|-------------|-------------|-------|
 | 7 | [x] | `mfa` | parent | _identity | `api/src/core/mfa/` | `app/src/core/mfa/` | MFA policy, verify page, force setup, admin policy — 3 perms, 12 events, 13 bugs + bypass user-only (assignment_rules DB-driven), 500 policy fix, /me mfa_setup sync |
-| 8 | [ ] | `mfa.totp` | child | mfa | `api/src/core/mfa/totp/` | (dans mfa/) | Google Authenticator / TOTP apps |
-| 9 | [ ] | `notification` | parent | event | `api/src/core/notification/` | `app/src/core/notification/` | In-app notifs, rules engine, SSE, NotificationBell |
-| 10 | [ ] | `notification.email` | child | notification | `api/src/core/notification/email/` | (dans notification/) | SMTP delivery channel |
-| 11 | [ ] | `mfa.email` | child | mfa, notification.email | `api/src/core/mfa/email/` | (dans mfa/) | OTP par email — depend de notification.email |
+| 8 | [x] | `mfa.totp` | child | mfa | `api/src/core/mfa/totp/` | (dans mfa/) | Google Authenticator / TOTP apps — 2 fixes (require_permission sur 3 endpoints, flush redondant) |
+| 9 | [x] | `notification` | parent | event | `api/src/core/notification/` | `app/src/core/notification/` | In-app notifs, rules engine, SSE, NotificationBell — 4 fixes (require_permission sur 9 endpoints, sort whitelist, SSE check user actif) |
+| 10 | [x] | `notification.email` | child | notification | `api/src/core/notification/email/` | (dans notification/) | SMTP delivery channel — 2 fixes (html.escape XSS sur titres/noms, permission resend alignee manifest+frontend) |
+| 11 | [x] | `mfa.email` | child | mfa, notification.email | `api/src/core/mfa/email/` | (dans mfa/) | OTP par email — 4 fixes (require_permission sur 3 endpoints, check EMAIL_ENABLED avant activation, propagation erreur SMTP, backup codes affiches au frontend) + fix transversal email case-sensitivity (update profile, admin create/update user) |
 | 12 | [ ] | `notification.push` | child | notification | `api/src/core/notification/push/` | (dans notification/) | Web Push (VAPID) |
 | 13 | [ ] | `notification.webhook` | child | notification | `api/src/core/notification/webhook/` | (dans notification/) | HTTP webhooks |
 

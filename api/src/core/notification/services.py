@@ -461,7 +461,12 @@ async def list_notifications(
     total = total_result.scalar() or 0
 
     # Sorting
-    sort_column = getattr(Notification, sort_by, Notification.created_at)
+    allowed_sort = {
+        "created_at": Notification.created_at,
+        "title": Notification.title,
+        "is_read": Notification.is_read,
+    }
+    sort_column = allowed_sort.get(sort_by, Notification.created_at)
     order = desc(sort_column) if sort_dir == "desc" else asc(sort_column)
     query = query.order_by(order)
 

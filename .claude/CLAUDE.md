@@ -72,6 +72,15 @@ L'autorisation est **100% role-based**. Le champ `is_super_admin` sur le modele 
 - Un pirate qui flip `is_super_admin=True` en DB sans le role → aucun acces
 - `_is_super_admin()` dans `security.py` verifie le **role**, pas le flag
 
+### Endpoints et permissions
+
+**Tout endpoint API doit etre protege par `require_permission()`** — meme si la permission est accordee a tous les utilisateurs authentifies via GlobalPermission. Il n'existe aucun endpoint "libre" (hormis les endpoints publics comme `/login`, `/register`, les callbacks SSO et `/mfa/verify`).
+
+- Chaque action visible ou accessible (bouton, page, endpoint) correspond a une permission declaree dans le `manifest.py` de la feature
+- Si la permission est destinee a tous les users authentifies, l'ajouter en GlobalPermission (via migration Alembic)
+- Cote frontend, les routes utilisent `permission: 'feature.action'` dans le manifest
+- Cote backend, utiliser `dependencies=[Depends(require_permission("feature.action"))]` sur le decorateur de route
+
 ### Nouvelles permissions
 
 Quand tu ajoutes des permissions dans un `manifest.py` :

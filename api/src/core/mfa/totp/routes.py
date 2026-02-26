@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...database import get_db
 from ...events import event_bus
+from ...permissions import require_permission
 from ...security import get_current_user
 from ..models import UserMFA
 from ..schemas import BackupCodesResponse, TOTPSetupResponse, TOTPVerifySetupRequest
@@ -17,7 +18,7 @@ from .services import generate_qr_code_base64, generate_totp_secret, get_totp_pr
 router = APIRouter()
 
 
-@router.post("/setup", response_model=TOTPSetupResponse)
+@router.post("/setup", response_model=TOTPSetupResponse, dependencies=[Depends(require_permission("mfa.totp.setup"))])
 async def totp_setup(
     db: AsyncSession = Depends(get_db),
     current_user=Depends(get_current_user),
@@ -78,7 +79,7 @@ async def totp_setup(
     )
 
 
-@router.post("/verify-setup", response_model=BackupCodesResponse)
+@router.post("/verify-setup", response_model=BackupCodesResponse, dependencies=[Depends(require_permission("mfa.totp.setup"))])
 async def totp_verify_setup(
     request: TOTPVerifySetupRequest,
     db: AsyncSession = Depends(get_db),
@@ -131,10 +132,8 @@ async def totp_verify_setup(
     for other in other_primary.scalars().all():
         other.is_primary = False
 
-    # Generate backup codes
+    # Generate backup codes (flush included in generate_backup_codes)
     codes = await generate_backup_codes(db, current_user.id)
-
-    await db.flush()
 
     await event_bus.emit(
         "mfa.totp_enabled",
@@ -150,7 +149,7 @@ async def totp_verify_setup(
     )
 
 
-@router.post("/disable")
+@router.post("/disable", dependencies=[Depends(require_permission("mfa.totp.setup"))])
 async def totp_disable(
     request: TOTPVerifySetupRequest,
     db: AsyncSession = Depends(get_db),

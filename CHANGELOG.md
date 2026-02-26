@@ -1,5 +1,29 @@
 # Changelog
 
+## 2026.02.38
+
+### mfa.email (revue complete)
+
+- **`require_permission("mfa.email.setup")`** ajoute sur 3 endpoints (`/enable`, `/send-disable-code`, `/disable`) — alignement avec `mfa.totp`
+- **Check `EMAIL_ENABLED`** avant activation email MFA — empeche le lock-out si SMTP non configure
+- **Propagation erreur SMTP** : `send_email_otp()` retourne HTTP 502 si l'envoi echoue au lieu d'un faux "Code envoye"
+- **Backup codes affiches** : le frontend capture et affiche les backup codes a l'activation email MFA (comme TOTP)
+- **Fix `json.loads` sur preferences** : `verify_mfa` gere correctement les preferences JSONB (dict natif, plus de `TypeError`)
+- **Documentation** : `docs/core/mfa/email/README.md` cree
+
+### _identity (email case-insensitive)
+
+- **Index unique `LOWER(email)`** sur la table `users` — empeche les doublons de casse (`Nathan@...` vs `nathan@...`)
+- **Migration Alembic** `o8p9q0r1s2t3` : normalise les emails existants en minuscule, remplace l'index
+- **Modele SQLAlchemy** : `User.email` utilise `Index("ix_users_email", func.lower(email), unique=True)` dans `__table_args__`
+- **`.lower()` systematique** sur tous les points d'entree email :
+  - Login (`routes_auth.py`)
+  - `authenticate_user()` service (protege la creation auto intranet)
+  - Update profil utilisateur
+  - Admin create/update user (2 endpoints : par ID + par UUID)
+  - MFA email address sync (2 occurrences)
+  - Admin promotion `DEFAULT_ADMIN_EMAIL` dans `main.py`
+
 ## 2026.02.37
 
 ### _identity (assignment_rules DB-driven)

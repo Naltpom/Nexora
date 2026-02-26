@@ -177,6 +177,7 @@ async def authenticate_user(
     """
     from fastapi import HTTPException, status
 
+    email = email.lower()
     user = None
 
     # --- Intranet SSO --------------------------------------------------------

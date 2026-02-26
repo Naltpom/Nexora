@@ -162,7 +162,10 @@ export default function MFASetupPage() {
   const handleEmailEnable = async () => {
     setEmailSaving(true)
     try {
-      await api.post('/mfa/email/enable')
+      const res = await api.post('/mfa/email/enable')
+      if (res.data.codes && res.data.codes.length > 0) {
+        setBackupCodes(res.data.codes)
+      }
       await fetchStatus()
       clearMfaSetupRequired()
       showSuccess(t('setup_email_success'))

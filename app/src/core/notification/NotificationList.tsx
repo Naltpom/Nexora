@@ -264,6 +264,7 @@ function UserNotificationList() {
 
 function AdminNotificationList() {
   const { t } = useTranslation('notification')
+  const { can } = usePermission()
   const [notifications, setNotifications] = useState<AdminNotificationItem[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
@@ -592,7 +593,7 @@ function AdminNotificationList() {
                                 <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                               </svg>
                             </button>
-                            {notif.email_sent_at && (
+                            {notif.email_sent_at && can('notification.email.resend') && (
                               <button
                                 className="btn-resend btn-resend-email"
                                 title={t('admin_last_sent', { date: formatDate(notif.email_sent_at) })}

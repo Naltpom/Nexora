@@ -201,12 +201,13 @@ async def create_user(
     data: UserCreate,
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(select(User).where(User.email == data.email))
+    clean_email = data.email.lower()
+    result = await db.execute(select(User).where(User.email == clean_email))
     if result.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Un utilisateur avec cet email existe deja")
 
     user = User(
-        email=data.email,
+        email=clean_email,
         first_name=data.first_name,
         last_name=data.last_name,
         auth_source=data.auth_source,
@@ -254,7 +255,7 @@ async def update_user(
     was_active = user.is_active
 
     if data.email is not None:
-        user.email = data.email
+        user.email = data.email.lower()
         # Sync MFA email address if mfa feature is active
         try:
             from ..mfa.models import UserMFA
@@ -263,7 +264,7 @@ async def update_user(
             )
             mfa_email_record = mfa_result.scalar_one_or_none()
             if mfa_email_record:
-                mfa_email_record.email_address = data.email
+                mfa_email_record.email_address = data.email.lower()
         except Exception:
             pass  # MFA feature not active
     if data.first_name is not None:
@@ -541,7 +542,7 @@ async def update_user_by_uuid(
     was_active = user.is_active
 
     if data.email is not None:
-        user.email = data.email
+        user.email = data.email.lower()
         # Sync MFA email address if mfa feature is active
         try:
             from ..mfa.models import UserMFA
@@ -550,7 +551,7 @@ async def update_user_by_uuid(
             )
             mfa_email_record = mfa_result.scalar_one_or_none()
             if mfa_email_record:
-                mfa_email_record.email_address = data.email
+                mfa_email_record.email_address = data.email.lower()
         except Exception:
             pass  # MFA feature not active
     if data.first_name is not None:

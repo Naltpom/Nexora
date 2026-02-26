@@ -150,8 +150,12 @@ export default function App() {
         />
       ))}
 
-      {/* Catch-all: redirect unknown routes to home */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* Catch-all: show spinner while contexts load (prevents redirect on HMR reload), then redirect */}
+      <Route path="*" element={
+        hasToken && anyLoading && !timedOut
+          ? <div className="loading-screen"><div className="spinner" /></div>
+          : <Navigate to="/" replace />
+      } />
     </Routes>
   )
 

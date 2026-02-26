@@ -76,6 +76,7 @@ async def _create_session(
 @limiter.limit(settings.RATE_LIMIT_LOGIN)
 async def login(data: LoginRequest, request: Request, db: AsyncSession = Depends(get_db)):
     ip = request.client.host if request.client else "unknown"
+    data.email = data.email.lower()
 
     # -- Brute-force rate limit check (email + IP tracking) -------------
     allowed, retry_after = login_limiter.check(data.email, ip)
@@ -248,11 +249,12 @@ async def update_me(
     result = await db.execute(select(User).where(User.id == current_user.id))
     user = result.scalar_one()
 
-    if data.email is not None and data.email != user.email:
-        existing = await db.execute(select(User).where(User.email == data.email))
+    if data.email is not None and data.email.lower() != user.email:
+        new_email = data.email.lower()
+        existing = await db.execute(select(User).where(User.email == new_email))
         if existing.scalar_one_or_none():
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Cet email est deja utilise")
-        user.email = data.email
+        user.email = new_email
         # Sync MFA email address if mfa feature is active
         try:
             from ..mfa.models import UserMFA
@@ -261,7 +263,7 @@ async def update_me(
             )
             mfa_email_record = mfa_result.scalar_one_or_none()
             if mfa_email_record:
-                mfa_email_record.email_address = data.email
+                mfa_email_record.email_address = new_email
         except Exception:
             pass  # MFA feature not active
     if data.first_name is not None:

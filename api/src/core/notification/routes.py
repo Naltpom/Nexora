@@ -203,7 +203,11 @@ async def list_notifications_endpoint(
     return NotificationListResponse(items=items, total=total, page=page, per_page=per_page, pages=pages)
 
 
-@router.get("/unread-count", response_model=UnreadCountResponse)
+@router.get(
+    "/unread-count",
+    response_model=UnreadCountResponse,
+    dependencies=[Depends(require_permission("notification.read"))],
+)
 async def get_unread_count_endpoint(
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -267,7 +271,10 @@ async def list_all_notifications(
     )
 
 
-@router.patch("/{notification_id}/read")
+@router.patch(
+    "/{notification_id}/read",
+    dependencies=[Depends(require_permission("notification.read"))],
+)
 async def mark_as_read(
     notification_id: int,
     current_user=Depends(get_current_user),
@@ -279,7 +286,10 @@ async def mark_as_read(
     return {"ok": True}
 
 
-@router.patch("/{notification_id}/unread")
+@router.patch(
+    "/{notification_id}/unread",
+    dependencies=[Depends(require_permission("notification.read"))],
+)
 async def mark_as_unread(
     notification_id: int,
     current_user=Depends(get_current_user),
@@ -291,7 +301,10 @@ async def mark_as_unread(
     return {"ok": True}
 
 
-@router.patch("/read-all")
+@router.patch(
+    "/read-all",
+    dependencies=[Depends(require_permission("notification.read"))],
+)
 async def mark_all_as_read(
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -300,7 +313,10 @@ async def mark_all_as_read(
     return {"ok": True}
 
 
-@router.patch("/read-by-token/{token}")
+@router.patch(
+    "/read-by-token/{token}",
+    dependencies=[Depends(require_permission("notification.read"))],
+)
 async def mark_read_by_token(
     token: str,
     current_user=Depends(get_current_user),
@@ -359,7 +375,7 @@ async def delete_notification_endpoint(
 
 @router.post(
     "/{notification_id}/resend-email",
-    dependencies=[Depends(require_permission("notification.admin"))],
+    dependencies=[Depends(require_permission("notification.email.resend"))],
 )
 async def resend_email(
     notification_id: int,
@@ -465,8 +481,18 @@ async def resend_webhook_endpoint(
 @router.get("/stream")
 async def notification_stream(
     token_data: dict = Depends(decode_query_token_lightweight),
+    db: AsyncSession = Depends(get_db),
 ):
     user_id = token_data["user_id"]
+
+    # One-time check: user still active?
+    from .._identity.models import User
+
+    result = await db.execute(
+        select(User.id).where(User.id == user_id, User.is_active == True, User.deleted_at.is_(None))  # noqa: E712
+    )
+    if not result.scalar_one_or_none():
+        raise HTTPException(status_code=401, detail="Utilisateur inactif")
 
     async def event_generator():
         queue = await sse_broadcaster.subscribe(user_id)
@@ -600,7 +626,10 @@ async def delete_rule(
     await db.flush()
 
 
-@router.patch("/rules/{rule_id}/toggle")
+@router.patch(
+    "/rules/{rule_id}/toggle",
+    dependencies=[Depends(require_permission("notification.rules.update"))],
+)
 async def toggle_rule(
     rule_id: int,
     current_user=Depends(get_current_user),
@@ -623,7 +652,11 @@ async def toggle_rule(
 # -- Rules: Personal (User) ---------------------------------------------------
 
 
-@router.get("/rules/my", response_model=list[NotificationRuleResponse])
+@router.get(
+    "/rules/my",
+    response_model=list[NotificationRuleResponse],
+    dependencies=[Depends(require_permission("notification.rules.read"))],
+)
 async def list_my_rules_endpoint(
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -632,7 +665,12 @@ async def list_my_rules_endpoint(
     return [_rule_dict_to_response(d) for d in dicts]
 
 
-@router.post("/rules/my", response_model=NotificationRuleResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/rules/my",
+    response_model=NotificationRuleResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("notification.rules.read"))],
+)
 async def create_my_rule(
     data: NotificationRuleCreate,
     current_user=Depends(get_current_user),
@@ -671,7 +709,11 @@ async def create_my_rule(
 # -- User Preferences for Template Rules --------------------------------------
 
 
-@router.put("/rules/{rule_id}/preferences", response_model=UserRulePreferenceResponse)
+@router.put(
+    "/rules/{rule_id}/preferences",
+    response_model=UserRulePreferenceResponse,
+    dependencies=[Depends(require_permission("notification.rules.read"))],
+)
 async def update_rule_preference(
     rule_id: int,
     data: UpdateRulePreferenceRequest,

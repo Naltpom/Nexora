@@ -3,6 +3,7 @@
 import secrets
 from datetime import datetime, timedelta, timezone
 
+from fastapi import HTTPException, status
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -42,7 +43,12 @@ async def send_email_otp(db: AsyncSession, user_id: int, email: str, name: str) 
     from ...notification.email.services import SmtpEmailSender
 
     sender = SmtpEmailSender()
-    sender.send_verification_code(to_email=email, to_name=name, verification_code=code)
+    sent = sender.send_verification_code(to_email=email, to_name=name, verification_code=code)
+    if not sent:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Echec de l'envoi de l'email. Verifiez la configuration SMTP.",
+        )
 
     return {"expires_in_seconds": expiry * 60}
 
