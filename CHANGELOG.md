@@ -1,5 +1,35 @@
 # Changelog
 
+## 2026.02.45
+
+### preference.composants (revue SCSS — 8 fixes)
+
+- **SCSS hardcoded gaps/margins** : `gap: 20px`, `margin-bottom: 16px`, `gap: 16px`, `gap: 12px` remplaces par `var(--section-gap, 24px)` et `var(--density-gap, 12px)`
+- **Radio button padding hardcode** : `padding: 8px 16px` remplace par `var(--density-btn-padding, 8px 16px)`
+- **Toggle-row padding hardcode** : `padding: 10px 0` remplace par `var(--density-btn-padding, 8px 16px)`
+- **Preview padding/gap hardcode** : `gap: 16px`, `padding: 16px` remplaces par `var(--density-gap, 12px)` et `var(--density-card-padding, 24px)`
+- **Preview-card padding hardcode** : `padding: 16px 24px` remplace par `var(--density-card-padding, 24px)`
+- **Modal animations ajoutees** : keyframes `slide-up` et `scale-up` + selecteurs `[data-modal-anim]` pour none/slide/scale
+- **Table stripes** : style de base + dark theme + toggle `.no-table-stripes` + `.no-list-separators`
+- **applyComposantsPrefs(null) redondant supprime** : appel superflu dans `handleReset()`, deja gere par `setDraftPreference` + `useEffect`
+- **Preview-btn selecteurs supprimes** : `.composants-section__preview-btn` dans `[data-btn-style]` n'existait pas dans le DOM
+
+### preference.couleur (revue SCSS — 12 fixes)
+
+- **Margins/gaps hardcodes** : `margin-bottom: 16px/20px/24px/12px`, `gap: 8px/12px` remplaces par `var(--density-gap, 12px)` et `var(--section-gap, 24px)`
+- **Tab padding hardcode** : `padding: 8px 20px` remplace par `var(--density-btn-padding, 8px 16px)`
+- **Item padding hardcode** : `padding: 6px 10px` remplace par `var(--density-input-padding, 8px 12px)`
+- **Picker dimensions en px** : `width/height: 28px` converties en `1.75rem`
+- **Picker border-radius hardcode** : `border-radius: 4px/2px` remplaces par `calc(var(--radius) * 0.5)` et `calc(var(--radius) * 0.25)`
+- **Picker padding en px** : `padding: 2px` converti en `0.125rem`
+- **Hex min-width en px** : `min-width: 60px` converti en `3.75rem`
+- **Reset button padding/radius** : `padding: 2px 4px` converti en `0.125rem 0.25rem`, `border-radius: 4px` remplace par `calc(var(--radius) * 0.5)`
+- **Actions margin-top hardcode** : `margin-top: 8px` remplace par `var(--density-gap, 12px)`
+
+### preference (sections TSX)
+
+- **Classe CSS specifique par section** : ajout de `preference-*-section` sur chaque conteneur root (theme, layout, couleur, composants, accessibilite) pour ciblage CSS precis
+
 ## 2026.02.44
 
 ### preference.layout (revue complete — 7 fixes)

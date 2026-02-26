@@ -1,18 +1,18 @@
 // --- Color Section ---
 
 .couleur-description {
-  margin-bottom: 16px;
+  margin-bottom: var(--density-gap, 12px);
 }
 
 .couleur-tabs {
   display: flex;
   gap: 0;
-  margin-bottom: 20px;
+  margin-bottom: var(--density-gap, 12px);
   border-bottom: 2px solid var(--gray-200);
 }
 
 .couleur-tab {
-  padding: 8px 20px;
+  padding: var(--density-btn-padding, 8px 16px);
   border: none;
   background: none;
   cursor: pointer;
@@ -33,7 +33,7 @@
 }
 
 .couleur-group {
-  margin-bottom: 24px;
+  margin-bottom: var(--section-gap, 24px);
 }
 
 .couleur-group__title {
@@ -42,20 +42,20 @@
   color: var(--gray-500);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin-bottom: 12px;
+  margin-bottom: var(--density-gap, 12px);
 }
 
 .couleur-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 8px;
+  gap: var(--density-gap, 12px);
 }
 
 .couleur-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 10px;
+  padding: var(--density-input-padding, 8px 12px);
   border-radius: var(--radius);
   border: 1px solid var(--gray-200);
   transition: border-color 0.2s;
@@ -74,15 +74,15 @@
 .couleur-item__controls {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--density-gap, 12px);
 }
 
 .couleur-item__picker {
-  width: 28px;
-  height: 28px;
+  width: 1.75rem;
+  height: 1.75rem;
   border: 1px solid var(--gray-300);
-  border-radius: 4px;
-  padding: 2px;
+  border-radius: calc(var(--radius) * 0.5);
+  padding: 0.125rem;
   cursor: pointer;
   background: none;
 
@@ -92,7 +92,7 @@
 
   &::-webkit-color-swatch {
     border: none;
-    border-radius: 2px;
+    border-radius: calc(var(--radius) * 0.25);
   }
 }
 
@@ -100,7 +100,7 @@
   font-size: 0.6875rem;
   font-family: monospace;
   color: var(--gray-400);
-  min-width: 60px;
+  min-width: 3.75rem;
 }
 
 .couleur-item__reset {
@@ -109,8 +109,8 @@
   cursor: pointer;
   color: var(--gray-400);
   font-size: 1rem;
-  padding: 2px 4px;
-  border-radius: 4px;
+  padding: 0.125rem 0.25rem;
+  border-radius: calc(var(--radius) * 0.5);
   transition: color 0.2s;
 
   &:hover {
@@ -120,8 +120,8 @@
 
 .couleur-actions {
   display: flex;
-  gap: 12px;
-  margin-top: 8px;
+  gap: var(--density-gap, 12px);
+  margin-top: var(--density-gap, 12px);
 }
 
 // Dark theme overrides

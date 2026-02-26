@@ -21,7 +21,7 @@ export default function ThemeSection() {
   }
 
   return (
-    <div className="unified-card card-padded">
+    <div className="unified-card card-padded preference-theme-section">
       <h2 className="title-sm">{t('section_title')}</h2>
 
       <div className="form-group pref-form-group-spaced">

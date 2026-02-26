@@ -102,7 +102,7 @@ export default function ColorSection() {
   }
 
   return (
-    <div className="unified-card card-padded">
+    <div className="unified-card card-padded preference-couleur-section">
       <h2 className="title-sm">{t('section_title')}</h2>
       <p className="text-secondary couleur-description">
         {t('section_description')}

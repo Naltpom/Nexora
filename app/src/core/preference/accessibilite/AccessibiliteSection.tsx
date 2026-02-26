@@ -58,7 +58,7 @@ export default function AccessibiliteSection() {
   }
 
   return (
-    <div className="unified-card card-padded">
+    <div className="unified-card card-padded preference-a11y-section">
       <h2 className="title-sm">{t('section_title')}</h2>
       <p className="text-secondary">
         {t('section_description')}

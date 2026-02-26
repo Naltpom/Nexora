@@ -61,11 +61,10 @@ export default function ComposantsSection() {
   const handleReset = () => {
     setPrefs({ ...DEFAULTS })
     setDraftPreference('composants', DEFAULTS)
-    applyComposantsPrefs(null)
   }
 
   return (
-    <div className="unified-card card-padded">
+    <div className="unified-card card-padded preference-composants-section">
       <h2 className="title-sm">{t('section_title')}</h2>
       <p className="text-secondary">{t('section_description')}</p>
 
