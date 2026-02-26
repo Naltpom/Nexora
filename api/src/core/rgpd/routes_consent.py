@@ -7,6 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
+from ..events import event_bus
 from ..permissions import require_permission
 from ..security import get_current_user
 from .models import ConsentRecord
@@ -22,7 +23,11 @@ router = APIRouter()
 VALID_CONSENT_TYPES = {"necessary", "functional", "analytics", "marketing"}
 
 
-@router.get("/my", response_model=UserConsentSummary)
+@router.get(
+    "/my",
+    response_model=UserConsentSummary,
+    dependencies=[Depends(require_permission("rgpd.consentement.read"))],
+)
 async def get_my_consents(
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -108,7 +113,11 @@ async def record_consent(
     ]
 
 
-@router.put("/", response_model=list[ConsentResponse])
+@router.put(
+    "/",
+    response_model=list[ConsentResponse],
+    dependencies=[Depends(require_permission("rgpd.consentement.read"))],
+)
 async def update_my_consents(
     data: ConsentBulkInput,
     request: Request,
@@ -137,6 +146,14 @@ async def update_my_consents(
         records.append(record)
 
     await db.flush()
+
+    await event_bus.emit(
+        "rgpd.consent_updated",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="consent",
+        resource_id=current_user.id,
+    )
 
     return [
         ConsentResponse(

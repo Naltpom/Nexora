@@ -11,9 +11,11 @@ from sqlalchemy.orm.attributes import flag_modified
 from ..._identity.models import AppSetting, User
 from ...database import get_db
 from ...events import event_bus
-from ...permissions import require_permission
+from ...feature_registry import get_registry
+from ...permissions import load_user_permissions, require_permission
 from ...security import get_current_user
 from .schemas import (
+    FeatureTutorialResponse,
     PermissionSeenRequest,
     PermissionSeenResponse,
     TutorialOrderingResponse,
@@ -202,3 +204,85 @@ async def update_tutorial_ordering(
     )
 
     return {"ok": True}
+
+
+# --- Tutorials (server-side filtered) ---
+
+
+async def _load_ordering(db: AsyncSession) -> dict | None:
+    """Load tutorial ordering from AppSetting, or None if not set."""
+    result = await db.execute(
+        select(AppSetting).where(AppSetting.key == ORDERING_KEY)
+    )
+    setting = result.scalar_one_or_none()
+    if setting and setting.value:
+        return json.loads(setting.value)
+    return None
+
+
+def _apply_ordering(tutorials: list[dict], ordering: dict) -> list[dict]:
+    """Sort feature tutorials and their permission tutorials by admin ordering."""
+    feature_order = ordering.get("feature_order", [])
+    permission_order = ordering.get("permission_order", {})
+
+    def feature_sort_key(ft: dict) -> int:
+        try:
+            return feature_order.index(ft["feature_name"])
+        except ValueError:
+            return 999
+
+    result = sorted(tutorials, key=feature_sort_key)
+
+    for ft in result:
+        perm_order = permission_order.get(ft["feature_name"])
+        if perm_order:
+
+            def perm_sort_key(pt: dict, _order=perm_order) -> int:
+                try:
+                    return _order.index(pt["permission"])
+                except ValueError:
+                    return 999
+
+            ft["permission_tutorials"] = sorted(ft["permission_tutorials"], key=perm_sort_key)
+
+    return result
+
+
+@router.get(
+    "/tutorials",
+    response_model=list[FeatureTutorialResponse],
+    dependencies=[Depends(require_permission("preference.didacticiel.read"))],
+)
+async def get_tutorials(
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get tutorials filtered by user permissions and sorted by admin ordering."""
+    registry = get_registry()
+    if not registry:
+        return []
+
+    all_tutorials = registry.collect_all_tutorials()
+    user_perms = await load_user_permissions(db, current_user.id)
+
+    # Filter permission tutorials by user's effective permissions
+    result = []
+    for ft in all_tutorials:
+        filtered = [pt for pt in ft["permission_tutorials"] if user_perms.get(pt["permission"])]
+        if filtered:
+            result.append({**ft, "permission_tutorials": filtered})
+
+    # Apply admin ordering
+    ordering = await _load_ordering(db)
+    if ordering:
+        result = _apply_ordering(result, ordering)
+
+    return [
+        FeatureTutorialResponse(
+            featureName=ft["feature_name"],
+            label=ft["label"],
+            description=ft.get("description"),
+            permissionTutorials=ft["permission_tutorials"],
+        )
+        for ft in result
+    ]

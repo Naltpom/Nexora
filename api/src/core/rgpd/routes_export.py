@@ -10,6 +10,8 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
+from ..events import event_bus
+from ..permissions import require_permission
 from ..security import get_current_user
 from .schemas import DataPreviewResponse, DataPreviewSection
 from .services import collect_user_data
@@ -17,7 +19,11 @@ from .services import collect_user_data
 router = APIRouter()
 
 
-@router.get("/preview", response_model=DataPreviewResponse)
+@router.get(
+    "/preview",
+    response_model=DataPreviewResponse,
+    dependencies=[Depends(require_permission("rgpd.export.read"))],
+)
 async def preview_my_data(
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -40,7 +46,10 @@ async def preview_my_data(
     )
 
 
-@router.post("/json")
+@router.post(
+    "/json",
+    dependencies=[Depends(require_permission("rgpd.export.read"))],
+)
 async def export_my_data_json(
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -56,6 +65,14 @@ async def export_my_data_json(
 
     content = json.dumps(export, indent=2, default=str, ensure_ascii=False)
 
+    await event_bus.emit(
+        "rgpd.data_exported",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="user_data",
+        resource_id=current_user.id,
+    )
+
     return StreamingResponse(
         io.BytesIO(content.encode("utf-8")),
         media_type="application/json",
@@ -63,7 +80,10 @@ async def export_my_data_json(
     )
 
 
-@router.post("/csv")
+@router.post(
+    "/csv",
+    dependencies=[Depends(require_permission("rgpd.export.read"))],
+)
 async def export_my_data_csv(
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -89,6 +109,14 @@ async def export_my_data_csv(
         writer.writerow([])
 
     content = output.getvalue()
+
+    await event_bus.emit(
+        "rgpd.data_exported",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="user_data",
+        resource_id=current_user.id,
+    )
 
     return StreamingResponse(
         io.BytesIO(content.encode("utf-8")),

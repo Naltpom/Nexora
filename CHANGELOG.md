@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026.02.48
+
+### preference.accessibilite (revue complete — 3 fixes)
+
+- **SCSS border-radius hardcode (LOW)** : `border-radius: 10px` remplace par `var(--radius)` sur `.a11y-section__active-count`
+- **SCSS density vars manquantes (LOW)** : `padding: 12px 16px` → `var(--density-padding, 12px 16px)` sur `.a11y-section__item`, `margin-bottom: 16px` → `var(--density-gap, 12px)` sur `__list`, `gap: 12px` → `var(--density-gap, 12px)` sur `__actions`
+- **handleReset applyNull redondant (LOW)** : `applyAccessibilitePrefs(null)` supprime dans `handleReset` — le `useEffect` sur `prefs` applique deja les DEFAULTS (tous false = supprime toutes les classes)
+
+### preference.didacticiel (refactoring — backend-driven tutorials)
+
+- **Tutoriels backend** : les definitions de tutoriels deplacees des manifests frontend (`index.ts`) vers les manifests backend (`manifest.py`) via le nouveau champ `tutorials` de `FeatureManifest`
+- **Nouvel endpoint `GET /tutorials`** : retourne les tutoriels filtres par permissions effectives de l'utilisateur (`load_user_permissions()`) et tries par l'ordering admin — le frontend ne recoit que ce qu'il peut voir
+- **3 nouveaux schemas** : `TutorialStepResponse`, `PermissionTutorialResponse`, `FeatureTutorialResponse`
+- **`collect_all_tutorials()`** : nouvelle methode dans `FeatureRegistry`, meme pattern que `collect_all_events()`
+- **Frontend simplifie** : `TutorialContext.tsx` remplace `import.meta.glob` + 2 useMemo (raw + ordering) par un unique appel API `GET /tutorials`
+- **7 index.ts nettoyes** : suppression de `featureTutorial` et de l'import `FeatureTutorial` dans `_identity`, `notification`, `rgpd`, `event`, `mfa`, `sso`, `preference`
+- **SCSS border-radius pill badges** : 2 occurrences `border-radius: 10px` corrigees en `var(--radius)` (`.tutorial-feature__seen-badge`, `.tutorial-tooltip-step`)
+
 ## 2026.02.47
 
 ### preference.didacticiel (revue complete — 6 fixes + events)

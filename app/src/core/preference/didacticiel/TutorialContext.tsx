@@ -7,7 +7,6 @@ import {
   useMemo,
   ReactNode,
 } from 'react'
-import { useFeature } from '../../FeatureContext'
 import { usePermission } from '../../PermissionContext'
 import { useAuth } from '../../AuthContext'
 import api from '../../../api'
@@ -16,13 +15,7 @@ import type {
   FeatureTutorial,
   PermissionTutorial,
   TutorialStep,
-  TutorialOrdering,
 } from '../../../types'
-
-const featureModules = {
-  ...import.meta.glob('../../*/index.ts', { eager: true }),
-  ...import.meta.glob('../../../features/*/index.ts', { eager: true }),
-} as Record<string, any>
 
 export interface ActiveTutorialState {
   featureName: string
@@ -59,61 +52,26 @@ interface TutorialContextType {
 const TutorialContext = createContext<TutorialContextType | undefined>(undefined)
 
 export function TutorialProvider({ children }: { children: ReactNode }) {
-  const { isActive } = useFeature()
-  const { can, permissions } = usePermission()
+  const { permissions } = usePermission()
   const { user } = useAuth()
 
+  const [featureTutorials, setFeatureTutorials] = useState<FeatureTutorial[]>([])
   const [permissionsSeen, setPermissionsSeen] = useState<Record<string, string>>({})
   const [active, setActive] = useState<ActiveTutorialState | null>(null)
   const [seenLoaded, setSeenLoaded] = useState(false)
-  const [ordering, setOrdering] = useState<TutorialOrdering | null>(null)
   const [pendingNewPermissions, setPendingNewPermissions] = useState<string[]>([])
   const [pendingDismissed, setPendingDismissed] = useState(
-    () => sessionStorage.getItem('tutorial_pending_dismissed') === 'true'
+    () => hasConsent('functional') && sessionStorage.getItem('tutorial_pending_dismissed') === 'true'
   )
 
-  // Collect feature tutorials from active feature manifests
-  const rawFeatureTutorials: FeatureTutorial[] = useMemo(() => {
-    const result: FeatureTutorial[] = []
-    for (const [, mod] of Object.entries(featureModules)) {
-      const manifest = (mod as any).manifest
-      if (!manifest || !isActive(manifest.name)) continue
-      if (manifest.featureTutorial) {
-        const ft = manifest.featureTutorial as FeatureTutorial
-        const filteredPerms = ft.permissionTutorials.filter(
-          (pt) => can(pt.permission)
-        )
-        if (filteredPerms.length > 0) {
-          result.push({ ...ft, permissionTutorials: filteredPerms })
-        }
-      }
-    }
-    return result
-  }, [isActive, can, permissions])
-
-  // Apply admin ordering
-  const featureTutorials = useMemo(() => {
-    if (!ordering) return rawFeatureTutorials
-    const sorted = [...rawFeatureTutorials].sort((a, b) => {
-      const ai = ordering.feature_order.indexOf(a.featureName)
-      const bi = ordering.feature_order.indexOf(b.featureName)
-      return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi)
-    })
-    return sorted.map((ft) => {
-      const permOrder = ordering.permission_order[ft.featureName]
-      if (!permOrder) return ft
-      const sortedPerms = [...ft.permissionTutorials].sort((a, b) => {
-        const ai = permOrder.indexOf(a.permission)
-        const bi = permOrder.indexOf(b.permission)
-        return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi)
-      })
-      return { ...ft, permissionTutorials: sortedPerms }
-    })
-  }, [rawFeatureTutorials, ordering])
-
-  // Fetch seen state and ordering from backend
+  // Fetch tutorials (filtered + ordered by backend), seen state
   useEffect(() => {
     if (!user) return
+    api
+      .get('/preference/didacticiel/tutorials')
+      .then((res) => setFeatureTutorials(res.data))
+      .catch(() => {})
+
     api
       .get('/preference/didacticiel/seen')
       .then((res) => {
@@ -121,15 +79,11 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
         setSeenLoaded(true)
       })
       .catch(() => setSeenLoaded(true))
-
-    api
-      .get('/preference/didacticiel/ordering')
-      .then((res) => setOrdering(res.data))
-      .catch(() => {})
   }, [user])
 
-  // Restore active state from sessionStorage
+  // Restore active state from sessionStorage (RGPD: only if functional consent)
   useEffect(() => {
+    if (!hasConsent('functional')) return
     const saved = sessionStorage.getItem('tutorial_active')
     if (saved) {
       try {

@@ -13,7 +13,7 @@
   background: var(--gray-50);
   border-top: 1px solid var(--gray-200);
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
-  padding: 16px 24px;
+  padding: var(--density-card-padding, 24px);
   animation: cookie-slide-up 0.3s ease-out;
 }
 
@@ -27,7 +27,7 @@
   margin: 0 auto;
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: var(--section-gap, 24px);
 }
 
 .cookie-banner-text {
@@ -68,7 +68,7 @@
 .rgpd-consent-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--density-gap, 12px);
   margin-bottom: 24px;
 }
 
@@ -77,7 +77,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px 20px;
+  padding: var(--density-padding, 12px 20px);
 }
 
 .rgpd-consent-item-info {
@@ -163,7 +163,7 @@
 .rgpd-badge {
   display: inline-block;
   padding: 2px 8px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   font-size: 0.6875rem;
   font-weight: 600;
   background: var(--gray-100);
@@ -190,7 +190,7 @@
 .rgpd-status {
   display: inline-block;
   padding: 3px 10px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -220,12 +220,12 @@
 .rgpd-data-sections {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 12px;
+  gap: var(--density-gap, 12px);
   margin-bottom: 24px;
 }
 
 .rgpd-data-section {
-  padding: 16px 20px;
+  padding: var(--density-padding, 12px 20px);
 }
 
 .rgpd-data-section-header {
@@ -252,7 +252,7 @@
   display: inline-block;
   padding: 2px 8px;
   background: var(--gray-100);
-  border-radius: 4px;
+  border-radius: var(--radius);
   font-size: 0.6875rem;
   color: var(--gray-600);
   font-family: monospace;
@@ -261,7 +261,7 @@
 /* --- Rights CTA --- */
 
 .rgpd-rights-cta {
-  padding: 20px;
+  padding: var(--density-card-padding, 24px);
   margin-top: 12px;
 
   h3 {
@@ -284,12 +284,12 @@
 .rgpd-requests-admin-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--density-gap, 12px);
 }
 
 .rgpd-request-item,
 .rgpd-request-admin-item {
-  padding: 16px 20px;
+  padding: var(--density-padding, 12px 20px);
 }
 
 .rgpd-request-header {
@@ -341,7 +341,7 @@
 .rgpd-register-form,
 .rgpd-legal-form {
   margin-bottom: 16px;
-  padding: 20px;
+  padding: var(--density-card-padding, 24px);
 
   h3 {
     margin: 0 0 16px;
@@ -366,7 +366,7 @@
 }
 
 .rgpd-tab {
-  padding: 10px 20px;
+  padding: var(--density-btn-padding, 8px 16px);
   border: none;
   background: none;
   cursor: pointer;
@@ -407,11 +407,11 @@
 .rgpd-register-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--density-gap, 12px);
 }
 
 .rgpd-register-item {
-  padding: 16px 20px;
+  padding: var(--density-padding, 12px 20px);
 }
 
 .rgpd-register-item-header {
@@ -452,7 +452,7 @@
   border-collapse: collapse;
 
   th, td {
-    padding: 10px 12px;
+    padding: var(--density-padding, 12px 20px);
     text-align: left;
     font-size: 0.8125rem;
     border-bottom: 1px solid var(--gray-100);
@@ -474,11 +474,11 @@
 .rgpd-legal-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--density-gap, 12px);
 }
 
 .rgpd-legal-item {
-  padding: 14px 20px;
+  padding: var(--density-padding, 12px 20px);
 }
 
 .rgpd-legal-item-header {
@@ -575,7 +575,7 @@
 .legal-accept-card {
   background: var(--gray-50);
   border-radius: var(--radius);
-  padding: 32px 40px;
+  padding: var(--density-card-padding, 24px);
   max-width: 800px;
   width: 100%;
   box-shadow: var(--shadow);
@@ -591,7 +591,7 @@
 .legal-accept-document {
   border: 1px solid var(--gray-200);
   border-radius: var(--radius);
-  padding: 16px 20px;
+  padding: var(--density-padding, 12px 20px);
 }
 
 .legal-accept-document-header {
@@ -671,7 +671,7 @@
   font-weight: 600;
   color: var(--primary);
   background: rgba(59, 130, 246, 0.1);
-  border-radius: 12px;
+  border-radius: var(--radius);
 }
 
 /* --- Compact mode (registration) --- */
@@ -679,7 +679,7 @@
 .legal-accept-document-compact {
   border: 1px solid var(--gray-200);
   border-radius: var(--radius);
-  padding: 12px 16px;
+  padding: var(--density-padding, 12px 20px);
 }
 
 .legal-accept-compact-row {

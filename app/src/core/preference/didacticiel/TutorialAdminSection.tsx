@@ -161,7 +161,7 @@ export default function TutorialAdminSection() {
   }
 
   return (
-    <div className="unified-card card-padded">
+    <div className="unified-card card-padded tutorial-admin-section">
       <h2 className="title-sm">{t('tutorial_admin_title')}</h2>
       <p className="text-secondary">
         {t('tutorial_admin_description')}

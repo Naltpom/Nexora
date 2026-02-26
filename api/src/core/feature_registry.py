@@ -41,6 +41,11 @@ class FeatureManifest:
     # Each dict: {"event_type": "user.registered", "label": "...", "category": "...", "description": "...", "admin_only": False}
     events: list[dict[str, Any]] = field(default_factory=list)
 
+    # Tutorial definitions for the didacticiel system
+    # Each dict: {"permission": "feature.read", "label": "...", "description": "...",
+    #   "steps": [{"target": ".css", "title": "...", "description": "...", "position": "bottom", "navigateTo": "/path"}]}
+    tutorials: list[dict[str, Any]] = field(default_factory=list)
+
     # Required config keys
     config_keys: list[str] = field(default_factory=list)
 
@@ -281,6 +286,21 @@ class FeatureRegistry:
             for evt in sorted(manifest.events, key=lambda e: e["event_type"]):
                 events.append({**evt, "feature": manifest.name})
         return events
+
+    def collect_all_tutorials(self) -> list[dict]:
+        """Gather all tutorial declarations from active feature manifests, sorted by feature name."""
+        result = []
+        for manifest in sorted(self._manifests.values(), key=lambda m: m.name):
+            if not self.is_active(manifest.name):
+                continue
+            if manifest.tutorials:
+                result.append({
+                    "feature_name": manifest.name,
+                    "label": manifest.label,
+                    "description": manifest.description,
+                    "permission_tutorials": manifest.tutorials,
+                })
+        return result
 
     def get_feature_for_path(self, path: str) -> str | None:
         """Return the feature name that owns the given request path, or None."""

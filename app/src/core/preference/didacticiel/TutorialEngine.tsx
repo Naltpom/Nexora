@@ -173,6 +173,7 @@ export default function TutorialEngine() {
     return () => {
       cancelled = true
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active?.featureName, active?.permissionIndex, active?.stepIndex])
 
   // Keep position updated on resize/scroll

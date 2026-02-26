@@ -54,7 +54,6 @@ export default function AccessibiliteSection() {
   const handleReset = () => {
     setPrefs({ ...DEFAULTS })
     setDraftPreference('accessibilite', DEFAULTS)
-    applyAccessibilitePrefs(null)
   }
 
   return (

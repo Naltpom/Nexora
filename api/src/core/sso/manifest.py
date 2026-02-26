@@ -18,6 +18,14 @@ manifest = FeatureManifest(
         {"event_type": "sso.login_failed", "label": "Connexion SSO echouee", "category": "SSO", "description": "Une tentative de connexion SSO a echoue"},
         {"event_type": "sso.link_failed", "label": "Liaison SSO echouee", "category": "SSO", "description": "Une tentative de liaison de compte SSO a echoue"},
     ],
+    tutorials=[
+        {
+            "permission": "sso.link",
+            "label": "Lier un compte SSO",
+            "description": "Associez vos comptes externes pour vous connecter plus rapidement.",
+            "steps": [{"target": ".sso-profile-section", "title": "Comptes lies", "description": "Associez vos comptes Google ou GitHub pour vous connecter plus rapidement. Gerez vos comptes lies depuis cette section.", "position": "top", "navigateTo": "/profile"}],
+        },
+    ],
     router_module="src.core.sso.routes",
     router_prefix="/api/sso",
     router_tags=["SSO"],

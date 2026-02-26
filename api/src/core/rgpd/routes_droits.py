@@ -7,6 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
+from ..events import event_bus
 from ..permissions import require_permission
 from ..security import get_current_user
 from .models import RightsRequest
@@ -39,7 +40,11 @@ def _to_response(req: RightsRequest, user_email: str | None = None, user_name: s
     )
 
 
-@router.get("/my", response_model=list[RightsRequestResponse])
+@router.get(
+    "/my",
+    response_model=list[RightsRequestResponse],
+    dependencies=[Depends(require_permission("rgpd.droits.read"))],
+)
 async def get_my_rights_requests(
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -54,7 +59,11 @@ async def get_my_rights_requests(
     return [_to_response(r) for r in items]
 
 
-@router.post("/", response_model=RightsRequestResponse)
+@router.post(
+    "/",
+    response_model=RightsRequestResponse,
+    dependencies=[Depends(require_permission("rgpd.droits.read"))],
+)
 async def create_rights_request(
     data: RightsRequestCreate,
     current_user=Depends(get_current_user),
@@ -71,6 +80,14 @@ async def create_rights_request(
     )
     db.add(req)
     await db.flush()
+
+    await event_bus.emit(
+        "rgpd.rights_request_created",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="rights_request",
+        resource_id=req.id,
+    )
 
     return _to_response(req)
 
@@ -183,4 +200,13 @@ async def process_rights_request(
         req.completed_at = datetime.now(timezone.utc)
 
     await db.flush()
+
+    await event_bus.emit(
+        "rgpd.rights_request_processed",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="rights_request",
+        resource_id=req.id,
+    )
+
     return _to_response(req)

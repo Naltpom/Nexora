@@ -117,7 +117,11 @@ async def get_pending_acceptances_for_user(
     return pending, has_previous
 
 
-@router.get("/acceptance/pending", response_model=list[PendingLegalAcceptance])
+@router.get(
+    "/acceptance/pending",
+    response_model=list[PendingLegalAcceptance],
+    dependencies=[Depends(require_permission("rgpd.politique.read"))],
+)
 async def get_pending_acceptances(
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -127,7 +131,11 @@ async def get_pending_acceptances(
     return pending
 
 
-@router.get("/acceptance/check", response_model=CheckPendingResponse)
+@router.get(
+    "/acceptance/check",
+    response_model=CheckPendingResponse,
+    dependencies=[Depends(require_permission("rgpd.politique.read"))],
+)
 async def check_pending_acceptances(
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -152,7 +160,10 @@ async def check_pending_acceptances(
     return CheckPendingResponse(pending=result.scalar_one_or_none() is not None)
 
 
-@router.post("/acceptance/accept")
+@router.post(
+    "/acceptance/accept",
+    dependencies=[Depends(require_permission("rgpd.politique.read"))],
+)
 async def accept_legal_pages(
     data: LegalAcceptanceInput,
     request: Request,

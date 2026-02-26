@@ -183,7 +183,7 @@ Cela s'applique dans **tous les contextes** :
 | 16 | [x] | `preference.font` | child | preference | (dans preference/) | `app/src/core/preference/font/` | Police, taille texte, interligne — 2 fixes (OpenDyslexic bundle local woff2 + @font-face, applyFontPrefs(null) redondant supprime) + SCSS conforme + events/perms OK |
 | 17 | [x] | `preference.layout` | child | preference | (dans preference/) | `app/src/core/preference/layout/` | Densite, border-radius, largeur contenu — 7 fixes (maxWidth/sectionGap default mismatch CSS fallback, inline style preview, SCSS hardcoded gaps/radius/btn-padding, applyLayoutPrefs(null) 3 density vars manquantes, handleReset redondant) |
 | 18 | [x] | `preference.couleur` | child | preference | (dans preference/) | `app/src/core/preference/couleur/` | Couleurs personnalisees — 3 fixes (classe CSS tutorial manquante sur 5 sections, SCSS density vars, border-radius var(--radius)) |
-| 19 | [ ] | `preference.accessibilite` | child | preference | (dans preference/) | `app/src/core/preference/accessibilite/` | Contraste, animations, dyslexie, focus |
+| 19 | [x] | `preference.accessibilite` | child | preference | (dans preference/) | `app/src/core/preference/accessibilite/` | Contraste, animations, dyslexie, focus — 5 fixes (SCSS var(--radius)/density vars, handleReset applyNull redondant) |
 | 20 | [x] | `preference.composants` | child | preference | (dans preference/) | `app/src/core/preference/composants/` | Style cards, tables, modals, boutons — 5 fixes (CSS modal-anim keyframes+selecteurs, table stripes base style+dark, SCSS 6 density vars, handleReset applyNull redondant, selecteurs preview-btn redondants) |
 | 21 | [x] | `preference.langue` | child | preference, i18n | (dans preference/) | `app/src/core/preference/langue/` | Preference de langue utilisateur — 5 fixes (axios brut→api HIGH, double save, LOCALE_LABELS duplique+accents, event preference.updated, JWT lang claim stale→new token) |
 | 22 | [x] | `preference.didacticiel` | child | preference | `api/src/core/preference/didacticiel/` | `app/src/core/preference/didacticiel/` | Tutoriels in-app, TutorialEngine — 6 fixes (Rules of Hooks, CSS target class, SCSS var(--radius)/density, RGPD hasConsent, useEffect deps) + events preference.updated |
@@ -192,13 +192,13 @@ Cela s'applique dans **tous les contextes** :
 
 | # | Check | Feature | Type | Dependances | Chemins API | Chemins APP | Notes |
 |---|-------|---------|------|-------------|-------------|-------------|-------|
-| 23 | [ ] | `rgpd` | parent | aucune | `api/src/core/rgpd/` | `app/src/core/rgpd/` | CookieBanner (header), AcceptLegalPage |
-| 24 | [ ] | `rgpd.consentement` | child | rgpd | `api/src/core/rgpd/consentement/` | (dans rgpd/) | Banniere cookies, enregistrement choix |
-| 25 | [ ] | `rgpd.registre` | child | rgpd | `api/src/core/rgpd/registre/` | (dans rgpd/) | Registre des traitements (Art. 30) |
-| 26 | [ ] | `rgpd.droits` | child | rgpd | `api/src/core/rgpd/droits/` | (dans rgpd/) | Demandes d'exercice de droits |
-| 27 | [ ] | `rgpd.export` | child | rgpd | `api/src/core/rgpd/export/` | (dans rgpd/) | Export donnees personnelles (Art. 20) |
-| 28 | [ ] | `rgpd.politique` | child | rgpd | `api/src/core/rgpd/politique/` | (dans rgpd/) | Pages legales editables (CGU, confidentialite, mentions) |
-| 29 | [ ] | `rgpd.audit` | child | rgpd | `api/src/core/rgpd/audit/` | (dans rgpd/) | Journal d'audit acces donnees perso |
+| 23 | [x] | `rgpd` | parent | aucune | `api/src/core/rgpd/` | `app/src/core/rgpd/` | CookieBanner (header), AcceptLegalPage, 7 modeles, 6 extra_routers, 4 events, 2 commandes planifiees — 4 fixes (10 require_permission HIGH, 4 events non emis, 4 border-radius, ~15 density vars) |
+| 24 | [ ] | `rgpd.consentement` | child | rgpd | (dans rgpd/) | (dans rgpd/) | Banniere cookies, ConsentPage, consentManager.ts — 2 fixes (require_permission GET/PUT, event consent_updated) |
+| 25 | [ ] | `rgpd.registre` | child | rgpd | (dans rgpd/) | (dans rgpd/) | Registre des traitements (Art. 30) — RegisterTab, CRUD 4 endpoints, 2 perms — OK |
+| 26 | [ ] | `rgpd.droits` | child | rgpd | (dans rgpd/) | (dans rgpd/) | Demandes d'exercice de droits, 6 types, 4 statuts — 2 fixes (require_permission GET/POST, 2 events) |
+| 27 | [ ] | `rgpd.export` | child | rgpd | (dans rgpd/) | (dans rgpd/) | Export donnees personnelles (Art. 20), collect_user_data 10 sections — 2 fixes (require_permission 3 endpoints, event data_exported) |
+| 28 | [ ] | `rgpd.politique` | child | rgpd | (dans rgpd/) | (dans rgpd/) | Pages legales editables, versioning, acceptation obligatoire post-login, 4 slugs — 1 fix (require_permission 3 endpoints acceptation) |
+| 29 | [ ] | `rgpd.audit` | child | rgpd | (dans rgpd/) | (dans rgpd/) | Journal d'audit acces donnees perso, purge 365j — OK |
 
 ### Phase 6 — Utilitaires & Transversal
 
