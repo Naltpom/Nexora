@@ -273,7 +273,7 @@ Les preferences de personnalisation s'appliquent a **l'ensemble de l'interface**
    - Cellules de table : `padding: var(--density-padding, 12px 20px)`
    - Cards : `padding: var(--density-card-padding, 24px)`
 4. **Gaps entre sections** — `gap: var(--section-gap, 24px)` pour les conteneurs de page
-5. **Largeur du contenu** — `max-width: var(--content-max-width, 1200px)` pour les conteneurs principaux
+5. **Largeur du contenu** — `max-width: var(--content-max-width, 960px)` pour les conteneurs principaux
 6. **`font-family`** — Ne pas definir explicitement sauf pour du code (`monospace`). Le body propage `var(--font-family)` a tous les elements via heritage CSS.
 7. **Accessibilite** — Ne pas utiliser `!important` sur `transition`, `outline`, `font-family` car les classes `a11y-*` globales peuvent les surcharger.
 
@@ -290,7 +290,7 @@ Les preferences de personnalisation s'appliquent a **l'ensemble de l'interface**
 | `--density-btn-padding` | 8px 16px | preference.layout |
 | `--density-input-padding` | 8px 12px | preference.layout |
 | `--density-card-padding` | 24px | preference.layout |
-| `--content-max-width` | 1200px | preference.layout |
+| `--content-max-width` | 960px | preference.layout |
 | `--section-gap` | 24px | preference.layout |
 
 ### Pre-render & application

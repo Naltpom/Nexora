@@ -117,7 +117,7 @@ function formatValue(t: TFunction, key: string, val: any): string {
         const wKey = WIDTH_LABEL_KEYS[val.maxWidth]
         parts.push(wKey ? t(wKey) : val.maxWidth)
       }
-      if (val.sectionGap && val.sectionGap !== 16) parts.push(`${t('format_spacing')} ${val.sectionGap}px`)
+      if (val.sectionGap && val.sectionGap !== 24) parts.push(`${t('format_spacing')} ${val.sectionGap}px`)
       return parts.length > 0 ? parts.join(', ') : t('format_default')
     }
 

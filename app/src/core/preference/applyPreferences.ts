@@ -77,6 +77,9 @@ export function applyLayoutPrefs(prefs: LayoutPrefs | null | undefined): void {
     el.removeProperty('--density-padding')
     el.removeProperty('--density-gap')
     el.removeProperty('--density-row-height')
+    el.removeProperty('--density-card-padding')
+    el.removeProperty('--density-btn-padding')
+    el.removeProperty('--density-input-padding')
     el.removeProperty('--radius')
     el.removeProperty('--content-max-width')
     el.removeProperty('--section-gap')
@@ -109,7 +112,7 @@ export function applyLayoutPrefs(prefs: LayoutPrefs | null | undefined): void {
   } else {
     el.removeProperty('--content-max-width')
   }
-  if (prefs.sectionGap && prefs.sectionGap !== 16) {
+  if (prefs.sectionGap && prefs.sectionGap !== 24) {
     el.setProperty('--section-gap', `${prefs.sectionGap}px`)
   } else {
     el.removeProperty('--section-gap')

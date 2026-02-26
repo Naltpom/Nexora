@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026.02.44
+
+### preference.layout (revue complete — 7 fixes)
+
+- **maxWidth default mismatch (MEDIUM)** : le fallback CSS `--content-max-width` etait 1200px mais l'option "Normal" = 960px — l'utilisateur voyait "Normal (960px)" mais avait 1200px de largeur effective, et "Wide (1200px)" ne faisait rien. Corrige : fallback CSS aligne a 960px dans `_body.scss`, CLAUDE.md mis a jour
+- **sectionGap default mismatch (MEDIUM)** : le default du slider (16px) ne correspondait pas au fallback CSS (24px) — le slider montrait 16px alors que le gap effectif etait 24px. Corrige : DEFAULTS.sectionGap = 24, comparaisons alignees dans `applyPreferences.ts` et `DraftPreferenceContext.tsx`
+- **Inline style preview box** : `style={{ borderRadius }}` sur le radius-box de preview violait la regle "aucun style inline". Remplace par `border-radius: var(--radius, 8px)` en SCSS
+- **SCSS hardcoded gaps/margins** : `gap: 20px`, `margin-bottom: 16px`, `gap: 12px` remplacees par `var(--section-gap, 24px)` et `var(--density-gap, 12px)`
+- **Badge value hardcoded radius** : `border-radius: 10px` remplace par `var(--radius, 8px)` (aligne avec font.scss)
+- **Radio button padding hardcode** : `padding: 8px 16px` remplace par `var(--density-btn-padding, 8px 16px)`
+- **applyLayoutPrefs(null) incomplet** : le branch null ne nettoyait pas `--density-card-padding`, `--density-btn-padding`, `--density-input-padding` — valeurs fantomes possibles au discard. +3 removeProperty + suppression appel redondant dans handleReset
+
 ## 2026.02.43
 
 ### preference.font (revue complete — 2 fixes + bundle local fonts)

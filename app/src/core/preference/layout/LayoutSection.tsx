@@ -17,7 +17,7 @@ const WIDTH_OPTION_KEYS = [
   { value: 'full', key: 'width_full' },
 ]
 
-const DEFAULTS: LayoutPrefs = { density: 'normal', radius: 8, maxWidth: 'normal', sectionGap: 16 }
+const DEFAULTS: LayoutPrefs = { density: 'normal', radius: 8, maxWidth: 'normal', sectionGap: 24 }
 
 export default function LayoutSection() {
   const { t } = useTranslation('preference.layout')
@@ -49,7 +49,6 @@ export default function LayoutSection() {
   const handleReset = () => {
     setPrefs({ ...DEFAULTS })
     setDraftPreference('layout', DEFAULTS)
-    applyLayoutPrefs(null)
   }
 
   return (
@@ -93,10 +92,7 @@ export default function LayoutSection() {
             <span>16px</span>
           </div>
           <div className="layout-section__radius-preview">
-            <div
-              className="layout-section__radius-box"
-              style={{ borderRadius: `${prefs.radius ?? 8}px` }}
-            />
+            <div className="layout-section__radius-box" />
           </div>
         </div>
 
@@ -116,7 +112,7 @@ export default function LayoutSection() {
         <div className="layout-section__field">
           <label className="layout-section__label">
             {t('label_section_spacing')}
-            <span className="layout-section__value">{prefs.sectionGap ?? 16}px</span>
+            <span className="layout-section__value">{prefs.sectionGap ?? 24}px</span>
           </label>
           <input
             type="range"
@@ -124,7 +120,7 @@ export default function LayoutSection() {
             min={8}
             max={32}
             step={2}
-            value={prefs.sectionGap ?? 16}
+            value={prefs.sectionGap ?? 24}
             onChange={(e) => update({ sectionGap: Number(e.target.value) })}
           />
           <div className="layout-section__range-labels">
