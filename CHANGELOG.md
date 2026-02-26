@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026.02.43
+
+### preference.font (revue complete — 2 fixes + bundle local fonts)
+
+- **Polices bundlees localement** : toutes les polices de preference (Inter, Roboto, Open Sans, Atkinson Hyperlegible, OpenDyslexic) sont desormais servies en local depuis `public/fonts/` au lieu de Google Fonts CDN — suppression des 3 balises `<link>` Google Fonts de `index.html`, ajout de 18 declarations `@font-face` dans `_fonts.scss` (~600 KB woff2 total). Zero requete externe, fonctionne offline
+- **OpenDyslexic fonctionnel** : la police etait referencee dans 3 fichiers (FontSection, applyPreferences, accessibilite.scss) mais jamais chargee (pas disponible sur Google Fonts). Corrige via bundle local woff2
+- **`applyFontPrefs(null)` redondant supprime** : appel superflu dans `handleReset()` de FontSection, deja gere par `setDraftPreference` + `useEffect`
+
 ## 2026.02.42
 
 ### preference.theme (integration wallpaper dans le draft system)

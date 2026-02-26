@@ -51,11 +51,10 @@ export default function FontSection() {
   const handleReset = () => {
     setPrefs({ ...DEFAULTS })
     setDraftPreference('font', DEFAULTS)
-    applyFontPrefs(null)
   }
 
   return (
-    <div className="unified-card card-padded">
+    <div className="unified-card card-padded preference-font-section">
       <h2 className="title-sm">{t('section_title')}</h2>
       <p className="text-secondary">{t('section_description')}</p>
 
