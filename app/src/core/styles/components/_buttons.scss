@@ -53,7 +53,7 @@
 }
 
 .btn-sm {
-  padding: 4px 10px;
+  padding: var(--density-btn-sm-padding, 4px 10px);
   font-size: 0.8125rem;
 }
 
@@ -63,7 +63,7 @@
 
 /* Btn warning */
 .btn-warning {
-  background: #F59E0B;
+  background: var(--warning);
   color: white;
 }
 
@@ -75,7 +75,7 @@
 .btn-icon {
   width: 32px;
   height: 32px;
-  border-radius: 6px;
+  border-radius: var(--radius);
   border: none;
   cursor: pointer;
   display: flex;
@@ -107,12 +107,12 @@
 }
 
 .btn-icon-warning {
-  color: var(--gray-500);
+  background: #FEF3C7;
+  color: var(--warning);
 }
 
 .btn-icon-warning:hover {
-  background: #FEF3C7;
-  color: var(--warning);
+  background: #FDE68A;
 }
 
 .btn-icon-danger {
@@ -164,12 +164,12 @@
 }
 
 [data-theme="dark"] .btn-icon-warning {
-  color: rgba(255,255,255,0.6);
+  background: rgba(217, 119, 6, 0.2);
+  color: #FBBF24;
 }
 
 [data-theme="dark"] .btn-icon-warning:hover {
-  background: rgba(217, 119, 6, 0.15);
-  color: #FBBF24;
+  background: rgba(217, 119, 6, 0.3);
 }
 
 [data-theme="dark"] .btn-icon-danger {

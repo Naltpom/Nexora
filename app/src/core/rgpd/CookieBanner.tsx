@@ -2,10 +2,8 @@ import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import api from '../../api'
-import { cleanupFunctionalStorage } from './consentManager'
+import { CONSENT_KEY, cleanupFunctionalStorage } from './consentManager'
 import './rgpd.scss'
-
-const CONSENT_KEY = 'rgpd_consent_given'
 
 export default function CookieBanner() {
   const { t } = useTranslation('rgpd')

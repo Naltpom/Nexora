@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import Layout from '../Layout'
 import api from '../../api'
-import { cleanupFunctionalStorage } from './consentManager'
+import { CONSENT_KEY, cleanupFunctionalStorage } from './consentManager'
 import './rgpd.scss'
 
 interface ConsentState {
@@ -11,8 +11,6 @@ interface ConsentState {
   analytics: boolean
   marketing: boolean
 }
-
-const CONSENT_KEY = 'rgpd_consent_given'
 
 const CONSENT_TYPES: { key: string; labelKey: string; descriptionKey: string; required?: boolean }[] = [
   { key: 'necessary', labelKey: 'consent_page.consent_necessary_label', descriptionKey: 'consent_page.consent_necessary_description', required: true },
@@ -29,6 +27,7 @@ export default function ConsentPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState('')
+  const [error, setError] = useState('')
 
   const loadConsent = useCallback(async () => {
     try {
@@ -67,6 +66,7 @@ export default function ConsentPage() {
   const handleSave = async () => {
     setSaving(true)
     setSuccess('')
+    setError('')
     try {
       const consents = Object.entries(consent).map(([type, granted]) => ({
         consent_type: type,
@@ -83,7 +83,8 @@ export default function ConsentPage() {
       setSuccess(t('consent_page.success_message'))
       setTimeout(() => setSuccess(''), 3000)
     } catch {
-      // silently fail
+      setError(t('consent_page.error_message'))
+      setTimeout(() => setError(''), 5000)
     } finally {
       setSaving(false)
     }
@@ -109,6 +110,7 @@ export default function ConsentPage() {
       </div>
 
       {success && <div className="alert alert-success mb-16">{success}</div>}
+      {error && <div className="alert alert-danger mb-16">{error}</div>}
 
       <div className="rgpd-consent-list">
         {CONSENT_TYPES.map((info) => (

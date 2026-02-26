@@ -1,4 +1,4 @@
-"""Email OTP routes: enable, send-code, disable."""
+"""Email OTP routes: enable, verify-setup, send-code, disable."""
 
 from datetime import datetime, timezone
 
@@ -14,20 +14,22 @@ from ...permissions import require_permission
 from ...rate_limit import limiter
 from ...security import decode_mfa_token, get_current_user
 from ..models import UserMFA
-from ..schemas import BackupCodesResponse, EmailDisableRequest, EmailOTPSendResponse
+from ..schemas import BackupCodesResponse, EmailDisableRequest, EmailOTPSendResponse, EmailVerifySetupRequest
 from ..services import generate_backup_codes
 from .services import send_email_otp, verify_email_otp
 
 router = APIRouter()
 
 
-@router.post("/enable", response_model=BackupCodesResponse, dependencies=[Depends(require_permission("mfa.email.setup"))])
+@router.post("/enable", response_model=EmailOTPSendResponse, dependencies=[Depends(require_permission("mfa.email.setup"))])
+@limiter.limit(settings.RATE_LIMIT_MFA_VERIFY)
 async def email_enable(
+    request: Request,
     db: AsyncSession = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    """Activer le MFA par email pour l'utilisateur courant."""
-    # Bug 2 fix: check EMAIL_ENABLED before allowing activation
+    """Initier l'activation du MFA par email : envoie un code de verification."""
+    # Check EMAIL_ENABLED before allowing activation
     if not settings.EMAIL_ENABLED:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -48,7 +50,7 @@ async def email_enable(
             detail="MFA par email est deja active",
         )
 
-    # Create or update UserMFA record
+    # Create or update UserMFA record (not yet enabled, pending verification)
     result = await db.execute(
         select(UserMFA).where(
             UserMFA.user_id == current_user.id,
@@ -58,16 +60,70 @@ async def email_enable(
     mfa_record = result.scalar_one_or_none()
 
     if mfa_record:
-        mfa_record.is_enabled = True
+        mfa_record.is_enabled = False
         mfa_record.email_address = current_user.email
     else:
         mfa_record = UserMFA(
             user_id=current_user.id,
             method="email",
-            is_enabled=True,
+            is_enabled=False,
             email_address=current_user.email,
         )
         db.add(mfa_record)
+
+    await db.flush()
+
+    # Send verification code
+    result_info = await send_email_otp(
+        db, current_user.id, current_user.email, f"{current_user.first_name} {current_user.last_name}"
+    )
+
+    return EmailOTPSendResponse(
+        message="Code de verification envoye par email",
+        **result_info,
+    )
+
+
+@router.post("/verify-setup", response_model=BackupCodesResponse, dependencies=[Depends(require_permission("mfa.email.setup"))])
+@limiter.limit(settings.RATE_LIMIT_MFA_VERIFY)
+async def email_verify_setup(
+    request: Request,
+    data: EmailVerifySetupRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Verifier le code email pour confirmer l'activation du MFA par email."""
+    # Load UserMFA for email
+    result = await db.execute(
+        select(UserMFA).where(
+            UserMFA.user_id == current_user.id,
+            UserMFA.method == "email",
+        )
+    )
+    mfa_record = result.scalar_one_or_none()
+
+    if not mfa_record:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Veuillez d'abord initier l'activation via /enable",
+        )
+
+    if mfa_record.is_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="MFA par email est deja active",
+        )
+
+    # Verify email OTP code
+    is_valid = await verify_email_otp(db, current_user.id, data.code)
+    if not is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Code email invalide ou expire",
+        )
+
+    # Activate email MFA
+    mfa_record.is_enabled = True
 
     # Check if this is the first MFA method -> make it primary
     result = await db.execute(

@@ -35,6 +35,7 @@ class TOTPVerifySetupRequest(BaseModel):
 class EmailOTPSendResponse(BaseModel):
     message: str
     expires_in_seconds: int
+    resend_cooldown_seconds: int = 120
 
 
 class MFAVerifyRequest(BaseModel):
@@ -56,6 +57,10 @@ class MFADisableRequest(BaseModel):
 
 
 class EmailDisableRequest(BaseModel):
+    code: str
+
+
+class EmailVerifySetupRequest(BaseModel):
     code: str
 
 

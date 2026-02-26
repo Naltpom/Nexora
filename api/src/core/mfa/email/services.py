@@ -1,5 +1,6 @@
 """Email OTP services: generation, sending, verification (DB-backed)."""
 
+import math
 import secrets
 from datetime import datetime, timedelta, timezone
 
@@ -20,8 +21,31 @@ def generate_email_otp() -> str:
 
 async def send_email_otp(db: AsyncSession, user_id: int, email: str, name: str) -> dict:
     """Generate, persist, and send an email OTP to the user."""
-    code = generate_email_otp()
+    cooldown = settings.MFA_EMAIL_RESEND_COOLDOWN_SECONDS
     expiry = settings.MFA_EMAIL_CODE_EXPIRY_MINUTES
+
+    # Check cooldown: refuse if a code was sent recently
+    result = await db.execute(
+        select(MFAEmailCode).where(
+            MFAEmailCode.user_id == user_id,
+            MFAEmailCode.is_used == False,
+        ).order_by(MFAEmailCode.created_at.desc())
+    )
+    existing = result.scalar_one_or_none()
+
+    if existing:
+        elapsed = (datetime.now(timezone.utc) - existing.created_at).total_seconds()
+        remaining = cooldown - elapsed
+        if remaining > 0:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail={
+                    "message": "Veuillez patienter avant de renvoyer un code",
+                    "retry_after_seconds": math.ceil(remaining),
+                },
+            )
+
+    code = generate_email_otp()
 
     # Delete previous unused codes for this user
     await db.execute(
@@ -50,7 +74,7 @@ async def send_email_otp(db: AsyncSession, user_id: int, email: str, name: str) 
             detail="Echec de l'envoi de l'email. Verifiez la configuration SMTP.",
         )
 
-    return {"expires_in_seconds": expiry * 60}
+    return {"expires_in_seconds": expiry * 60, "resend_cooldown_seconds": cooldown}
 
 
 async def verify_email_otp(db: AsyncSession, user_id: int, code: str) -> bool:

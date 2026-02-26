@@ -70,6 +70,7 @@ class Settings(BaseSettings):
     # MFA - Email OTP
     MFA_EMAIL_CODE_LENGTH: int = 6
     MFA_EMAIL_CODE_EXPIRY_MINUTES: int = 5
+    MFA_EMAIL_RESEND_COOLDOWN_SECONDS: int = 120
 
     # Backups
     BACKUP_DIR: str = "/app/backups"

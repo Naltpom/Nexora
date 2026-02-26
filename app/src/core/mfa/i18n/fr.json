@@ -68,6 +68,7 @@
   "force_email_activating": "Activation...",
   "force_email_activate": "Activer la verification email",
   "force_email_error_activation": "Erreur lors de l'activation",
+  "force_email_error_invalid_code": "Code invalide ou expire",
   "force_no_methods": "Aucune methode MFA disponible. Contactez votre administrateur.",
   "force_logout": "Se deconnecter",
 
@@ -107,6 +108,9 @@
   "setup_email_disable": "Desactiver",
   "setup_email_activating": "Activation...",
   "setup_email_activate": "Activer",
+  "setup_email_verify_instructions": "Un code de verification a ete envoye a votre adresse email. Entrez-le ci-dessous pour confirmer l'activation.",
+  "setup_email_error_invalid_code": "Code email invalide ou expire",
+  "setup_email_code_resent": "Code de verification renvoye par email",
   "setup_email_success": "MFA par email active",
   "setup_email_error_activation": "Erreur lors de l'activation email",
   "setup_email_disabled_success": "MFA par email desactive",
@@ -141,5 +145,6 @@
   "verify_submit": "Verifier",
   "verify_email_resending": "Envoi...",
   "verify_email_resend": "Renvoyer le code",
+  "verify_email_resend_cooldown": "Renvoyer le code ({{time}})",
   "verify_back_to_login": "Retour a la connexion"
 }

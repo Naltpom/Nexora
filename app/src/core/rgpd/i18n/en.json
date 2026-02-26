@@ -48,6 +48,7 @@
     "heading": "Consent preferences",
     "description": "Manage your cookies and trackers and data processing preferences.",
     "success_message": "Consent preferences updated.",
+    "error_message": "An error occurred while saving your preferences.",
     "btn_saving": "Saving...",
     "btn_save": "Save my preferences",
     "badge_required": "Required",

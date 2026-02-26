@@ -48,6 +48,7 @@
     "heading": "Preferences de consentement",
     "description": "Gerez vos preferences de cookies et traceurs et de traitement de donnees.",
     "success_message": "Preferences de consentement mises a jour.",
+    "error_message": "Erreur lors de l'enregistrement de vos preferences.",
     "btn_saving": "Enregistrement...",
     "btn_save": "Enregistrer mes preferences",
     "badge_required": "Obligatoire",

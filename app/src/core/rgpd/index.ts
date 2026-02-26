@@ -3,7 +3,7 @@ import { lazy } from 'react'
 export const manifest = {
   name: 'rgpd',
   routes: [
-    { path: '/rgpd/consent', component: lazy(() => import('./ConsentPage')), permission: 'rgpd.read' },
+    { path: '/rgpd/consent', component: lazy(() => import('./ConsentPage')), permission: 'rgpd.consentement.read' },
     { path: '/rgpd/my-data', component: lazy(() => import('./MyDataPage')), permission: 'rgpd.read' },
     { path: '/rgpd/rights', component: lazy(() => import('./RightsRequestPage')), permission: 'rgpd.read' },
     { path: '/rgpd/legal/:slug', component: lazy(() => import('./LegalPage')), public: true },

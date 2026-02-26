@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../core/AuthContext'
@@ -24,6 +24,12 @@ export default function MFAForceSetupPage() {
 
   // Email
   const [emailSaving, setEmailSaving] = useState(false)
+  const [emailSetupPending, setEmailSetupPending] = useState(false)
+  const [emailVerifyCode, setEmailVerifyCode] = useState('')
+  const [emailVerifyError, setEmailVerifyError] = useState('')
+  const [emailVerifying, setEmailVerifying] = useState(false)
+  const [emailResendCooldown, setEmailResendCooldown] = useState(0)
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const fetchMethods = useCallback(async () => {
     try {
@@ -43,10 +49,46 @@ export default function MFAForceSetupPage() {
     fetchMethods()
   }, [fetchMethods])
 
+  useEffect(() => {
+    return () => {
+      if (cooldownRef.current) clearInterval(cooldownRef.current)
+    }
+  }, [])
+
   const onSetupComplete = () => {
     clearMfaSetupRequired()
     setSuccessMessage(t('force_success'))
     setTimeout(() => navigate('/'), 1500)
+  }
+
+  const formatCooldown = (seconds: number) => {
+    const m = Math.floor(seconds / 60)
+    const s = seconds % 60
+    return `${m}:${s.toString().padStart(2, '0')}`
+  }
+
+  const startCooldown = (seconds: number) => {
+    if (cooldownRef.current) clearInterval(cooldownRef.current)
+    setEmailResendCooldown(seconds)
+    cooldownRef.current = setInterval(() => {
+      setEmailResendCooldown((prev) => {
+        if (prev <= 1) {
+          if (cooldownRef.current) clearInterval(cooldownRef.current)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+  }
+
+  const parseCooldownFromError = (err: any): number | null => {
+    if (err.response?.status === 429) {
+      const detail = err.response?.data?.detail
+      if (typeof detail === 'object' && detail?.retry_after_seconds) {
+        return detail.retry_after_seconds
+      }
+    }
+    return null
   }
 
   // TOTP
@@ -83,11 +125,53 @@ export default function MFAForceSetupPage() {
   // Email
   const handleEmailEnable = async () => {
     setEmailSaving(true)
+    setEmailVerifyError('')
     try {
-      await api.post('/mfa/email/enable')
+      const res = await api.post('/mfa/email/enable')
+      setEmailSetupPending(true)
+      startCooldown(res.data.resend_cooldown_seconds || 120)
+    } catch (err: any) {
+      const cd = parseCooldownFromError(err)
+      if (cd) {
+        setEmailSetupPending(true)
+        startCooldown(cd)
+      } else {
+        setError(err.response?.data?.detail || t('force_email_error_activation'))
+      }
+    } finally {
+      setEmailSaving(false)
+    }
+  }
+
+  const handleEmailVerifySetup = async () => {
+    if (!emailVerifyCode || emailVerifyCode.length !== 6) {
+      setEmailVerifyError(t('force_totp_error_6_digits'))
+      return
+    }
+    setEmailVerifyError('')
+    setEmailVerifying(true)
+    try {
+      await api.post('/mfa/email/verify-setup', { code: emailVerifyCode })
       onSetupComplete()
     } catch (err: any) {
-      setError(err.response?.data?.detail || t('force_email_error_activation'))
+      setEmailVerifyError(err.response?.data?.detail || t('force_email_error_invalid_code'))
+    } finally {
+      setEmailVerifying(false)
+    }
+  }
+
+  const handleEmailResendCode = async () => {
+    setEmailSaving(true)
+    try {
+      const res = await api.post('/mfa/email/enable')
+      startCooldown(res.data.resend_cooldown_seconds || 120)
+    } catch (err: any) {
+      const cd = parseCooldownFromError(err)
+      if (cd) {
+        startCooldown(cd)
+      } else {
+        setEmailVerifyError(err.response?.data?.detail || t('force_email_error_activation'))
+      }
     } finally {
       setEmailSaving(false)
     }
@@ -179,9 +263,45 @@ export default function MFAForceSetupPage() {
                 <p className="mfa-force-method-desc">
                   {t('force_email_description')}
                 </p>
-                <button className="btn btn-primary" onClick={handleEmailEnable} disabled={emailSaving}>
-                  {emailSaving ? t('force_email_activating') : t('force_email_activate')}
-                </button>
+
+                {emailVerifyError && <div className="alert alert-error alert-spaced" role="alert">{emailVerifyError}</div>}
+
+                {!emailSetupPending ? (
+                  <button className="btn btn-primary" onClick={handleEmailEnable} disabled={emailSaving}>
+                    {emailSaving ? t('force_email_activating') : t('force_email_activate')}
+                  </button>
+                ) : (
+                  <div>
+                    <p className="mfa-force-method-desc">{t('setup_email_verify_instructions')}</p>
+                    <div className="form-group">
+                      <label>{t('verify_label_email')}</label>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={emailVerifyCode}
+                        onChange={(e) => setEmailVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        placeholder="000000"
+                        maxLength={6}
+                        autoFocus
+                      />
+                    </div>
+                    <div className="flex-row-sm">
+                      <button className="btn btn-primary" onClick={handleEmailVerifySetup} disabled={emailVerifying || emailVerifyCode.length !== 6}>
+                        {emailVerifying ? t('force_totp_verifying') : t('force_totp_confirm')}
+                      </button>
+                      <button
+                        className="btn btn-secondary"
+                        onClick={handleEmailResendCode}
+                        disabled={emailSaving || emailResendCooldown > 0}
+                      >
+                        {emailSaving ? t('verify_email_resending') : emailResendCooldown > 0 ? t('verify_email_resend_cooldown', { time: formatCooldown(emailResendCooldown) }) : t('verify_email_resend')}
+                      </button>
+                      <button className="btn btn-secondary" onClick={() => { setEmailSetupPending(false); setEmailVerifyCode(''); setEmailVerifyError(''); setEmailResendCooldown(0) }}>
+                        {t('force_totp_cancel')}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

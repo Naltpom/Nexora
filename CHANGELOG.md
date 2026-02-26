@@ -1,5 +1,32 @@
 # Changelog
 
+## 2026.02.49
+
+### mfa (revue mfa.email — activation 2 etapes + cooldown resend)
+
+- **Activation email MFA en 2 etapes (HIGH)** : `/enable` envoie un code de verification au lieu d'activer directement. Nouvel endpoint `/verify-setup` confirme le code avant d'activer le MFA — empeche l'activation sans prouver l'acces a l'email
+- **Cooldown resend backend (MEDIUM)** : nouveau setting `MFA_EMAIL_RESEND_COOLDOWN_SECONDS` (defaut 120s), `send_email_otp()` verifie le cooldown avant envoi, retourne 429 avec `retry_after_seconds`
+- **Cooldown resend frontend (MEDIUM)** : les 3 pages MFA (MFASetupPage, MFAForceSetupPage, MFAVerifyPage) affichent un compte a rebours sur les boutons de renvoi, gerent les erreurs 429 avec synchronisation automatique du cooldown
+- **Events declares dans les manifests (LOW)** : `mfa` (8 events), `mfa.email` (2 events), `mfa.totp` (2 events) — tous les `event_bus.emit()` couverts
+- **Nouveaux schemas** : `EmailVerifySetupRequest`, champ `resend_cooldown_seconds` sur `EmailOTPSendResponse`
+
+### rgpd.consentement (revue complete — 7 fixes)
+
+- **Permission route ConsentPage (MEDIUM)** : `rgpd.read` → `rgpd.consentement.read` dans le manifest frontend
+- **CONSENT_KEY centralise (LOW)** : exporte depuis `consentManager.ts`, importe dans ConsentPage et CookieBanner (etait duplique)
+- **Feedback erreur ConsentPage (LOW)** : affiche un message d'erreur en cas d'echec de sauvegarde (echouait silencieusement)
+- **i18n** : ajout `consent_page.error_message` (fr/en)
+- **SCSS density vars (LOW)** : `cookie-banner-actions` gap → `var(--density-gap)`, `rgpd-consent-list` margin-bottom → `var(--section-gap)`, `rgpd-consent-item` gap → `var(--density-gap)`, `cookie-banner-content` max-width → `var(--content-max-width)`
+
+### preference.layout (density btn-sm)
+
+- **`--density-btn-sm-padding`** : nouvelle variable de densite pour les petits boutons, appliquee par niveau (compact: `3px 8px`, normal: `4px 10px`, airy: `6px 14px`)
+
+### styles (conformite SCSS)
+
+- **btn-warning** : `background: #F59E0B` → `var(--warning)`
+- **btn-icon** : `border-radius: 6px` → `var(--radius)`
+
 ## 2026.02.48
 
 ### preference.accessibilite (revue complete — 3 fixes)

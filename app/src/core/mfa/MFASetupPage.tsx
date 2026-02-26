@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import Layout from '../../core/Layout'
 import { useAuth } from '../../core/AuthContext'
@@ -53,6 +53,17 @@ export default function MFASetupPage() {
   const [emailDisableCode, setEmailDisableCode] = useState('')
   const [showEmailDisableConfirm, setShowEmailDisableConfirm] = useState(false)
   const [emailDisableCodeSending, setEmailDisableCodeSending] = useState(false)
+  // Email setup verification (2-step flow)
+  const [emailSetupPending, setEmailSetupPending] = useState(false)
+  const [emailVerifyCode, setEmailVerifyCode] = useState('')
+  const [emailVerifyError, setEmailVerifyError] = useState('')
+  const [emailVerifying, setEmailVerifying] = useState(false)
+
+  // Email resend cooldowns
+  const [emailResendCooldown, setEmailResendCooldown] = useState(0)
+  const [emailDisableResendCooldown, setEmailDisableResendCooldown] = useState(0)
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const disableCooldownRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // Backup codes
   const [backupCodes, setBackupCodes] = useState<string[] | null>(null)
@@ -87,6 +98,43 @@ export default function MFASetupPage() {
     setSuccessMessage(msg)
     setTimeout(() => setSuccessMessage(''), 4000)
   }
+
+  const formatCooldown = (seconds: number) => {
+    const m = Math.floor(seconds / 60)
+    const s = seconds % 60
+    return `${m}:${s.toString().padStart(2, '0')}`
+  }
+
+  const startCooldown = (seconds: number, setter: React.Dispatch<React.SetStateAction<number>>, ref: React.MutableRefObject<ReturnType<typeof setInterval> | null>) => {
+    if (ref.current) clearInterval(ref.current)
+    setter(seconds)
+    ref.current = setInterval(() => {
+      setter((prev) => {
+        if (prev <= 1) {
+          if (ref.current) clearInterval(ref.current)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+  }
+
+  const parseCooldownFromError = (err: any): number | null => {
+    if (err.response?.status === 429) {
+      const detail = err.response?.data?.detail
+      if (typeof detail === 'object' && detail?.retry_after_seconds) {
+        return detail.retry_after_seconds
+      }
+    }
+    return null
+  }
+
+  useEffect(() => {
+    return () => {
+      if (cooldownRef.current) clearInterval(cooldownRef.current)
+      if (disableCooldownRef.current) clearInterval(disableCooldownRef.current)
+    }
+  }, [])
 
   const isMethodAvailable = (method: string) => {
     if (availableMethods.length === 0) return true
@@ -161,8 +209,36 @@ export default function MFASetupPage() {
 
   const handleEmailEnable = async () => {
     setEmailSaving(true)
+    setEmailVerifyError('')
     try {
       const res = await api.post('/mfa/email/enable')
+      setEmailSetupPending(true)
+      startCooldown(res.data.resend_cooldown_seconds || 120, setEmailResendCooldown, cooldownRef)
+    } catch (err: any) {
+      const cd = parseCooldownFromError(err)
+      if (cd) {
+        setEmailSetupPending(true)
+        startCooldown(cd, setEmailResendCooldown, cooldownRef)
+      } else {
+        setError(err.response?.data?.detail || t('setup_email_error_activation'))
+      }
+    } finally {
+      setEmailSaving(false)
+    }
+  }
+
+  const handleEmailVerifySetup = async () => {
+    if (!emailVerifyCode || emailVerifyCode.length !== 6) {
+      setEmailVerifyError(t('setup_totp_error_6_digits'))
+      return
+    }
+    setEmailVerifyError('')
+    setEmailVerifying(true)
+    try {
+      const res = await api.post('/mfa/email/verify-setup', { code: emailVerifyCode })
+      setEmailSetupPending(false)
+      setEmailVerifyCode('')
+      setEmailResendCooldown(0)
       if (res.data.codes && res.data.codes.length > 0) {
         setBackupCodes(res.data.codes)
       }
@@ -170,7 +246,25 @@ export default function MFASetupPage() {
       clearMfaSetupRequired()
       showSuccess(t('setup_email_success'))
     } catch (err: any) {
-      setError(err.response?.data?.detail || t('setup_email_error_activation'))
+      setEmailVerifyError(err.response?.data?.detail || t('setup_email_error_invalid_code'))
+    } finally {
+      setEmailVerifying(false)
+    }
+  }
+
+  const handleEmailResendCode = async () => {
+    setEmailSaving(true)
+    try {
+      const res = await api.post('/mfa/email/enable')
+      startCooldown(res.data.resend_cooldown_seconds || 120, setEmailResendCooldown, cooldownRef)
+      showSuccess(t('setup_email_code_resent'))
+    } catch (err: any) {
+      const cd = parseCooldownFromError(err)
+      if (cd) {
+        startCooldown(cd, setEmailResendCooldown, cooldownRef)
+      } else {
+        setEmailVerifyError(err.response?.data?.detail || t('setup_email_error_activation'))
+      }
     } finally {
       setEmailSaving(false)
     }
@@ -179,11 +273,35 @@ export default function MFASetupPage() {
   const handleEmailDisableSendCode = async () => {
     setEmailDisableCodeSending(true)
     try {
-      // Send a verification code to user's email via a dedicated endpoint
-      await api.post('/mfa/email/send-disable-code')
+      const res = await api.post('/mfa/email/send-disable-code')
       setShowEmailDisableConfirm(true)
+      startCooldown(res.data.resend_cooldown_seconds || 120, setEmailDisableResendCooldown, disableCooldownRef)
     } catch (err: any) {
-      setError(err.response?.data?.detail || t('setup_email_error_disabling'))
+      const cd = parseCooldownFromError(err)
+      if (cd) {
+        setShowEmailDisableConfirm(true)
+        startCooldown(cd, setEmailDisableResendCooldown, disableCooldownRef)
+      } else {
+        setError(err.response?.data?.detail || t('setup_email_error_disabling'))
+      }
+    } finally {
+      setEmailDisableCodeSending(false)
+    }
+  }
+
+  const handleEmailDisableResendCode = async () => {
+    setEmailDisableCodeSending(true)
+    try {
+      const res = await api.post('/mfa/email/send-disable-code')
+      startCooldown(res.data.resend_cooldown_seconds || 120, setEmailDisableResendCooldown, disableCooldownRef)
+      showSuccess(t('setup_email_code_resent'))
+    } catch (err: any) {
+      const cd = parseCooldownFromError(err)
+      if (cd) {
+        startCooldown(cd, setEmailDisableResendCooldown, disableCooldownRef)
+      } else {
+        setError(err.response?.data?.detail || t('setup_email_error_disabling'))
+      }
     } finally {
       setEmailDisableCodeSending(false)
     }
@@ -464,7 +582,55 @@ export default function MFASetupPage() {
                     </button>
                     <button
                       className="btn btn-secondary"
-                      onClick={() => { setShowEmailDisableConfirm(false); setEmailDisableCode('') }}
+                      onClick={handleEmailDisableResendCode}
+                      disabled={emailDisableCodeSending || emailDisableResendCooldown > 0}
+                    >
+                      {emailDisableCodeSending ? t('verify_email_resending') : emailDisableResendCooldown > 0 ? t('verify_email_resend_cooldown', { time: formatCooldown(emailDisableResendCooldown) }) : t('verify_email_resend')}
+                    </button>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => { setShowEmailDisableConfirm(false); setEmailDisableCode(''); setEmailDisableResendCooldown(0) }}
+                      type="button"
+                    >
+                      {t('setup_totp_cancel')}
+                    </button>
+                  </div>
+                </div>
+              ) : emailSetupPending ? (
+                <div className="mfa-totp-setup">
+                  <p className="mfa-setup-totp-instructions">{t('setup_email_verify_instructions')}</p>
+                  {emailVerifyError && <div className="alert alert-error alert-spaced" role="alert">{emailVerifyError}</div>}
+                  <div className="form-group">
+                    <label>{t('verify_label_email')}</label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      className="mfa-code-input"
+                      value={emailVerifyCode}
+                      onChange={(e) => setEmailVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      placeholder="000000"
+                      maxLength={6}
+                      autoFocus
+                    />
+                  </div>
+                  <div className="flex-row-sm">
+                    <button
+                      className="btn btn-primary"
+                      onClick={handleEmailVerifySetup}
+                      disabled={emailVerifying || emailVerifyCode.length !== 6}
+                    >
+                      {emailVerifying ? t('setup_totp_verifying') : t('setup_totp_confirm')}
+                    </button>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={handleEmailResendCode}
+                      disabled={emailSaving || emailResendCooldown > 0}
+                    >
+                      {emailSaving ? t('verify_email_resending') : emailResendCooldown > 0 ? t('verify_email_resend_cooldown', { time: formatCooldown(emailResendCooldown) }) : t('verify_email_resend')}
+                    </button>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => { setEmailSetupPending(false); setEmailVerifyCode(''); setEmailVerifyError('') }}
                       type="button"
                     >
                       {t('setup_totp_cancel')}

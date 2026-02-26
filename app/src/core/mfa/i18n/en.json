@@ -68,6 +68,7 @@
   "force_email_activating": "Activating...",
   "force_email_activate": "Activate email verification",
   "force_email_error_activation": "Error during activation",
+  "force_email_error_invalid_code": "Invalid or expired code",
   "force_no_methods": "No MFA methods available. Contact your administrator.",
   "force_logout": "Sign out",
 
@@ -107,6 +108,9 @@
   "setup_email_disable": "Disable",
   "setup_email_activating": "Activating...",
   "setup_email_activate": "Activate",
+  "setup_email_verify_instructions": "A verification code has been sent to your email address. Enter it below to confirm activation.",
+  "setup_email_error_invalid_code": "Invalid or expired email code",
+  "setup_email_code_resent": "Verification code resent by email",
   "setup_email_success": "Email MFA activated",
   "setup_email_error_activation": "Error activating email MFA",
   "setup_email_disabled_success": "Email MFA disabled",
@@ -141,5 +145,6 @@
   "verify_submit": "Verify",
   "verify_email_resending": "Sending...",
   "verify_email_resend": "Resend code",
+  "verify_email_resend_cooldown": "Resend code ({{time}})",
   "verify_back_to_login": "Back to sign in"
 }

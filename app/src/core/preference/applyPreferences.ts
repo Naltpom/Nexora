@@ -57,11 +57,11 @@ export function applyFontPrefs(prefs: FontPrefs | null | undefined): void {
 
 const DENSITY_MAP: Record<string, {
   padding: string; gap: string; rowHeight: string
-  cardPadding: string; btnPadding: string; inputPadding: string
+  cardPadding: string; btnPadding: string; btnSmPadding: string; inputPadding: string
 }> = {
-  compact: { padding: '8px 12px', gap: '8px', rowHeight: '36px', cardPadding: '16px', btnPadding: '6px 12px', inputPadding: '6px 10px' },
-  normal: { padding: '12px 16px', gap: '12px', rowHeight: '44px', cardPadding: '24px', btnPadding: '8px 16px', inputPadding: '8px 12px' },
-  airy: { padding: '16px 20px', gap: '16px', rowHeight: '52px', cardPadding: '28px', btnPadding: '10px 20px', inputPadding: '12px 16px' },
+  compact: { padding: '8px 12px', gap: '8px', rowHeight: '36px', cardPadding: '16px', btnPadding: '6px 12px', btnSmPadding: '3px 8px', inputPadding: '6px 10px' },
+  normal: { padding: '12px 16px', gap: '12px', rowHeight: '44px', cardPadding: '24px', btnPadding: '8px 16px', btnSmPadding: '4px 10px', inputPadding: '8px 12px' },
+  airy: { padding: '16px 20px', gap: '16px', rowHeight: '52px', cardPadding: '28px', btnPadding: '10px 20px', btnSmPadding: '6px 14px', inputPadding: '12px 16px' },
 }
 
 export interface LayoutPrefs {
@@ -79,6 +79,7 @@ export function applyLayoutPrefs(prefs: LayoutPrefs | null | undefined): void {
     el.removeProperty('--density-row-height')
     el.removeProperty('--density-card-padding')
     el.removeProperty('--density-btn-padding')
+    el.removeProperty('--density-btn-sm-padding')
     el.removeProperty('--density-input-padding')
     el.removeProperty('--radius')
     el.removeProperty('--content-max-width')
@@ -92,6 +93,7 @@ export function applyLayoutPrefs(prefs: LayoutPrefs | null | undefined): void {
     el.setProperty('--density-row-height', density.rowHeight)
     el.setProperty('--density-card-padding', density.cardPadding)
     el.setProperty('--density-btn-padding', density.btnPadding)
+    el.setProperty('--density-btn-sm-padding', density.btnSmPadding)
     el.setProperty('--density-input-padding', density.inputPadding)
   } else {
     el.removeProperty('--density-padding')
@@ -99,6 +101,7 @@ export function applyLayoutPrefs(prefs: LayoutPrefs | null | undefined): void {
     el.removeProperty('--density-row-height')
     el.removeProperty('--density-card-padding')
     el.removeProperty('--density-btn-padding')
+    el.removeProperty('--density-btn-sm-padding')
     el.removeProperty('--density-input-padding')
   }
   if (prefs.radius !== undefined && prefs.radius !== 8) {

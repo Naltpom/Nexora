@@ -193,7 +193,7 @@ Cela s'applique dans **tous les contextes** :
 | # | Check | Feature | Type | Dependances | Chemins API | Chemins APP | Notes |
 |---|-------|---------|------|-------------|-------------|-------------|-------|
 | 23 | [x] | `rgpd` | parent | aucune | `api/src/core/rgpd/` | `app/src/core/rgpd/` | CookieBanner (header), AcceptLegalPage, 7 modeles, 6 extra_routers, 4 events, 2 commandes planifiees — 4 fixes (10 require_permission HIGH, 4 events non emis, 4 border-radius, ~15 density vars) |
-| 24 | [ ] | `rgpd.consentement` | child | rgpd | (dans rgpd/) | (dans rgpd/) | Banniere cookies, ConsentPage, consentManager.ts — 2 fixes (require_permission GET/PUT, event consent_updated) |
+| 24 | [x] | `rgpd.consentement` | child | rgpd | (dans rgpd/) | (dans rgpd/) | Banniere cookies, ConsentPage, consentManager.ts — 7 fixes (require_permission GET/PUT, event consent_updated, route perm rgpd.read→consentement.read, CONSENT_KEY centralise, error feedback, SCSS density gaps, btn-sm density var) |
 | 25 | [ ] | `rgpd.registre` | child | rgpd | (dans rgpd/) | (dans rgpd/) | Registre des traitements (Art. 30) — RegisterTab, CRUD 4 endpoints, 2 perms — OK |
 | 26 | [ ] | `rgpd.droits` | child | rgpd | (dans rgpd/) | (dans rgpd/) | Demandes d'exercice de droits, 6 types, 4 statuts — 2 fixes (require_permission GET/POST, 2 events) |
 | 27 | [ ] | `rgpd.export` | child | rgpd | (dans rgpd/) | (dans rgpd/) | Export donnees personnelles (Art. 20), collect_user_data 10 sections — 2 fixes (require_permission 3 endpoints, event data_exported) |

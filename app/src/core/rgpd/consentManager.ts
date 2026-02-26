@@ -11,7 +11,7 @@ interface ConsentState {
   date?: string
 }
 
-const CONSENT_KEY = 'rgpd_consent_given'
+export const CONSENT_KEY = 'rgpd_consent_given'
 
 const FUNCTIONAL_SESSION_KEYS = [
   'tutorial_active',

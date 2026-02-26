@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, FormEvent } from 'react'
+import { useState, useEffect, useRef, FormEvent, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../core/AuthContext'
@@ -30,6 +30,8 @@ export default function MFAVerifyPage() {
   const [emailSent, setEmailSent] = useState(false)
   const [emailSending, setEmailSending] = useState(false)
   const [attemptsHint, setAttemptsHint] = useState('')
+  const [emailResendCooldown, setEmailResendCooldown] = useState(0)
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -43,8 +45,35 @@ export default function MFAVerifyPage() {
     setError('')
     setAttemptsHint('')
     setEmailSent(false)
+    setEmailResendCooldown(0)
     setTimeout(() => inputRef.current?.focus(), 50)
   }, [activeMethod])
+
+  useEffect(() => {
+    return () => {
+      if (cooldownRef.current) clearInterval(cooldownRef.current)
+    }
+  }, [])
+
+  const formatCooldown = useCallback((seconds: number) => {
+    const m = Math.floor(seconds / 60)
+    const s = seconds % 60
+    return `${m}:${s.toString().padStart(2, '0')}`
+  }, [])
+
+  const startCooldown = useCallback((seconds: number) => {
+    if (cooldownRef.current) clearInterval(cooldownRef.current)
+    setEmailResendCooldown(seconds)
+    cooldownRef.current = setInterval(() => {
+      setEmailResendCooldown((prev) => {
+        if (prev <= 1) {
+          if (cooldownRef.current) clearInterval(cooldownRef.current)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+  }, [])
 
   const handleSubmit = async (e?: FormEvent) => {
     if (e) e.preventDefault()
@@ -129,9 +158,18 @@ export default function MFAVerifyPage() {
     setError('')
 
     try {
-      await api.post('/mfa/email/send-code', { mfa_token: mfaToken })
+      const res = await api.post('/mfa/email/send-code', { mfa_token: mfaToken })
       setEmailSent(true)
+      startCooldown(res.data.resend_cooldown_seconds || 120)
     } catch (err: any) {
+      if (err.response?.status === 429) {
+        const detail = err.response?.data?.detail
+        if (typeof detail === 'object' && detail?.retry_after_seconds) {
+          setEmailSent(true)
+          startCooldown(detail.retry_after_seconds)
+          return
+        }
+      }
       setError(err.response?.data?.detail || t('verify_email_error_sending'))
     } finally {
       setEmailSending(false)
@@ -235,9 +273,9 @@ export default function MFAVerifyPage() {
                   type="button"
                   className="mfa-resend-btn"
                   onClick={handleSendEmailCode}
-                  disabled={emailSending}
+                  disabled={emailSending || emailResendCooldown > 0}
                 >
-                  {emailSending ? t('verify_email_resending') : t('verify_email_resend')}
+                  {emailSending ? t('verify_email_resending') : emailResendCooldown > 0 ? t('verify_email_resend_cooldown', { time: formatCooldown(emailResendCooldown) }) : t('verify_email_resend')}
                 </button>
               )}
             </>

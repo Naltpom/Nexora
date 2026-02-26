@@ -10,6 +10,16 @@ manifest = FeatureManifest(
         "mfa.setup",
         "mfa.bypass",
     ],
+    events=[
+        {"event_type": "mfa.verify_failed", "label": "Verification MFA echouee", "category": "MFA", "description": "Un code MFA invalide a ete soumis"},
+        {"event_type": "mfa.verified", "label": "Verification MFA reussie", "category": "MFA", "description": "Un code MFA a ete verifie avec succes"},
+        {"event_type": "mfa.disabled", "label": "MFA desactive", "category": "MFA", "description": "Toutes les methodes MFA ont ete desactivees"},
+        {"event_type": "mfa.backup_codes_generated", "label": "Codes de secours generes", "category": "MFA", "description": "De nouveaux codes de secours MFA ont ete generes"},
+        {"event_type": "mfa.backup_code_used", "label": "Code de secours utilise", "category": "MFA", "description": "Un code de secours MFA a ete utilise"},
+        {"event_type": "mfa.bypassed", "label": "MFA contourne", "category": "MFA", "description": "Le MFA a ete contourne via une permission de bypass"},
+        {"event_type": "mfa.policy_updated", "label": "Politique MFA modifiee", "category": "MFA", "description": "Une politique MFA de role a ete mise a jour"},
+        {"event_type": "mfa.policy_deleted", "label": "Politique MFA supprimee", "category": "MFA", "description": "Une politique MFA de role a ete supprimee"},
+    ],
     tutorials=[
         {
             "permission": "mfa.setup",
