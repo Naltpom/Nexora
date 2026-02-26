@@ -410,6 +410,8 @@ async def process_notifications(
                 webhook.url,
                 payload,
                 secret=_decrypt_secret(webhook.secret),
+                webhook_id=webhook.id,
+                event_id=event.id,
             )
 
 

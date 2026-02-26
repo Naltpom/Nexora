@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026.02.40
+
+### notification.webhook (revue complete)
+
+- **3 bugs permissions HIGH corriges** : `delete_webhook` verifiait `global.update` au lieu de `global.delete`, `test_webhook` verifiait `global.update` au lieu de `global.read`, routes globales PUT/DELETE sans filtre `is_global=True` (pouvaient manipuler des webhooks personnels)
+- **Delivery logs incomplets** : les webhooks matches par rules ne passaient pas `webhook_id`/`event_id` a l'enqueue — livraisons non trackees dans `WebhookDeliveryLog` (corrige dans `notification/services.py`)
+- **4 events declares et emis** : `notification.webhook.created`, `.updated`, `.deleted`, `.tested` — ajout au manifest + emissions dans les 7 routes CRUD
+- **Validation format** : `format: str` remplace par `Literal["custom", "slack", "discord"]` dans les schemas Pydantic
+- **SCSS** : 14 `border-radius` hardcodes remplaces par `var(--radius)`, density variables appliquees (`.notif-webhook-card`, `.notif-webhook-list`, `.notif-event-checkboxes`)
+- **Test webhook** : la livraison test est maintenant loggee dans `WebhookDeliveryLog`, reponse HTTP non-2xx retourne 502 au lieu de 200
+- **Documentation** : `docs/core/notification/webhook/README.md`
+
 ## 2026.02.39
 
 ### notification.push (resend + error handling)

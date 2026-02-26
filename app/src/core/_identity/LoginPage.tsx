@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import './_identity.scss'
 import { useAuth } from '../../core/AuthContext'
 import SSOSection from '../sso/SSOSection'
+import PageSEO from './PageSEO'
 
 export default function Login() {
   const { t } = useTranslation('_identity')
@@ -52,6 +53,7 @@ export default function Login() {
 
   return (
     <div className="login-container">
+      <PageSEO page="login" />
       <div className="login-card login-card-enter">
         <div className="login-header">
           <svg width="48" height="48" viewBox="0 0 32 32" fill="none">

@@ -40,6 +40,13 @@
     "description": "Description"
   },
 
+  "seo": {
+    "login_title": "Sign in — {{app_name}}",
+    "login_description": "Sign in to {{app_name}} to access the platform. {{app_description}}",
+    "register_title": "Sign up — {{app_name}}",
+    "register_description": "Create your account on {{app_name}}. {{app_description}}"
+  },
+
   "login": {
     "welcome": "Welcome",
     "subtitle": "Sign in to access the platform",

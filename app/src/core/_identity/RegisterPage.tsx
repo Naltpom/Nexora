@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import './_identity.scss'
 import api from '../../api'
+import PageSEO from './PageSEO'
 
 export default function Register() {
   const { t } = useTranslation('_identity')
@@ -60,6 +61,7 @@ export default function Register() {
 
   return (
     <div className="login-container">
+      <PageSEO page="register" />
       <div className="login-card">
         <div className="login-header">
           <svg width="48" height="48" viewBox="0 0 32 32" fill="none">

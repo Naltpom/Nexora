@@ -16,7 +16,7 @@
     height: 36px;
     border: none;
     background: transparent;
-    border-radius: 8px;
+    border-radius: var(--radius);
     cursor: pointer;
     color: var(--gray-500);
     transition: background 0.15s, color 0.15s;
@@ -63,7 +63,7 @@
   max-height: 500px;
   background: white;
   border: 1px solid var(--gray-200);
-  border-radius: 12px;
+  border-radius: var(--radius);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06);
   z-index: 1000;
   display: flex;
@@ -155,7 +155,7 @@
   color: var(--primary-light);
   cursor: pointer;
   padding: 4px 8px;
-  border-radius: 6px;
+  border-radius: var(--radius);
   transition: background 0.15s;
 
   &:hover {
@@ -291,7 +291,7 @@
     height: 24px;
     border: none;
     background: transparent;
-    border-radius: 6px;
+    border-radius: var(--radius);
     color: var(--gray-400);
     cursor: pointer;
     opacity: 0;
@@ -319,7 +319,7 @@
     height: 24px;
     border: none;
     background: transparent;
-    border-radius: 6px;
+    border-radius: var(--radius);
     color: var(--gray-400);
     cursor: pointer;
     opacity: 0;
@@ -360,7 +360,7 @@
   gap: 4px;
   padding: 4px;
   background: var(--gray-100);
-  border-radius: 10px;
+  border-radius: var(--radius);
   width: fit-content;
 
   [data-theme="dark"] & {
@@ -372,7 +372,7 @@
   padding: 7px 18px;
   border: none;
   background: transparent;
-  border-radius: 8px;
+  border-radius: var(--radius);
   font-size: 0.8125rem;
   font-weight: 500;
   color: var(--gray-500);
@@ -455,7 +455,7 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   padding: 3px 8px;
-  border-radius: 6px;
+  border-radius: var(--radius);
 
   &.personal {
     background: rgba(59, 130, 246, 0.1);
@@ -553,7 +553,7 @@
   text-transform: uppercase;
   letter-spacing: 0.3px;
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius);
   background: rgba(217, 119, 6, 0.1);
   color: var(--warning);
   margin-left: 8px;
@@ -581,7 +581,7 @@
 .notif-event-tag {
   font-size: 0.6875rem;
   padding: 2px 8px;
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: var(--gray-100);
   color: var(--gray-600);
   white-space: nowrap;
@@ -730,20 +730,20 @@
 /* ── Webhook Cards ── */
 
 .notif-webhook-list {
-  padding: 16px 24px;
+  padding: var(--density-card-padding, 24px);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--density-gap, 12px);
 }
 
 .notif-webhook-card {
   border: 1px solid var(--gray-200);
-  border-radius: 10px;
-  padding: 14px 18px;
+  border-radius: var(--radius);
+  padding: var(--density-padding, 12px 16px);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--density-gap, 12px);
   transition: border-color 0.15s;
 
   &:hover {
@@ -813,8 +813,8 @@
   max-height: 220px;
   overflow-y: auto;
   border: 1px solid var(--gray-200);
-  border-radius: 8px;
-  padding: 10px 12px;
+  border-radius: var(--radius);
+  padding: var(--density-input-padding, 8px 12px);
 
   [data-theme="dark"] & {
     border-color: rgba(255, 255, 255, 0.1);
@@ -1198,7 +1198,7 @@
 .notification-event-badge {
   font-size: 0.6875rem;
   padding: 2px 8px;
-  border-radius: 6px;
+  border-radius: var(--radius);
   background: var(--gray-100);
   color: var(--gray-600);
   white-space: nowrap;
@@ -1216,7 +1216,7 @@
   gap: 4px;
   font-size: 0.6875rem;
   padding: 4px 8px;
-  border-radius: 6px;
+  border-radius: var(--radius);
   border: 1px solid var(--gray-200);
   background: white;
   color: var(--gray-600);

@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...database import get_db
+from ...events import event_bus
 from ...permissions import load_user_permissions, require_permission
 from ...security import get_current_user
 from .models import Webhook
@@ -82,6 +83,21 @@ async def create_webhook(
     )
     db.add(webhook)
     await db.flush()
+
+    await event_bus.emit(
+        "notification.webhook.created",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="webhook",
+        resource_id=webhook.id,
+        payload={
+            "actor_name": f"{current_user.first_name} {current_user.last_name}",
+            "webhook_name": webhook.name,
+            "webhook_url": webhook.url,
+            "is_global": False,
+        },
+    )
+
     return _webhook_to_response(webhook)
 
 
@@ -112,6 +128,21 @@ async def update_webhook(
     for field, value in provided.items():
         setattr(webhook, field, value)
     await db.flush()
+
+    await event_bus.emit(
+        "notification.webhook.updated",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="webhook",
+        resource_id=webhook.id,
+        payload={
+            "actor_name": f"{current_user.first_name} {current_user.last_name}",
+            "webhook_name": webhook.name,
+            "is_global": webhook.is_global,
+            "fields_updated": list(provided.keys()),
+        },
+    )
+
     return _webhook_to_response(webhook)
 
 
@@ -131,10 +162,25 @@ async def delete_webhook(
     if not webhook:
         raise HTTPException(status_code=404, detail="Webhook introuvable")
     user_perms = await load_user_permissions(db, current_user.id)
-    if user_perms.get("notification.webhook.global.update") is not True and webhook.user_id != current_user.id:
+    if user_perms.get("notification.webhook.global.delete") is not True and webhook.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Acces refuse")
+    webhook_info = {"id": webhook.id, "name": webhook.name, "url": webhook.url, "is_global": webhook.is_global}
     await db.delete(webhook)
     await db.flush()
+
+    await event_bus.emit(
+        "notification.webhook.deleted",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="webhook",
+        resource_id=webhook_info["id"],
+        payload={
+            "actor_name": f"{current_user.first_name} {current_user.last_name}",
+            "webhook_name": webhook_info["name"],
+            "webhook_url": webhook_info["url"],
+            "is_global": webhook_info["is_global"],
+        },
+    )
 
 
 @router.post(
@@ -152,7 +198,7 @@ async def test_webhook(
     if not webhook:
         raise HTTPException(status_code=404, detail="Webhook introuvable")
     user_perms = await load_user_permissions(db, current_user.id)
-    if user_perms.get("notification.webhook.global.update") is not True and webhook.user_id != current_user.id:
+    if user_perms.get("notification.webhook.global.read") is not True and webhook.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Acces refuse")
 
     actor_name = f"{current_user.first_name} {current_user.last_name}"
@@ -187,10 +233,27 @@ async def test_webhook(
 
     sender = HttpWebhookSender()
     try:
-        await sender.send(webhook.url, payload, secret=webhook_secret)
-        return {"ok": True, "message": f"Test envoye a {webhook.url}"}
+        result = await sender.send(webhook.url, payload, secret=webhook_secret, webhook_id=webhook.id, db=db)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Echec de l'envoi: {str(e)}")
+
+    await event_bus.emit(
+        "notification.webhook.tested",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="webhook",
+        resource_id=webhook.id,
+        payload={
+            "actor_name": actor_name,
+            "webhook_name": webhook.name,
+            "webhook_url": webhook.url,
+            "success": result.get("success", False),
+        },
+    )
+
+    if result.get("success"):
+        return {"ok": True, "message": f"Test envoye a {webhook.url}"}
+    raise HTTPException(status_code=502, detail=f"Webhook a repondu avec erreur: {result.get('status_code', 'N/A')}")
 
 
 # -- Global Webhooks (Super Admin) --------------------------------------------
@@ -238,6 +301,21 @@ async def create_global_webhook(
     )
     db.add(webhook)
     await db.flush()
+
+    await event_bus.emit(
+        "notification.webhook.created",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="webhook",
+        resource_id=webhook.id,
+        payload={
+            "actor_name": f"{current_user.first_name} {current_user.last_name}",
+            "webhook_name": webhook.name,
+            "webhook_url": webhook.url,
+            "is_global": True,
+        },
+    )
+
     return _webhook_to_response(webhook)
 
 
@@ -249,10 +327,11 @@ async def create_global_webhook(
 async def update_global_webhook(
     webhook_id: int,
     data: WebhookUpdate,
+    current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Modifier un webhook global."""
-    result = await db.execute(select(Webhook).where(Webhook.id == webhook_id))
+    result = await db.execute(select(Webhook).where(Webhook.id == webhook_id, Webhook.is_global.is_(True)))
     webhook = result.scalar_one_or_none()
     if not webhook:
         raise HTTPException(status_code=404, detail="Webhook global introuvable")
@@ -264,6 +343,21 @@ async def update_global_webhook(
     for field, value in provided.items():
         setattr(webhook, field, value)
     await db.flush()
+
+    await event_bus.emit(
+        "notification.webhook.updated",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="webhook",
+        resource_id=webhook.id,
+        payload={
+            "actor_name": f"{current_user.first_name} {current_user.last_name}",
+            "webhook_name": webhook.name,
+            "is_global": True,
+            "fields_updated": list(provided.keys()),
+        },
+    )
+
     return _webhook_to_response(webhook)
 
 
@@ -274,12 +368,28 @@ async def update_global_webhook(
 )
 async def delete_global_webhook(
     webhook_id: int,
+    current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Supprimer un webhook global."""
-    result = await db.execute(select(Webhook).where(Webhook.id == webhook_id))
+    result = await db.execute(select(Webhook).where(Webhook.id == webhook_id, Webhook.is_global.is_(True)))
     webhook = result.scalar_one_or_none()
     if not webhook:
         raise HTTPException(status_code=404, detail="Webhook global introuvable")
+    webhook_info = {"id": webhook.id, "name": webhook.name, "url": webhook.url}
     await db.delete(webhook)
     await db.flush()
+
+    await event_bus.emit(
+        "notification.webhook.deleted",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="webhook",
+        resource_id=webhook_info["id"],
+        payload={
+            "actor_name": f"{current_user.first_name} {current_user.last_name}",
+            "webhook_name": webhook_info["name"],
+            "webhook_url": webhook_info["url"],
+            "is_global": True,
+        },
+    )
