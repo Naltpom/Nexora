@@ -3,7 +3,7 @@
 .pref-tabs {
   display: flex;
   gap: 0;
-  margin-bottom: 24px;
+  margin-bottom: var(--section-gap, 24px);
   border-bottom: 2px solid var(--gray-200);
 
   @media (max-width: 640px) {
@@ -12,7 +12,7 @@
 }
 
 .pref-tab {
-  padding: 10px 18px;
+  padding: var(--density-btn-padding, 10px 18px);
   border: none;
   background: none;
   cursor: pointer;
@@ -38,7 +38,7 @@
 
 .pref-tabs-mobile {
   display: none;
-  margin-bottom: 24px;
+  margin-bottom: var(--section-gap, 24px);
 
   @media (max-width: 640px) {
     display: block;
@@ -47,7 +47,8 @@
 
 .pref-tabs-select {
   width: 100%;
-  padding: 10px 36px 10px 14px;
+  padding: var(--density-input-padding, 10px 14px);
+  padding-right: 36px;
   border: 1px solid var(--gray-300);
   border-radius: var(--radius, 8px);
   font-size: 0.875rem;
@@ -70,7 +71,7 @@
 // ─── Tab content ───
 
 .pref-tab-content {
-  min-height: 200px;
+  min-height: 12.5rem;
 }
 
 // ─── Save Bar (sticky bottom) ───
@@ -83,9 +84,9 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 12px;
-  padding: 12px 20px;
-  margin-top: 24px;
+  gap: var(--density-gap, 12px);
+  padding: var(--density-padding, 12px 20px);
+  margin-top: var(--section-gap, 24px);
   background: var(--gray-50);
   border-top: 1px solid var(--gray-200);
   border-radius: 0 0 var(--radius, 8px) var(--radius, 8px);
@@ -111,6 +112,10 @@
   display: flex;
   align-items: center;
   gap: 6px;
+
+  &--error {
+    color: var(--danger, #DC2626);
+  }
 
   svg {
     flex-shrink: 0;

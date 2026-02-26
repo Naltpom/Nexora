@@ -6,6 +6,7 @@ from sqlalchemy.orm import attributes
 
 from ...config import settings
 from ...database import get_db
+from ...permissions import require_permission
 from ...security import get_current_user
 from .schemas import LanguageResponse, LanguageUpdateRequest
 
@@ -26,7 +27,11 @@ LOCALE_LABELS = {
 }
 
 
-@router.get("/language", response_model=LanguageResponse)
+@router.get(
+    "/language",
+    response_model=LanguageResponse,
+    dependencies=[Depends(require_permission("preference.langue.read"))],
+)
 async def get_language(
     current_user=Depends(get_current_user),
 ):
@@ -41,7 +46,11 @@ async def get_language(
     )
 
 
-@router.put("/language", response_model=LanguageResponse)
+@router.put(
+    "/language",
+    response_model=LanguageResponse,
+    dependencies=[Depends(require_permission("preference.langue.read"))],
+)
 async def update_language(
     data: LanguageUpdateRequest,
     current_user=Depends(get_current_user),

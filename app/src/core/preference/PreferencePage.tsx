@@ -48,7 +48,7 @@ function PreferencePageInner() {
   const { t } = useTranslation('preference')
   const { isActive } = useFeature()
   const { can } = usePermission()
-  const { hasChanges, getChanges, saveAll, discardAll } = useDraftPreference()
+  const { hasChanges, saveError, getChanges, saveAll, discardAll } = useDraftPreference()
   const navigate = useNavigate()
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -130,8 +130,12 @@ function PreferencePageInner() {
 
   const handleSaveAndLeave = async () => {
     const path = pendingPath
-    await saveAll()
-    if (path) proceedNavigation(path)
+    try {
+      await saveAll()
+      if (path) proceedNavigation(path)
+    } catch {
+      // saveError state is set by context — stay on page
+    }
   }
 
   const handleDiscardAndLeave = () => {
@@ -205,18 +209,18 @@ function PreferencePageInner() {
 
         {hasChanges && (
           <div className="pref-save-bar">
-            <span className="pref-save-bar__hint">
+            <span className={`pref-save-bar__hint${saveError ? ' pref-save-bar__hint--error' : ''}`}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10" />
                 <line x1="12" y1="8" x2="12" y2="12" />
                 <line x1="12" y1="16" x2="12.01" y2="16" />
               </svg>
-              {t('unsaved_changes_hint')}
+              {saveError ? t('save_error') : t('unsaved_changes_hint')}
             </span>
             <button className="btn btn-secondary" onClick={discardAll} type="button">
               {t('btn_cancel')}
             </button>
-            <button className="btn btn-primary" onClick={saveAll} type="button">
+            <button className="btn btn-primary" onClick={() => { saveAll().catch(() => {}) }} type="button">
               {t('btn_save_preferences')}
             </button>
           </div>

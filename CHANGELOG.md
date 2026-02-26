@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026.02.41
+
+### preference (revue parent — 4 bugs corriges)
+
+- **require_permission sur 6 endpoints** : ajout de `require_permission()` sur les 6 endpoints non proteges — `GET/POST/DELETE /seen` et `GET /ordering` (didacticiel), `GET/PUT /language` (langue). Le `GET /ordering` etait accessible sans authentification
+- **Manifest parent children incomplet** : ajout des 4 enfants manquants (`preference.font`, `preference.layout`, `preference.accessibilite`, `preference.composants`) a la liste `children` du manifest parent
+- **Gestion d'erreur saveAll()** : ajout try/catch dans `DraftPreferenceContext.saveAll()` — le snapshot n'est plus mis a jour en cas d'echec API, un message d'erreur s'affiche dans la save-bar (i18n fr + en)
+- **SCSS variables de densite** : remplacement des paddings/margins/gaps hardcodes par les CSS variables du systeme de preferences (`--density-padding`, `--density-gap`, `--density-btn-padding`, `--density-input-padding`, `--density-card-padding`, `--section-gap`) dans `preference.scss`, `preferenceTabs.scss` et `unsavedChangesModal.scss`
+
 ## 2026.02.40
 
 ### notification.webhook (revue complete)

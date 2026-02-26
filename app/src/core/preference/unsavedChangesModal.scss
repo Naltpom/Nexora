@@ -9,8 +9,9 @@
 .unsaved-modal__header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 20px 24px 12px;
+  gap: var(--density-gap, 10px);
+  padding: var(--density-card-padding, 24px);
+  padding-bottom: var(--density-gap, 12px);
   color: var(--warning, #D97706);
 
   h3 {
@@ -22,7 +23,7 @@
 }
 
 .unsaved-modal__body {
-  padding: 0 24px 16px;
+  padding: 0 var(--density-card-padding, 24px) var(--density-gap, 16px);
 
   > p {
     font-size: 0.875rem;
@@ -34,14 +35,14 @@
 .unsaved-modal__changes {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--density-gap, 10px);
 }
 
 .unsaved-modal__change-item {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 10px 12px;
+  padding: var(--density-padding, 10px 12px);
   border-radius: var(--radius, 8px);
   background: var(--gray-50);
   border: 1px solid var(--gray-200);
@@ -80,8 +81,8 @@
 .unsaved-modal__footer {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  padding: 12px 24px 20px;
+  gap: var(--density-gap, 10px);
+  padding: var(--density-gap, 12px) var(--density-card-padding, 24px) var(--density-card-padding, 20px);
 }
 
 // ─── Dark theme ───

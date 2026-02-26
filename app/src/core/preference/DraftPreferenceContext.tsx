@@ -18,6 +18,7 @@ interface DraftPreferenceContextType {
   getDraftPreference: (key: string, defaultValue?: any) => any
   setDraftPreference: (key: string, value: any) => void
   hasChanges: boolean
+  saveError: boolean
   getChanges: () => PreferenceChange[]
   saveAll: () => Promise<void>
   discardAll: () => void
@@ -225,13 +226,21 @@ export function DraftPreferenceProvider({ children }: { children: ReactNode }) {
     return changes
   }, [draft, snapshot, t])
 
+  const [saveError, setSaveError] = useState(false)
+
   const saveAll = useCallback(async () => {
-    for (const key of PREFERENCE_KEYS) {
-      if (JSON.stringify(draft[key]) !== JSON.stringify(snapshot[key])) {
-        await updatePreference(key, draft[key])
+    setSaveError(false)
+    try {
+      for (const key of PREFERENCE_KEYS) {
+        if (JSON.stringify(draft[key]) !== JSON.stringify(snapshot[key])) {
+          await updatePreference(key, draft[key])
+        }
       }
+      setSnapshot(deepClone(draft))
+    } catch {
+      setSaveError(true)
+      throw new Error('save_failed')
     }
-    setSnapshot(deepClone(draft))
   }, [draft, snapshot, updatePreference])
 
   const discardAll = useCallback(() => {
@@ -255,6 +264,7 @@ export function DraftPreferenceProvider({ children }: { children: ReactNode }) {
       getDraftPreference,
       setDraftPreference,
       hasChanges,
+      saveError,
       getChanges,
       saveAll,
       discardAll,

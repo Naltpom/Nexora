@@ -45,7 +45,11 @@ def _migrate_legacy(prefs: dict) -> dict[str, str]:
     return permissions_seen
 
 
-@router.get("/seen", response_model=PermissionSeenResponse)
+@router.get(
+    "/seen",
+    response_model=PermissionSeenResponse,
+    dependencies=[Depends(require_permission("preference.didacticiel.read"))],
+)
 async def get_seen_permissions(
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -68,7 +72,10 @@ async def get_seen_permissions(
     return PermissionSeenResponse(permissions_seen=permissions_seen)
 
 
-@router.post("/seen")
+@router.post(
+    "/seen",
+    dependencies=[Depends(require_permission("preference.didacticiel.read"))],
+)
 async def mark_permission_seen(
     request: PermissionSeenRequest,
     current_user=Depends(get_current_user),
@@ -89,7 +96,10 @@ async def mark_permission_seen(
     return {"ok": True}
 
 
-@router.delete("/seen")
+@router.delete(
+    "/seen",
+    dependencies=[Depends(require_permission("preference.didacticiel.read"))],
+)
 async def reset_all_tutorials(
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -110,8 +120,15 @@ async def reset_all_tutorials(
 # --- Admin ordering ---
 
 
-@router.get("/ordering", response_model=TutorialOrderingResponse)
-async def get_tutorial_ordering(db: AsyncSession = Depends(get_db)):
+@router.get(
+    "/ordering",
+    response_model=TutorialOrderingResponse,
+    dependencies=[Depends(require_permission("preference.didacticiel.read"))],
+)
+async def get_tutorial_ordering(
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     """Get tutorial ordering configuration."""
     result = await db.execute(
         select(AppSetting).where(AppSetting.key == ORDERING_KEY)

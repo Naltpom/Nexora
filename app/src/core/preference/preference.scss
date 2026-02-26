@@ -1,7 +1,7 @@
 // ─── Preference Pages ───
 
 .pref-form-group-spaced {
-  margin-bottom: 20px;
+  margin-bottom: var(--section-gap, 24px);
 }
 
 .pref-hint {
@@ -12,7 +12,7 @@
 .pref-actions-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--density-gap, 12px);
 }
 
 // ─── Select / Input styling inside preference sections ───
