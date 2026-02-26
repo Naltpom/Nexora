@@ -1,5 +1,27 @@
 # Changelog
 
+## 2026.02.47
+
+### preference.didacticiel (revue complete — 6 fixes + events)
+
+- **Rules of Hooks violation (HIGH)** : `useEffect` et `useCallback` appeles apres un `return null` conditionnel dans `TutorialAdminSection` — hooks deplaces avant le early return pour etre toujours inconditionnels
+- **Classe CSS cible manquante (MEDIUM)** : les steps de tutoriel ciblaient `.tutorial-section` mais le root div de `TutorialSection` n'avait pas cette classe — ajout de `tutorial-section` au className
+- **SCSS border-radius hardcodes (MEDIUM)** : 10 occurrences `border-radius: Npx` remplacees par `var(--radius)` (items, feature groups, stats cards, highlight ring, tooltip, notification, admin items, sub-items, bottom sheet)
+- **SCSS density variables manquantes (MEDIUM)** : 5 paddings hardcodes remplaces par `var(--density-padding)` / `var(--density-card-padding)`, 4 gaps remplaces par `var(--density-gap, 12px)`, mobile highlight override supprime (redondant)
+- **RGPD sessionStorage sans consent (LOW)** : ecritures `tutorial_active` et `tutorial_pending_dismissed` gatees par `hasConsent('functional')` — les `removeItem` (cleanup) restent non-gates
+- **Dependency manquante useEffect (LOW)** : `active` ajoute au dependency array du useEffect de detection des permissions non vues
+- **Events non emis (ajout)** : import `event_bus`, emission `preference.updated` sur `POST /seen` (mark), `DELETE /seen` (reset), `PUT /ordering` (admin)
+
+## 2026.02.46
+
+### preference.langue (revue complete — 5 fixes)
+
+- **axios brut sans auth (HIGH)** : `import axios` remplace par `import api` — le PUT `/api/preferences/language` echouait en 401 (pas de JWT attache), le `catch` masquait l'erreur. Le changement de langue ne fonctionnait pas
+- **Double sauvegarde (MEDIUM)** : le frontend appelait PUT `/api/preferences/language` puis `updatePreference()` qui rappelait PUT `/auth/me/preferences` — flow clarifie avec stockage du nouveau token
+- **LOCALE_LABELS duplique + accents manquants (LOW)** : dict identique dans `i18n/routes.py` et `preference/langue/routes.py`, extrait dans `api/src/core/i18n/locale_labels.py` (source unique). Accents corriges : Francais → Français, Espanol → Español, Portugues → Português
+- **Event preference.updated non emis (LOW)** : le manifest parent declare l'event mais le PUT endpoint ne l'emettait pas — ajout de `event_bus.emit("preference.updated", ...)` avec payload (old/new language, IP)
+- **JWT lang claim stale (LOW)** : apres changement de langue, le JWT gardait l'ancien claim `lang` jusqu'au refresh — le PUT retourne maintenant un `access_token` frais avec le claim mis a jour, stocke immediatement par le frontend
+
 ## 2026.02.45
 
 ### preference.composants (revue SCSS — 8 fixes)

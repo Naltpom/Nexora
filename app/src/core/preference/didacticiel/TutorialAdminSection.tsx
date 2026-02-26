@@ -22,8 +22,6 @@ export default function TutorialAdminSection() {
   const [saving, setSaving] = useState(false)
   const [dirty, setDirty] = useState(false)
 
-  if (!can('preference.didacticiel.manage')) return null
-
   // Initialize order from available tutorials
   useEffect(() => {
     api
@@ -148,6 +146,8 @@ export default function TutorialAdminSection() {
     }
     setSaving(false)
   }, [featureOrder, permissionOrder])
+
+  if (!can('preference.didacticiel.manage')) return null
 
   const getFeatureLabel = (name: string) => {
     const ft = featureTutorials.find((f) => f.featureName === name)

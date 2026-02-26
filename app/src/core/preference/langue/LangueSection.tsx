@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../AuthContext'
-import axios from 'axios'
+import api from '../../../api'
 import './langue.scss'
 
 interface LocaleInfo {
@@ -18,24 +18,32 @@ export default function LangueSection() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    axios
-      .get('/api/i18n/locales')
+    api
+      .get('/i18n/locales')
       .then((res) => setLocales(res.data))
       .catch(() => {})
   }, [])
 
   const handleChange = async (code: string) => {
     if (code === selected) return
+    const previousCode = selected
     setSelected(code)
     setSaving(true)
     try {
-      await axios.put('/api/preferences/language', { language: code })
+      const res = await api.put('/preferences/language', { language: code })
+
+      // Store new access token with updated lang claim
+      if (res.data.access_token) {
+        localStorage.setItem('access_token', res.data.access_token)
+      }
+
+      // Sync local state (localStorage + React user state)
       await updatePreference('language', code)
+
       i18n.changeLanguage(code)
       document.documentElement.lang = code
     } catch {
-      // revert on error
-      setSelected(selected)
+      setSelected(previousCode)
     } finally {
       setSaving(false)
     }

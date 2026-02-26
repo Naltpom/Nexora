@@ -11,6 +11,7 @@ import { useFeature } from '../../FeatureContext'
 import { usePermission } from '../../PermissionContext'
 import { useAuth } from '../../AuthContext'
 import api from '../../../api'
+import { hasConsent } from '../../rgpd/consentManager'
 import type {
   FeatureTutorial,
   PermissionTutorial,
@@ -143,7 +144,9 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
   // Persist active state to sessionStorage
   useEffect(() => {
     if (active) {
-      sessionStorage.setItem('tutorial_active', JSON.stringify(active))
+      if (hasConsent('functional')) {
+        sessionStorage.setItem('tutorial_active', JSON.stringify(active))
+      }
     } else {
       sessionStorage.removeItem('tutorial_active')
     }
@@ -167,7 +170,7 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
     if (unseen.length > 0 && !active) {
       setPendingNewPermissions(unseen)
     }
-  }, [seenLoaded, featureTutorials, permissionsSeen, permissions, pendingDismissed])
+  }, [seenLoaded, featureTutorials, permissionsSeen, permissions, pendingDismissed, active])
 
   // Helper to get current feature/permission/step from active state
   const currentFeatureTutorial = useMemo(() => {
@@ -428,7 +431,9 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
   const dismissPending = useCallback(() => {
     setPendingDismissed(true)
     setPendingNewPermissions([])
-    sessionStorage.setItem('tutorial_pending_dismissed', 'true')
+    if (hasConsent('functional')) {
+      sessionStorage.setItem('tutorial_pending_dismissed', 'true')
+    }
   }, [])
 
   return (

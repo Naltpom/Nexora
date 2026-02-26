@@ -1,13 +1,15 @@
 """Language preference endpoints."""
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import attributes
 
 from ...config import settings
 from ...database import get_db
+from ...events import event_bus
+from ...i18n.locale_labels import LOCALE_LABELS
 from ...permissions import require_permission
-from ...security import get_current_user
+from ...security import create_access_token, get_current_user
 from .schemas import LanguageResponse, LanguageUpdateRequest
 
 router = APIRouter()
@@ -15,16 +17,6 @@ router = APIRouter()
 
 def _get_supported_locales() -> list[str]:
     return [loc.strip() for loc in settings.I18N_SUPPORTED_LOCALES.split(",") if loc.strip()]
-
-
-LOCALE_LABELS = {
-    "fr": "Francais",
-    "en": "English",
-    "es": "Espanol",
-    "de": "Deutsch",
-    "it": "Italiano",
-    "pt": "Portugues",
-}
 
 
 @router.get(
@@ -53,6 +45,7 @@ async def get_language(
 )
 async def update_language(
     data: LanguageUpdateRequest,
+    request: Request,
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -64,6 +57,7 @@ async def update_language(
             detail=f"Langue non supportee. Langues disponibles : {', '.join(supported)}",
         )
 
+    old_language = current_user.language
     current_user.language = data.language
 
     # Also persist in preferences JSON
@@ -74,10 +68,30 @@ async def update_language(
 
     await db.flush()
 
+    # Emit preference.updated event
+    await event_bus.emit(
+        "preference.updated",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="user",
+        resource_id=current_user.id,
+        payload={
+            "keys": ["language"],
+            "old_language": old_language,
+            "new_language": data.language,
+            "ip": request.client.host if request.client else None,
+        },
+    )
+
+    # Generate new access token with updated lang claim
+    token_data = {"sub": str(current_user.id), "email": current_user.email, "lang": data.language}
+    new_access_token = create_access_token(token_data)
+
     return LanguageResponse(
         language=current_user.language,
         available=[
             {"code": loc, "label": LOCALE_LABELS.get(loc, loc), "is_default": loc == settings.I18N_DEFAULT_LOCALE}
             for loc in supported
         ],
+        access_token=new_access_token,
     )

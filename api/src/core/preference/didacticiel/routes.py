@@ -10,6 +10,7 @@ from sqlalchemy.orm.attributes import flag_modified
 
 from ..._identity.models import AppSetting, User
 from ...database import get_db
+from ...events import event_bus
 from ...permissions import require_permission
 from ...security import get_current_user
 from .schemas import (
@@ -93,6 +94,16 @@ async def mark_permission_seen(
     user.preferences = existing
     flag_modified(user, "preferences")
     await db.flush()
+
+    await event_bus.emit(
+        "preference.updated",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="user",
+        resource_id=current_user.id,
+        payload={"keys": ["permissions_seen"], "permission": request.permission},
+    )
+
     return {"ok": True}
 
 
@@ -114,6 +125,16 @@ async def reset_all_tutorials(
     user.preferences = existing
     flag_modified(user, "preferences")
     await db.flush()
+
+    await event_bus.emit(
+        "preference.updated",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="user",
+        resource_id=current_user.id,
+        payload={"keys": ["permissions_seen"], "action": "reset"},
+    )
+
     return {"ok": True}
 
 
@@ -170,4 +191,14 @@ async def update_tutorial_ordering(
             )
         )
     await db.flush()
+
+    await event_bus.emit(
+        "preference.updated",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="app_setting",
+        resource_id=0,
+        payload={"keys": ["tutorial_ordering"]},
+    )
+
     return {"ok": True}

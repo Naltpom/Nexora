@@ -185,8 +185,8 @@ Cela s'applique dans **tous les contextes** :
 | 18 | [x] | `preference.couleur` | child | preference | (dans preference/) | `app/src/core/preference/couleur/` | Couleurs personnalisees — 3 fixes (classe CSS tutorial manquante sur 5 sections, SCSS density vars, border-radius var(--radius)) |
 | 19 | [ ] | `preference.accessibilite` | child | preference | (dans preference/) | `app/src/core/preference/accessibilite/` | Contraste, animations, dyslexie, focus |
 | 20 | [x] | `preference.composants` | child | preference | (dans preference/) | `app/src/core/preference/composants/` | Style cards, tables, modals, boutons — 5 fixes (CSS modal-anim keyframes+selecteurs, table stripes base style+dark, SCSS 6 density vars, handleReset applyNull redondant, selecteurs preview-btn redondants) |
-| 21 | [ ] | `preference.langue` | child | preference, i18n | (dans preference/) | `app/src/core/preference/langue/` | Preference de langue utilisateur |
-| 22 | [ ] | `preference.didacticiel` | child | preference | `api/src/core/preference/didacticiel/` | `app/src/core/preference/didacticiel/` | Tutoriels in-app, TutorialEngine |
+| 21 | [x] | `preference.langue` | child | preference, i18n | (dans preference/) | `app/src/core/preference/langue/` | Preference de langue utilisateur — 5 fixes (axios brut→api HIGH, double save, LOCALE_LABELS duplique+accents, event preference.updated, JWT lang claim stale→new token) |
+| 22 | [x] | `preference.didacticiel` | child | preference | `api/src/core/preference/didacticiel/` | `app/src/core/preference/didacticiel/` | Tutoriels in-app, TutorialEngine — 6 fixes (Rules of Hooks, CSS target class, SCSS var(--radius)/density, RGPD hasConsent, useEffect deps) + events preference.updated |
 
 ### Phase 5 — Conformite RGPD
 

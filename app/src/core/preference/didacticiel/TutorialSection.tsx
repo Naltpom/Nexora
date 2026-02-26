@@ -29,7 +29,7 @@ export default function TutorialSection() {
   }
 
   return (
-    <div className="unified-card card-padded">
+    <div className="unified-card card-padded tutorial-section">
       <h2 className="title-sm">{t('tutorial_section_title')}</h2>
       <p className="text-secondary">
         {t('tutorial_section_description')}

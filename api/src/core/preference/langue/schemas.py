@@ -10,3 +10,4 @@ class LanguageUpdateRequest(BaseModel):
 class LanguageResponse(BaseModel):
     language: str
     available: list[dict]
+    access_token: str | None = None

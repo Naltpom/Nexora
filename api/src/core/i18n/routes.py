@@ -3,19 +3,11 @@
 from fastapi import APIRouter, Query
 
 from ..config import settings
+from .locale_labels import LOCALE_LABELS
 from .schemas import LocaleInfo, TranslationsResponse
 from .translations import get_all_namespaces, get_translations
 
 router = APIRouter()
-
-LOCALE_LABELS = {
-    "fr": "Francais",
-    "en": "English",
-    "es": "Espanol",
-    "de": "Deutsch",
-    "it": "Italiano",
-    "pt": "Portugues",
-}
 
 
 @router.get("/locales", response_model=list[LocaleInfo])

@@ -10,16 +10,16 @@
   &__features {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--density-gap, 12px);
   }
 
   &__item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 16px;
+    padding: var(--density-padding, 12px 16px);
     background: var(--gray-50);
-    border-radius: 8px;
+    border-radius: var(--radius);
     border: 1px solid var(--gray-200);
   }
 
@@ -69,14 +69,14 @@
 /* Feature group within tutorial section */
 .tutorial-feature {
   border: 1px solid var(--gray-200);
-  border-radius: 8px;
+  border-radius: var(--radius);
   overflow: hidden;
 
   &__header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 16px;
+    padding: var(--density-padding, 12px 16px);
     background: var(--gray-100);
   }
 
@@ -127,17 +127,17 @@
 .aide-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  gap: var(--density-gap, 12px);
   margin-bottom: 16px;
 
   &__card {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 16px 12px;
+    padding: var(--density-card-padding, 24px);
     background: var(--gray-50);
     border: 1px solid var(--gray-200);
-    border-radius: 8px;
+    border-radius: var(--radius);
     gap: 4px;
   }
 
@@ -173,7 +173,7 @@
 /* Highlight ring around target element */
 .tutorial-highlight {
   position: fixed;
-  border-radius: 8px;
+  border-radius: var(--radius);
   box-shadow: 0 0 0 3px var(--primary, #4f46e5), 0 0 12px rgba(79, 70, 229, 0.4);
   pointer-events: none;
   animation: tutorial-pulse 2s ease-in-out infinite;
@@ -194,7 +194,7 @@
   position: fixed;
   background: #fff;
   border: 1px solid var(--gray-200);
-  border-radius: 12px;
+  border-radius: var(--radius);
   padding: 16px 20px;
   max-width: 340px;
   min-width: 260px;
@@ -226,7 +226,7 @@
     top: auto;
     max-width: 100%;
     min-width: 0;
-    border-radius: 16px 16px 0 0;
+    border-radius: var(--radius) var(--radius) 0 0;
     padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
     box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.25);
     transform: none;
@@ -365,12 +365,12 @@
   &__content {
     background: #fff;
     border: 1px solid var(--gray-200);
-    border-radius: 12px;
-    padding: 16px 20px;
+    border-radius: var(--radius);
+    padding: var(--density-card-padding, 24px);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--density-gap, 12px);
     max-width: 320px;
   }
 
@@ -409,11 +409,11 @@
   &__item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 10px 12px;
+    gap: var(--density-gap, 12px);
+    padding: var(--density-padding, 12px 16px);
     background: var(--gray-50);
     border: 1px solid var(--gray-200);
-    border-radius: 6px;
+    border-radius: var(--radius);
     cursor: grab;
     user-select: none;
     transition: background 0.15s;
@@ -470,7 +470,7 @@
     padding: 6px 10px;
     background: var(--gray-25, var(--gray-50));
     border: 1px solid var(--gray-150, var(--gray-200));
-    border-radius: 4px;
+    border-radius: var(--radius);
     cursor: grab;
     user-select: none;
     font-size: 0.8125rem;
@@ -506,10 +506,6 @@
 /* ===== Mobile responsive ===== */
 
 @media (max-width: 640px) {
-  .tutorial-highlight {
-    border-radius: 6px;
-  }
-
   .tutorial-notification {
     bottom: 12px;
     right: 12px;
