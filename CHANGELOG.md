@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026.02.42
+
+### preference.theme (integration wallpaper dans le draft system)
+
+- **BackgroundThemePicker en mode draft** : ajout des props `onSelect` et `currentValue` pour integrer le picker dans le systeme de brouillon des preferences (preview live + sauvegarde groupee via save-bar)
+- **DraftPreferenceContext** : ajout de `backgroundTheme` dans les cles de preferences gerees — preview visuel instantane, revert on discard, detection de changement dans la save-bar
+- **ThemeSection** : le picker de fond d'ecran utilise desormais le draft system au lieu de sauvegarder immediatement
+- **App.tsx** : le raccourci Alt+T et le picker ne s'affichent que si la feature `preference.theme` est active
+- **BackgroundThemePicker isDark reactif** : utilisation d'un MutationObserver pour reagir aux changements de theme en temps reel (previews light/dark corrects)
+- **Permissions** : ajout de `require_permission("preference.read")` sur les endpoints GET/PUT `/me/preferences`
+- **Event** : declaration de `preference.updated` dans le manifest preference + emission dans le PUT `/me/preferences`
+- **SCSS** : remplacement de 7 valeurs hardcodees par les CSS variables du systeme (`--radius`, `--density-card-padding`, `--density-gap`, `--density-padding`) dans `_bg-theme-picker.scss`
+- **i18n** : ajout des cles `pref_label_background_theme` et `format_bg_theme` (fr + en)
+
 ## 2026.02.41
 
 ### preference (revue parent — 4 bugs corriges)

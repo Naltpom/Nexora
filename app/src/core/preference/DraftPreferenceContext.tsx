@@ -5,7 +5,7 @@ import { useAuth } from '../AuthContext'
 import { applyFontPrefs, applyLayoutPrefs, applyComposantsPrefs, applyAccessibilitePrefs } from './applyPreferences'
 import { applyCustomColors } from './couleur/applyCustomColors'
 
-const PREFERENCE_KEYS = ['theme', 'customColors', 'font', 'layout', 'composants', 'accessibilite'] as const
+const PREFERENCE_KEYS = ['theme', 'backgroundTheme', 'customColors', 'font', 'layout', 'composants', 'accessibilite'] as const
 
 export interface PreferenceChange {
   key: string
@@ -37,6 +37,7 @@ export function useDraftPreference() {
 
 const PREF_LABEL_KEYS: Record<string, string> = {
   theme: 'pref_label_theme',
+  backgroundTheme: 'pref_label_background_theme',
   customColors: 'pref_label_custom_colors',
   font: 'pref_label_font',
   layout: 'pref_label_layout',
@@ -77,6 +78,9 @@ function formatValue(t: TFunction, key: string, val: any): string {
   switch (key) {
     case 'theme':
       return val === 'dark' ? t('format_theme_dark') : t('format_theme_light')
+
+    case 'backgroundTheme':
+      return val ? t('format_bg_theme', { id: val }) : t('format_default')
 
     case 'customColors': {
       if (!val || typeof val !== 'object') return t('format_default')
@@ -147,6 +151,9 @@ function applyVisual(key: string, value: any, draft: Record<string, any>) {
       document.documentElement.setAttribute('data-theme', value || 'light')
       applyCustomColors(draft.customColors, value || 'light')
       break
+    case 'backgroundTheme':
+      document.documentElement.setAttribute('data-bg-theme', String(value || 4))
+      break
     case 'customColors':
       applyCustomColors(value, draft.theme || 'light')
       break
@@ -167,6 +174,7 @@ function applyVisual(key: string, value: any, draft: Record<string, any>) {
 
 function revertAllVisuals(snapshot: Record<string, any>) {
   document.documentElement.setAttribute('data-theme', snapshot.theme || 'light')
+  document.documentElement.setAttribute('data-bg-theme', String(snapshot.backgroundTheme || 4))
   applyCustomColors(snapshot.customColors, snapshot.theme || 'light')
   applyFontPrefs(snapshot.font)
   applyLayoutPrefs(snapshot.layout)

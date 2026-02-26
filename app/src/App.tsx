@@ -75,7 +75,10 @@ export default function App() {
   // Show skeleton on public pages while contexts load (or until timeout)
   const showSkeleton = !hasToken && anyLoading && !timedOut
 
+  const themeFeatureAvailable = !!user && isActive('preference.theme')
+
   useEffect(() => {
+    if (!themeFeatureAvailable) return
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.altKey && e.key.toLowerCase() === 't') {
         e.preventDefault()
@@ -84,7 +87,7 @@ export default function App() {
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  }, [themeFeatureAvailable])
 
   // Collect routes from active features
   const featureRoutes: Array<{
@@ -164,7 +167,7 @@ export default function App() {
         <LoginSkeleton />
       ) : (
         <>
-          {user && (
+          {themeFeatureAvailable && (
             <BackgroundThemePicker
               isOpen={showBgPicker}
               onClose={() => setShowBgPicker(false)}

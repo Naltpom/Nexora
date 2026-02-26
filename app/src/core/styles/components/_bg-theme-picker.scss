@@ -1,8 +1,8 @@
 /* Background Theme Picker */
 .bg-theme-picker {
   background: white;
-  border-radius: 16px;
-  padding: 20px;
+  border-radius: var(--radius, 8px);
+  padding: var(--density-card-padding, 24px);
   max-width: 560px;
   width: 92%;
   box-shadow: 0 20px 60px rgba(0,0,0,0.3);
@@ -10,7 +10,7 @@
 }
 
 .bg-theme-picker h3 {
-  margin: 0 0 16px;
+  margin: 0 0 var(--density-gap, 12px);
   font-size: 1.125rem;
   font-weight: 600;
   color: var(--gray-900);
@@ -19,13 +19,13 @@
 .bg-theme-grid {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 10px;
+  gap: var(--density-gap, 12px);
 }
 
 .bg-theme-option {
   border: 2px solid var(--gray-200);
-  border-radius: 12px;
-  padding: 8px;
+  border-radius: var(--radius, 8px);
+  padding: var(--density-padding, 8px);
   background: var(--gray-50);
   cursor: pointer;
   text-align: center;
@@ -48,13 +48,13 @@
 
 .bg-theme-preview {
   height: 64px;
-  border-radius: 8px;
+  border-radius: var(--radius, 8px);
   overflow: hidden;
   margin-bottom: 6px;
 }
 
 .bg-theme-hint {
-  margin-top: 16px;
+  margin-top: var(--density-gap, 12px);
   text-align: center;
   font-size: 0.75rem;
   color: var(--gray-400);

@@ -179,7 +179,7 @@ Cela s'applique dans **tous les contextes** :
 | # | Check | Feature | Type | Dependances | Chemins API | Chemins APP | Notes |
 |---|-------|---------|------|-------------|-------------|-------------|-------|
 | 14 | [x] | `preference` | parent | aucune | `api/src/core/preference/` | `app/src/core/preference/` | PreferencePage, DraftPreferenceContext, UnsavedChangesModal — 4 fixes (require_permission 6 endpoints, children manifest complet, saveAll() error handling, SCSS density vars) |
-| 15 | [ ] | `preference.theme` | child | preference | (dans preference/) | `app/src/core/preference/theme/` | Dark/light, fonds visuels |
+| 15 | [x] | `preference.theme` | child | preference | (dans preference/) | `app/src/core/preference/theme/` | Dark/light, fonds visuels — 3 fixes (feature gate Alt+T + BackgroundThemePicker, backgroundTheme dans draft system, isDark reactif MutationObserver) + require_permission 2 endpoints + event preference.updated + SCSS var(--radius/--density-*) bg-theme-picker |
 | 16 | [ ] | `preference.font` | child | preference | (dans preference/) | `app/src/core/preference/font/` | Police, taille texte, interligne |
 | 17 | [ ] | `preference.layout` | child | preference | (dans preference/) | `app/src/core/preference/layout/` | Densite, border-radius, largeur contenu |
 | 18 | [ ] | `preference.couleur` | child | preference | (dans preference/) | `app/src/core/preference/couleur/` | Couleurs personnalisees |

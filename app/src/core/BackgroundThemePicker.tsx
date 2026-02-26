@@ -1,5 +1,5 @@
 import './backgrounds/backgrounds.scss'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from './AuthContext'
 
@@ -105,17 +105,38 @@ const THEMES = [
 interface BackgroundThemePickerProps {
   isOpen: boolean
   onClose: () => void
+  /** Draft mode: called instead of immediate save (for PreferencePage integration) */
+  onSelect?: (variant: number) => void
+  /** Current value override (from draft system) */
+  currentValue?: number
 }
 
-export default function BackgroundThemePicker({ isOpen, onClose }: BackgroundThemePickerProps) {
+export default function BackgroundThemePicker({ isOpen, onClose, onSelect, currentValue }: BackgroundThemePickerProps) {
   const { t } = useTranslation('common')
   const { getPreference, updatePreference } = useAuth()
-  const current = getPreference('backgroundTheme', 4)
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+  const current = currentValue ?? getPreference('backgroundTheme', 4)
+
+  // Reactive isDark: observes data-theme attribute changes via MutationObserver
+  const [isDark, setIsDark] = useState(
+    () => document.documentElement.getAttribute('data-theme') === 'dark'
+  )
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.getAttribute('data-theme') === 'dark')
+    })
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+    return () => observer.disconnect()
+  }, [])
 
   const handleSelect = (variant: number) => {
-    document.documentElement.setAttribute('data-bg-theme', String(variant))
-    updatePreference('backgroundTheme', variant)
+    if (onSelect) {
+      // Draft mode: delegate to parent (preview applied by DraftPreferenceContext)
+      onSelect(variant)
+    } else {
+      // Immediate mode (Alt+T from App.tsx): save directly
+      document.documentElement.setAttribute('data-bg-theme', String(variant))
+      updatePreference('backgroundTheme', variant)
+    }
     onClose()
   }
 
@@ -140,6 +161,7 @@ export default function BackgroundThemePicker({ isOpen, onClose }: BackgroundThe
               key={theme.id}
               className={`bg-theme-option ${current === theme.id ? 'active' : ''}`}
               onClick={() => handleSelect(theme.id)}
+              type="button"
             >
               <div
                 className="bg-theme-preview"

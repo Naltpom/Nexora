@@ -9,10 +9,15 @@ export default function ThemeSection() {
   const { t } = useTranslation('preference.theme')
   const { getDraftPreference, setDraftPreference } = useDraftPreference()
   const currentTheme = getDraftPreference('theme', 'light') as string
+  const currentBg = getDraftPreference('backgroundTheme', 4) as number
   const [showBgPicker, setShowBgPicker] = useState(false)
 
   const handleThemeChange = (theme: string) => {
     setDraftPreference('theme', theme)
+  }
+
+  const handleBgSelect = (variant: number) => {
+    setDraftPreference('backgroundTheme', variant)
   }
 
   return (
@@ -51,7 +56,14 @@ export default function ThemeSection() {
         </div>
       </div>
 
-      {showBgPicker && <BackgroundThemePicker isOpen={true} onClose={() => setShowBgPicker(false)} />}
+      {showBgPicker && (
+        <BackgroundThemePicker
+          isOpen={true}
+          onClose={() => setShowBgPicker(false)}
+          onSelect={handleBgSelect}
+          currentValue={currentBg}
+        />
+      )}
     </div>
   )
 }

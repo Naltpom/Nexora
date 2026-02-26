@@ -15,4 +15,7 @@ manifest = FeatureManifest(
         "preference.didacticiel",
     ],
     permissions=["preference.read"],
+    events=[
+        {"event_type": "preference.updated", "label": "Preferences modifiees", "category": "Preferences", "description": "Un utilisateur a modifie ses preferences"},
+    ],
 )

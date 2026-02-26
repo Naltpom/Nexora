@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..config import settings
 from ..database import get_db
 from ..events import event_bus
-from ..permissions import get_user_permission_codes
+from ..permissions import get_user_permission_codes, require_permission
 from ..rate_limit import limiter, login_limiter
 from ..security import (
     create_access_token,
@@ -299,13 +299,20 @@ async def update_me(
 # ---------------------------------------------------------------------------
 
 
-@router.get("/me/preferences")
+@router.get(
+    "/me/preferences",
+    dependencies=[Depends(require_permission("preference.read"))],
+)
 async def get_preferences(current_user=Depends(get_current_user)):
     return current_user.preferences or {}
 
 
-@router.put("/me/preferences")
+@router.put(
+    "/me/preferences",
+    dependencies=[Depends(require_permission("preference.read"))],
+)
 async def update_preferences(
+    request: Request,
     prefs: dict = Body(...),
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -318,6 +325,16 @@ async def update_preferences(
     user.preferences = existing
     flag_modified(user, "preferences")
     await db.flush()
+
+    await event_bus.emit(
+        "preference.updated",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="user",
+        resource_id=current_user.id,
+        payload={"keys": list(prefs.keys()), "ip": request.client.host if request.client else None},
+    )
+
     return existing
 
 
