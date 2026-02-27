@@ -84,6 +84,7 @@ class CommandRegistry:
     def load_states_from_db_sync(self):
         """Load command enabled/disabled states from DB at startup (sync)."""
         from sqlalchemy import create_engine
+        from sqlalchemy.exc import OperationalError
         from sqlalchemy.orm import Session
 
         from .config import settings
@@ -107,8 +108,12 @@ class CommandRegistry:
                             f"Command '{state.name}' state loaded from DB: "
                             f"enabled={state.enabled}"
                         )
+        except OperationalError as e:
+            # DB not reachable yet (worker starts before migrations) — safe fallback
+            logger.warning(f"DB not available for command states (using defaults): {e}")
         except Exception as e:
-            logger.warning(f"Could not load command states from DB: {e}")
+            logger.error(f"Failed to load command states from DB: {e}")
+            raise
         finally:
             sync_engine.dispose()
 
@@ -158,9 +163,12 @@ class CommandRegistry:
 
         elapsed = round((datetime.now(timezone.utc) - start).total_seconds(), 3)
 
-        # Log execution to DB
+        # Log execution to DB using a separate session so the log survives
+        # even if the caller rolls back the main session on error.
         try:
             from ._identity.models import CommandExecution
+            from .database import async_session
+
             log_entry = CommandExecution(
                 command_name=name,
                 command_label=cmd.label,
@@ -173,7 +181,9 @@ class CommandRegistry:
                 executed_by=executed_by,
                 executed_at=start,
             )
-            db.add(log_entry)
+            async with async_session() as log_db:
+                log_db.add(log_entry)
+                await log_db.commit()
         except Exception as e:
             logger.warning(f"Could not log command execution: {e}")
 

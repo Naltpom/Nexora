@@ -2,8 +2,6 @@
 
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import delete
-
 from ...command_registry import CommandDefinition
 from ...config import settings
 from .models import PushSubscription
@@ -11,16 +9,17 @@ from .models import PushSubscription
 
 async def _cleanup_stale_subscriptions(db):
     """Delete inactive push subscriptions older than N days."""
+    from ...batch_utils import batch_delete
+    from ...database import async_session
+
     days = settings.PUSH_SUBSCRIPTION_RETENTION_DAYS
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)
 
-    result = await db.execute(
-        delete(PushSubscription).where(
-            PushSubscription.is_active.is_(False),
-            PushSubscription.updated_at < cutoff,
-        )
+    count = await batch_delete(
+        async_session,
+        PushSubscription,
+        (PushSubscription.is_active.is_(False), PushSubscription.updated_at < cutoff),
     )
-    count = result.rowcount
 
     return {
         "purged_count": count,

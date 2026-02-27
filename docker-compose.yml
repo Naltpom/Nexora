@@ -1,6 +1,8 @@
 services:
   db:
-    image: postgres:15
+    build:
+      context: ./db
+      dockerfile: Dockerfile
     container_name: template02_db
     restart: unless-stopped
     environment:
@@ -11,6 +13,7 @@ services:
       - "5470:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s

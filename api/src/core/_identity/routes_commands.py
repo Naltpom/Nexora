@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..command_registry import get_command_registry
 from ..database import get_db
+from ..events import event_bus
 from ..permissions import require_permission
 from .models import CommandExecution, CommandState, User
 from .routes_auth import get_current_user
@@ -136,6 +137,15 @@ async def run_command(
             detail=str(e),
         )
 
+    await event_bus.emit(
+        "command.executed",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="command",
+        resource_id=0,
+        payload={"command": command_name, "source": "api", "result": result.get("result")},
+    )
+
     return result
 
 
@@ -183,6 +193,17 @@ async def toggle_command(
             updated_by=current_user.id,
         )
         db.add(state)
+
+    await db.flush()
+
+    await event_bus.emit(
+        "command.toggled",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="command",
+        resource_id=0,
+        payload={"command": command_name, "enabled": body.enabled, "toggled_by": current_user.email},
+    )
 
     await db.commit()
 

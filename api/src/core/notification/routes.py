@@ -307,48 +307,6 @@ async def mark_all_as_read(
     return {"ok": True}
 
 
-@router.patch(
-    "/read-by-token/{token}",
-    dependencies=[Depends(require_permission("notification.read"))],
-)
-async def mark_read_by_token(
-    token: str,
-    current_user=Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    # Find event by redirect token
-    result = await db.execute(
-        select(Event).where(Event.redirect_token == token)
-    )
-    event = result.scalar_one_or_none()
-    if not event:
-        return {"ok": True, "link": None}
-
-    # Find notification for this event and user
-    result = await db.execute(
-        select(Notification).where(
-            Notification.event_id == event.id,
-            Notification.user_id == current_user.id,
-            Notification.deleted_at.is_(None),
-        )
-    )
-    notif = result.scalar_one_or_none()
-    if notif:
-        if not notif.is_read:
-            notif.is_read = True
-            notif.read_at = datetime.now(timezone.utc)
-            await db.flush()
-        link = notif.link
-    else:
-        # Get link from any notification for this event
-        result = await db.execute(
-            select(Notification.link).where(Notification.event_id == event.id).limit(1)
-        )
-        row = result.first()
-        link = row[0] if row else None
-    return {"ok": True, "link": link}
-
-
 @router.delete(
     "/{notification_id}",
     status_code=status.HTTP_204_NO_CONTENT,

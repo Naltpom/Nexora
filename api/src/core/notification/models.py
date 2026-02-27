@@ -17,7 +17,7 @@ class Notification(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    event_id: Mapped[int] = mapped_column(Integer, ForeignKey("events.id", ondelete="CASCADE"), nullable=False)
+    event_id: Mapped[int] = mapped_column(Integer, nullable=False)  # No FK — events is partitioned
     rule_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("notification_rules.id", ondelete="SET NULL"), nullable=True)
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     body: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -29,7 +29,8 @@ class Notification(Base):
     push_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), primary_key=True,
+        default=lambda: datetime.now(timezone.utc),
     )
 
     user = relationship("User", foreign_keys=[user_id])
@@ -38,6 +39,7 @@ class Notification(Base):
     __table_args__ = (
         Index("ix_notifications_user_unread", "user_id", "is_read", "created_at"),
         Index("ix_notifications_user_created", "user_id", "created_at"),
+        Index("ix_notifications_event_id", "event_id"),
     )
 
 

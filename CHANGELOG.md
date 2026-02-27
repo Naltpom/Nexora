@@ -1,5 +1,54 @@
 # Changelog
 
+## 2026.02.53
+
+### batch_utils (NEW)
+
+- **Utilitaire batch centralise** : `batch_delete()` et `batch_insert()` dans `api/src/core/batch_utils.py` — operations par lot avec sessions independantes, taille configurable (`PURGE_BATCH_SIZE`)
+- **Fix purge notifications** : remplacement du pattern select+loop par `batch_delete` (0 rows en memoire)
+- **Fix purge events** : batch_delete au lieu d'un DELETE unique qui cascade des millions de notifications
+- **Fix purge users** : batch_delete au lieu de select+loop
+- **Nouvelle commande `notification.purge_old`** : hard-delete des notifications de plus de N jours (`NOTIFICATION_MAX_AGE_DAYS`), schedule hebdomadaire
+
+### notification (optimisation fan-out)
+
+- **Fan-out batch** : pour `target_type="all"`, remplacement de `select(User)` + flush individuel par `select(User.id)` + `INSERT...RETURNING` en batch de 5000
+- **Push SSE batch** : envoi SSE depuis les IDs retournes apres chaque batch insert
+- **Batch email** : chargement des users pour email en un seul `WHERE id IN (...)` au lieu de N queries
+
+### event (partitionnement PostgreSQL)
+
+- **pg_partman** : image Docker custom (`db/Dockerfile`) avec postgresql-15-partman, extension installee dans le schema `partman`
+- **Tables partitionnees** : `events` et `notifications` convertis en `PARTITION BY RANGE (created_at)` avec PK composite `(id, created_at)`
+- **Migration Alembic** : rename old → create partitioned → register avec partman (monthly, premake 3) → copy data → drop old
+- **FK supprimees** : `notifications.event_id → events.id` et `webhook_delivery_logs.event_id → events.id` (PostgreSQL ne supporte pas les FK vers tables partitionnees)
+- **Alembic env.py** : filtre `include_object` pour exclure les partitions enfants de l'autogenerate
+- **Commande `event.partman_maintenance`** : `SELECT partman.run_maintenance()` schedule quotidien 1h
+- **Retention 48 mois** : `EVENT_RETENTION_DAYS` passe de 180 a 1460
+
+### worker (scheduler ARQ)
+
+- **Cron parser** : `cron_to_arq_kwargs()` convertit les expressions cron 5 champs en kwargs ARQ
+- **Decouverte automatique** : au demarrage du worker, `CommandRegistry.discover()` + `load_states_from_db_sync()` pour trouver les commandes schedulees
+- **Execution schedulee** : chaque commande cron s'execute dans sa propre session DB, loguee avec `source="scheduler"` dans `command_executions`
+
+### lifecycle (NEW)
+
+- **Nouvelle feature core `lifecycle`** : gestion automatique du cycle de vie des comptes utilisateurs
+- **Phase inactivite (48 mois)** : detection des comptes inactifs, sequence d'avertissements (6 mois, 2 mois, 2 semaines, 3 jours avant), archivage automatique (is_active=False, archived_at=now, revocation sessions)
+- **Phase archive (12 mois)** : sequence d'avertissements de suppression (6 mois, 2 mois, 2 semaines, 3 jours apres archive), suppression definitive (DELETE CASCADE)
+- **Exclusions** : super_admin exclus du lifecycle automatique, users soft-deleted ignores
+- **Model** : `LifecycleEmail` (tracking des emails envoyes, unique par user+type)
+- **Backend** : manifest, models, schemas, services, routes (dashboard, reactivate, settings), commands (2 cron daily)
+- **Frontend** : page admin `/admin/lifecycle` avec stats, onglets (bientot archives / archives), badges urgence, bouton reactivation
+- **Migration Alembic** : colonne `archived_at` sur users, table `lifecycle_emails`, seed feature_state + permissions admin
+- **Settings** : `LIFECYCLE_INACTIVITY_DAYS=1460`, `LIFECYCLE_ARCHIVE_DAYS=365`
+
+### docker
+
+- **Service db** : passe de `image: postgres:15` a `build: ./db` (image custom avec pg_partman)
+- **Volume init** : `./db/init:/docker-entrypoint-initdb.d` pour l'extension pg_partman
+
 ## 2026.02.52
 
 ### realtime (NEW)

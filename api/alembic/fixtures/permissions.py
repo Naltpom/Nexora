@@ -92,6 +92,9 @@ ALL_PERMISSIONS: list[tuple[str, str]] = [
     ("sso.link", "sso"),
     ("sso.google.login", "sso.google"),
     ("sso.github.login", "sso.github"),
+    # lifecycle
+    ("lifecycle.read", "lifecycle"),
+    ("lifecycle.manage", "lifecycle"),
     # storybook
     ("storybook.read", "storybook"),
 ]

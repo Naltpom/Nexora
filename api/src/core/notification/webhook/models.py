@@ -47,7 +47,7 @@ class WebhookDeliveryLog(Base):
         Integer, ForeignKey("webhooks.id", ondelete="CASCADE"), nullable=False, index=True
     )
     event_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("events.id", ondelete="SET NULL"), nullable=True
+        Integer, nullable=True  # No FK — events is partitioned
     )
     status_code: Mapped[int | None] = mapped_column(Integer, nullable=True)
     success: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)

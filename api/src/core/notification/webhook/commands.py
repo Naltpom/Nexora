@@ -2,8 +2,6 @@
 
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import delete
-
 from ...command_registry import CommandDefinition
 from ...config import settings
 from .models import WebhookDeliveryLog
@@ -11,13 +9,17 @@ from .models import WebhookDeliveryLog
 
 async def _purge_delivery_logs(db):
     """Delete webhook delivery logs older than N days."""
+    from ...batch_utils import batch_delete
+    from ...database import async_session
+
     days = settings.DELIVERY_LOG_RETENTION_DAYS
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)
 
-    result = await db.execute(
-        delete(WebhookDeliveryLog).where(WebhookDeliveryLog.created_at < cutoff)
+    count = await batch_delete(
+        async_session,
+        WebhookDeliveryLog,
+        (WebhookDeliveryLog.created_at < cutoff,),
     )
-    count = result.rowcount
 
     return {
         "purged": count,

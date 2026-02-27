@@ -2,25 +2,22 @@
 
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import delete, func, select
-
 from ..command_registry import CommandDefinition
 from .models import ConsentRecord, DataAccessLog
 
 
 async def _purge_audit_logs(db):
     """Purge data access audit logs older than 365 days."""
+    from ..batch_utils import batch_delete
+    from ..database import async_session
+
     cutoff = datetime.now(timezone.utc) - timedelta(days=365)
 
-    count_result = await db.execute(
-        select(func.count(DataAccessLog.id)).where(DataAccessLog.created_at < cutoff)
+    count = await batch_delete(
+        async_session,
+        DataAccessLog,
+        (DataAccessLog.created_at < cutoff,),
     )
-    count = count_result.scalar() or 0
-
-    if count:
-        await db.execute(
-            delete(DataAccessLog).where(DataAccessLog.created_at < cutoff)
-        )
 
     return {
         "purged": count,
@@ -31,17 +28,16 @@ async def _purge_audit_logs(db):
 
 async def _purge_old_consents(db):
     """Purge consent records older than 3 years (1095 days)."""
+    from ..batch_utils import batch_delete
+    from ..database import async_session
+
     cutoff = datetime.now(timezone.utc) - timedelta(days=1095)
 
-    count_result = await db.execute(
-        select(func.count(ConsentRecord.id)).where(ConsentRecord.created_at < cutoff)
+    count = await batch_delete(
+        async_session,
+        ConsentRecord,
+        (ConsentRecord.created_at < cutoff,),
     )
-    count = count_result.scalar() or 0
-
-    if count:
-        await db.execute(
-            delete(ConsentRecord).where(ConsentRecord.created_at < cutoff)
-        )
 
     return {
         "purged": count,

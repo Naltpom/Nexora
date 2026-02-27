@@ -45,6 +45,9 @@ manifest = FeatureManifest(
         {"event_type": "admin.global_permissions_updated", "label": "Permissions globales modifiees", "category": "Administration", "description": "Les permissions globales ont ete modifiees"},
         {"event_type": "admin.feature_toggled", "label": "Feature activee/desactivee", "category": "Administration", "description": "Une feature a ete activee ou desactivee"},
         {"event_type": "admin.settings_updated", "label": "Parametres modifies", "category": "Administration", "description": "Les parametres de l'application ont ete modifies"},
+        # Commandes
+        {"event_type": "command.executed", "label": "Commande executee", "category": "Administration", "description": "Une commande de maintenance a ete executee"},
+        {"event_type": "command.toggled", "label": "Commande activee/desactivee", "category": "Administration", "description": "Une commande a ete activee ou desactivee"},
     ],
     tutorials=[
         {

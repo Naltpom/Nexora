@@ -1,0 +1,22 @@
+{
+  "inactivity_6m_title": "Votre compte sera archive dans 6 mois",
+  "inactivity_6m_body": "Bonjour {name}, votre compte est inactif depuis longtemps. Sans connexion de votre part, il sera archive dans 6 mois.",
+  "inactivity_2m_title": "Votre compte sera archive dans 2 mois",
+  "inactivity_2m_body": "Bonjour {name}, votre compte sera archive dans 2 mois en raison d'inactivite. Connectez-vous pour eviter l'archivage.",
+  "inactivity_2w_title": "Votre compte sera archive dans 2 semaines",
+  "inactivity_2w_body": "Bonjour {name}, votre compte sera archive dans 2 semaines. Connectez-vous maintenant pour eviter cette action.",
+  "inactivity_3d_title": "URGENT : Votre compte sera archive dans 3 jours",
+  "inactivity_3d_body": "Bonjour {name}, votre compte sera archive dans 3 jours en raison d'inactivite prolongee. Connectez-vous immediatement.",
+  "archived_title": "Votre compte a ete archive",
+  "archived_body": "Bonjour {name}, votre compte a ete archive en raison d'inactivite. Vos donnees seront conservees pendant 12 mois. Contactez un administrateur pour reactiver votre compte.",
+  "deletion_6m_title": "Vos donnees seront supprimees dans 6 mois",
+  "deletion_6m_body": "Bonjour {name}, votre compte archive sera definitivement supprime dans 6 mois. Contactez un administrateur pour reactiver votre compte.",
+  "deletion_2m_title": "Vos donnees seront supprimees dans 2 mois",
+  "deletion_2m_body": "Bonjour {name}, votre compte archive sera definitivement supprime dans 2 mois. Contactez un administrateur rapidement.",
+  "deletion_2w_title": "Vos donnees seront supprimees dans 2 semaines",
+  "deletion_2w_body": "Bonjour {name}, votre compte sera supprime definitivement dans 2 semaines. C'est votre derniere chance de reactiver votre compte.",
+  "deletion_3d_title": "URGENT : Suppression de vos donnees dans 3 jours",
+  "deletion_3d_body": "Bonjour {name}, votre compte et toutes vos donnees seront definitivement supprimes dans 3 jours. Contactez un administrateur immediatement.",
+  "deleted_title": "Vos donnees ont ete supprimees",
+  "deleted_body": "Bonjour {name}, votre compte et toutes les donnees associees ont ete definitivement supprimes conformement a notre politique de retention."
+}

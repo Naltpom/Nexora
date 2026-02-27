@@ -46,6 +46,18 @@ if config.config_file_name is not None:
 
 target_metadata = Base.metadata
 
+# Tables managed by pg_partman — skip partition children during autogenerate
+_PARTITIONED_PARENTS = {"events", "notifications"}
+
+
+def _include_object(object, name, type_, reflected, compare_to):
+    """Exclude pg_partman partition children from autogenerate diffs."""
+    if type_ == "table":
+        for parent in _PARTITIONED_PARENTS:
+            if name.startswith(f"{parent}_p") or name == f"{parent}_default":
+                return False
+    return True
+
 
 def run_migrations_offline() -> None:
     url = config.get_main_option("sqlalchemy.url")
@@ -54,6 +66,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        include_object=_include_object,
     )
     with context.begin_transaction():
         context.run_migrations()
@@ -66,7 +79,11 @@ def run_migrations_online() -> None:
         poolclass=pool.NullPool,
     )
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+            include_object=_include_object,
+        )
         with context.begin_transaction():
             context.run_migrations()
 

@@ -153,7 +153,7 @@ async def refresh_token(
 
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
-    if not user or not user.is_active or user.deleted_at is not None:
+    if not user or not user.is_active or user.deleted_at is not None or user.archived_at is not None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Utilisateur introuvable",

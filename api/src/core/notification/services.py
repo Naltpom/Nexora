@@ -2,6 +2,7 @@
 
 import logging
 from datetime import datetime, timedelta, timezone
+from typing import Any
 
 from sqlalchemy import asc, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -154,13 +155,17 @@ async def process_notifications(
     webhook_rule_ids: set[int] = set()
     explicit_webhook_ids: set[int] = set()
 
+    # Collect all pending work before doing bulk DB operations
+    pending_inserts: list[dict] = []
+    pending_deliveries: list[dict] = []
+
     for rule in rules:
-        # Resolve recipients
+        # Resolve recipients — IDs only for "all" target (avoid loading full User objects)
         if rule.target_type == "all":
             user_result = await db.execute(
-                select(User).where(User.is_active.is_(True))
+                select(User.id).where(User.is_active.is_(True))
             )
-            recipient_ids = {u.id for u in user_result.scalars().all()}
+            recipient_ids = {row[0] for row in user_result.all()}
         elif rule.target_type == "users":
             recipient_ids = set(rule.target_user_ids or [])
         elif rule.target_type == "self":
@@ -183,51 +188,30 @@ async def process_notifications(
             if not any(channels.values()):
                 continue
 
-            if channels["in_app"]:
-                notif = Notification(
-                    user_id=user_id,
-                    event_id=event.id,
-                    rule_id=rule.id,
-                    title=title,
-                    body=body,
-                    link=link,
-                    email_sent_at=datetime.now(timezone.utc) if channels["email"] else None,
-                    webhook_sent_at=datetime.now(timezone.utc) if channels["webhook"] else None,
-                    push_sent_at=datetime.now(timezone.utc) if channels["push"] else None,
-                )
-                db.add(notif)
-                await db.flush()
+            now = datetime.now(timezone.utc)
 
-                # Push SSE notification via realtime broadcaster
-                await sse_broadcaster.push(user_id, event_type="notification", data={
-                    "id": notif.id,
+            if channels["in_app"]:
+                pending_inserts.append({
+                    "user_id": user_id,
+                    "event_id": event.id,
+                    "rule_id": rule.id,
                     "title": title,
                     "body": body,
                     "link": link,
                     "is_read": False,
-                    "event_type": event.event_type,
-                    "created_at": notif.created_at.isoformat() if notif.created_at else None,
+                    "email_sent_at": now if channels["email"] else None,
+                    "webhook_sent_at": now if channels["webhook"] else None,
+                    "push_sent_at": now if channels["push"] else None,
+                    "created_at": now,
                 })
 
-            # Enqueue email delivery
-            if channels["email"]:
-                user_result = await db.execute(
-                    select(User).where(User.id == user_id)
-                )
-                user = user_result.scalar_one_or_none()
-                if user and user.email:
-                    await enqueue(
-                        "send_email_task",
-                        user.email,
-                        f"{user.first_name} {user.last_name}",
-                        title,
-                        body,
-                        link,
-                    )
-
-            # Enqueue push delivery
-            if channels["push"]:
-                await enqueue("send_push_task", user_id, title, body, link)
+            pending_deliveries.append({
+                "user_id": user_id,
+                "channels": channels,
+                "title": title,
+                "body": body,
+                "link": link,
+            })
 
             # Collect webhook data
             if channels["webhook"]:
@@ -239,6 +223,64 @@ async def process_notifications(
                     webhook_rule_ids.add(rule.id)
 
         notified_users.update(new_recipients)
+
+    # --- Batch insert notifications ---
+    if pending_inserts:
+        from sqlalchemy import insert as sa_insert
+
+        FANOUT_BATCH = 5000
+
+        for i in range(0, len(pending_inserts), FANOUT_BATCH):
+            chunk = pending_inserts[i: i + FANOUT_BATCH]
+            stmt = sa_insert(Notification).values(chunk).returning(
+                Notification.id, Notification.user_id, Notification.title,
+                Notification.body, Notification.link, Notification.created_at,
+            )
+            insert_result = await db.execute(stmt)
+            inserted_rows = insert_result.all()
+
+            # Push SSE for each inserted notification
+            for row in inserted_rows:
+                notif_id, uid, n_title, n_body, n_link, n_created = row
+                await sse_broadcaster.push(uid, event_type="notification", data={
+                    "id": notif_id,
+                    "title": n_title,
+                    "body": n_body,
+                    "link": n_link,
+                    "is_read": False,
+                    "event_type": event.event_type,
+                    "created_at": n_created.isoformat() if n_created else None,
+                })
+
+        await db.flush()
+
+    # --- Enqueue email and push deliveries ---
+    email_user_ids = [d["user_id"] for d in pending_deliveries if d["channels"]["email"]]
+    users_by_id: dict[int, Any] = {}
+    if email_user_ids:
+        user_result = await db.execute(
+            select(User).where(User.id.in_(email_user_ids))
+        )
+        users_by_id = {u.id: u for u in user_result.scalars().all()}
+
+    for delivery in pending_deliveries:
+        uid = delivery["user_id"]
+        channels = delivery["channels"]
+
+        if channels["email"]:
+            user = users_by_id.get(uid)
+            if user and user.email:
+                await enqueue(
+                    "send_email_task",
+                    user.email,
+                    f"{user.first_name} {user.last_name}",
+                    delivery["title"],
+                    delivery["body"],
+                    delivery["link"],
+                )
+
+        if channels["push"]:
+            await enqueue("send_push_task", uid, delivery["title"], delivery["body"], delivery["link"])
 
     # Enqueue webhook deliveries
     if webhook_rule_ids or explicit_webhook_ids:
@@ -465,21 +507,35 @@ async def delete_notification(db: AsyncSession, notification_id: int, user_id: i
 
 
 async def purge_deleted_notifications(db: AsyncSession, days: int) -> int:
-    """Hard-delete notifications that were soft-deleted more than `days` days ago.
-    Returns the number of purged rows."""
+    """Hard-delete notifications that were soft-deleted more than ``days`` days ago.
+
+    Uses batch_delete to process in manageable chunks.
+    """
+    from ..batch_utils import batch_delete
+    from ..database import async_session
+
     cutoff = datetime.now(timezone.utc) - timedelta(days=days)
-    result = await db.execute(
-        select(Notification).where(
-            Notification.deleted_at.isnot(None),
-            Notification.deleted_at < cutoff,
-        )
+    return await batch_delete(
+        async_session,
+        Notification,
+        (Notification.deleted_at.isnot(None), Notification.deleted_at < cutoff),
     )
-    rows = result.scalars().all()
-    count = len(rows)
-    for notif in rows:
-        await db.delete(notif)
-    await db.flush()
-    return count
+
+
+async def purge_old_notifications(db: AsyncSession, days: int) -> int:
+    """Hard-delete ALL notifications older than ``days`` days, regardless of soft-delete status.
+
+    Uses batch_delete to process in manageable chunks.
+    """
+    from ..batch_utils import batch_delete
+    from ..database import async_session
+
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    return await batch_delete(
+        async_session,
+        Notification,
+        (Notification.created_at < cutoff,),
+    )
 
 
 # ---------------------------------------------------------------------------

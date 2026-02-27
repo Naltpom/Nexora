@@ -19,7 +19,8 @@ class Event(Base):
     resource_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     payload: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), primary_key=True,
+        default=lambda: datetime.now(timezone.utc),
     )
 
     __table_args__ = (

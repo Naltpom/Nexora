@@ -80,7 +80,13 @@ class Settings(BaseSettings):
     NOTIFICATION_PURGE_DAYS: int = 90  # Hard-delete soft-deleted notifications older than N days
 
     # Event purge
-    EVENT_RETENTION_DAYS: int = 180  # Delete events older than N days
+    EVENT_RETENTION_DAYS: int = 1460  # Delete events older than N days (48 mois)
+
+    # Notification max age (hard-delete regardless of soft-delete status)
+    NOTIFICATION_MAX_AGE_DAYS: int = 365  # Hard-delete ALL notifications older than N days
+
+    # Batch processing
+    PURGE_BATCH_SIZE: int = 10000  # Rows per batch for batch_delete operations
 
     # Push subscription cleanup
     PUSH_SUBSCRIPTION_RETENTION_DAYS: int = 90  # Delete inactive subscriptions older than N days
@@ -96,6 +102,10 @@ class Settings(BaseSettings):
 
     # Webhook delivery log retention
     DELIVERY_LOG_RETENTION_DAYS: int = 90  # Delete webhook delivery logs older than N days
+
+    # Lifecycle (user account lifecycle management)
+    LIFECYCLE_INACTIVITY_DAYS: int = 1460  # ~48 months of inactivity before archive
+    LIFECYCLE_ARCHIVE_DAYS: int = 365  # ~12 months of archive before permanent deletion
 
     # i18n
     I18N_DEFAULT_LOCALE: str = "fr"

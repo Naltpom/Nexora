@@ -179,7 +179,7 @@ Cela s'applique dans **tous les contextes** :
 | # | Check | Feature | Type | Dependances | Chemins API | Chemins APP | Notes |
 |---|-------|---------|------|-------------|-------------|-------------|-------|
 | 14 | [x] | `preference` | parent | aucune | `api/src/core/preference/` | `app/src/core/preference/` | PreferencePage, DraftPreferenceContext, UnsavedChangesModal — 4 fixes (require_permission 6 endpoints, children manifest complet, saveAll() error handling, SCSS density vars) |
-| 15 | [ ] | `preference.theme` | child | preference | (dans preference/) | `app/src/core/preference/theme/` | Dark/light, fonds visuels — 3 fixes (feature gate Alt+T + BackgroundThemePicker, backgroundTheme dans draft system, isDark reactif MutationObserver) + require_permission 2 endpoints + event preference.updated + SCSS var(--radius/--density-*) bg-theme-picker |
+| 15 | [x] | `preference.theme` | child | preference | (dans preference/) | `app/src/core/preference/theme/` | Dark/light, fonds visuels — 3 fixes (feature gate Alt+T + BackgroundThemePicker, backgroundTheme dans draft system, isDark reactif MutationObserver) + require_permission 2 endpoints + event preference.updated + SCSS var(--radius/--density-*) bg-theme-picker |
 | 16 | [x] | `preference.font` | child | preference | (dans preference/) | `app/src/core/preference/font/` | Police, taille texte, interligne — 2 fixes (OpenDyslexic bundle local woff2 + @font-face, applyFontPrefs(null) redondant supprime) + SCSS conforme + events/perms OK |
 | 17 | [x] | `preference.layout` | child | preference | (dans preference/) | `app/src/core/preference/layout/` | Densite, border-radius, largeur contenu — 7 fixes (maxWidth/sectionGap default mismatch CSS fallback, inline style preview, SCSS hardcoded gaps/radius/btn-padding, applyLayoutPrefs(null) 3 density vars manquantes, handleReset redondant) |
 | 18 | [x] | `preference.couleur` | child | preference | (dans preference/) | `app/src/core/preference/couleur/` | Couleurs personnalisees — 3+1 fixes (classe CSS tutorial manquante sur 5 sections, SCSS density vars, border-radius var(--radius), inline styles preset swatches→CSS var injection) |
@@ -207,12 +207,21 @@ Cela s'applique dans **tous les contextes** :
 | 30 | [x] | `storybook` | standalone | aucune | `api/src/core/storybook/` | `app/src/core/storybook/` | Catalogue composants UI — 7 fixes (2 border-radius var(--radius), 2 gap var(--density-gap), 1 tab padding var(--density-btn-padding), variable shadowing t→tab, useEffect deps) |
 | 31 | [x] | `realtime` | standalone | event | `api/src/core/realtime/` | `app/src/core/realtime/` | Infrastructure SSE/temps reel — 6 fixes (require_permission /stream HIGH, queues bornees 256 MEDIUM, factory broadcaster fallback InMemory LOW, backoff exponentiel reconnexion LOW, dead i18n keys LOW, connectSSE deps LOW) + 8 SSE push manquants dans routes_permissions.py/routes_users.py |
 
+### Phase 7 — Optimisation DB & Cycle de vie
+
+| # | Check | Feature | Type | Dependances | Chemins API | Chemins APP | Notes |
+|---|-------|---------|------|-------------|-------------|-------------|-------|
+| 32 | [x] | `batch_utils` | utilitaire | aucune | `api/src/core/batch_utils.py` | — | 4 fixes (batch_insert dead code supprime, 8 purges migrees vers batch_delete dans _identity+push+webhook+rgpd commands, try/except+log progression sur erreur batch, docstring+imports nettoyes) — events N/A, perms N/A, SCSS N/A (utilitaire pur backend) |
+| 33 | [x] | `partitionnement` | infra | event, notification | `db/`, migration alembic | — | Revise OK : Dockerfile pg_partman, init SQL, migration rename→copy→drop, PK composites, FK dropped, include_object filter, commande partman_maintenance — 0 bug partitionnement, 1 bug pre-existant decouvert (Event.redirect_token crash CRITICAL dans notification) — events OK, perms N/A, SCSS N/A |
+| 34 | [x] | `scheduler` | infra | aucune | `api/src/core/cron_parser.py`, `api/src/worker.py` | — | Revise OK : 3 fixes (reload enabled state depuis DB au runtime MEDIUM, log executions erreur via session separee MEDIUM, load_states_from_db_sync distingue OperationalError LOW) + 2 events declares+emis (command.executed, command.toggled) + enregistrement de tous les cron jobs (enabled check au runtime) — perms 4/4 OK, SCSS N/A (infra pure backend) |
+| 35 | [~] | `lifecycle` | parent | notification.email, event | `api/src/core/lifecycle/` | `app/src/core/lifecycle/` | Archivage inactifs 48 mois + suppression 12 mois post-archive, 10 emails d'avertissement, dashboard admin, reactivation, 2 commandes schedulées (daily), 2 perms (lifecycle.read, lifecycle.manage), 3 events (user_archived, user_deleted, user_reactivated), exclusion super_admin — 7 fixes (race condition archivage MEDIUM, isolation erreur batch MEDIUM, double-click reactivation MEDIUM, dead i18n keys LOW, setTimeout cleanup LOW, SCSS disabled state LOW, event count description LOW) |
+
 ---
 
 ## Statistiques
 
-- **Total features** : 31
-- **Parents** : 9 (_identity, i18n, event, sso, mfa, notification, preference, rgpd, storybook, realtime)
+- **Total features** : 35 (31 features + 2 utilitaires infra + 1 utilitaire batch + 1 feature lifecycle)
+- **Parents** : 10 (_identity, i18n, event, sso, mfa, notification, preference, rgpd, storybook, realtime, lifecycle)
 - **Sous-features** : 21 (2 sso + 2 mfa + 3 notification + 8 preference + 6 rgpd)
 - **Features projet** : 0
 
@@ -265,5 +274,7 @@ docs/
     storybook/
       README.md
     realtime/
+      README.md
+    lifecycle/
       README.md
 ```
