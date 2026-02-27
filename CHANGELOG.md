@@ -1,5 +1,28 @@
 # Changelog
 
+## 2026.02.50
+
+### rgpd.export (revue complete — 3 fixes)
+
+- **Classe CSS tutorial manquante (MEDIUM)** : le didacticiel ciblait `.rgpd-export-buttons` mais la div n'avait que `unified-page-header-actions` → ajout de la classe `rgpd-export-buttons` sur le wrapper des boutons d'export
+- **Erreurs silencieuses export/preview (MEDIUM)** : `catch {}` vide sur `loadPreview` et `handleExport` → ajout state `error` avec alerte `alert-error` + auto-clear 5s, cles i18n `error_load` et `error_export` (fr/en)
+- **SCSS margins hardcodees (LOW)** : `.rgpd-data-sections` `margin-bottom: 24px` → `var(--section-gap, 24px)`, `.rgpd-rights-cta` `margin-top: 12px` → `var(--density-gap, 12px)`
+
+### rgpd.politique (revue complete — 4 fixes)
+
+- **Tab permission mismatch (MEDIUM)** : l'onglet "Pages legales" dans AdminRGPDPage verifiait `rgpd.politique.read` mais l'endpoint GET list exige `rgpd.politique.manage` — un user read-only voyait l'onglet mais recevait 403. Corrige en `rgpd.politique.manage`
+- **Events manquants (MEDIUM)** : aucun event emis dans routes_politique.py. Ajoute 2 events (`rgpd.politique.accepted`, `rgpd.politique.updated`) declares dans le manifest parent et emis sur accept et upsert
+- **Erreurs silencieuses LegalPagesTab (LOW)** : 3 catch vides sur load, save et versions. Ajoute error state + alertes i18n avec auto-clear 5s, 3 cles i18n fr/en (`error_load`, `error_save`, `error_versions`)
+- **SCSS hardcoded (LOW)** : ~10 valeurs hardcodees remplacees par density vars (`--density-gap`, `--density-padding`, `--density-card-padding`, `--section-gap`) sur legal-accept-documents, legal-document-scroll, legal-accept-actions, legal-version-list, legal-version-item, rgpd-legal-container, rgpd-legal-meta, rgpd-legal-item-actions
+
+### Verification complete
+
+- **Permissions** : 10/10 endpoints (1 public, 6 user, 3 admin) — OK
+- **Events** : 9/9 declares et emis — OK
+- **SCSS** : `font-size` en rem, `border-radius: var(--radius)`, density vars, section-gap — OK
+- **i18n** : couverture FR + EN complete — OK
+- **Dark theme** : override `[data-theme="dark"]` pour tous les composants RGPD — OK
+
 ## 2026.02.49
 
 ### mfa (revue mfa.email — activation 2 etapes + cooldown resend)

@@ -79,7 +79,9 @@
     "btn_consent_preferences": "Consent preferences",
     "exercise_rights_title": "Exercise your rights",
     "exercise_rights_description": "You have the right to access your data, rectify it, delete it, object to its processing, or request its portability.",
-    "btn_make_request": "Make a request"
+    "btn_make_request": "Make a request",
+    "error_load": "Failed to load your data.",
+    "error_export": "Export failed. Please try again."
   },
   "legal_page": {
     "default_title": "Legal page",
@@ -168,7 +170,10 @@
     "detail_retention": "Retention:",
     "detail_recipients": "Recipients:",
     "btn_edit_title": "Edit",
-    "btn_delete_title": "Delete"
+    "btn_delete_title": "Delete",
+    "error_load": "Failed to load the register.",
+    "error_save": "Failed to save the entry.",
+    "error_delete": "Failed to delete the entry."
   },
   "admin_rights_tab": {
     "heading": "Rights exercise requests",
@@ -191,8 +196,10 @@
   "admin_audit_tab": {
     "heading": "Access audit log",
     "no_logs": "No access logs.",
+    "error_load": "Error loading audit logs.",
     "col_date": "Date",
     "col_user": "User",
+    "col_target": "Target",
     "col_action": "Action",
     "col_resource": "Resource",
     "col_details": "Details",
@@ -218,6 +225,9 @@
     "btn_history": "History",
     "btn_edit": "Edit",
     "no_previous_versions": "No previous versions.",
-    "version_label": "Version"
+    "version_label": "Version",
+    "error_load": "Failed to load legal pages.",
+    "error_save": "Failed to save the page.",
+    "error_versions": "Failed to load version history."
   }
 }

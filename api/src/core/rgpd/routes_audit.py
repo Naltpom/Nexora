@@ -3,6 +3,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import aliased
 
 from ..database import get_db
 from ..permissions import require_permission
@@ -27,12 +28,17 @@ async def list_audit_logs(
     """Admin: paginated list of data access audit logs."""
     from .._identity.models import User
 
+    AccessorUser = aliased(User, name="accessor_user")
+    TargetUser = aliased(User, name="target_user")
+
     query = (
         select(
             DataAccessLog,
-            User.email.label("accessor_email"),
+            AccessorUser.email.label("accessor_email"),
+            TargetUser.email.label("target_user_email"),
         )
-        .outerjoin(User, DataAccessLog.accessor_id == User.id)
+        .outerjoin(AccessorUser, DataAccessLog.accessor_id == AccessorUser.id)
+        .outerjoin(TargetUser, DataAccessLog.target_user_id == TargetUser.id)
     )
     count_query = select(func.count(DataAccessLog.id))
 
@@ -54,12 +60,13 @@ async def list_audit_logs(
     rows = result.all()
 
     items = []
-    for log, accessor_email in rows:
+    for log, accessor_email, target_user_email in rows:
         items.append(DataAccessLogResponse(
             id=log.id,
             accessor_id=log.accessor_id,
             accessor_email=accessor_email,
             target_user_id=log.target_user_id,
+            target_user_email=target_user_email,
             resource_type=log.resource_type,
             resource_id=log.resource_id,
             action=log.action,
@@ -91,9 +98,17 @@ async def list_audit_logs_for_user(
     """Admin: audit logs for a specific user's data."""
     from .._identity.models import User
 
+    AccessorUser = aliased(User, name="accessor_user")
+    TargetUser = aliased(User, name="target_user")
+
     query = (
-        select(DataAccessLog, User.email.label("accessor_email"))
-        .outerjoin(User, DataAccessLog.accessor_id == User.id)
+        select(
+            DataAccessLog,
+            AccessorUser.email.label("accessor_email"),
+            TargetUser.email.label("target_user_email"),
+        )
+        .outerjoin(AccessorUser, DataAccessLog.accessor_id == AccessorUser.id)
+        .outerjoin(TargetUser, DataAccessLog.target_user_id == TargetUser.id)
         .where(DataAccessLog.target_user_id == user_id)
     )
     count_query = select(func.count(DataAccessLog.id)).where(
@@ -110,12 +125,13 @@ async def list_audit_logs_for_user(
     rows = result.all()
 
     items = []
-    for log, accessor_email in rows:
+    for log, accessor_email, target_user_email in rows:
         items.append(DataAccessLogResponse(
             id=log.id,
             accessor_id=log.accessor_id,
             accessor_email=accessor_email,
             target_user_id=log.target_user_id,
+            target_user_email=target_user_email,
             resource_type=log.resource_type,
             resource_id=log.resource_id,
             action=log.action,

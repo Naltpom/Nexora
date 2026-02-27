@@ -16,22 +16,25 @@ export default function MyDataPage() {
   const [sections, setSections] = useState<DataSection[]>([])
   const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState<string | null>(null)
+  const [error, setError] = useState('')
 
   const loadPreview = useCallback(async () => {
     try {
       const res = await api.get('/rgpd/export/preview')
       setSections(res.data.sections || [])
     } catch {
-      // silently fail
+      setError(t('my_data_page.error_load'))
+      setTimeout(() => setError(''), 5000)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [t])
 
   useEffect(() => { loadPreview() }, [loadPreview])
 
   const handleExport = async (format: 'json' | 'csv') => {
     setExporting(format)
+    setError('')
     try {
       const res = await api.post(`/rgpd/export/${format}`, {}, { responseType: 'blob' })
       const url = window.URL.createObjectURL(new Blob([res.data]))
@@ -43,7 +46,8 @@ export default function MyDataPage() {
       link.remove()
       window.URL.revokeObjectURL(url)
     } catch {
-      // silently fail
+      setError(t('my_data_page.error_export'))
+      setTimeout(() => setError(''), 5000)
     } finally {
       setExporting(null)
     }
@@ -65,7 +69,7 @@ export default function MyDataPage() {
             <h1>{t('my_data_page.heading')}</h1>
             <p>{t('my_data_page.description')}</p>
           </div>
-          <div className="unified-page-header-actions">
+          <div className="unified-page-header-actions rgpd-export-buttons">
             <button
               className="btn btn-secondary btn-sm"
               onClick={() => handleExport('csv')}
@@ -83,6 +87,8 @@ export default function MyDataPage() {
           </div>
         </div>
       </div>
+
+      {error && <div className="alert alert-error mb-16">{error}</div>}
 
       {sections.length === 0 ? (
         <div className="unified-card">

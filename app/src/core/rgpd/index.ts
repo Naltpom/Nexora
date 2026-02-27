@@ -5,7 +5,7 @@ export const manifest = {
   routes: [
     { path: '/rgpd/consent', component: lazy(() => import('./ConsentPage')), permission: 'rgpd.consentement.read' },
     { path: '/rgpd/my-data', component: lazy(() => import('./MyDataPage')), permission: 'rgpd.read' },
-    { path: '/rgpd/rights', component: lazy(() => import('./RightsRequestPage')), permission: 'rgpd.read' },
+    { path: '/rgpd/rights', component: lazy(() => import('./RightsRequestPage')), permission: 'rgpd.droits.read' },
     { path: '/rgpd/legal/:slug', component: lazy(() => import('./LegalPage')), public: true },
     { path: '/admin/rgpd', component: lazy(() => import('./AdminRGPDPage')), permission: 'rgpd.registre.read' },
   ],

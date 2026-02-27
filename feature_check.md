@@ -194,11 +194,11 @@ Cela s'applique dans **tous les contextes** :
 |---|-------|---------|------|-------------|-------------|-------------|-------|
 | 23 | [x] | `rgpd` | parent | aucune | `api/src/core/rgpd/` | `app/src/core/rgpd/` | CookieBanner (header), AcceptLegalPage, 7 modeles, 6 extra_routers, 4 events, 2 commandes planifiees — 4 fixes (10 require_permission HIGH, 4 events non emis, 4 border-radius, ~15 density vars) |
 | 24 | [x] | `rgpd.consentement` | child | rgpd | (dans rgpd/) | (dans rgpd/) | Banniere cookies, ConsentPage, consentManager.ts — 7 fixes (require_permission GET/PUT, event consent_updated, route perm rgpd.read→consentement.read, CONSENT_KEY centralise, error feedback, SCSS density gaps, btn-sm density var) |
-| 25 | [ ] | `rgpd.registre` | child | rgpd | (dans rgpd/) | (dans rgpd/) | Registre des traitements (Art. 30) — RegisterTab, CRUD 4 endpoints, 2 perms — OK |
-| 26 | [ ] | `rgpd.droits` | child | rgpd | (dans rgpd/) | (dans rgpd/) | Demandes d'exercice de droits, 6 types, 4 statuts — 2 fixes (require_permission GET/POST, 2 events) |
-| 27 | [ ] | `rgpd.export` | child | rgpd | (dans rgpd/) | (dans rgpd/) | Export donnees personnelles (Art. 20), collect_user_data 10 sections — 2 fixes (require_permission 3 endpoints, event data_exported) |
-| 28 | [ ] | `rgpd.politique` | child | rgpd | (dans rgpd/) | (dans rgpd/) | Pages legales editables, versioning, acceptation obligatoire post-login, 4 slugs — 1 fix (require_permission 3 endpoints acceptation) |
-| 29 | [ ] | `rgpd.audit` | child | rgpd | (dans rgpd/) | (dans rgpd/) | Journal d'audit acces donnees perso, purge 365j — OK |
+| 25 | [x] | `rgpd.registre` | child | rgpd | (dans rgpd/) | (dans rgpd/) | Registre des traitements (Art. 30) — RegisterTab, CRUD 4 endpoints, 2 perms — 3 fixes (3 events CRUD declares+emis MEDIUM, handleDelete try/catch LOW, error feedback save/load/delete LOW) |
+| 26 | [x] | `rgpd.droits` | child | rgpd | (dans rgpd/) | (dans rgpd/) | Demandes d'exercice de droits, 6 types, 4 statuts — 5 fixes (admin GET endpoints rgpd.droits.read→manage MEDIUM, tab admin permission alignee, route frontend rgpd.read→droits.read, SCSS density padding response box, SCSS density gap pagination) |
+| 27 | [x] | `rgpd.export` | child | rgpd | (dans rgpd/) | (dans rgpd/) | Export donnees personnelles (Art. 20), collect_user_data 10 sections — 3 fixes (classe CSS tutorial .rgpd-export-buttons MEDIUM, erreurs silencieuses export/preview+i18n MEDIUM, SCSS margins hardcodees→CSS vars LOW) + perms 3/3 OK + event data_exported OK + SCSS conforme |
+| 28 | [x] | `rgpd.politique` | child | rgpd | (dans rgpd/) | (dans rgpd/) | Pages legales editables, versioning, acceptation obligatoire post-login, 4 slugs — 4 fixes (tab permission read→manage MEDIUM, 2 events declares+emis MEDIUM, error feedback LegalPagesTab 3 catch LOW, SCSS ~10 density vars LOW) |
+| 29 | [x] | `rgpd.audit` | child | rgpd | (dans rgpd/) | (dans rgpd/) | Journal d'audit acces donnees perso, purge 365j — 4 fixes (purge OOM select→count MEDIUM, error feedback AuditTab LOW, target_user_email join+colonne LOW, locale hardcodee fr-FR→i18n LOW) + perms 1/1 OK + events N/A (read-only) + SCSS conforme |
 
 ### Phase 6 — Utilitaires & Transversal
 

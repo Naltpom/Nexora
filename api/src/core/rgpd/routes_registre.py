@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
+from ..events import event_bus
 from ..permissions import require_permission
 from ..security import get_current_user
 from .models import DataProcessingRegister
@@ -80,6 +81,15 @@ async def create_register_entry(
     )
     db.add(entry)
     await db.flush()
+
+    await event_bus.emit(
+        "rgpd.register_created",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="data_processing_register",
+        resource_id=entry.id,
+    )
+
     return _to_response(entry)
 
 
@@ -91,6 +101,7 @@ async def create_register_entry(
 async def update_register_entry(
     entry_id: int,
     data: RegisterEntryUpdate,
+    current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Update a data processing register entry."""
@@ -106,6 +117,15 @@ async def update_register_entry(
 
     entry.updated_at = datetime.now(timezone.utc)
     await db.flush()
+
+    await event_bus.emit(
+        "rgpd.register_updated",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="data_processing_register",
+        resource_id=entry.id,
+    )
+
     return _to_response(entry)
 
 
@@ -116,6 +136,7 @@ async def update_register_entry(
 )
 async def delete_register_entry(
     entry_id: int,
+    current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Delete a data processing register entry."""
@@ -126,5 +147,14 @@ async def delete_register_entry(
     if not entry:
         raise HTTPException(status_code=404, detail="Entree non trouvee")
 
+    entry_id_for_event = entry.id
     await db.delete(entry)
     await db.flush()
+
+    await event_bus.emit(
+        "rgpd.register_deleted",
+        db=db,
+        actor_id=current_user.id,
+        resource_type="data_processing_register",
+        resource_id=entry_id_for_event,
+    )

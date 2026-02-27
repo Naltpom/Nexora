@@ -38,6 +38,7 @@ interface AuditLog {
   id: number
   accessor_email: string | null
   target_user_id: number | null
+  target_user_email: string | null
   resource_type: string
   action: string
   details: string | null
@@ -88,9 +89,9 @@ export default function AdminRGPDPage() {
 
   const tabs: { key: Tab; label: string; permission?: string }[] = [
     { key: 'registre', label: t('admin_rgpd_page.tab_registre'), permission: 'rgpd.registre.read' },
-    { key: 'droits', label: t('admin_rgpd_page.tab_droits'), permission: 'rgpd.droits.read' },
+    { key: 'droits', label: t('admin_rgpd_page.tab_droits'), permission: 'rgpd.droits.manage' },
     { key: 'audit', label: t('admin_rgpd_page.tab_audit'), permission: 'rgpd.audit.read' },
-    { key: 'pages', label: t('admin_rgpd_page.tab_pages'), permission: 'rgpd.politique.read' },
+    { key: 'pages', label: t('admin_rgpd_page.tab_pages'), permission: 'rgpd.politique.manage' },
   ]
 
   const visibleTabs = tabs.filter(t => !t.permission || can(t.permission))
@@ -161,12 +162,16 @@ function RegisterTab() {
     data_subjects: '', recipients: '', retention_period: '', security_measures: '',
   })
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
 
   const load = useCallback(async () => {
     try {
       const res = await api.get('/rgpd/register/')
       setEntries(res.data.items || [])
-    } catch { /* */ } finally { setLoading(false) }
+    } catch {
+      setError(t('admin_register_tab.error_load'))
+      setTimeout(() => setError(''), 5000)
+    } finally { setLoading(false) }
   }, [])
 
   useEffect(() => { load() }, [load])
@@ -198,19 +203,29 @@ function RegisterTab() {
       }
       resetForm()
       load()
-    } catch { /* */ } finally { setSaving(false) }
+    } catch {
+      setError(t('admin_register_tab.error_save'))
+      setTimeout(() => setError(''), 5000)
+    } finally { setSaving(false) }
   }
 
   const handleDelete = async (id: number) => {
     if (!confirm(t('admin_register_tab.confirm_delete'))) return
-    await api.delete(`/rgpd/register/${id}`)
-    load()
+    try {
+      await api.delete(`/rgpd/register/${id}`)
+      load()
+    } catch {
+      setError(t('admin_register_tab.error_delete'))
+      setTimeout(() => setError(''), 5000)
+    }
   }
 
   if (loading) return <div className="text-center loading-pad-lg"><div className="spinner" /></div>
 
   return (
     <div>
+      {error && <div className="alert alert-danger mb-16">{error}</div>}
+
       <div className="rgpd-section-header">
         <h2>{t('admin_register_tab.heading')}</h2>
         {can('rgpd.registre.manage') && (
@@ -416,18 +431,22 @@ function RightsTab() {
 /* ---- Audit Tab ---- */
 
 function AuditTab() {
-  const { t } = useTranslation('rgpd')
+  const { t, i18n } = useTranslation('rgpd')
   const [logs, setLogs] = useState<AuditLog[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
+  const [error, setError] = useState('')
 
   const load = useCallback(async () => {
     try {
       const res = await api.get('/rgpd/audit/', { params: { page, per_page: 25 } })
       setLogs(res.data.items || [])
       setTotal(res.data.total || 0)
-    } catch { /* */ } finally { setLoading(false) }
+    } catch {
+      setError(t('admin_audit_tab.error_load'))
+      setTimeout(() => setError(''), 5000)
+    } finally { setLoading(false) }
   }, [page])
 
   useEffect(() => { load() }, [load])
@@ -437,15 +456,17 @@ function AuditTab() {
   return (
     <div>
       <h2>{t('admin_audit_tab.heading')}</h2>
-      {logs.length === 0 ? (
+      {error && <div className="alert alert-danger mb-16">{error}</div>}
+      {logs.length === 0 && !error ? (
         <div className="unified-card"><p className="text-center text-secondary">{t('admin_audit_tab.no_logs')}</p></div>
-      ) : (
+      ) : logs.length > 0 && (
         <div className="table-container">
           <table className="rgpd-audit-table">
             <thead>
               <tr>
                 <th>{t('admin_audit_tab.col_date')}</th>
                 <th>{t('admin_audit_tab.col_user')}</th>
+                <th>{t('admin_audit_tab.col_target')}</th>
                 <th>{t('admin_audit_tab.col_action')}</th>
                 <th>{t('admin_audit_tab.col_resource')}</th>
                 <th>{t('admin_audit_tab.col_details')}</th>
@@ -454,8 +475,9 @@ function AuditTab() {
             <tbody>
               {logs.map(log => (
                 <tr key={log.id}>
-                  <td>{new Date(log.created_at).toLocaleString('fr-FR')}</td>
+                  <td>{new Date(log.created_at).toLocaleString(i18n.language || 'fr')}</td>
                   <td>{log.accessor_email || '—'}</td>
+                  <td>{log.target_user_email || '—'}</td>
                   <td>{log.action}</td>
                   <td>{log.resource_type}</td>
                   <td>{log.details || '—'}</td>
@@ -489,12 +511,16 @@ function LegalPagesTab() {
   const [versionsSlug, setVersionsSlug] = useState<string | null>(null)
   const [versions, setVersions] = useState<LegalPageVersionItem[]>([])
   const [loadingVersions, setLoadingVersions] = useState(false)
+  const [error, setError] = useState('')
 
   const load = useCallback(async () => {
     try {
       const res = await api.get('/rgpd/legal/')
       setPages(res.data.items || [])
-    } catch { /* */ } finally { setLoading(false) }
+    } catch {
+      setError(t('admin_legal_pages_tab.error_load'))
+      setTimeout(() => setError(''), 5000)
+    } finally { setLoading(false) }
   }, [])
 
   useEffect(() => { load() }, [load])
@@ -511,7 +537,10 @@ function LegalPagesTab() {
       await api.put(`/rgpd/legal/${editingSlug}`, form)
       setEditingSlug(null)
       load()
-    } catch { /* */ } finally { setSaving(false) }
+    } catch {
+      setError(t('admin_legal_pages_tab.error_save'))
+      setTimeout(() => setError(''), 5000)
+    } finally { setSaving(false) }
   }
 
   const handleShowVersions = async (slug: string) => {
@@ -524,7 +553,11 @@ function LegalPagesTab() {
     try {
       const res = await api.get(`/rgpd/legal/${slug}/versions`)
       setVersions(res.data || [])
-    } catch { setVersions([]) } finally { setLoadingVersions(false) }
+    } catch {
+      setVersions([])
+      setError(t('admin_legal_pages_tab.error_versions'))
+      setTimeout(() => setError(''), 5000)
+    } finally { setLoadingVersions(false) }
   }
 
   const formatDate = (dateStr: string) => {
@@ -541,6 +574,8 @@ function LegalPagesTab() {
 
   return (
     <div>
+      {error && <div className="alert alert-danger mb-16">{error}</div>}
+
       <h2>{t('admin_legal_pages_tab.heading')}</h2>
 
       {editingSlug && (

@@ -50,6 +50,36 @@ manifest = FeatureManifest(
             "category": "RGPD",
             "description": "Un utilisateur a exporte ses donnees personnelles",
         },
+        {
+            "event_type": "rgpd.register_created",
+            "label": "Traitement cree",
+            "category": "RGPD",
+            "description": "Un administrateur a ajoute une entree au registre des traitements",
+        },
+        {
+            "event_type": "rgpd.register_updated",
+            "label": "Traitement modifie",
+            "category": "RGPD",
+            "description": "Un administrateur a modifie une entree du registre des traitements",
+        },
+        {
+            "event_type": "rgpd.register_deleted",
+            "label": "Traitement supprime",
+            "category": "RGPD",
+            "description": "Un administrateur a supprime une entree du registre des traitements",
+        },
+        {
+            "event_type": "rgpd.politique.updated",
+            "label": "Page legale modifiee",
+            "category": "RGPD",
+            "description": "Un administrateur a modifie une page legale",
+        },
+        {
+            "event_type": "rgpd.politique.accepted",
+            "label": "Pages legales acceptees",
+            "category": "RGPD",
+            "description": "Un utilisateur a accepte les documents legaux",
+        },
     ],
     tutorials=[
         {

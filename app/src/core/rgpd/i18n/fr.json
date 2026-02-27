@@ -79,7 +79,9 @@
     "btn_consent_preferences": "Preferences de consentement",
     "exercise_rights_title": "Exercer vos droits",
     "exercise_rights_description": "Vous avez le droit d'acceder a vos donnees, de les rectifier, de les supprimer, de vous opposer a leur traitement ou de demander leur portabilite.",
-    "btn_make_request": "Faire une demande"
+    "btn_make_request": "Faire une demande",
+    "error_load": "Erreur lors du chargement de vos donnees.",
+    "error_export": "Erreur lors de l'export. Veuillez reessayer."
   },
   "legal_page": {
     "default_title": "Page legale",
@@ -168,7 +170,10 @@
     "detail_retention": "Conservation :",
     "detail_recipients": "Destinataires :",
     "btn_edit_title": "Modifier",
-    "btn_delete_title": "Supprimer"
+    "btn_delete_title": "Supprimer",
+    "error_load": "Erreur lors du chargement du registre.",
+    "error_save": "Erreur lors de l'enregistrement.",
+    "error_delete": "Erreur lors de la suppression."
   },
   "admin_rights_tab": {
     "heading": "Demandes d'exercice de droits",
@@ -191,8 +196,10 @@
   "admin_audit_tab": {
     "heading": "Journal d'audit des acces",
     "no_logs": "Aucun log d'acces.",
+    "error_load": "Erreur lors du chargement des logs d'audit.",
     "col_date": "Date",
     "col_user": "Utilisateur",
+    "col_target": "Cible",
     "col_action": "Action",
     "col_resource": "Ressource",
     "col_details": "Details",
@@ -218,6 +225,9 @@
     "btn_history": "Historique",
     "btn_edit": "Editer",
     "no_previous_versions": "Aucune version precedente.",
-    "version_label": "Version"
+    "version_label": "Version",
+    "error_load": "Erreur lors du chargement des pages legales.",
+    "error_save": "Erreur lors de l'enregistrement.",
+    "error_versions": "Erreur lors du chargement de l'historique."
   }
 }

@@ -7,6 +7,7 @@ from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
+from ..events import event_bus
 from ..permissions import require_permission
 from ..security import get_current_user
 from .models import LegalPage, LegalPageAcceptance, LegalPageVersion
@@ -202,6 +203,14 @@ async def accept_legal_pages(
         db.add(acceptance)
 
     await db.flush()
+
+    await event_bus.emit(
+        "rgpd.politique.accepted",
+        db=db,
+        actor_id=current_user.id,
+        details={"slugs": data.slugs, "count": len(pages)},
+    )
+
     return {"message": "Documents acceptes", "count": len(pages)}
 
 
@@ -292,6 +301,14 @@ async def upsert_legal_page(
         db.add(page)
 
     await db.flush()
+
+    await event_bus.emit(
+        "rgpd.politique.updated",
+        db=db,
+        actor_id=current_user.id,
+        details={"slug": slug, "version": page.version},
+    )
+
     return _to_response(page)
 
 
