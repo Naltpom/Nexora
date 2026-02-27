@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useDraftPreference } from '../DraftPreferenceContext'
 import { applyCustomColors, clearCustomColors } from './applyCustomColors'
 import { COLOR_GROUPS, LIGHT_DEFAULTS, DARK_DEFAULTS } from './colorDefaults'
+import { COLOR_PRESETS, presetToColors } from './colorPresets'
 import './couleur.scss'
 
 export default function ColorSection() {
@@ -12,6 +13,7 @@ export default function ColorSection() {
   const activeThemeKey = currentTheme === 'dark' ? 'dark' : 'light'
 
   const [editingTheme, setEditingTheme] = useState<'light' | 'dark'>(activeThemeKey)
+  const lastRandomRef = useRef<string | null>(null)
 
   // Local state for fast preview — decoupled from draft context
   const [localColors, setLocalColors] = useState<Record<string, Record<string, string>>>(() => {
@@ -28,6 +30,27 @@ export default function ColorSection() {
     const saved = getDraftPreference('customColors', null)
     setLocalColors(saved && typeof saved === 'object' ? saved : {})
   }, [resetVersion])
+
+  // -- Preset application ----------------------------------------------------
+
+  const applyPreset = (presetKey: string) => {
+    const preset = COLOR_PRESETS.find((p) => p.key === presetKey)
+    if (!preset) return
+    const updated: Record<string, Record<string, string>> = {
+      light: presetToColors(preset.light),
+      dark: presetToColors(preset.dark),
+    }
+    setLocalColors(updated)
+    setDraftPreference('customColors', updated)
+    applyCustomColors(updated, currentTheme)
+    lastRandomRef.current = presetKey
+  }
+
+  const applyRandomPreset = () => {
+    const candidates = COLOR_PRESETS.filter((p) => p.key !== lastRandomRef.current)
+    const pick = candidates[Math.floor(Math.random() * candidates.length)]
+    applyPreset(pick.key)
+  }
 
   const defaults = editingTheme === 'dark' ? DARK_DEFAULTS : LIGHT_DEFAULTS
 
@@ -107,6 +130,58 @@ export default function ColorSection() {
       <p className="text-secondary couleur-description">
         {t('section_description')}
       </p>
+
+      {/* Preset gallery */}
+      <div className="couleur-presets-section">
+        <h3 className="couleur-group__title">{t('presets_title')}</h3>
+        <div className="couleur-presets">
+          {COLOR_PRESETS.map((preset) => {
+            const themeData = editingTheme === 'dark' ? preset.dark : preset.light
+            const colors = presetToColors(themeData)
+            return (
+              <button
+                key={preset.key}
+                className="couleur-preset-card"
+                type="button"
+                onClick={() => applyPreset(preset.key)}
+                title={t(preset.i18nKey)}
+              >
+                <div
+                  className="couleur-preset-card__gradient"
+                  style={{ '--preset-gradient': themeData.brand.gradient } as React.CSSProperties}
+                />
+                <span className="couleur-preset-card__label">{t(preset.i18nKey)}</span>
+                <div className="couleur-preset-card__swatches">
+                  <span className="couleur-preset-card__swatch" style={{ '--swatch-bg': colors['primary'] } as React.CSSProperties} />
+                  <span className="couleur-preset-card__swatch" style={{ '--swatch-bg': colors['primary-light'] } as React.CSSProperties} />
+                  <span className="couleur-preset-card__swatch" style={{ '--swatch-bg': colors['primary-dark'] } as React.CSSProperties} />
+                </div>
+                <div className="couleur-preset-card__swatches">
+                  <span className="couleur-preset-card__swatch" style={{ '--swatch-bg': colors['success'] } as React.CSSProperties} />
+                  <span className="couleur-preset-card__swatch" style={{ '--swatch-bg': colors['warning'] } as React.CSSProperties} />
+                  <span className="couleur-preset-card__swatch" style={{ '--swatch-bg': colors['danger'] } as React.CSSProperties} />
+                </div>
+                <div className="couleur-preset-card__swatches">
+                  <span className="couleur-preset-card__swatch" style={{ '--swatch-bg': colors['gray-50'] } as React.CSSProperties} />
+                  <span className="couleur-preset-card__swatch" style={{ '--swatch-bg': colors['gray-300'] } as React.CSSProperties} />
+                  <span className="couleur-preset-card__swatch" style={{ '--swatch-bg': colors['gray-500'] } as React.CSSProperties} />
+                  <span className="couleur-preset-card__swatch" style={{ '--swatch-bg': colors['gray-700'] } as React.CSSProperties} />
+                  <span className="couleur-preset-card__swatch" style={{ '--swatch-bg': colors['gray-900'] } as React.CSSProperties} />
+                </div>
+              </button>
+            )
+          })}
+          <button
+            className="couleur-preset-card couleur-preset-card--random"
+            type="button"
+            onClick={applyRandomPreset}
+            title={t('preset_random_description')}
+          >
+            <div className="couleur-preset-card__random-icon">&#x1F3B2;</div>
+            <span className="couleur-preset-card__label">{t('preset_random')}</span>
+          </button>
+        </div>
+      </div>
 
       <div className="couleur-tabs">
         <button

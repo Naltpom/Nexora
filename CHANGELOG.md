@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026.02.51
+
+### preference.couleur (presets de couleurs + bouton aleatoire + revue)
+
+- **Galerie de themes predefinis (NEW)** : 5 presets de couleurs (Deep Teal, Navy & Ambre, Bleu Electrique, Charcoal & Vif, Rouge Dark Forest) affiches en grille au-dessus de la selection manuelle. Chaque carte affiche un bandeau gradient + 5 pastilles couleur
+- **Bouton aleatoire** : carte speciale en fin de grille, selectionne un preset au hasard (evite de repeter le dernier)
+- **Application simultanee light + dark** : un clic sur un preset applique les 16 variables CSS pour les deux themes d'un coup, avec preview live instantane
+- **Mapping automatique** : fonction `presetToColors()` convertit la structure riche des presets (bg, text, brand, semantic, surface) vers les 16 variables CSS existantes, avec interpolation hex pour les valeurs intermediaires de l'echelle de gris
+- **Inline styles preset swatches (MEDIUM)** : 12 occurrences `style={{ background: ... }}` sur les pastilles/gradient des presets → converties en injection CSS variable (`--swatch-bg`, `--preset-gradient`) avec `background: var(...)` dans le SCSS
+- **Fichiers** : nouveau `colorPresets.ts` (donnees + mapping), modifications `ColorSection.tsx`, `couleur.scss`, i18n fr/en
+
+### storybook (revue complete — 7 fixes)
+
+- **SCSS border-radius hardcode (LOW)** : `.storybook-color-box` `6px` et `.storybook-color-table td code` `4px` → `var(--radius)`
+- **SCSS gap hardcode (LOW)** : `.storybook-color-swatch` `0.75rem` et `.storybook-inline-demo` `1rem` → `var(--density-gap, 12px)`
+- **SCSS tab padding hardcode (LOW)** : `.storybook-tab` `0.625rem 1.25rem` → `var(--density-btn-padding, 8px 16px)`
+- **Variable shadowing (LOW)** : `TABS.find(t => ...)` renomme en `tab` pour eviter le shadowing de la fonction `t` de `useTranslation`
+- **useEffect deps manquant (LOW)** : `activeTab` ajoute au tableau de dependances du `useEffect` de sync URL
+
 ## 2026.02.50
 
 ### rgpd.export (revue complete — 3 fixes)

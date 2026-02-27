@@ -35,22 +35,22 @@ export default function StorybookPage() {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const tabParam = searchParams.get('tab')
-  const initialTab = TABS.find(t => t.id === tabParam)?.id || TABS[0].id
+  const initialTab = TABS.find(tab => tab.id === tabParam)?.id || TABS[0].id
   const [activeTab, setActiveTabState] = useState(initialTab)
 
   useEffect(() => {
     const urlTab = searchParams.get('tab')
-    if (urlTab && TABS.find(t => t.id === urlTab) && urlTab !== activeTab) {
+    if (urlTab && TABS.find(tab => tab.id === urlTab) && urlTab !== activeTab) {
       setActiveTabState(urlTab)
     }
-  }, [searchParams])
+  }, [searchParams, activeTab])
 
   const setActiveTab = useCallback((tabId: string) => {
     setActiveTabState(tabId)
     setSearchParams({ tab: tabId }, { replace: true })
   }, [setSearchParams])
 
-  const activeTabDef = TABS.find(t => t.id === activeTab)
+  const activeTabDef = TABS.find(tab => tab.id === activeTab)
   const ActiveComponent = activeTabDef?.component
 
   return (

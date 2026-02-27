@@ -179,10 +179,10 @@ Cela s'applique dans **tous les contextes** :
 | # | Check | Feature | Type | Dependances | Chemins API | Chemins APP | Notes |
 |---|-------|---------|------|-------------|-------------|-------------|-------|
 | 14 | [x] | `preference` | parent | aucune | `api/src/core/preference/` | `app/src/core/preference/` | PreferencePage, DraftPreferenceContext, UnsavedChangesModal — 4 fixes (require_permission 6 endpoints, children manifest complet, saveAll() error handling, SCSS density vars) |
-| 15 | [x] | `preference.theme` | child | preference | (dans preference/) | `app/src/core/preference/theme/` | Dark/light, fonds visuels — 3 fixes (feature gate Alt+T + BackgroundThemePicker, backgroundTheme dans draft system, isDark reactif MutationObserver) + require_permission 2 endpoints + event preference.updated + SCSS var(--radius/--density-*) bg-theme-picker |
+| 15 | [ ] | `preference.theme` | child | preference | (dans preference/) | `app/src/core/preference/theme/` | Dark/light, fonds visuels — 3 fixes (feature gate Alt+T + BackgroundThemePicker, backgroundTheme dans draft system, isDark reactif MutationObserver) + require_permission 2 endpoints + event preference.updated + SCSS var(--radius/--density-*) bg-theme-picker |
 | 16 | [x] | `preference.font` | child | preference | (dans preference/) | `app/src/core/preference/font/` | Police, taille texte, interligne — 2 fixes (OpenDyslexic bundle local woff2 + @font-face, applyFontPrefs(null) redondant supprime) + SCSS conforme + events/perms OK |
 | 17 | [x] | `preference.layout` | child | preference | (dans preference/) | `app/src/core/preference/layout/` | Densite, border-radius, largeur contenu — 7 fixes (maxWidth/sectionGap default mismatch CSS fallback, inline style preview, SCSS hardcoded gaps/radius/btn-padding, applyLayoutPrefs(null) 3 density vars manquantes, handleReset redondant) |
-| 18 | [x] | `preference.couleur` | child | preference | (dans preference/) | `app/src/core/preference/couleur/` | Couleurs personnalisees — 3 fixes (classe CSS tutorial manquante sur 5 sections, SCSS density vars, border-radius var(--radius)) |
+| 18 | [x] | `preference.couleur` | child | preference | (dans preference/) | `app/src/core/preference/couleur/` | Couleurs personnalisees — 3+1 fixes (classe CSS tutorial manquante sur 5 sections, SCSS density vars, border-radius var(--radius), inline styles preset swatches→CSS var injection) |
 | 19 | [x] | `preference.accessibilite` | child | preference | (dans preference/) | `app/src/core/preference/accessibilite/` | Contraste, animations, dyslexie, focus — 5 fixes (SCSS var(--radius)/density vars, handleReset applyNull redondant) |
 | 20 | [x] | `preference.composants` | child | preference | (dans preference/) | `app/src/core/preference/composants/` | Style cards, tables, modals, boutons — 5 fixes (CSS modal-anim keyframes+selecteurs, table stripes base style+dark, SCSS 6 density vars, handleReset applyNull redondant, selecteurs preview-btn redondants) |
 | 21 | [x] | `preference.langue` | child | preference, i18n | (dans preference/) | `app/src/core/preference/langue/` | Preference de langue utilisateur — 5 fixes (axios brut→api HIGH, double save, LOCALE_LABELS duplique+accents, event preference.updated, JWT lang claim stale→new token) |
@@ -204,7 +204,7 @@ Cela s'applique dans **tous les contextes** :
 
 | # | Check | Feature | Type | Dependances | Chemins API | Chemins APP | Notes |
 |---|-------|---------|------|-------------|-------------|-------------|-------|
-| 30 | [ ] | `storybook` | standalone | aucune | `api/src/core/storybook/` | `app/src/core/storybook/` | Catalogue composants UI |
+| 30 | [x] | `storybook` | standalone | aucune | `api/src/core/storybook/` | `app/src/core/storybook/` | Catalogue composants UI — 7 fixes (2 border-radius var(--radius), 2 gap var(--density-gap), 1 tab padding var(--density-btn-padding), variable shadowing t→tab, useEffect deps) |
 | 31 | [ ] | `realtime` (NEW) | standalone | event | a creer | a creer | Infrastructure SSE/temps reel — les features declarent `depends: ["realtime"]` pour recevoir les updates en direct (permissions, RGPD, etc.) |
 
 ---

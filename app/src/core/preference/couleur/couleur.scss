@@ -4,6 +4,94 @@
   margin-bottom: var(--density-gap, 12px);
 }
 
+// --- Preset gallery ---
+
+.couleur-presets-section {
+  margin-bottom: var(--section-gap, 24px);
+}
+
+.couleur-presets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--density-gap, 12px);
+}
+
+.couleur-preset-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  background: none;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    border-color: var(--primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+.couleur-preset-card__gradient {
+  width: 100%;
+  height: 2rem;
+  background: var(--preset-gradient);
+}
+
+.couleur-preset-card__label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--gray-700);
+  padding: 0 0.5rem;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.couleur-preset-card__swatches {
+  display: flex;
+  gap: 0.1875rem;
+  padding: 0 0.5rem;
+
+  &:last-child {
+    padding-bottom: 0.5rem;
+  }
+}
+
+.couleur-preset-card__swatch {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: var(--swatch-bg);
+}
+
+.couleur-preset-card--random {
+  justify-content: center;
+  padding: 0.5rem;
+  border-style: dashed;
+
+  .couleur-preset-card__label {
+    color: var(--gray-500);
+  }
+}
+
+.couleur-preset-card__random-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+// --- Tabs ---
+
 .couleur-tabs {
   display: flex;
   gap: 0;
@@ -126,6 +214,27 @@
 
 // Dark theme overrides
 [data-theme="dark"] {
+  .couleur-preset-card {
+    border-color: rgba(255, 255, 255, 0.1);
+
+    &:hover {
+      border-color: var(--primary);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  .couleur-preset-card__label {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .couleur-preset-card__swatch {
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .couleur-preset-card--random .couleur-preset-card__label {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
   .couleur-tab {
     color: var(--gray-400);
 

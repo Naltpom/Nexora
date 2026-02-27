@@ -51,7 +51,7 @@
 .storybook-color-swatch {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--density-gap, 12px);
   padding: 0.5rem;
   border-radius: var(--radius);
   border: 1px solid var(--gray-200);
@@ -60,7 +60,7 @@
 .storybook-color-box {
   width: 2.5rem;
   height: 2.5rem;
-  border-radius: 6px;
+  border-radius: var(--radius);
   border: 1px solid var(--gray-200);
   flex-shrink: 0;
 }
@@ -84,7 +84,7 @@
 .storybook-inline-demo {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--density-gap, 12px);
   padding: 1rem;
   background: var(--gray-50);
   border-radius: var(--radius);
@@ -99,7 +99,7 @@
 }
 
 .storybook-tab {
-  padding: 0.625rem 1.25rem;
+  padding: var(--density-btn-padding, 8px 16px);
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--gray-500);
@@ -221,7 +221,7 @@
   font-size: 0.8125rem;
   background: var(--gray-100);
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius);
   color: var(--gray-800);
 }
 
