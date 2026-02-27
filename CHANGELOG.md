@@ -1,5 +1,40 @@
 # Changelog
 
+## 2026.02.52
+
+### realtime (NEW)
+
+- **Nouvelle feature core `realtime`** : infrastructure SSE (Server-Sent Events) generique extraite de `notification`. Une seule connexion SSE par utilisateur, partagee par toutes les features
+- **Backend** : `RedisSSEBroadcaster` avec `push(user_id, event_type, data)` cible et `broadcast_all(event_type, data)` pour les events systeme. Canal Redis `sse:broadcast` pour diffusion globale. Endpoint `GET /api/realtime/stream`
+- **Frontend** : `RealtimeProvider` centralise (EventSource unique), hook `useRealtimeEvent(type, handler)` pour s'abonner a un type d'event, `RealtimeSyncBridge` pour synchroniser les contextes parents (features, permissions)
+- **Migration Alembic** : permission `realtime.stream` en GlobalPermission (tous les users authentifies), feature_state active par defaut
+
+### realtime (revue — 6 fixes)
+
+- **require_permission sur /stream (HIGH)** : ajout check `realtime.stream` dans le handler (SSE utilise query token, pas Bearer — `require_permission` classique inapplicable)
+- **Queues bornees (MEDIUM)** : `asyncio.Queue(maxsize=256)` sur `InMemorySSEBroadcaster` et `RedisSSEBroadcaster` — les handlers `QueueFull` fonctionnent desormais, previent les fuites memoire sur clients lents
+- **Factory broadcaster avec fallback (LOW)** : `_create_broadcaster()` tente Redis puis fallback sur InMemory si Redis indisponible. Import `redis.asyncio` deplace dans le constructeur
+- **Backoff exponentiel reconnexion (LOW)** : delai reconnexion SSE passe de fixe 5s a exponentiel (5s, 10s, 20s, 40s, 60s max), reset a 0 sur connexion reussie
+- **Dead i18n keys (LOW)** : suppression des cles `connection_lost`/`connection_restored` jamais utilisees dans le code
+- **connectSSE deps (LOW)** : suppression de `dispatch` inutile dans le tableau de dependances `useCallback`
+
+### _identity (revue realtime — 8 SSE push manquants)
+
+- **Feature toggle en temps reel** : quand un admin active/desactive une feature, `broadcast_all("feature_toggle", ...)` notifie tous les clients connectes → l'UI se met a jour automatiquement sans refresh
+- **Permissions en temps reel** : quand les permissions d'un role sont modifiees ou les roles d'un user sont changes, les users concernes recoivent un event `permission_change` → refresh automatique des permissions cote frontend
+- **Permission overrides SSE (MEDIUM)** : `set_user_permission_override` et `remove_user_permission_override` dans `routes_users.py` envoient desormais `permission_change` via SSE
+- **routes_permissions.py — 6 endpoints SSE (MEDIUM)** : ajout `sse_broadcaster.push/broadcast_all` sur les 6 endpoints de modification de permissions/roles qui en manquaient :
+  - `set_global_permission` → `broadcast_all("permission_change")` (affecte tous les users)
+  - `remove_global_permission` → `broadcast_all("permission_change")`
+  - `set_user_permission` → `push(user_id, "permission_change")`
+  - `remove_user_permission` → `push(user_id, "permission_change")`
+  - `assign_roles_to_user` → `push(user_id, "permission_change")`
+  - `remove_role_from_user` → `push(user_id, "permission_change")`
+
+### notification
+
+- **Migration vers realtime** : `notification` declare `depends: ["realtime"]`, suppression de l'endpoint SSE `/api/notifications/stream` (remplace par `/api/realtime/stream`), suppression des classes broadcaster internes, utilisation de `useRealtimeEvent('notification', ...)` cote frontend
+
 ## 2026.02.51
 
 ### preference.couleur (presets de couleurs + bouton aleatoire + revue)

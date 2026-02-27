@@ -1,131 +1,17 @@
-"""Notification feature services: SSE broadcaster, notification processing."""
+"""Notification feature services: notification processing, queries."""
 
-import asyncio
-import json
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Any
 
-import redis.asyncio as aioredis
 from sqlalchemy import asc, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..config import settings
 from ..event.models import Event
+from ..realtime.services import sse_broadcaster
 from ..tasks import enqueue
 from .models import Notification, NotificationRule, UserRulePreference
 
 logger = logging.getLogger(__name__)
-
-
-# ---------------------------------------------------------------------------
-#  SSE Broadcasters
-# ---------------------------------------------------------------------------
-
-
-class InMemorySSEBroadcaster:
-    """In-memory SSE broadcaster (fallback).
-
-    Stores per-user asyncio queues. Suitable for single-process deployments
-    where Redis is not available.
-    """
-
-    def __init__(self) -> None:
-        self._connections: dict[int, list[asyncio.Queue]] = {}
-
-    async def subscribe(self, user_id: int) -> asyncio.Queue:
-        queue: asyncio.Queue = asyncio.Queue()
-        if user_id not in self._connections:
-            self._connections[user_id] = []
-        self._connections[user_id].append(queue)
-        logger.debug(
-            "SSE subscribe: user_id=%d (total=%d)",
-            user_id,
-            len(self._connections[user_id]),
-        )
-        return queue
-
-    async def unsubscribe(self, user_id: int, queue: asyncio.Queue) -> None:
-        if user_id in self._connections:
-            try:
-                self._connections[user_id].remove(queue)
-            except ValueError:
-                pass
-            if not self._connections[user_id]:
-                del self._connections[user_id]
-        logger.debug("SSE unsubscribe: user_id=%d", user_id)
-
-    async def push(self, user_id: int, data: dict[str, Any]) -> None:
-        queues = self._connections.get(user_id, [])
-        for queue in queues:
-            try:
-                queue.put_nowait(data)
-            except asyncio.QueueFull:
-                logger.warning(
-                    "SSE queue full for user_id=%d, dropping notification",
-                    user_id,
-                )
-
-
-class RedisSSEBroadcaster:
-    """Redis pub/sub SSE broadcaster. Works across multiple API instances."""
-
-    def __init__(self) -> None:
-        self._redis = aioredis.from_url(settings.REDIS_URL, decode_responses=True)
-        self._tasks: dict[int, list[tuple[asyncio.Queue, asyncio.Task]]] = {}
-
-    async def subscribe(self, user_id: int) -> asyncio.Queue:
-        queue: asyncio.Queue = asyncio.Queue()
-        task = asyncio.create_task(self._listen(user_id, queue))
-        if user_id not in self._tasks:
-            self._tasks[user_id] = []
-        self._tasks[user_id].append((queue, task))
-        logger.debug("SSE subscribe: user_id=%d", user_id)
-        return queue
-
-    async def _listen(self, user_id: int, queue: asyncio.Queue) -> None:
-        channel = f"sse:{user_id}"
-        pubsub = self._redis.pubsub()
-        await pubsub.subscribe(channel)
-        try:
-            async for message in pubsub.listen():
-                if message["type"] == "message":
-                    try:
-                        data = json.loads(message["data"])
-                        queue.put_nowait(data)
-                    except (json.JSONDecodeError, asyncio.QueueFull):
-                        pass
-        except asyncio.CancelledError:
-            pass
-        finally:
-            await pubsub.unsubscribe(channel)
-            await pubsub.aclose()
-
-    async def unsubscribe(self, user_id: int, queue: asyncio.Queue) -> None:
-        if user_id in self._tasks:
-            # Find and cancel the task associated with this queue first
-            task_to_cancel: asyncio.Task | None = None
-            for q, t in self._tasks[user_id]:
-                if q is queue:
-                    task_to_cancel = t
-                    break
-            if task_to_cancel is not None:
-                task_to_cancel.cancel()
-            # Remove the entry from the list
-            self._tasks[user_id] = [
-                (q, t) for q, t in self._tasks[user_id] if q is not queue
-            ]
-            if not self._tasks[user_id]:
-                del self._tasks[user_id]
-        logger.debug("SSE unsubscribe: user_id=%d", user_id)
-
-    async def push(self, user_id: int, data: dict[str, Any]) -> None:
-        channel = f"sse:{user_id}"
-        await self._redis.publish(channel, json.dumps(data, default=str))
-
-
-# Singleton instance
-sse_broadcaster = RedisSSEBroadcaster()
 
 
 # ---------------------------------------------------------------------------
@@ -312,18 +198,15 @@ async def process_notifications(
                 db.add(notif)
                 await db.flush()
 
-                # Push SSE notification
-                await sse_broadcaster.push(user_id, {
-                    "type": "notification",
-                    "data": {
-                        "id": notif.id,
-                        "title": title,
-                        "body": body,
-                        "link": link,
-                        "is_read": False,
-                        "event_type": event.event_type,
-                        "created_at": notif.created_at.isoformat() if notif.created_at else None,
-                    },
+                # Push SSE notification via realtime broadcaster
+                await sse_broadcaster.push(user_id, event_type="notification", data={
+                    "id": notif.id,
+                    "title": title,
+                    "body": body,
+                    "link": link,
+                    "is_read": False,
+                    "event_type": event.event_type,
+                    "created_at": notif.created_at.isoformat() if notif.created_at else None,
                 })
 
             # Enqueue email delivery

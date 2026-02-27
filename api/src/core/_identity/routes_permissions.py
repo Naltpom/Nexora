@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..events import event_bus
 from ..permissions import invalidate_permission_cache, require_permission
+from ..realtime.services import sse_broadcaster
 from ..security import get_current_user
 from .models import (
     GlobalPermission,
@@ -118,6 +119,11 @@ async def set_global_permission(
         payload={"code": perm.code, "granted": data.granted, "updated_by": current_user.email},
     )
 
+    # Broadcast to ALL users — global permission change affects everyone
+    await sse_broadcaster.broadcast_all(
+        event_type="permission_change", data={"reason": "global_permission_updated"},
+    )
+
     return {"permission_id": data.permission_id, "code": perm.code, "granted": data.granted}
 
 
@@ -140,6 +146,11 @@ async def remove_global_permission(
     await db.delete(gp)
     await db.flush()
     invalidate_permission_cache()  # Global permission change affects all users
+
+    # Broadcast to ALL users — global permission removal affects everyone
+    await sse_broadcaster.broadcast_all(
+        event_type="permission_change", data={"reason": "global_permission_removed"},
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -206,6 +217,12 @@ async def set_user_permission(
 
     await db.flush()
     invalidate_permission_cache(user_id)
+
+    # Notify user via realtime SSE
+    await sse_broadcaster.push(
+        user_id, event_type="permission_change", data={"reason": "permission_override_set"},
+    )
+
     return {"user_id": user_id, "permission_id": data.permission_id, "code": perm.code, "granted": data.granted}
 
 
@@ -232,6 +249,11 @@ async def remove_user_permission(
     await db.delete(up)
     await db.flush()
     invalidate_permission_cache(user_id)
+
+    # Notify user via realtime SSE
+    await sse_broadcaster.push(
+        user_id, event_type="permission_change", data={"reason": "permission_override_removed"},
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -266,6 +288,11 @@ async def assign_roles_to_user(
         db.add(UserRole(user_id=user_id, role_id=rid))
     await db.flush()
     invalidate_permission_cache(user_id)
+
+    # Notify user via realtime SSE
+    await sse_broadcaster.push(
+        user_id, event_type="permission_change", data={"reason": "roles_updated"},
+    )
 
     return {"user_id": user_id, "role_ids": role_ids}
 
@@ -324,3 +351,8 @@ async def remove_role_from_user(
     await db.delete(ur)
     await db.flush()
     invalidate_permission_cache(user_id)
+
+    # Notify user via realtime SSE
+    await sse_broadcaster.push(
+        user_id, event_type="permission_change", data={"reason": "role_removed"},
+    )

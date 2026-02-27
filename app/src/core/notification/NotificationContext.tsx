@@ -1,8 +1,9 @@
-import { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import api from '../../api'
 import { useAuth } from '../../core/AuthContext'
 import { useFeature } from '../../core/FeatureContext'
+import { useRealtimeEvent } from '../../core/realtime/useRealtimeEvent'
 import './notifications.scss'
 
 // ── Inline push notification helpers ──
@@ -149,8 +150,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false)
   const [hasMore, setHasMore] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
-  const eventSourceRef = useRef<EventSource | null>(null)
-  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Push notification state
   const [pushSupported] = useState(isPushSupported())
@@ -257,68 +256,25 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     return success
   }, [])
 
-  const connectSSE = useCallback(() => {
-    const token = localStorage.getItem('access_token')
-    if (!token) return
-
-    // Close existing connection
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close()
-    }
-
-    const es = new EventSource(`/api/notifications/stream?token=${token}`)
-    eventSourceRef.current = es
-
-    es.addEventListener('notification', (event) => {
-      try {
-        const data = JSON.parse(event.data)
-        setNotifications(prev => [data, ...prev])
-        setUnreadCount(prev => prev + 1)
-      } catch {
-        // ignore malformed events
-      }
-    })
-
-    es.addEventListener('ping', () => {
-      // keep-alive, do nothing
-    })
-
-    es.onerror = () => {
-      es.close()
-      eventSourceRef.current = null
-      // Reconnect after 5 seconds
-      reconnectTimeoutRef.current = setTimeout(() => {
-        connectSSE()
-      }, 5000)
-    }
+  // Subscribe to realtime notification events via RealtimeProvider
+  const handleRealtimeNotification = useCallback((data: unknown) => {
+    const notif = data as Notification
+    setNotifications(prev => [notif, ...prev])
+    setUnreadCount(prev => prev + 1)
   }, [])
+  useRealtimeEvent('notification', handleRealtimeNotification)
 
   // Initialize when user logs in
   useEffect(() => {
     if (user) {
       fetchUnreadCount()
       fetchNotifications(1)
-      connectSSE()
       refreshPushStatus()
     } else {
       setNotifications([])
       setUnreadCount(0)
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close()
-        eventSourceRef.current = null
-      }
     }
-
-    return () => {
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close()
-        eventSourceRef.current = null
-      }
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current)
-      }
-    }
-  }, [user, fetchUnreadCount, fetchNotifications, connectSSE, refreshPushStatus])
+  }, [user, fetchUnreadCount, fetchNotifications, refreshPushStatus])
 
   // Show push prompt after login if not subscribed and not dismissed
   useEffect(() => {

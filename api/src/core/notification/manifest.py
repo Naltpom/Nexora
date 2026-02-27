@@ -6,8 +6,8 @@ from . import event_handlers  # noqa: F401
 manifest = FeatureManifest(
     name="notification",
     label="Notifications",
-    description="In-app notification system with rules engine and SSE",
-    depends=["event"],
+    description="In-app notification system with rules engine",
+    depends=["event", "realtime"],
     children=["notification.email", "notification.push", "notification.webhook"],
     permissions=[
         "notification.read", "notification.delete",

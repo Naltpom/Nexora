@@ -13,6 +13,7 @@ from ..config import settings
 from ..database import get_db
 from ..events import event_bus
 from ..permissions import invalidate_permission_cache, load_user_permissions, require_permission
+from ..realtime.services import sse_broadcaster
 from ..security import get_current_user, hash_password
 from .models import (
     GlobalPermission,
@@ -650,6 +651,11 @@ async def update_user_roles(
         },
     )
 
+    # Notify user via realtime SSE that their permissions changed
+    await sse_broadcaster.push(
+        user.id, event_type="permission_change", data={"reason": "roles_updated"},
+    )
+
     return {"roles": [RoleBasic.model_validate(r).model_dump() for r in new_roles]}
 
 
@@ -686,6 +692,12 @@ async def set_user_permission_override(
 
     await db.flush()
     invalidate_permission_cache(user.id)
+
+    # Notify user via realtime SSE that their permissions changed
+    await sse_broadcaster.push(
+        user.id, event_type="permission_change", data={"reason": "permission_override_set"},
+    )
+
     return {"permission_id": data.permission_id, "granted": data.granted}
 
 
@@ -715,3 +727,8 @@ async def remove_user_permission_override(
     await db.delete(override)
     await db.flush()
     invalidate_permission_cache(user.id)
+
+    # Notify user via realtime SSE that their permissions changed
+    await sse_broadcaster.push(
+        user.id, event_type="permission_change", data={"reason": "permission_override_removed"},
+    )

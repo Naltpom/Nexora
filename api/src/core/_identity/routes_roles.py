@@ -11,6 +11,7 @@ from sqlalchemy.orm import selectinload
 from ..database import get_db
 from ..events import event_bus
 from ..permissions import invalidate_permission_cache, require_permission
+from ..realtime.services import sse_broadcaster
 from ..security import get_current_user
 from .models import Permission, Role, RolePermission, User, UserRole
 from .schemas import (
@@ -251,6 +252,15 @@ async def assign_permissions(
         payload={"permission_ids": data.permission_ids, "count": len(data.permission_ids)},
     )
 
+    # Notify affected users via realtime SSE
+    user_role_result = await db.execute(
+        select(UserRole.user_id).where(UserRole.role_id == role_id)
+    )
+    for row in user_role_result.all():
+        await sse_broadcaster.push(
+            row[0], event_type="permission_change", data={"reason": "role_permissions_updated"},
+        )
+
     # Reload with permissions
     result = await db.execute(
         select(Role).options(selectinload(Role.permissions)).where(Role.id == role_id)
@@ -383,6 +393,16 @@ async def toggle_role_permission(
         resource_id=role_id,
         payload={"permission_id": data.permission_id, "granted": granted},
     )
+
+    # Notify affected users via realtime SSE
+    user_role_result = await db.execute(
+        select(UserRole.user_id).where(UserRole.role_id == role_id)
+    )
+    for row in user_role_result.all():
+        await sse_broadcaster.push(
+            row[0], event_type="permission_change", data={"reason": "role_permissions_updated"},
+        )
+
     return {"granted": granted}
 
 

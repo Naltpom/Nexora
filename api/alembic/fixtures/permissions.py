@@ -86,6 +86,8 @@ ALL_PERMISSIONS: list[tuple[str, str]] = [
     ("rgpd.politique.read", "rgpd.politique"),
     ("rgpd.politique.manage", "rgpd.politique"),
     ("rgpd.audit.read", "rgpd.audit"),
+    # realtime
+    ("realtime.stream", "realtime"),
     # sso
     ("sso.link", "sso"),
     ("sso.google.login", "sso.google"),

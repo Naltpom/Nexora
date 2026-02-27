@@ -7,6 +7,8 @@ import { FeatureProvider } from './core/FeatureContext'
 import { AppSettingsProvider } from './core/AppSettingsContext'
 import { ConfirmProvider } from './core/ConfirmModal'
 import { NotificationProvider } from './core/notification/NotificationContext'
+import { RealtimeProvider } from './core/realtime/RealtimeProvider'
+import { RealtimeSyncBridge } from './core/realtime/RealtimeSyncBridge'
 import I18nProvider from './core/i18n/I18nProvider'
 import ErrorBoundary from './core/ErrorBoundary'
 import { hasConsent } from './core/rgpd/consentManager'
@@ -71,11 +73,14 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <ErrorBoundary>
               <PermissionProvider>
                 <FeatureProvider>
-                  <ConfirmProvider>
-                    <NotificationProvider>
-                      <App />
-                    </NotificationProvider>
-                  </ConfirmProvider>
+                  <RealtimeProvider>
+                    <RealtimeSyncBridge />
+                    <ConfirmProvider>
+                      <NotificationProvider>
+                        <App />
+                      </NotificationProvider>
+                    </ConfirmProvider>
+                  </RealtimeProvider>
                 </FeatureProvider>
               </PermissionProvider>
             </ErrorBoundary>

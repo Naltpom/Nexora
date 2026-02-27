@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..events import event_bus
 from ..permissions import require_permission
+from ..realtime.services import sse_broadcaster
 from ..security import get_current_user
 from .models import FeatureState
 from .schemas import FeatureResponse, FeatureToggleRequest
@@ -102,6 +103,12 @@ async def toggle_feature(
         resource_type="feature",
         resource_id=0,
         payload={"feature": name, "active": data.active, "cascaded": names_to_toggle[1:], "toggled_by": current_user.email},
+    )
+
+    # Broadcast feature toggle to all connected users via realtime SSE
+    await sse_broadcaster.broadcast_all(
+        event_type="feature_toggle",
+        data={"feature": name, "active": data.active, "cascaded": names_to_toggle[1:]},
     )
 
     return {"name": name, "active": data.active, "cascaded": names_to_toggle[1:]}

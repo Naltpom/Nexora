@@ -205,16 +205,15 @@ Cela s'applique dans **tous les contextes** :
 | # | Check | Feature | Type | Dependances | Chemins API | Chemins APP | Notes |
 |---|-------|---------|------|-------------|-------------|-------------|-------|
 | 30 | [x] | `storybook` | standalone | aucune | `api/src/core/storybook/` | `app/src/core/storybook/` | Catalogue composants UI — 7 fixes (2 border-radius var(--radius), 2 gap var(--density-gap), 1 tab padding var(--density-btn-padding), variable shadowing t→tab, useEffect deps) |
-| 31 | [ ] | `realtime` (NEW) | standalone | event | a creer | a creer | Infrastructure SSE/temps reel — les features declarent `depends: ["realtime"]` pour recevoir les updates en direct (permissions, RGPD, etc.) |
+| 31 | [x] | `realtime` | standalone | event | `api/src/core/realtime/` | `app/src/core/realtime/` | Infrastructure SSE/temps reel — 6 fixes (require_permission /stream HIGH, queues bornees 256 MEDIUM, factory broadcaster fallback InMemory LOW, backoff exponentiel reconnexion LOW, dead i18n keys LOW, connectSSE deps LOW) + 8 SSE push manquants dans routes_permissions.py/routes_users.py |
 
 ---
 
 ## Statistiques
 
-- **Total features** : 31 (30 existantes + 1 a creer)
-- **Parents** : 9 (_identity, i18n, event, sso, mfa, notification, preference, rgpd, storybook)
+- **Total features** : 31
+- **Parents** : 9 (_identity, i18n, event, sso, mfa, notification, preference, rgpd, storybook, realtime)
 - **Sous-features** : 21 (2 sso + 2 mfa + 3 notification + 8 preference + 6 rgpd)
-- **Nouvelle feature** : 1 (realtime)
 - **Features projet** : 0
 
 ---
