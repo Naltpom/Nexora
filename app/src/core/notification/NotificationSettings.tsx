@@ -478,7 +478,7 @@ export default function NotificationSettings() {
           )}
           {showBadges && locked && (
             <span className="notif-rule-template-badge notif-rule-admin-badge">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="notif-lock-icon">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="notif-lock-icon" aria-hidden="true">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
@@ -662,14 +662,16 @@ export default function NotificationSettings() {
               type="checkbox"
               checked={locked ? (rule.user_preference ? rule.user_preference.is_active : rule.is_active) : rule.is_active}
               onChange={() => toggleRule(rule, locked)}
+              aria-checked={locked ? (rule.user_preference ? rule.user_preference.is_active : rule.is_active) : rule.is_active}
+              aria-label={t('aria_toggle_rule', { name: rule.name })}
             />
             <span className="notif-toggle-slider" />
           </label>
         </td>
         <td>
           {locked ? (
-            <div className="notif-actions notif-actions-locked" title={t('rules_locked_title')}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4">
+            <div className="notif-actions notif-actions-locked" title={t('rules_locked_title')} aria-label={t('rules_locked_title')}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4" aria-hidden="true">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
@@ -680,8 +682,9 @@ export default function NotificationSettings() {
                 className="btn-icon btn-icon-secondary"
                 onClick={() => openEditRule(rule, scope)}
                 title={t('rules_edit_title')}
+                aria-label={t('aria_edit_rule', { name: rule.name })}
               >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                 </svg>
@@ -690,8 +693,9 @@ export default function NotificationSettings() {
                 className="btn-icon btn-icon-danger"
                 onClick={() => deleteRule(rule.id)}
                 title={t('rules_delete_title')}
+                aria-label={t('aria_delete_rule', { name: rule.name })}
               >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                   <polyline points="3 6 5 6 21 6" />
                   <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                 </svg>
@@ -705,7 +709,8 @@ export default function NotificationSettings() {
 
   const renderRulesTable = (rules: NotificationRule[], scope: 'my' | 'global') => (
     <div className="table-container">
-      <table className="notif-rules-table">
+      <table className="notif-rules-table" aria-label={scope === 'my' ? t('aria_rules_table_personal') : t('aria_rules_table_global')}>
+        <caption className="sr-only">{scope === 'my' ? t('aria_rules_table_personal') : t('aria_rules_table_global')}</caption>
         <colgroup>
           <col className="col-nom" />
           <col className="col-events" />
@@ -715,11 +720,11 @@ export default function NotificationSettings() {
         </colgroup>
         <thead>
           <tr>
-            <th>{t('rules_column_name')}</th>
-            <th>{t('rules_column_events')}</th>
-            <th>{t('rules_column_channels')}</th>
-            <th>{t('rules_column_active')}</th>
-            <th></th>
+            <th scope="col">{t('rules_column_name')}</th>
+            <th scope="col">{t('rules_column_events')}</th>
+            <th scope="col">{t('rules_column_channels')}</th>
+            <th scope="col">{t('rules_column_active')}</th>
+            <th scope="col"><span className="sr-only">{t('admin_column_actions')}</span></th>
           </tr>
         </thead>
         <tbody>
@@ -748,19 +753,19 @@ export default function NotificationSettings() {
         )}
       </div>
       <div className="notif-webhook-actions">
-        <button className="btn-icon btn-icon-secondary" onClick={() => testWebhook(wh.id)} title={t('webhooks_test_title')}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <button className="btn-icon btn-icon-secondary" onClick={() => testWebhook(wh.id)} title={t('webhooks_test_title')} aria-label={t('aria_test_webhook', { name: wh.name || 'Webhook' })}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
             <polygon points="5 3 19 12 5 21 5 3" />
           </svg>
         </button>
-        <button className="btn-icon btn-icon-secondary" onClick={() => openEditWebhook(wh)} title={t('webhooks_edit_title')}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <button className="btn-icon btn-icon-secondary" onClick={() => openEditWebhook(wh)} title={t('webhooks_edit_title')} aria-label={t('aria_edit_webhook', { name: wh.name || 'Webhook' })}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
           </svg>
         </button>
-        <button className="btn-icon btn-icon-danger" onClick={() => deleteWebhook(wh)} title={t('webhooks_delete_title')}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <button className="btn-icon btn-icon-danger" onClick={() => deleteWebhook(wh)} title={t('webhooks_delete_title')} aria-label={t('aria_delete_webhook', { name: wh.name || 'Webhook' })}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
             <polyline points="3 6 5 6 21 6" />
             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
           </svg>
@@ -773,16 +778,17 @@ export default function NotificationSettings() {
 
   if (loading) {
     return (
-      <Layout title="Notifications" breadcrumb={[{ label: t('breadcrumb_home'), path: '/' }, { label: t('breadcrumb_notifications'), path: '/notifications' }, { label: t('breadcrumb_settings') }]}>
-        <div className="notif-loading-center">
+      <Layout title={t('page_title_settings')} breadcrumb={[{ label: t('breadcrumb_home'), path: '/' }, { label: t('breadcrumb_notifications'), path: '/notifications' }, { label: t('breadcrumb_settings') }]}>
+        <div className="notif-loading-center" aria-busy="true" role="status">
           <div className="spinner" />
+          <span className="sr-only">{t('aria_loading')}</span>
         </div>
       </Layout>
     )
   }
 
   return (
-    <Layout title="Notifications" breadcrumb={[{ label: t('breadcrumb_home'), path: '/' }, { label: t('breadcrumb_notifications'), path: '/notifications' }, { label: t('breadcrumb_settings') }]}>
+    <Layout title={t('page_title_settings')} breadcrumb={[{ label: t('breadcrumb_home'), path: '/' }, { label: t('breadcrumb_notifications'), path: '/notifications' }, { label: t('breadcrumb_settings') }]}>
       {/* Page Header */}
       <div className="unified-card page-header-card">
         <div className="unified-page-header">
@@ -791,16 +797,24 @@ export default function NotificationSettings() {
             <p>{t('settings_page_subtitle')}</p>
           </div>
           <div className="unified-page-header-actions">
-            <div className="notif-tabs">
+            <div className="notif-tabs" role="tablist" aria-label={t('aria_settings_tabs')}>
               <button
                 className={`notif-tab ${activeTab === 'rules' ? 'active' : ''}`}
                 onClick={() => setActiveTab('rules')}
+                role="tab"
+                aria-selected={activeTab === 'rules'}
+                aria-controls="tabpanel-rules"
+                id="tab-rules"
               >
                 {t('settings_tab_rules')}
               </button>
               <button
                 className={`notif-tab ${activeTab === 'webhooks' ? 'active' : ''}`}
                 onClick={() => setActiveTab('webhooks')}
+                role="tab"
+                aria-selected={activeTab === 'webhooks'}
+                aria-controls="tabpanel-webhooks"
+                id="tab-webhooks"
               >
                 {t('settings_tab_webhooks')}
               </button>
@@ -810,7 +824,7 @@ export default function NotificationSettings() {
       </div>
 
       {activeTab === 'rules' && (
-        <>
+        <div role="tabpanel" id="tabpanel-rules" aria-labelledby="tab-rules">
           {/* Section 1: Personal Rules */}
           <div className="unified-card notif-section">
             <div className="notif-section-header">
@@ -822,7 +836,7 @@ export default function NotificationSettings() {
                 <div className="notif-section-desc">{t('rules_personal_desc')}</div>
               </div>
               <button className="btn btn-sm btn-primary" onClick={() => openCreateRule('my')}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                   <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
                 {t('rules_add_button')}
@@ -854,11 +868,11 @@ export default function NotificationSettings() {
               {renderRulesTable(allRules, 'global')}
             </div>
           )}
-        </>
+        </div>
       )}
 
       {activeTab === 'webhooks' && (
-        <>
+        <div role="tabpanel" id="tabpanel-webhooks" aria-labelledby="tab-webhooks">
           {/* Personal Webhooks */}
           <div className="unified-card notif-section">
             <div className="notif-section-header">
@@ -870,7 +884,7 @@ export default function NotificationSettings() {
                 <div className="notif-section-desc">{t('webhooks_personal_desc')}</div>
               </div>
               <button className="btn btn-sm btn-primary" onClick={() => openCreateWebhook(false)}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                   <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
                 {t('webhooks_add_button')}
@@ -914,23 +928,24 @@ export default function NotificationSettings() {
               )}
             </div>
           )}
-        </>
+        </div>
       )}
 
       {/* -- Rule Modal -- */}
       {showRuleModal && (
-        <div className="modal-overlay" onClick={() => setShowRuleModal(false)}>
-          <div className="modal notif-modal-rule" onClick={e => e.stopPropagation()}>
+        <div className="modal-overlay" onClick={() => setShowRuleModal(false)} role="presentation">
+          <div className="modal notif-modal-rule" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="rule-modal-title">
             <div className="modal-header">
-              <h2>{editingRule ? t('rule_modal_title_edit') : t('rule_modal_title_create')}</h2>
-              <button className="modal-close" onClick={() => setShowRuleModal(false)}>&times;</button>
+              <h2 id="rule-modal-title">{editingRule ? t('rule_modal_title_edit') : t('rule_modal_title_create')}</h2>
+              <button className="modal-close" onClick={() => setShowRuleModal(false)} aria-label={t('aria_close_modal')}>&times;</button>
             </div>
             <div className="modal-body">
-              {error && <div className="alert alert-error notif-alert-spaced">{error}</div>}
+              {error && <div className="alert alert-error notif-alert-spaced" role="alert">{error}</div>}
 
               <div className="form-group">
-                <label>{t('rule_modal_label_name')}</label>
+                <label htmlFor="rule-name">{t('rule_modal_label_name')}</label>
                 <input
+                  id="rule-name"
                   type="text"
                   value={ruleForm.name}
                   onChange={e => setRuleForm(prev => ({ ...prev, name: e.target.value }))}
@@ -1086,18 +1101,19 @@ export default function NotificationSettings() {
 
       {/* -- Webhook Modal -- */}
       {showWebhookModal && (
-        <div className="modal-overlay" onClick={() => setShowWebhookModal(false)}>
-          <div className="modal notif-modal-webhook" onClick={e => e.stopPropagation()}>
+        <div className="modal-overlay" onClick={() => setShowWebhookModal(false)} role="presentation">
+          <div className="modal notif-modal-webhook" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="webhook-modal-title">
             <div className="modal-header">
-              <h2>{editingWebhook ? t('webhook_modal_title_edit') : t('webhook_modal_title_create')}</h2>
-              <button className="modal-close" onClick={() => setShowWebhookModal(false)}>&times;</button>
+              <h2 id="webhook-modal-title">{editingWebhook ? t('webhook_modal_title_edit') : t('webhook_modal_title_create')}</h2>
+              <button className="modal-close" onClick={() => setShowWebhookModal(false)} aria-label={t('aria_close_modal')}>&times;</button>
             </div>
             <div className="modal-body">
-              {error && <div className="alert alert-error notif-alert-spaced">{error}</div>}
+              {error && <div className="alert alert-error notif-alert-spaced" role="alert">{error}</div>}
 
               <div className="form-group">
-                <label>{t('webhook_modal_label_name')}</label>
+                <label htmlFor="webhook-name">{t('webhook_modal_label_name')}</label>
                 <input
+                  id="webhook-name"
                   type="text"
                   value={webhookForm.name}
                   onChange={e => setWebhookForm(prev => ({ ...prev, name: e.target.value }))}

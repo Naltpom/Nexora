@@ -54,7 +54,8 @@ export default function RightsRequestPage() {
 
   useEffect(() => { loadRequests() }, [loadRequests])
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
     setSubmitting(true)
     setError('')
     setSuccess('')
@@ -78,7 +79,7 @@ export default function RightsRequestPage() {
   if (loading) {
     return (
       <Layout title={t('rights_request_page.page_title')} breadcrumb={[{ label: t('rights_request_page.breadcrumb_home'), path: '/' }, { label: t('rights_request_page.breadcrumb_label') }]}>
-        <div className="text-center loading-pad-lg"><div className="spinner" /></div>
+        <div className="text-center loading-pad-lg" aria-busy="true"><div className="spinner" role="status"><span className="sr-only">{t('rights_request_page.aria_loading')}</span></div></div>
       </Layout>
     )
   }
@@ -92,31 +93,42 @@ export default function RightsRequestPage() {
             <p>{t('rights_request_page.description')}</p>
           </div>
           <div className="unified-page-header-actions">
-            <button className="btn btn-primary btn-sm" onClick={() => setShowForm(!showForm)}>
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => setShowForm(!showForm)}
+              aria-expanded={showForm}
+              aria-controls="rights-request-form"
+            >
               {showForm ? t('rights_request_page.btn_cancel') : t('rights_request_page.btn_new_request')}
             </button>
           </div>
         </div>
       </div>
 
-      {success && <div className="alert alert-success mb-16">{success}</div>}
-      {error && <div className="alert alert-error mb-16">{error}</div>}
+      {success && <div className="alert alert-success mb-16" role="status">{success}</div>}
+      {error && <div className="alert alert-error mb-16" role="alert">{error}</div>}
 
       {showForm && (
-        <div className="unified-card rgpd-rights-form">
-          <h3>{t('rights_request_page.form_title')}</h3>
+        <form
+          id="rights-request-form"
+          className="unified-card rgpd-rights-form"
+          onSubmit={handleSubmit}
+          aria-label={t('rights_request_page.form_title')}
+        >
+          <h2>{t('rights_request_page.form_title')}</h2>
           <div className="form-group">
-            <label>{t('rights_request_page.form_type_label')}</label>
-            <select value={formType} onChange={(e) => setFormType(e.target.value)}>
+            <label htmlFor="rights-type">{t('rights_request_page.form_type_label')}</label>
+            <select id="rights-type" value={formType} onChange={(e) => setFormType(e.target.value)} aria-required="true" aria-describedby="rights-type-desc">
               {Object.entries(REQUEST_TYPE_KEYS).map(([key, info]) => (
                 <option key={key} value={key}>{t(info.labelKey)}</option>
               ))}
             </select>
-            <small>{t(REQUEST_TYPE_KEYS[formType]?.descriptionKey)}</small>
+            <small id="rights-type-desc">{t(REQUEST_TYPE_KEYS[formType]?.descriptionKey)}</small>
           </div>
           <div className="form-group">
-            <label>{t('rights_request_page.form_description_label')}</label>
+            <label htmlFor="rights-description">{t('rights_request_page.form_description_label')}</label>
             <textarea
+              id="rights-description"
               value={formDescription}
               onChange={(e) => setFormDescription(e.target.value)}
               placeholder={t('rights_request_page.form_description_placeholder')}
@@ -124,11 +136,11 @@ export default function RightsRequestPage() {
             />
           </div>
           <div className="form-actions">
-            <button className="btn btn-primary" onClick={handleSubmit} disabled={submitting}>
+            <button type="submit" className="btn btn-primary" disabled={submitting} aria-busy={submitting}>
               {submitting ? t('rights_request_page.btn_submitting') : t('rights_request_page.btn_submit')}
             </button>
           </div>
-        </div>
+        </form>
       )}
 
       {requests.length === 0 ? (
@@ -136,37 +148,39 @@ export default function RightsRequestPage() {
           <p className="text-center text-secondary">{t('rights_request_page.no_requests')}</p>
         </div>
       ) : (
-        <div className="rgpd-requests-list">
-          {requests.map((req) => {
-            const statusClassName = STATUS_CLASSNAMES[req.status] || STATUS_CLASSNAMES.pending
-            const statusLabelKey = `rights_request_page.status_${req.status}` as const
-            const typeKeys = REQUEST_TYPE_KEYS[req.request_type]
-            return (
-              <div key={req.id} className="unified-card rgpd-request-item">
-                <div className="rgpd-request-header">
-                  <div>
-                    <h3>{typeKeys ? t(typeKeys.labelKey) : req.request_type}</h3>
-                    <span className="rgpd-request-date">
-                      {new Date(req.created_at).toLocaleDateString('fr-FR')}
+        <section aria-label={t('rights_request_page.aria_requests_list')}>
+          <div className="rgpd-requests-list">
+            {requests.map((req) => {
+              const statusClassName = STATUS_CLASSNAMES[req.status] || STATUS_CLASSNAMES.pending
+              const statusLabelKey = `rights_request_page.status_${req.status}` as const
+              const typeKeys = REQUEST_TYPE_KEYS[req.request_type]
+              return (
+                <article key={req.id} className="unified-card rgpd-request-item">
+                  <div className="rgpd-request-header">
+                    <div>
+                      <h2>{typeKeys ? t(typeKeys.labelKey) : req.request_type}</h2>
+                      <span className="rgpd-request-date">
+                        {new Date(req.created_at).toLocaleDateString('fr-FR')}
+                      </span>
+                    </div>
+                    <span className={`rgpd-status ${statusClassName}`}>
+                      {t(statusLabelKey)}
                     </span>
                   </div>
-                  <span className={`rgpd-status ${statusClassName}`}>
-                    {t(statusLabelKey)}
-                  </span>
-                </div>
-                {req.description && (
-                  <p className="rgpd-request-description">{req.description}</p>
-                )}
-                {req.admin_response && (
-                  <div className="rgpd-request-response">
-                    <strong>{t('rights_request_page.response_label')}</strong>
-                    <p>{req.admin_response}</p>
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
+                  {req.description && (
+                    <p className="rgpd-request-description">{req.description}</p>
+                  )}
+                  {req.admin_response && (
+                    <div className="rgpd-request-response">
+                      <strong>{t('rights_request_page.response_label')}</strong>
+                      <p>{req.admin_response}</p>
+                    </div>
+                  )}
+                </article>
+              )
+            })}
+          </div>
+        </section>
       )}
     </Layout>
   )

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, memo } from 'react'
 import { useTranslation } from 'react-i18next'
 import Layout from '../../core/Layout'
 import api from '../../api'
@@ -25,6 +25,46 @@ interface EventListResponse {
   per_page: number
   pages: number
 }
+
+/* -- Memoized Row -- */
+
+interface EventTableRowProps {
+  evt: EventItem
+  isExpanded: boolean
+  onTogglePayload: (id: number) => void
+  formatDate: (iso: string) => string
+  t: (key: string, opts?: Record<string, unknown>) => string
+}
+
+const EventTableRow = memo(function EventTableRow({ evt, isExpanded, onTogglePayload, formatDate, t }: EventTableRowProps) {
+  return (
+    <tr>
+      <td className="text-gray-500-sm nowrap">{formatDate(evt.created_at)}</td>
+      <td><code className="badge-tag badge-tag--mono">{evt.event_type}</code></td>
+      <td>{evt.actor_email}</td>
+      <td>
+        <span className="events-resource">
+          {evt.resource_type}
+          <span className="events-resource-id">#{evt.resource_id}</span>
+        </span>
+      </td>
+      <td>
+        {Object.keys(evt.payload).length > 0 ? (
+          <button
+            className="events-payload-toggle"
+            onClick={() => onTogglePayload(evt.id)}
+            aria-expanded={isExpanded}
+            aria-label={isExpanded ? t('masquer_payload') : t('aria_voir_payload', { type: evt.event_type })}
+          >
+            {isExpanded ? t('masquer_payload') : t('voir_payload')}
+          </button>
+        ) : (
+          <span className="text-gray-500" aria-label={t('aria_no_payload')}>{'\u2014'}</span>
+        )}
+      </td>
+    </tr>
+  )
+})
 
 /* -- Component -- */
 
@@ -101,6 +141,13 @@ export default function EventsPage() {
     loadData(1, undefined, undefined, field, newDir)
   }
 
+  const handleSortKeyDown = (e: React.KeyboardEvent, field: string) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      handleSort(field)
+    }
+  }
+
   const handleToggleShowAll = () => {
     const next = !showAll
     setShowAll(next)
@@ -114,7 +161,7 @@ export default function EventsPage() {
     loadData(1, undefined, pp)
   }
 
-  const togglePayload = (id: number) => {
+  const togglePayload = useCallback((id: number) => {
     setExpandedPayloads(prev => {
       const next = new Set(prev)
       if (next.has(id)) {
@@ -124,15 +171,20 @@ export default function EventsPage() {
       }
       return next
     })
-  }
+  }, [])
 
   const formatDate = (iso: string) => {
     const d = new Date(iso)
     return d.toLocaleString()
   }
 
+  const getAriaSort = (field: string): 'ascending' | 'descending' | 'none' => {
+    if (sortBy !== field) return 'none'
+    return sortDir === 'asc' ? 'ascending' : 'descending'
+  }
+
   return (
-    <Layout breadcrumb={[{ label: t('breadcrumb_accueil'), path: '/' }, { label: t('breadcrumb_events') }]} title={t('breadcrumb_events')}>
+    <Layout breadcrumb={[{ label: t('breadcrumb_accueil'), path: '/' }, { label: t('breadcrumb_events') }]} title={t('page_title_journal')}>
       <div className="unified-card page-header-card">
         <div className="unified-page-header">
           <div className="unified-page-header-info">
@@ -149,17 +201,20 @@ export default function EventsPage() {
       </div>
 
       {loading ? (
-        <div className="spinner" />
+        <div className="spinner" aria-busy="true" role="status">
+          <span className="sr-only">{t('aria_loading')}</span>
+        </div>
       ) : (
         <>
           <div className="unified-card full-width-breakout card-table">
-            <div className="events-toolbar">
+            <div className="events-toolbar" role="search" aria-label={t('aria_search_events')}>
               <input
                 type="text"
                 className="events-search-input"
                 placeholder={t('rechercher_evenement')}
                 value={search}
                 onChange={(e) => handleSearchChange(e.target.value)}
+                aria-label={t('aria_search_events')}
               />
               {canReadAll && (
                 <label className="events-checkbox-label">
@@ -167,6 +222,7 @@ export default function EventsPage() {
                     type="checkbox"
                     checked={showAll}
                     onChange={handleToggleShowAll}
+                    aria-label={t('afficher_tous')}
                   />
                   {t('afficher_tous')}
                 </label>
@@ -174,13 +230,14 @@ export default function EventsPage() {
             </div>
 
             {events.length === 0 ? (
-              <div className="events-no-match">
+              <div className="events-no-match" role="status">
                 {t('aucun_event')}
               </div>
             ) : (
               <>
                 <div className="table-container">
-                  <table className="unified-table">
+                  <table className="unified-table" aria-label={t('aria_events_table_caption')}>
+                    <caption className="sr-only">{t('aria_events_table_caption')}</caption>
                     <colgroup>
                       <col className="col-date" />
                       <col className="col-evtype" />
@@ -190,46 +247,53 @@ export default function EventsPage() {
                     </colgroup>
                     <thead>
                       <tr>
-                        <th className="th-sortable" onClick={() => handleSort('created_at')}>
-                          {t('col_date')} {sortBy === 'created_at' && <span className="sort-indicator">{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span>}
+                        <th
+                          className="th-sortable"
+                          onClick={() => handleSort('created_at')}
+                          onKeyDown={(e) => handleSortKeyDown(e, 'created_at')}
+                          role="columnheader"
+                          tabIndex={0}
+                          aria-sort={getAriaSort('created_at')}
+                          scope="col"
+                        >
+                          {t('col_date')} {sortBy === 'created_at' && <span className="sort-indicator" aria-hidden="true">{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span>}
                         </th>
-                        <th className="th-sortable" onClick={() => handleSort('event_type')}>
-                          {t('col_type')} {sortBy === 'event_type' && <span className="sort-indicator">{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span>}
+                        <th
+                          className="th-sortable"
+                          onClick={() => handleSort('event_type')}
+                          onKeyDown={(e) => handleSortKeyDown(e, 'event_type')}
+                          role="columnheader"
+                          tabIndex={0}
+                          aria-sort={getAriaSort('event_type')}
+                          scope="col"
+                        >
+                          {t('col_type')} {sortBy === 'event_type' && <span className="sort-indicator" aria-hidden="true">{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span>}
                         </th>
-                        <th>{t('col_acteur')}</th>
-                        <th className="th-sortable" onClick={() => handleSort('resource_type')}>
-                          {t('col_ressource')} {sortBy === 'resource_type' && <span className="sort-indicator">{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span>}
+                        <th scope="col">{t('col_acteur')}</th>
+                        <th
+                          className="th-sortable"
+                          onClick={() => handleSort('resource_type')}
+                          onKeyDown={(e) => handleSortKeyDown(e, 'resource_type')}
+                          role="columnheader"
+                          tabIndex={0}
+                          aria-sort={getAriaSort('resource_type')}
+                          scope="col"
+                        >
+                          {t('col_ressource')} {sortBy === 'resource_type' && <span className="sort-indicator" aria-hidden="true">{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span>}
                         </th>
-                        <th>{t('col_payload')}</th>
+                        <th scope="col">{t('col_payload')}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {events.map(evt => (
-                        <tr key={evt.id}>
-                          <td className="text-gray-500-sm nowrap">{formatDate(evt.created_at)}</td>
-                          <td>
-                            <code className="badge-tag badge-tag--mono">{evt.event_type}</code>
-                          </td>
-                          <td>{evt.actor_email}</td>
-                          <td>
-                            <span className="events-resource">
-                              {evt.resource_type}
-                              <span className="events-resource-id">#{evt.resource_id}</span>
-                            </span>
-                          </td>
-                          <td>
-                            {Object.keys(evt.payload).length > 0 ? (
-                              <button
-                                className="events-payload-toggle"
-                                onClick={() => togglePayload(evt.id)}
-                              >
-                                {expandedPayloads.has(evt.id) ? t('masquer_payload') : t('voir_payload')}
-                              </button>
-                            ) : (
-                              <span className="text-gray-500">{'\u2014'}</span>
-                            )}
-                          </td>
-                        </tr>
+                        <EventTableRow
+                          key={evt.id}
+                          evt={evt}
+                          isExpanded={expandedPayloads.has(evt.id)}
+                          onTogglePayload={togglePayload}
+                          formatDate={formatDate}
+                          t={t}
+                        />
                       ))}
                     </tbody>
                   </table>
@@ -237,7 +301,7 @@ export default function EventsPage() {
 
                 {/* Expanded payloads */}
                 {events.filter(evt => expandedPayloads.has(evt.id)).map(evt => (
-                  <div key={`payload-${evt.id}`} className="events-payload-block">
+                  <div key={`payload-${evt.id}`} className="events-payload-block" role="region" aria-label={t('aria_payload_for', { type: evt.event_type })}>
                     <div className="events-payload-header">
                       <code className="badge-tag badge-tag--mono">{evt.event_type}</code>
                       <span className="text-gray-500-sm">{formatDate(evt.created_at)}</span>
@@ -249,13 +313,14 @@ export default function EventsPage() {
             )}
           </div>
 
-          <div className="unified-pagination">
+          <nav className="unified-pagination" aria-label={t('aria_pagination')}>
             <span className="unified-pagination-info">{total} {t('stat_events')}</span>
             <div className="unified-pagination-controls">
               <select
                 className="per-page-select"
                 value={perPage}
                 onChange={(e) => handlePerPageChange(parseInt(e.target.value))}
+                aria-label={t('aria_per_page')}
               >
                 <option value={10}>{t('pagination_10')}</option>
                 <option value={25}>{t('pagination_25')}</option>
@@ -268,8 +333,9 @@ export default function EventsPage() {
                     className="unified-pagination-btn"
                     disabled={page <= 1}
                     onClick={() => goToPage(page - 1)}
+                    aria-label={t('aria_previous_page')}
                   >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <polyline points="15 18 9 12 15 6" />
                     </svg>
                   </button>
@@ -284,12 +350,14 @@ export default function EventsPage() {
                     }, [])
                     .map((p, i) =>
                       typeof p === 'string' ? (
-                        <span key={`dots-${i}`} className="unified-pagination-dots">...</span>
+                        <span key={`dots-${i}`} className="unified-pagination-dots" aria-hidden="true">...</span>
                       ) : (
                         <button
                           key={p}
                           className={`unified-pagination-btn${p === page ? ' active' : ''}`}
                           onClick={() => goToPage(p)}
+                          aria-current={p === page ? 'page' : undefined}
+                          aria-label={t('aria_page_number', { page: p })}
                         >
                           {p}
                         </button>
@@ -299,15 +367,16 @@ export default function EventsPage() {
                     className="unified-pagination-btn"
                     disabled={page >= totalPages}
                     onClick={() => goToPage(page + 1)}
+                    aria-label={t('aria_next_page')}
                   >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <polyline points="9 18 15 12 9 6" />
                     </svg>
                   </button>
                 </>
               )}
             </div>
-          </div>
+          </nav>
         </>
       )}
     </Layout>

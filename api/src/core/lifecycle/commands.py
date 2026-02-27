@@ -15,6 +15,12 @@ async def _check_archive_expiry(db):
     return await check_archive_expiry(db)
 
 
+async def _partman_maintenance(db):
+    """Run pg_partman maintenance to create future partitions."""
+    from .services import partman_maintenance
+    return await partman_maintenance(db)
+
+
 commands = [
     CommandDefinition(
         name="lifecycle.check_inactivity",
@@ -33,5 +39,13 @@ commands = [
         schedule="0 2 * * *",
         config_keys=["LIFECYCLE_ARCHIVE_DAYS"],
         timeout=120,
+    ),
+    CommandDefinition(
+        name="lifecycle.partman_maintenance",
+        label="Maintenance partitions pg_partman",
+        description="Cree les futures partitions et applique la retention sur les tables events et notifications",
+        handler=_partman_maintenance,
+        schedule="0 3 * * 0",
+        timeout=60,
     ),
 ]

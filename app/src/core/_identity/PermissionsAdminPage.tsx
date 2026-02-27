@@ -133,138 +133,154 @@ export default function PermissionsAdminPage() {
       </div>
 
       {/* Tabs */}
-      <div className="tab-bar">
+      <div className="tab-bar" role="tablist">
         <button
           onClick={() => setActiveTab('permissions')}
           className={`tab-button ${activeTab === 'permissions' ? 'tab-button--active' : 'tab-button--inactive'}`}
+          role="tab"
+          aria-selected={activeTab === 'permissions'}
+          aria-controls="tabpanel-permissions"
+          id="tab-permissions"
         >
           {t('permissions_admin.tab_permissions')}
         </button>
         <button
           onClick={() => setActiveTab('global')}
           className={`tab-button ${activeTab === 'global' ? 'tab-button--active' : 'tab-button--inactive'}`}
+          role="tab"
+          aria-selected={activeTab === 'global'}
+          aria-controls="tabpanel-global"
+          id="tab-global"
         >
           {t('permissions_admin.tab_global')}
         </button>
       </div>
 
       {message && (
-        <div className={`alert-dynamic ${message.type === 'success' ? 'alert-dynamic--success' : 'alert-dynamic--error'}`}>
+        <div className={`alert-dynamic ${message.type === 'success' ? 'alert-dynamic--success' : 'alert-dynamic--error'}`} role={message.type === 'success' ? 'status' : 'alert'}>
           {message.text}
         </div>
       )}
 
       {/* Permissions Tab */}
       {activeTab === 'permissions' && (
-        loading ? (
-          <div className="spinner" />
-        ) : Object.keys(permissionsByFeature).length === 0 ? (
-          <div className="unified-card empty-state">
-            {t('permissions_admin.empty_state')}
-          </div>
-        ) : (
-          Object.entries(permissionsByFeature).map(([feature, perms]) => (
-            <div key={feature} className="section-mb-lg">
-              <h2 className="section-category-title">
-                {feature}
-              </h2>
-              <div className="unified-card card-table">
-                <div className="table-container">
-                  <table className="unified-table">
-                    <thead>
-                      <tr>
-                        <th className="col-200">{t('permissions_admin.th_code')}</th>
-                        <th className="col-200">{t('permissions_admin.th_label')}</th>
-                        <th>{t('permissions_admin.th_description')}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {perms.map((perm) => (
-                        <tr key={perm.id}>
-                          <td>
-                            <code className="badge-tag badge-tag--mono">
-                              {perm.code}
-                            </code>
-                          </td>
-                          <td><strong>{perm.label}</strong></td>
-                          <td className="text-gray-500">{perm.description || '\u2014'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+        <div role="tabpanel" id="tabpanel-permissions" aria-labelledby="tab-permissions">
+          {loading ? (
+            <div className="spinner" role="status" aria-label={t('a11y.loading_permissions')} />
+          ) : Object.keys(permissionsByFeature).length === 0 ? (
+            <div className="unified-card empty-state">
+              {t('permissions_admin.empty_state')}
             </div>
-          ))
-        )
-      )}
-
-      {/* Global Permissions Tab */}
-      {activeTab === 'global' && (
-        loadingGlobal ? (
-          <div className="spinner" />
-        ) : Object.keys(permissionsByFeature).length === 0 ? (
-          <div className="unified-card empty-state">
-            {t('permissions_admin.empty_state')}
-          </div>
-        ) : (
-          <>
-            {Object.entries(permissionsByFeature).map(([feature, perms]) => {
-              const filteredPerms = perms.filter(p => p.assignment_rules?.global !== false)
-              if (filteredPerms.length === 0) return null
-              return (
+          ) : (
+            Object.entries(permissionsByFeature).map(([feature, perms]) => (
               <div key={feature} className="section-mb-lg">
                 <h2 className="section-category-title">
                   {feature}
                 </h2>
-                <div className="unified-card p-16">
-                  <div className="flex-col-md">
-                    {filteredPerms.map((perm) => {
-                      const granted = isGlobalGranted(perm.id)
-                      return (
-                        <div
-                          key={perm.id}
-                          className={`global-perm-row ${granted ? 'global-perm-row--on' : 'global-perm-row--off'}`}
-                        >
-                          <div className="flex-1">
-                            <div className="flex-center mb-2">
-                              <strong>{perm.label}</strong>
-                              <code className="badge-tag badge-tag--mono-sm">
+                <div className="unified-card card-table">
+                  <div className="table-container">
+                    <table className="unified-table">
+                      <caption className="sr-only">{t('a11y.table_caption_permissions_feature', { feature })}</caption>
+                      <thead>
+                        <tr>
+                          <th scope="col" className="col-200">{t('permissions_admin.th_code')}</th>
+                          <th scope="col" className="col-200">{t('permissions_admin.th_label')}</th>
+                          <th scope="col">{t('permissions_admin.th_description')}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {perms.map((perm) => (
+                          <tr key={perm.id}>
+                            <td>
+                              <code className="badge-tag badge-tag--mono">
                                 {perm.code}
                               </code>
-                            </div>
-                            {perm.description && (
-                              <div className="text-gray-500-sm">{perm.description}</div>
-                            )}
-                          </div>
-                          <button
-                            onClick={() => toggleGlobalPermission(perm.id)}
-                            className={`toggle-switch ${granted ? 'toggle-switch--on' : 'toggle-switch--off'}`}
-                            title={granted ? t('permissions_admin.tooltip_deactivate') : t('permissions_admin.tooltip_activate')}
-                            disabled={!can('permissions.manage')}
-                          >
-                            <span
-                              className={`toggle-switch-knob ${granted ? 'toggle-switch-knob--on' : 'toggle-switch-knob--off'}`}
-                            />
-                          </button>
-                        </div>
-                      )
-                    })}
+                            </td>
+                            <td><strong>{perm.label}</strong></td>
+                            <td className="text-gray-500">{perm.description || '\u2014'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
-              )
-            })}
+            ))
+          )}
+        </div>
+      )}
 
-            {can('permissions.manage') && (
-              <div className="flex-end mt-8">
-                <button className="btn btn-primary" onClick={saveGlobalPermissions} disabled={savingGlobal}>
-                  {savingGlobal ? t('permissions_admin.global_saving') : t('permissions_admin.global_save')}
-                </button>
-              </div>
-            )}
-          </>
-        )
+      {/* Global Permissions Tab */}
+      {activeTab === 'global' && (
+        <div role="tabpanel" id="tabpanel-global" aria-labelledby="tab-global">
+          {loadingGlobal ? (
+            <div className="spinner" role="status" aria-label={t('a11y.loading_permissions')} />
+          ) : Object.keys(permissionsByFeature).length === 0 ? (
+            <div className="unified-card empty-state">
+              {t('permissions_admin.empty_state')}
+            </div>
+          ) : (
+            <>
+              {Object.entries(permissionsByFeature).map(([feature, perms]) => {
+                const filteredPerms = perms.filter(p => p.assignment_rules?.global !== false)
+                if (filteredPerms.length === 0) return null
+                return (
+                <div key={feature} className="section-mb-lg" role="region" aria-label={t('a11y.global_permissions_section', { feature })}>
+                  <h2 className="section-category-title">
+                    {feature}
+                  </h2>
+                  <div className="unified-card p-16">
+                    <div className="flex-col-md">
+                      {filteredPerms.map((perm) => {
+                        const granted = isGlobalGranted(perm.id)
+                        return (
+                          <div
+                            key={perm.id}
+                            className={`global-perm-row ${granted ? 'global-perm-row--on' : 'global-perm-row--off'}`}
+                          >
+                            <div className="flex-1">
+                              <div className="flex-center mb-2">
+                                <strong>{perm.label}</strong>
+                                <code className="badge-tag badge-tag--mono-sm">
+                                  {perm.code}
+                                </code>
+                              </div>
+                              {perm.description && (
+                                <div className="text-gray-500-sm">{perm.description}</div>
+                              )}
+                            </div>
+                            <button
+                              onClick={() => toggleGlobalPermission(perm.id)}
+                              className={`toggle-switch ${granted ? 'toggle-switch--on' : 'toggle-switch--off'}`}
+                              title={granted ? t('permissions_admin.tooltip_deactivate') : t('permissions_admin.tooltip_activate')}
+                              disabled={!can('permissions.manage')}
+                              aria-pressed={granted}
+                              aria-label={t('a11y.toggle_global_permission', { name: perm.label })}
+                            >
+                              <span
+                                className={`toggle-switch-knob ${granted ? 'toggle-switch-knob--on' : 'toggle-switch-knob--off'}`}
+                                aria-hidden="true"
+                              />
+                            </button>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
+                )
+              })}
+
+              {can('permissions.manage') && (
+                <div className="flex-end mt-8">
+                  <button className="btn btn-primary" onClick={saveGlobalPermissions} disabled={savingGlobal}>
+                    {savingGlobal ? t('permissions_admin.global_saving') : t('permissions_admin.global_save')}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       )}
     </Layout>
   )

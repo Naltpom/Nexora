@@ -131,13 +131,21 @@ async def authenticate_intranet(email: str, password: str) -> dict | None:
         return None
 
     try:
+        # SSL verification: custom CA bundle > system default (prod) > disabled (dev only)
+        if settings.INTRANET_SSL_CA_BUNDLE:
+            ssl_verify: bool | str = settings.INTRANET_SSL_CA_BUNDLE
+        elif settings.is_dev:
+            ssl_verify = False
+        else:
+            ssl_verify = True
+
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
             "Accept": "application/json, text/plain, */*",
             "Accept-Language": "fr-FR,fr;q=0.9",
         }
         async with httpx.AsyncClient(
-            verify=False,
+            verify=ssl_verify,
             timeout=10.0,
             headers=headers,
             follow_redirects=True,
@@ -249,9 +257,9 @@ async def authenticate_user(
 
     # --- Email verification check --------------------------------------------
     if not user.email_verified:
-        import random
+        import secrets
 
-        code = str(random.randint(100000, 999999))
+        code = str(secrets.randbelow(900000) + 100000)
         await create_security_token(db, user.id, "email_verification", code, expires_minutes=5)
 
         if settings.EMAIL_ENABLED:
@@ -279,7 +287,7 @@ async def authenticate_user(
             "mfa_grace_period_expires": None,
             "email_verification_required": True,
             "email_verification_email": user.email,
-            "debug_code": code if not settings.EMAIL_ENABLED else None,
+            "debug_code": code if settings.is_dev else None,
         }
 
     # --- Update last login ---------------------------------------------------
@@ -397,24 +405,40 @@ async def sync_permissions_from_registry(db: AsyncSession, registry) -> None:
 
 
 async def find_pending_invitation(db: AsyncSession, token: str):
-    """Walk all pending invitations and return the one matching *token*.
+    """Find a pending invitation by token (O(1) HMAC lookup).
 
+    Falls back to bcrypt scan for legacy invitations without token_hmac.
     Raises ``HTTPException(400)`` when not found.
     """
     from fastapi import HTTPException
 
+    from ..security import hash_refresh_token
     from .models import Invitation
 
     now = datetime.now(timezone.utc)
+    token_hmac = hash_refresh_token(token)
+
+    # O(1) indexed lookup
     result = await db.execute(
         select(Invitation).where(
+            Invitation.token_hmac == token_hmac,
             Invitation.consumed_at.is_(None),
             Invitation.expires_at > now,
         )
     )
-    invitations = result.scalars().all()
+    inv = result.scalar_one_or_none()
+    if inv:
+        return inv
 
-    for inv in invitations:
+    # Fallback: bcrypt scan for legacy invitations (no token_hmac)
+    result = await db.execute(
+        select(Invitation).where(
+            Invitation.token_hmac.is_(None),
+            Invitation.consumed_at.is_(None),
+            Invitation.expires_at > now,
+        )
+    )
+    for inv in result.scalars().all():
         if verify_password(token, inv.token_hash):
             return inv
 

@@ -33,6 +33,13 @@
     "email_placeholder": "your@email.com",
     "password_min_6": "Minimum 6 characters",
     "password_min_8": "Minimum 8 characters",
+    "password_policy_hint": "Min. 8 chars, 1 uppercase, 1 digit, 1 special",
+    "password_policy": {
+      "min_length": "At least 8 characters",
+      "uppercase": "At least one uppercase letter",
+      "digit": "At least one digit",
+      "special": "At least one special character (!@#$...)"
+    },
     "confirm_password_placeholder": "Confirm your password",
     "confirm_password_placeholder_short": "Confirm password",
     "home": "Home",
@@ -44,7 +51,17 @@
     "login_title": "Sign in — {{app_name}}",
     "login_description": "Sign in to {{app_name}} to access the platform. {{app_description}}",
     "register_title": "Sign up — {{app_name}}",
-    "register_description": "Create your account on {{app_name}}. {{app_description}}"
+    "register_description": "Create your account on {{app_name}}. {{app_description}}",
+    "forgot_password_title": "Forgot password — {{app_name}}",
+    "forgot_password_description": "Reset your password on {{app_name}}. {{app_description}}",
+    "reset_password_title": "New password — {{app_name}}",
+    "reset_password_description": "Set a new password for your {{app_name}} account. {{app_description}}",
+    "verify_email_title": "Email verification — {{app_name}}",
+    "verify_email_description": "Verify your email address to activate your {{app_name}} account. {{app_description}}",
+    "force_change_password_title": "Password change — {{app_name}}",
+    "force_change_password_description": "Password change required to access {{app_name}}. {{app_description}}",
+    "accept_invitation_title": "Accept invitation — {{app_name}}",
+    "accept_invitation_description": "Accept your invitation to join {{app_name}}. {{app_description}}"
   },
 
   "login": {
@@ -60,7 +77,9 @@
     "no_account_link": "Don't have an account? Create one",
     "error_default": "Login error",
     "legal_refused_warning": "You have declined the terms of use. Accepting the legal documents is required to access the service.",
-    "account_deleted_info": "Your account has been deactivated. If you sign in again within 30 days, it will be automatically reactivated."
+    "account_deleted_info": "Your account has been deactivated. If you sign in again within 30 days, it will be automatically reactivated.",
+    "form_aria_label": "Login form",
+    "nav_aria_label": "Navigation links"
   },
 
   "register": {
@@ -74,7 +93,9 @@
     "error_default": "Registration error",
     "error_invalid_email": "Please enter a valid email address",
     "error_password_min_8": "Password must be at least 8 characters",
-    "error_password_mismatch": "Passwords do not match"
+    "error_password_mismatch": "Passwords do not match",
+    "form_aria_label": "Registration form",
+    "nav_aria_label": "Navigation links"
   },
 
   "forgot_password": {
@@ -85,7 +106,9 @@
     "submitting": "Sending...",
     "success_title": "Request sent",
     "success_message": "If this address exists in our system, an email will be sent shortly with a link valid for 30 minutes.",
-    "error_default": "Error sending request"
+    "error_default": "Error sending request",
+    "form_aria_label": "Password reset form",
+    "nav_aria_label": "Navigation links"
   },
 
   "reset_password": {
@@ -101,7 +124,8 @@
     "error_default": "Error resetting password",
     "error_token_invalid": "Invalid or expired token",
     "error_password_min_6": "Password must be at least 6 characters",
-    "error_password_mismatch": "Passwords do not match"
+    "error_password_mismatch": "Passwords do not match",
+    "form_aria_label": "New password form"
   },
 
   "force_change_password": {
@@ -111,7 +135,8 @@
     "submitting": "Saving...",
     "error_default": "Error changing password",
     "error_password_min_6": "Password must be at least 6 characters",
-    "error_password_mismatch": "Passwords do not match"
+    "error_password_mismatch": "Passwords do not match",
+    "form_aria_label": "Password change form"
   },
 
   "verify_email": {
@@ -128,7 +153,10 @@
     "success_title": "Email verified!",
     "success_message": "Your account has been successfully activated.",
     "error_code_incorrect": "Incorrect code",
-    "error_resend": "Error resending code"
+    "error_resend": "Error resending code",
+    "form_aria_label": "Email verification form",
+    "nav_aria_label": "Navigation links",
+    "debug_aria_label": "Verification code in development mode"
   },
 
   "accept_invitation": {
@@ -160,7 +188,10 @@
     "error_password_mismatch": "Passwords do not match",
     "error_password_min_6": "Password must be at least 6 characters",
     "error_code_incorrect": "Incorrect code",
-    "error_resend": "Error resending code"
+    "error_resend": "Error resending code",
+    "form_aria_label": "Invitation acceptance form",
+    "verify_form_aria_label": "Verification code form",
+    "nav_aria_label": "Navigation links"
   },
 
   "home": {
@@ -194,7 +225,8 @@
     "time_just_now": "Just now",
     "time_minutes_ago": "{{count}} min ago",
     "time_hours_ago": "{{count}}h ago",
-    "time_days_ago": "{{count}}d ago"
+    "time_days_ago": "{{count}}d ago",
+    "aria_stats_section": "Dashboard statistics"
   },
 
   "profile": {
@@ -603,5 +635,66 @@
     "inv_confirm_cancel_message": "Are you sure you want to cancel this invitation?",
     "inv_confirm_cancel_btn": "Cancel invitation",
     "inv_error_send": "Error sending invitation"
+  },
+
+  "a11y": {
+    "table_caption_users": "User list",
+    "table_caption_invitations": "Pending invitations list",
+    "table_caption_roles": "Roles list",
+    "table_caption_role_permissions": "Permissions for role {{name}}",
+    "table_caption_permissions_feature": "Permissions for feature {{feature}}",
+    "table_caption_user_permissions": "User permissions",
+    "pagination": "Pagination",
+    "pagination_page": "Page {{page}}",
+    "pagination_previous": "Previous page",
+    "pagination_next": "Next page",
+    "search_users": "Search users",
+    "search_permissions": "Search permissions",
+    "search_role_permissions": "Search role permissions",
+    "sort_ascending": "Sorted ascending",
+    "sort_descending": "Sorted descending",
+    "sort_none": "Not sorted",
+    "close_modal": "Close dialog",
+    "toggle_active_user": "Toggle active status of user {{name}}",
+    "toggle_active_status": "Toggle active status",
+    "btn_view_detail": "View details of {{name}}",
+    "btn_impersonate": "Sign in as {{name}}",
+    "btn_reset_password": "Reset password for {{name}}",
+    "btn_delete_user": "Delete user {{name}}",
+    "btn_cancel_invitation": "Cancel invitation for {{email}}",
+    "btn_manage_permissions": "Manage permissions for role {{name}}",
+    "btn_edit_role": "Edit role {{name}}",
+    "btn_delete_role": "Delete role {{name}}",
+    "btn_close_permissions_panel": "Close permissions panel",
+    "btn_back_full_table": "Back to full roles table",
+    "toggle_permission": "Toggle permission {{name}}",
+    "toggle_global_permission": "Toggle global permission {{name}}",
+    "permission_cycle": "User permission cycle for {{name}}",
+    "per_page_select": "Items per page",
+    "user_email_input": "Email for user {{name}}",
+    "user_firstname_input": "First name for user {{name}}",
+    "user_lastname_input": "Last name for user {{name}}",
+    "loading_users": "Loading users",
+    "loading_roles": "Loading roles",
+    "loading_permissions": "Loading permissions",
+    "loading_invitations": "Loading invitations",
+    "tab_users": "Users tab",
+    "tab_invitations": "Invitations tab",
+    "tab_permissions_list": "Permissions list tab",
+    "tab_global_permissions": "Global permissions tab",
+    "changes_pending": "Pending changes",
+    "global_permissions_section": "Global permissions section for {{feature}}",
+    "table_caption_features": "List of application features",
+    "table_caption_commands": "List of maintenance commands",
+    "table_caption_command_history": "Command execution history",
+    "toggle_feature": "Enable or disable feature {{label}}",
+    "toggle_command": "Enable or disable command {{label}}",
+    "filter_status": "Filter by status",
+    "form_app_settings": "Application settings form",
+    "logo_preview": "Logo preview",
+    "favicon_preview": "Favicon preview",
+    "color_picker": "Primary color picker",
+    "reset_logo": "Reset logo to default",
+    "reset_favicon": "Reset favicon to default"
   }
 }

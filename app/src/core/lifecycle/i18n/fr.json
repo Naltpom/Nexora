@@ -24,5 +24,10 @@
   "loading": "Chargement...",
   "error_load": "Erreur lors du chargement du dashboard",
   "error_reactivate": "Erreur lors de la reactivation de l'utilisateur",
-  "reactivating": "Reactivation..."
+  "reactivating": "Reactivation...",
+  "aria_stats": "Statistiques des comptes",
+  "aria_tablist": "Vues du cycle de vie",
+  "aria_table_soon": "Utilisateurs bientot archives",
+  "aria_table_archived": "Utilisateurs archives",
+  "aria_reactivate_user": "Reactiver {{name}}"
 }

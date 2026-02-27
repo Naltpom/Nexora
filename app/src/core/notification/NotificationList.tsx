@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback, memo } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Layout from '../../core/Layout'
@@ -64,12 +64,88 @@ export default function NotificationList() {
   return (
     <Layout
       breadcrumb={[{ label: t('breadcrumb_home'), path: '/' }, { label: t('breadcrumb_notifications') }]}
-      title={t('breadcrumb_notifications')}
+      title={t('page_title_notifications')}
     >
       {can('notification.admin') ? <AdminNotificationList /> : <UserNotificationList />}
     </Layout>
   )
 }
+
+// -- Memoized User Card --
+
+interface UserNotificationCardProps {
+  notif: NotificationItem
+  onClick: (notif: NotificationItem) => void
+  onKeyDown: (e: React.KeyboardEvent, notif: NotificationItem) => void
+  onMarkAsRead: (id: number) => void
+  onMarkAsUnread: (id: number) => void
+  onDelete: (id: number) => void
+  t: (key: string, opts?: Record<string, unknown>) => string
+}
+
+const UserNotificationCard = memo(function UserNotificationCard({
+  notif, onClick, onKeyDown, onMarkAsRead, onMarkAsUnread, onDelete, t
+}: UserNotificationCardProps) {
+  return (
+    <div
+      className={`notification-list-card${!notif.is_read ? ' unread' : ''}${notif.link ? ' notif-clickable' : ''}`}
+      onClick={() => onClick(notif)}
+      onKeyDown={(e) => onKeyDown(e, notif)}
+      role="listitem"
+      tabIndex={notif.link ? 0 : undefined}
+      aria-label={t('aria_notification_item', { title: notif.title, time: timeAgo(notif.created_at, t), status: notif.is_read ? t('admin_status_read') : t('admin_status_unread') })}
+    >
+      <div className={`notification-item-dot${notif.is_read ? ' read' : ''}`} aria-hidden="true" />
+      <div className="notification-list-card-content">
+        <div className="notification-list-card-title">{notif.title}</div>
+        {notif.body && (
+          <div className="notification-list-card-body">{notif.body}</div>
+        )}
+        <div className="notification-list-card-meta">
+          <span className="notification-event-badge">{notif.event_type}</span>
+          <span className="notif-time-ago">{timeAgo(notif.created_at, t)}</span>
+        </div>
+      </div>
+      <div className="notification-list-card-actions">
+        {!notif.is_read ? (
+          <button
+            className="btn-icon btn-icon-secondary"
+            title={t('user_list_mark_as_read')}
+            aria-label={t('user_list_mark_as_read')}
+            aria-pressed={false}
+            onClick={(e) => { e.stopPropagation(); onMarkAsRead(notif.id) }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </button>
+        ) : (
+          <button
+            className="btn-icon btn-icon-secondary"
+            title={t('user_list_mark_as_unread')}
+            aria-label={t('user_list_mark_as_unread')}
+            aria-pressed={true}
+            onClick={(e) => { e.stopPropagation(); onMarkAsUnread(notif.id) }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="5" />
+            </svg>
+          </button>
+        )}
+        <button
+          className="btn-icon btn-icon-danger"
+          title={t('user_list_delete')}
+          aria-label={t('aria_delete_notification', { title: notif.title })}
+          onClick={(e) => { e.stopPropagation(); onDelete(notif.id) }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  )
+})
 
 // -- User View --
 
@@ -108,7 +184,7 @@ function UserNotificationList() {
     loadData(p)
   }
 
-  const handleMarkAsRead = async (id: number) => {
+  const handleMarkAsRead = useCallback(async (id: number) => {
     try {
       await api.patch(`/notifications/${id}/read`)
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n))
@@ -116,7 +192,7 @@ function UserNotificationList() {
     } catch (err) {
       console.error(err)
     }
-  }
+  }, [refreshBell])
 
   const handleMarkAllAsRead = async () => {
     try {
@@ -128,7 +204,7 @@ function UserNotificationList() {
     }
   }
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = useCallback(async (id: number) => {
     try {
       await api.delete(`/notifications/${id}`)
       setNotifications(prev => prev.filter(n => n.id !== id))
@@ -137,9 +213,9 @@ function UserNotificationList() {
     } catch (err) {
       console.error(err)
     }
-  }
+  }, [refreshBell])
 
-  const handleMarkAsUnread = async (id: number) => {
+  const handleMarkAsUnread = useCallback(async (id: number) => {
     try {
       await api.patch(`/notifications/${id}/unread`)
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: false } : n))
@@ -147,12 +223,19 @@ function UserNotificationList() {
     } catch (err) {
       console.error(err)
     }
-  }
+  }, [refreshBell])
 
-  const handleClick = (notif: NotificationItem) => {
+  const handleClick = useCallback((notif: NotificationItem) => {
     if (!notif.is_read) handleMarkAsRead(notif.id)
     if (notif.link) navigate(notif.link)
-  }
+  }, [handleMarkAsRead, navigate])
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent, notif: NotificationItem) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      handleClick(notif)
+    }
+  }, [handleClick])
 
   const hasUnread = notifications.some(n => !n.is_read)
 
@@ -166,12 +249,16 @@ function UserNotificationList() {
           </div>
           <div className="unified-page-header-actions">
             {hasUnread && (
-              <button className="btn-unified-secondary" onClick={handleMarkAllAsRead}>
+              <button
+                className="btn-unified-secondary"
+                onClick={handleMarkAllAsRead}
+                aria-label={t('user_list_mark_all_read')}
+              >
                 {t('user_list_mark_all_read')}
               </button>
             )}
-            <Link to="/notifications/settings" className="btn-icon btn-icon-secondary" title={t('user_list_settings_title')}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <Link to="/notifications/settings" className="btn-icon btn-icon-secondary" title={t('user_list_settings_title')} aria-label={t('user_list_settings_title')}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
               </svg>
             </Link>
@@ -180,10 +267,12 @@ function UserNotificationList() {
       </div>
 
       {loading ? (
-        <div className="spinner" />
+        <div className="spinner" aria-busy="true" role="status">
+          <span className="sr-only">{t('aria_loading')}</span>
+        </div>
       ) : notifications.length === 0 ? (
-        <div className="unified-card notif-empty-state">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="notif-empty-icon">
+        <div className="unified-card notif-empty-state" role="status">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="notif-empty-icon" aria-hidden="true">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
             <path d="M13.73 21a2 2 0 0 1-3.46 0" />
           </svg>
@@ -191,58 +280,18 @@ function UserNotificationList() {
         </div>
       ) : (
         <>
-          <div className="unified-card notif-card-flush">
+          <div className="unified-card notif-card-flush" aria-live="polite" role="list" aria-label={t('aria_notification_list')}>
             {notifications.map(notif => (
-              <div
+              <UserNotificationCard
                 key={notif.id}
-                className={`notification-list-card${!notif.is_read ? ' unread' : ''}`}
-                onClick={() => handleClick(notif)}
-                style={{ cursor: notif.link ? 'pointer' : 'default' }}
-              >
-                <div className={`notification-item-dot${notif.is_read ? ' read' : ''}`} />
-                <div className="notification-list-card-content">
-                  <div className="notification-list-card-title">{notif.title}</div>
-                  {notif.body && (
-                    <div className="notification-list-card-body">{notif.body}</div>
-                  )}
-                  <div className="notification-list-card-meta">
-                    <span className="notification-event-badge">{notif.event_type}</span>
-                    <span className="notif-time-ago">{timeAgo(notif.created_at, t)}</span>
-                  </div>
-                </div>
-                <div className="notification-list-card-actions">
-                  {!notif.is_read ? (
-                    <button
-                      className="btn-icon btn-icon-secondary"
-                      title={t('user_list_mark_as_read')}
-                      onClick={(e) => { e.stopPropagation(); handleMarkAsRead(notif.id) }}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                    </button>
-                  ) : (
-                    <button
-                      className="btn-icon btn-icon-secondary"
-                      title={t('user_list_mark_as_unread')}
-                      onClick={(e) => { e.stopPropagation(); handleMarkAsUnread(notif.id) }}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="5" />
-                      </svg>
-                    </button>
-                  )}
-                  <button
-                    className="btn-icon btn-icon-danger"
-                    title={t('user_list_delete')}
-                    onClick={(e) => { e.stopPropagation(); handleDelete(notif.id) }}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
+                notif={notif}
+                onClick={handleClick}
+                onKeyDown={handleKeyDown}
+                onMarkAsRead={handleMarkAsRead}
+                onMarkAsUnread={handleMarkAsUnread}
+                onDelete={handleDelete}
+                t={t}
+              />
             ))}
           </div>
 
@@ -260,6 +309,119 @@ function UserNotificationList() {
     </>
   )
 }
+
+// -- Memoized Admin Row --
+
+interface AdminNotificationRowProps {
+  notif: AdminNotificationItem
+  myOnly: boolean
+  onMarkAsRead: (id: number) => void
+  onMarkAsUnread: (id: number) => void
+  onDelete: (id: number) => void
+  onResendEmail: (id: number) => void
+  onResendWebhook: (id: number) => void
+  onResendPush: (id: number) => void
+  canResendEmail: boolean
+  canResendPush: boolean
+  t: (key: string, opts?: Record<string, unknown>) => string
+}
+
+const AdminNotificationRow = memo(function AdminNotificationRow({
+  notif, myOnly, onMarkAsRead, onMarkAsUnread, onDelete,
+  onResendEmail, onResendWebhook, onResendPush,
+  canResendEmail, canResendPush, t,
+}: AdminNotificationRowProps) {
+  return (
+    <tr className={notif.deleted_at ? 'notif-row-deleted' : ''}>
+      {!myOnly && (
+        <td>
+          <div className="notif-user-name">{notif.user_name}</div>
+          <div className="notif-user-email">{notif.user_email}</div>
+        </td>
+      )}
+      <td>
+        <div>{notif.title}</div>
+        {notif.body && <div className="notif-body-secondary">{notif.body}</div>}
+      </td>
+      <td><span className="notification-event-badge">{notif.event_type}</span></td>
+      <td>
+        {notif.is_read ? (
+          <span className="notif-status-green" title={t('admin_status_read')}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
+            <span className="sr-only">{t('admin_status_read')}</span>
+          </span>
+        ) : (
+          <span className="notification-item-dot" title={t('admin_status_unread')}><span className="sr-only">{t('admin_status_unread')}</span></span>
+        )}
+      </td>
+      <td className="notif-cell-nowrap">
+        {notif.email_sent_at ? (
+          <span className="notif-status-green" title={formatDate(notif.email_sent_at)}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
+            {' '}{formatDate(notif.email_sent_at)}
+          </span>
+        ) : (
+          <span className="notif-dash-muted" aria-label={t('aria_not_sent')}>{'\u2014'}</span>
+        )}
+      </td>
+      <td className="notif-cell-nowrap">
+        {notif.webhook_sent_at ? (
+          <span className="notif-status-green" title={formatDate(notif.webhook_sent_at)}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
+            {' '}{formatDate(notif.webhook_sent_at)}
+          </span>
+        ) : (
+          <span className="notif-dash-muted" aria-label={t('aria_not_sent')}>{'\u2014'}</span>
+        )}
+      </td>
+      <td className="notif-cell-nowrap">
+        {notif.push_sent_at ? (
+          <span className="notif-status-green" title={formatDate(notif.push_sent_at)}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
+            {' '}{formatDate(notif.push_sent_at)}
+          </span>
+        ) : (
+          <span className="notif-dash-muted" aria-label={t('aria_not_sent')}>{'\u2014'}</span>
+        )}
+      </td>
+      <td className="notif-cell-nowrap">{formatDate(notif.created_at)}</td>
+      <td>
+        <div className="notif-actions-wrap">
+          {!notif.is_read ? (
+            <button className="btn-icon btn-icon-secondary" title={t('admin_mark_as_read')} aria-label={t('admin_mark_as_read')} aria-pressed={false} onClick={() => onMarkAsRead(notif.id)}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
+            </button>
+          ) : (
+            <button className="btn-icon btn-icon-secondary" title={t('admin_mark_as_unread')} aria-label={t('admin_mark_as_unread')} aria-pressed={true} onClick={() => onMarkAsUnread(notif.id)}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5" /></svg>
+            </button>
+          )}
+          <button className="btn-icon btn-icon-danger" title={t('admin_delete')} aria-label={t('aria_delete_notification', { title: notif.title })} onClick={() => onDelete(notif.id)}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+          </button>
+          {notif.email_sent_at && canResendEmail && (
+            <button className="btn-resend btn-resend-email" title={t('admin_last_sent', { date: formatDate(notif.email_sent_at) })} aria-label={t('aria_resend_email', { title: notif.title })} onClick={() => onResendEmail(notif.id)}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg>
+              {t('admin_resend_email_button')}
+            </button>
+          )}
+          {notif.webhook_sent_at && (
+            <button className="btn-resend btn-resend-webhook" title={t('admin_last_sent', { date: formatDate(notif.webhook_sent_at) })} aria-label={t('aria_resend_webhook', { title: notif.title })} onClick={() => onResendWebhook(notif.id)}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>
+              {t('admin_resend_webhook_button')}
+            </button>
+          )}
+          {notif.push_sent_at && canResendPush && (
+            <button className="btn-resend btn-resend-push" title={t('admin_last_sent', { date: formatDate(notif.push_sent_at) })} aria-label={t('aria_resend_push', { title: notif.title })} onClick={() => onResendPush(notif.id)}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>
+              {t('admin_resend_push_button')}
+            </button>
+          )}
+        </div>
+      </td>
+    </tr>
+  )
+})
 
 // -- Admin View --
 
@@ -338,6 +500,13 @@ function AdminNotificationList() {
     loadData(1, undefined, undefined, field, newDir)
   }
 
+  const handleSortKeyDown = (e: React.KeyboardEvent, field: string) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      handleSort(field)
+    }
+  }
+
   const handleToggleMyOnly = () => {
     const next = !myOnly
     setMyOnly(next)
@@ -352,7 +521,7 @@ function AdminNotificationList() {
     loadData(1, undefined, undefined, undefined, undefined, undefined, next)
   }
 
-  const handleMarkAsRead = async (id: number) => {
+  const handleMarkAsRead = useCallback(async (id: number) => {
     try {
       await api.patch(`/notifications/${id}/read`)
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n))
@@ -360,9 +529,9 @@ function AdminNotificationList() {
     } catch (err) {
       console.error(err)
     }
-  }
+  }, [refreshBell])
 
-  const handleMarkAsUnread = async (id: number) => {
+  const handleMarkAsUnread = useCallback(async (id: number) => {
     try {
       await api.patch(`/notifications/${id}/unread`)
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: false } : n))
@@ -370,9 +539,9 @@ function AdminNotificationList() {
     } catch (err) {
       console.error(err)
     }
-  }
+  }, [refreshBell])
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = useCallback(async (id: number) => {
     const ok = await confirm({
       title: t('confirm_delete_title'),
       message: t('confirm_delete_message'),
@@ -388,9 +557,9 @@ function AdminNotificationList() {
     } catch (err) {
       console.error(err)
     }
-  }
+  }, [confirm, t, refreshBell])
 
-  const handleResendEmail = async (id: number) => {
+  const handleResendEmail = useCallback(async (id: number) => {
     const ok = await confirm({
       title: t('confirm_resend_email_title'),
       message: t('confirm_resend_email_message'),
@@ -404,9 +573,9 @@ function AdminNotificationList() {
     } catch (err: any) {
       await alert({ message: err.response?.data?.detail || t('alert_send_error'), variant: 'danger' })
     }
-  }
+  }, [confirm, alert, t])
 
-  const handleResendPush = async (id: number) => {
+  const handleResendPush = useCallback(async (id: number) => {
     const ok = await confirm({
       title: t('confirm_resend_push_title'),
       message: t('confirm_resend_push_message'),
@@ -420,9 +589,9 @@ function AdminNotificationList() {
     } catch (err: any) {
       await alert({ message: err.response?.data?.detail || t('alert_send_error'), variant: 'danger' })
     }
-  }
+  }, [confirm, alert, t])
 
-  const handleResendWebhook = async (id: number) => {
+  const handleResendWebhook = useCallback(async (id: number) => {
     const ok = await confirm({
       title: t('confirm_resend_webhook_title'),
       message: t('confirm_resend_webhook_message'),
@@ -436,13 +605,29 @@ function AdminNotificationList() {
     } catch (err: any) {
       await alert({ message: err.response?.data?.detail || t('alert_send_error'), variant: 'danger' })
     }
+  }, [confirm, alert, t])
+
+  const canResendEmail = can('notification.email.resend')
+  const canResendPush = can('notification.push.resend')
+
+  const getAriaSort = (field: string): 'ascending' | 'descending' | 'none' => {
+    if (sortBy !== field) return 'none'
+    return sortDir === 'asc' ? 'ascending' : 'descending'
   }
 
   const SortHeader = ({ field, children }: { field: string; children: React.ReactNode }) => (
-    <th className="th-sortable" onClick={() => handleSort(field)}>
+    <th
+      className="th-sortable"
+      onClick={() => handleSort(field)}
+      onKeyDown={(e) => handleSortKeyDown(e, field)}
+      role="columnheader"
+      tabIndex={0}
+      aria-sort={getAriaSort(field)}
+      scope="col"
+    >
       {children}
       {sortBy === field && (
-        <span className="sort-indicator">{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span>
+        <span className="sort-indicator" aria-hidden="true">{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span>
       )}
     </th>
   )
@@ -461,6 +646,7 @@ function AdminNotificationList() {
                 type="checkbox"
                 checked={!myOnly}
                 onChange={handleToggleMyOnly}
+                aria-label={t('admin_filter_all_notifications')}
               />
               {t('admin_filter_all_notifications')}
             </label>
@@ -469,11 +655,12 @@ function AdminNotificationList() {
                 type="checkbox"
                 checked={includeDeleted}
                 onChange={handleToggleIncludeDeleted}
+                aria-label={t('admin_filter_show_deleted')}
               />
               {t('admin_filter_show_deleted')}
             </label>
-            <div className="unified-search-box">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <div className="unified-search-box" role="search" aria-label={t('aria_search_notifications')}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
               </svg>
               <input
@@ -481,10 +668,11 @@ function AdminNotificationList() {
                 placeholder={t('admin_search_placeholder')}
                 value={search}
                 onChange={(e) => handleSearchChange(e.target.value)}
+                aria-label={t('aria_search_notifications')}
               />
             </div>
-            <Link to="/notifications/settings" className="btn-icon btn-icon-secondary" title={t('admin_settings_title')}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <Link to="/notifications/settings" className="btn-icon btn-icon-secondary" title={t('admin_settings_title')} aria-label={t('admin_settings_title')}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
               </svg>
             </Link>
@@ -493,23 +681,26 @@ function AdminNotificationList() {
       </div>
 
       {loading ? (
-        <div className="spinner" />
+        <div className="spinner" aria-busy="true" role="status">
+          <span className="sr-only">{t('aria_loading')}</span>
+        </div>
       ) : (
         <>
           <div className="unified-card full-width-breakout card-table">
             <div className="table-container">
-              <table className="unified-table">
+              <table className="unified-table" aria-label={t('aria_admin_table_caption')}>
+                <caption className="sr-only">{t('aria_admin_table_caption')}</caption>
                 <thead>
                   <tr>
                     {!myOnly && <SortHeader field="user_email">{t('admin_column_user')}</SortHeader>}
-                    <th>{t('admin_column_title')}</th>
+                    <th scope="col">{t('admin_column_title')}</th>
                     <SortHeader field="event_type">{t('admin_column_type')}</SortHeader>
                     <SortHeader field="is_read">{t('admin_column_read')}</SortHeader>
-                    <th>{t('admin_column_email')}</th>
-                    <th>{t('admin_column_webhook')}</th>
-                    <th>{t('admin_column_push')}</th>
+                    <th scope="col">{t('admin_column_email')}</th>
+                    <th scope="col">{t('admin_column_webhook')}</th>
+                    <th scope="col">{t('admin_column_push')}</th>
                     <SortHeader field="created_at">{t('admin_column_date')}</SortHeader>
-                    <th>{t('admin_column_actions')}</th>
+                    <th scope="col">{t('admin_column_actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -521,150 +712,20 @@ function AdminNotificationList() {
                     </tr>
                   ) : (
                     notifications.map(notif => (
-                      <tr key={notif.id} className={notif.deleted_at ? 'notif-row-deleted' : ''}>
-                        {!myOnly && (
-                          <td>
-                            <div className="notif-user-name">{notif.user_name}</div>
-                            <div className="notif-user-email">{notif.user_email}</div>
-                          </td>
-                        )}
-                        <td>
-                          <div>
-                            {notif.title}
-                          </div>
-                          {notif.body && (
-                            <div className="notif-body-secondary">
-                              {notif.body}
-                            </div>
-                          )}
-                        </td>
-                        <td>
-                          <span className="notification-event-badge">{notif.event_type}</span>
-                        </td>
-                        <td>
-                          {notif.is_read ? (
-                            <span className="notif-status-green" title={t('admin_status_read')}>
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <polyline points="20 6 9 17 4 12" />
-                              </svg>
-                            </span>
-                          ) : (
-                            <span className="notification-item-dot" title={t('admin_status_unread')} />
-                          )}
-                        </td>
-                        <td className="notif-cell-nowrap">
-                          {notif.email_sent_at ? (
-                            <span className="notif-status-green" title={formatDate(notif.email_sent_at)}>
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <polyline points="20 6 9 17 4 12" />
-                              </svg>
-                              {' '}{formatDate(notif.email_sent_at)}
-                            </span>
-                          ) : (
-                            <span className="notif-dash-muted">{'\u2014'}</span>
-                          )}
-                        </td>
-                        <td className="notif-cell-nowrap">
-                          {notif.webhook_sent_at ? (
-                            <span className="notif-status-green" title={formatDate(notif.webhook_sent_at)}>
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <polyline points="20 6 9 17 4 12" />
-                              </svg>
-                              {' '}{formatDate(notif.webhook_sent_at)}
-                            </span>
-                          ) : (
-                            <span className="notif-dash-muted">{'\u2014'}</span>
-                          )}
-                        </td>
-                        <td className="notif-cell-nowrap">
-                          {notif.push_sent_at ? (
-                            <span className="notif-status-green" title={formatDate(notif.push_sent_at)}>
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <polyline points="20 6 9 17 4 12" />
-                              </svg>
-                              {' '}{formatDate(notif.push_sent_at)}
-                            </span>
-                          ) : (
-                            <span className="notif-dash-muted">{'\u2014'}</span>
-                          )}
-                        </td>
-                        <td className="notif-cell-nowrap">
-                          {formatDate(notif.created_at)}
-                        </td>
-                        <td>
-                          <div className="notif-actions-wrap">
-                            {!notif.is_read ? (
-                              <button
-                                className="btn-icon btn-icon-secondary"
-                                title={t('admin_mark_as_read')}
-                                onClick={() => handleMarkAsRead(notif.id)}
-                              >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <polyline points="20 6 9 17 4 12" />
-                                </svg>
-                              </button>
-                            ) : (
-                              <button
-                                className="btn-icon btn-icon-secondary"
-                                title={t('admin_mark_as_unread')}
-                                onClick={() => handleMarkAsUnread(notif.id)}
-                              >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <circle cx="12" cy="12" r="5" />
-                                </svg>
-                              </button>
-                            )}
-                            <button
-                              className="btn-icon btn-icon-danger"
-                              title={t('admin_delete')}
-                              onClick={() => handleDelete(notif.id)}
-                            >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                              </svg>
-                            </button>
-                            {notif.email_sent_at && can('notification.email.resend') && (
-                              <button
-                                className="btn-resend btn-resend-email"
-                                title={t('admin_last_sent', { date: formatDate(notif.email_sent_at) })}
-                                onClick={() => handleResendEmail(notif.id)}
-                              >
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                                  <polyline points="22,6 12,13 2,6" />
-                                </svg>
-                                {t('admin_resend_email_button')}
-                              </button>
-                            )}
-                            {notif.webhook_sent_at && (
-                              <button
-                                className="btn-resend btn-resend-webhook"
-                                title={t('admin_last_sent', { date: formatDate(notif.webhook_sent_at) })}
-                                onClick={() => handleResendWebhook(notif.id)}
-                              >
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                                </svg>
-                                {t('admin_resend_webhook_button')}
-                              </button>
-                            )}
-                            {notif.push_sent_at && can('notification.push.resend') && (
-                              <button
-                                className="btn-resend btn-resend-push"
-                                title={t('admin_last_sent', { date: formatDate(notif.push_sent_at) })}
-                                onClick={() => handleResendPush(notif.id)}
-                              >
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                                </svg>
-                                {t('admin_resend_push_button')}
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
+                      <AdminNotificationRow
+                        key={notif.id}
+                        notif={notif}
+                        myOnly={myOnly}
+                        onMarkAsRead={handleMarkAsRead}
+                        onMarkAsUnread={handleMarkAsUnread}
+                        onDelete={handleDelete}
+                        onResendEmail={handleResendEmail}
+                        onResendWebhook={handleResendWebhook}
+                        onResendPush={handleResendPush}
+                        canResendEmail={canResendEmail}
+                        canResendPush={canResendPush}
+                        t={t}
+                      />
                     ))
                   )}
                 </tbody>
@@ -702,13 +763,14 @@ function Pagination({
 }) {
   const { t } = useTranslation('notification')
   return (
-    <div className="unified-pagination">
+    <nav className="unified-pagination" aria-label={t('aria_pagination')}>
       <span className="unified-pagination-info">{total} {label}{total > 1 ? 's' : ''}</span>
       <div className="unified-pagination-controls">
         <select
           className="per-page-select"
           value={perPage}
           onChange={(e) => onPerPageChange(parseInt(e.target.value))}
+          aria-label={t('aria_per_page')}
         >
           <option value={10}>{t('pagination_per_page_10')}</option>
           <option value={25}>{t('pagination_per_page_25')}</option>
@@ -721,8 +783,9 @@ function Pagination({
               className="unified-pagination-btn"
               disabled={page <= 1}
               onClick={() => onPageChange(page - 1)}
+              aria-label={t('aria_previous_page')}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <polyline points="15 18 9 12 15 6" />
               </svg>
             </button>
@@ -737,12 +800,14 @@ function Pagination({
               }, [])
               .map((p, i) =>
                 typeof p === 'string' ? (
-                  <span key={`dots-${i}`} className="unified-pagination-dots">...</span>
+                  <span key={`dots-${i}`} className="unified-pagination-dots" aria-hidden="true">...</span>
                 ) : (
                   <button
                     key={p}
                     className={`unified-pagination-btn${p === page ? ' active' : ''}`}
                     onClick={() => onPageChange(p)}
+                    aria-current={p === page ? 'page' : undefined}
+                    aria-label={t('aria_page_number', { page: p })}
                   >
                     {p}
                   </button>
@@ -752,14 +817,15 @@ function Pagination({
               className="unified-pagination-btn"
               disabled={page >= totalPages}
               onClick={() => onPageChange(page + 1)}
+              aria-label={t('aria_next_page')}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <polyline points="9 18 15 12 9 6" />
               </svg>
             </button>
           </>
         )}
       </div>
-    </div>
+    </nav>
   )
 }

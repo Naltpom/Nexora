@@ -32,7 +32,9 @@
     "status_pending": "En attente",
     "status_processing": "En cours",
     "status_completed": "Traitee",
-    "status_rejected": "Refusee"
+    "status_rejected": "Refusee",
+    "aria_loading": "Chargement en cours...",
+    "aria_requests_list": "Liste de vos demandes de droits"
   },
   "cookie_banner": {
     "title": "Nous respectons votre vie privee",
@@ -59,7 +61,9 @@
     "consent_analytics_label": "Analytiques",
     "consent_analytics_description": "Cookies et traceurs qui nous aident a comprendre comment vous utilisez le site pour l'ameliorer.",
     "consent_marketing_label": "Marketing",
-    "consent_marketing_description": "Cookies et traceurs utilises pour afficher des publicites pertinentes. Aucun pour le moment."
+    "consent_marketing_description": "Cookies et traceurs utilises pour afficher des publicites pertinentes. Aucun pour le moment.",
+    "aria_loading": "Chargement en cours...",
+    "aria_form_label": "Formulaire de preferences de consentement"
   },
   "my_data_page": {
     "page_title": "Mes donnees",
@@ -81,7 +85,10 @@
     "exercise_rights_description": "Vous avez le droit d'acceder a vos donnees, de les rectifier, de les supprimer, de vous opposer a leur traitement ou de demander leur portabilite.",
     "btn_make_request": "Faire une demande",
     "error_load": "Erreur lors du chargement de vos donnees.",
-    "error_export": "Erreur lors de l'export. Veuillez reessayer."
+    "error_export": "Erreur lors de l'export. Veuillez reessayer.",
+    "aria_loading": "Chargement en cours...",
+    "aria_data_sections": "Sections de donnees personnelles",
+    "aria_fields_label": "Champs de la section {{section}}"
   },
   "legal_page": {
     "default_title": "Page legale",
@@ -92,7 +99,13 @@
     "not_available": "Cette page n'est pas encore disponible.",
     "btn_back_home": "Retour a l'accueil",
     "last_updated": "Derniere mise a jour :",
-    "version_label": "Version"
+    "version_label": "Version",
+    "aria_loading": "Chargement en cours...",
+    "aria_nav_back": "Navigation retour",
+    "meta_privacy_policy": "Politique de confidentialite - informations sur le traitement de vos donnees personnelles.",
+    "meta_terms": "Conditions generales d'utilisation du service.",
+    "meta_legal_notice": "Mentions legales et informations sur l'editeur du site.",
+    "meta_cookie_policy": "Politique de cookies et traceurs - informations sur les cookies utilises par le site."
   },
   "accept_legal_page": {
     "update_heading": "Mise a jour des documents legaux",
@@ -116,7 +129,8 @@
     "confirm_delete_title": "Supprimer mon compte",
     "confirm_delete_message": "Votre compte sera desactive pendant 30 jours. Si vous vous reconnectez dans ce delai, il sera automatiquement reactive. Passe ce delai, toutes vos donnees seront definitivement supprimees.\n\nEtes-vous sur de vouloir continuer ?",
     "confirm_delete_confirm": "Oui, supprimer mon compte",
-    "confirm_delete_cancel": "Annuler"
+    "confirm_delete_cancel": "Annuler",
+    "aria_accept_form": "Acceptation des documents legaux"
   },
   "admin_rgpd_page": {
     "page_title": "Administration RGPD",
@@ -137,7 +151,8 @@
     "status_pending": "En attente",
     "status_processing": "En cours",
     "status_completed": "Traitee",
-    "status_rejected": "Refusee"
+    "status_rejected": "Refusee",
+    "aria_tablist": "Navigation des sections RGPD"
   },
   "admin_register_tab": {
     "heading": "Registre des traitements (Article 30)",
@@ -173,7 +188,8 @@
     "btn_delete_title": "Supprimer",
     "error_load": "Erreur lors du chargement du registre.",
     "error_save": "Erreur lors de l'enregistrement.",
-    "error_delete": "Erreur lors de la suppression."
+    "error_delete": "Erreur lors de la suppression.",
+    "aria_loading": "Chargement en cours..."
   },
   "admin_rights_tab": {
     "heading": "Demandes d'exercice de droits",
@@ -191,7 +207,10 @@
     "btn_process": "Traiter",
     "btn_previous": "Precedent",
     "btn_next": "Suivant",
-    "page_label": "Page"
+    "page_label": "Page",
+    "aria_loading": "Chargement en cours...",
+    "aria_pagination": "Pagination des demandes de droits",
+    "aria_process_form": "Formulaire de traitement de la demande"
   },
   "admin_audit_tab": {
     "heading": "Journal d'audit des acces",
@@ -205,7 +224,10 @@
     "col_details": "Details",
     "btn_previous": "Precedent",
     "btn_next": "Suivant",
-    "page_label": "Page"
+    "page_label": "Page",
+    "aria_loading": "Chargement en cours...",
+    "aria_table_caption": "Journal d'audit des acces aux donnees personnelles",
+    "aria_pagination": "Pagination du journal d'audit"
   },
   "admin_legal_pages_tab": {
     "heading": "Pages legales",
@@ -228,6 +250,7 @@
     "version_label": "Version",
     "error_load": "Erreur lors du chargement des pages legales.",
     "error_save": "Erreur lors de l'enregistrement.",
-    "error_versions": "Erreur lors du chargement de l'historique."
+    "error_versions": "Erreur lors du chargement de l'historique.",
+    "aria_loading": "Chargement en cours..."
   }
 }

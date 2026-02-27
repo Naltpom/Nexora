@@ -1,17 +1,41 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
 
+// ── In-memory token store ──────────────────────────────────────────
+// The access_token lives in JS memory only (not localStorage).
+// On page reload it is lost → silent refresh via HttpOnly cookie.
+let accessToken: string | null = null
+
+export function setAccessToken(token: string | null) {
+  accessToken = token
+  if (token) {
+    localStorage.setItem('has_session', '1')
+  } else {
+    localStorage.removeItem('has_session')
+  }
+}
+
+export function getAccessToken(): string | null {
+  return accessToken
+}
+
+export function clearAccessToken() {
+  accessToken = null
+  localStorage.removeItem('has_session')
+}
+
+// ── Axios instance ─────────────────────────────────────────────────
 const api = axios.create({
   baseURL: '/api',
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 })
 
-// Request interceptor: attach JWT
+// Request interceptor: attach JWT from memory
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('access_token')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`
   }
   return config
 })
@@ -55,28 +79,18 @@ api.interceptors.response.use(
         })
       }
 
-      const refreshToken = localStorage.getItem('refresh_token')
-      if (!refreshToken) {
-        localStorage.removeItem('access_token')
-        window.location.href = '/login'
-        return Promise.reject(error)
-      }
-
       isRefreshing = true
       try {
-        const response = await axios.post('/api/auth/refresh', {
-          refresh_token: refreshToken,
-        })
-        const { access_token, refresh_token: newRefresh } = response.data
-        localStorage.setItem('access_token', access_token)
-        localStorage.setItem('refresh_token', newRefresh)
+        // Cookie is sent automatically (withCredentials + Path=/api/auth)
+        const response = await axios.post('/api/auth/refresh', {}, { withCredentials: true })
+        const { access_token } = response.data
+        setAccessToken(access_token)
         processQueue(null, access_token)
         originalRequest.headers.Authorization = `Bearer ${access_token}`
         return api(originalRequest)
       } catch (refreshError) {
         processQueue(refreshError, null)
-        localStorage.removeItem('access_token')
-        localStorage.removeItem('refresh_token')
+        clearAccessToken()
         window.location.href = '/login'
         return Promise.reject(refreshError)
       } finally {

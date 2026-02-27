@@ -54,9 +54,9 @@ export default function Login() {
   return (
     <div className="login-container">
       <PageSEO page="login" />
-      <div className="login-card login-card-enter">
+      <div className="login-card login-card-enter" role="main" aria-busy={loading}>
         <div className="login-header">
-          <svg width="48" height="48" viewBox="0 0 32 32" fill="none">
+          <svg width="48" height="48" viewBox="0 0 32 32" fill="none" aria-hidden="true">
             <rect width="32" height="32" rx="6" fill="var(--primary)" />
             <text x="16" y="22" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold">K</text>
           </svg>
@@ -64,18 +64,22 @@ export default function Login() {
           <p>{t('login.subtitle')}</p>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} aria-label={t('login.form_aria_label')} noValidate>
           {searchParams.get('legal_refused') && (
-            <div className="alert alert-warning mb-16">
+            <div className="alert alert-warning mb-16" role="alert">
               {t('login.legal_refused_warning')}
             </div>
           )}
           {searchParams.get('account_deleted') && (
-            <div className="alert alert-info mb-16">
+            <div className="alert alert-info mb-16" role="status">
               {t('login.account_deleted_info')}
             </div>
           )}
-          {error && <div className="alert alert-error">{error}</div>}
+          {error && (
+            <div className="alert alert-error" role="alert" aria-live="polite" id="login-error">
+              {error}
+            </div>
+          )}
 
           <div className="form-group">
             <label htmlFor="email">{t('login.email_label')}</label>
@@ -86,7 +90,11 @@ export default function Login() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder={t('common.email_placeholder')}
               required
+              aria-required="true"
+              aria-invalid={!!error}
+              aria-describedby={error ? 'login-error' : undefined}
               autoFocus
+              autoComplete="email"
             />
           </div>
 
@@ -99,24 +107,33 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder={t('login.password_placeholder')}
               required
+              aria-required="true"
+              aria-invalid={!!error}
+              aria-describedby={error ? 'login-error' : undefined}
+              autoComplete="current-password"
             />
           </div>
 
-          <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
+          <button
+            type="submit"
+            className="btn btn-primary btn-block"
+            disabled={loading}
+            aria-disabled={loading}
+          >
             {loading ? t('login.submitting') : t('login.submit')}
           </button>
         </form>
 
         <SSOSection />
 
-        <div className="login-footer-flex">
+        <nav className="login-footer-flex" aria-label={t('login.nav_aria_label')}>
           <Link to="/forgot-password" className="link-primary">
             {t('login.forgot_password_link')}
           </Link>
           <Link to="/register" className="link-primary">
             {t('login.no_account_link')}
           </Link>
-        </div>
+        </nav>
       </div>
     </div>
   )

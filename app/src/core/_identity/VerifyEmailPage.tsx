@@ -1,9 +1,10 @@
 import { useState, useEffect, FormEvent, useRef } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import api from '../../api'
+import api, { setAccessToken } from '../../api'
 import { useAuth } from '../../core/AuthContext'
 import './_identity.scss'
+import PageSEO from './PageSEO'
 
 export default function VerifyEmail() {
   const { t } = useTranslation('_identity')
@@ -67,9 +68,8 @@ export default function VerifyEmail() {
     setSubmitting(true)
     try {
       const response = await api.post('/auth/verify-email', { email, code: verificationCode })
-      const { access_token, refresh_token } = response.data
-      localStorage.setItem('access_token', access_token)
-      localStorage.setItem('refresh_token', refresh_token)
+      const { access_token } = response.data
+      setAccessToken(access_token)
       await refreshUser()
       setSuccess(true)
       setTimeout(() => navigate('/'), 2000)
@@ -83,19 +83,20 @@ export default function VerifyEmail() {
   if (success) {
     return (
       <div className="login-container">
-        <div className="login-card">
+        <PageSEO page="verify_email" />
+        <div className="login-card" role="main">
           <div className="login-header">
-            <div className="avatar-circle-lg">
+            <div className="avatar-circle-lg" aria-hidden="true">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
             <h1>{t('verify_email.success_title')}</h1>
           </div>
-          <p className="text-center text-gray-500 mb-16">
+          <p className="text-center text-gray-500 mb-16" role="status">
             {t('verify_email.success_message')}
           </p>
-          <p className="text-center text-gray-500">
+          <p className="text-center text-gray-500" aria-live="polite">
             {t('common.redirecting')}
           </p>
         </div>
@@ -105,9 +106,10 @@ export default function VerifyEmail() {
 
   return (
     <div className="login-container">
-      <div className="login-card">
+      <PageSEO page="verify_email" />
+      <div className="login-card" role="main" aria-busy={submitting}>
         <div className="login-header">
-          <svg width="48" height="48" viewBox="0 0 32 32" fill="none">
+          <svg width="48" height="48" viewBox="0 0 32 32" fill="none" aria-hidden="true">
             <rect width="32" height="32" rx="6" fill="var(--primary)" />
             <text x="16" y="22" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold">K</text>
           </svg>
@@ -118,18 +120,23 @@ export default function VerifyEmail() {
         </div>
 
         {debugCode && (
-          <div className="verify-debug-box">
+          <div className="verify-debug-box" role="note" aria-label={t('verify_email.debug_aria_label')}>
             <span className="verify-debug-label">{t('verify_email.debug_label')}</span>
             <span className="verify-debug-code">{debugCode}</span>
           </div>
         )}
 
-        <form onSubmit={handleVerifyCode}>
-          {error && <div className="alert alert-error">{error}</div>}
+        <form onSubmit={handleVerifyCode} aria-label={t('verify_email.form_aria_label')}>
+          {error && (
+            <div className="alert alert-error" role="alert" aria-live="polite" id="verify-email-error">
+              {error}
+            </div>
+          )}
 
           <div className="form-group">
-            <label>{t('verify_email.code_label')}</label>
+            <label htmlFor="verification-code">{t('verify_email.code_label')}</label>
             <input
+              id="verification-code"
               type="text"
               value={verificationCode}
               onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
@@ -137,12 +144,25 @@ export default function VerifyEmail() {
               maxLength={6}
               className="verify-code-input"
               required
+              aria-required="true"
+              aria-invalid={!!error}
+              aria-describedby={error ? 'verify-email-error' : 'verify-email-hint'}
               autoFocus
               disabled={submitting}
+              inputMode="numeric"
+              autoComplete="one-time-code"
             />
+            <p className="text-muted" id="verify-email-hint">
+              {t('verify_email.code_validity')}
+            </p>
           </div>
 
-          <button type="submit" className="btn btn-primary btn-block" disabled={submitting || verificationCode.length !== 6}>
+          <button
+            type="submit"
+            className="btn btn-primary btn-block"
+            disabled={submitting || verificationCode.length !== 6}
+            aria-disabled={submitting || verificationCode.length !== 6}
+          >
             {submitting ? t('verify_email.submitting') : t('verify_email.submit')}
           </button>
 
@@ -151,6 +171,7 @@ export default function VerifyEmail() {
               type="button"
               onClick={handleResendCode}
               disabled={resendCooldown > 0}
+              aria-disabled={resendCooldown > 0}
               className={resendCooldown > 0 ? 'verify-resend-btn verify-resend-btn--disabled' : 'verify-resend-btn verify-resend-btn--active'}
             >
               {resendCooldown > 0
@@ -158,17 +179,13 @@ export default function VerifyEmail() {
                 : t('verify_email.resend_code')}
             </button>
           </div>
-
-          <p className="text-muted text-center mt-16">
-            {t('verify_email.code_validity')}
-          </p>
         </form>
 
-        <div className="login-footer">
+        <nav className="login-footer" aria-label={t('verify_email.nav_aria_label')}>
           <Link to="/login" className="link-primary text-gray-500">
             {t('verify_email.back_to_login')}
           </Link>
-        </div>
+        </nav>
       </div>
     </div>
   )

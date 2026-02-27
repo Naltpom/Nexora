@@ -56,5 +56,6 @@
   "a11y_label_focus_visible": "Enhanced focus",
   "a11y_label_underline_links": "Underlined links",
   "a11y_label_large_targets": "Large touch targets",
-  "save_error": "Error saving preferences. Please try again."
+  "save_error": "Error saving preferences. Please try again.",
+  "aria_tablist": "Preference sections"
 }

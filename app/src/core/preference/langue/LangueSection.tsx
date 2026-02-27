@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../AuthContext'
-import api from '../../../api'
+import api, { setAccessToken } from '../../../api'
 import './langue.scss'
 
 interface LocaleInfo {
@@ -34,7 +34,7 @@ export default function LangueSection() {
 
       // Store new access token with updated lang claim
       if (res.data.access_token) {
-        localStorage.setItem('access_token', res.data.access_token)
+        setAccessToken(res.data.access_token)
       }
 
       // Sync local state (localStorage + React user state)

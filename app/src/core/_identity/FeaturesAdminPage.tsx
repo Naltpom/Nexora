@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, memo } from 'react'
 import { useTranslation } from 'react-i18next'
 import Layout from '../../core/Layout'
 import { useConfirm } from '../../core/ConfirmModal'
@@ -24,6 +24,124 @@ interface Feature {
 }
 
 /* ------------------------------------------------------------------ */
+/*  FeatureTableRow (memoized)                                        */
+/* ------------------------------------------------------------------ */
+
+interface FeatureTableRowProps {
+  feature: Feature
+  isChild: boolean
+  toggling: string | null
+  canManage: boolean
+  onToggle: (feature: Feature) => void
+  onPermissionsClick: (feature: Feature) => void
+  onChildrenClick: (feature: Feature) => void
+  onBadgeKeyDown: (e: React.KeyboardEvent, action: () => void) => void
+  t: (key: string, opts?: Record<string, any>) => string
+}
+
+const FeatureTableRow = memo(function FeatureTableRow({
+  feature,
+  isChild,
+  toggling,
+  canManage,
+  onToggle,
+  onPermissionsClick,
+  onChildrenClick,
+  onBadgeKeyDown,
+  t,
+}: FeatureTableRowProps) {
+  return (
+    <tr className={feature.active ? '' : 'opacity-60'}>
+      {/* Feature name */}
+      <td className={isChild ? 'feature-child-indent' : undefined}>
+        <div className="feature-name-col">
+          {isChild && (
+            <span className="feature-child-arrow" aria-hidden="true">&#x2514;</span>
+          )}
+          <div>
+            <div className="font-medium">{feature.label}</div>
+            <code className="text-gray-400-code">{feature.name}</code>
+          </div>
+        </div>
+      </td>
+
+      {/* Description */}
+      <td className="feature-desc-col">
+        {feature.description || '\u2014'}
+      </td>
+
+      {/* Status */}
+      <td>
+        <span className={`badge ${feature.active ? 'badge-success' : 'badge-warning'} text-xs`}>
+          {feature.active ? t('common.active') : t('common.inactive')}
+        </span>
+      </td>
+
+      {/* Info badges */}
+      <td>
+        <div className="flex-row-xs flex-wrap">
+          {feature.is_core && (
+            <span className="badge badge-secondary text-xs">Core</span>
+          )}
+          {feature.has_routes && (
+            <span className="badge badge-secondary text-xs">Routes</span>
+          )}
+          {feature.permissions.length > 0 && (
+            <span
+              className="badge badge-secondary text-xs cursor-pointer"
+              role="button"
+              tabIndex={0}
+              onClick={() => onPermissionsClick(feature)}
+              onKeyDown={(e) => onBadgeKeyDown(e, () => onPermissionsClick(feature))}
+              aria-label={t('features_admin.tooltip_view_permissions')}
+            >
+              {feature.permissions.length > 1 ? t('features_admin.badge_perms_plural', { count: feature.permissions.length }) : t('features_admin.badge_perms', { count: feature.permissions.length })}
+            </span>
+          )}
+          {feature.children.length > 0 && (
+            <span
+              className="badge badge-secondary text-xs cursor-pointer"
+              role="button"
+              tabIndex={0}
+              onClick={() => onChildrenClick(feature)}
+              onKeyDown={(e) => onBadgeKeyDown(e, () => onChildrenClick(feature))}
+              aria-label={t('features_admin.tooltip_view_children')}
+            >
+              {feature.children.length > 1 ? t('features_admin.badge_children_plural', { count: feature.children.length }) : t('features_admin.badge_children', { count: feature.children.length })}
+            </span>
+          )}
+        </div>
+      </td>
+
+      {/* Dependencies */}
+      <td className="text-gray-500-sm">
+        {feature.depends.length > 0 ? feature.depends.join(', ') : '\u2014'}
+      </td>
+
+      {/* Toggle */}
+      <td className="text-center">
+        {feature.is_core ? (
+          <span className="feature-locked">
+            {t('features_admin.locked')}
+          </span>
+        ) : (
+          <label className="toggle" aria-label={t('a11y.toggle_feature', { label: feature.label })}>
+            <input
+              type="checkbox"
+              checked={feature.active}
+              onChange={() => onToggle(feature)}
+              disabled={toggling === feature.name || !canManage}
+              aria-checked={feature.active}
+            />
+            <span className="toggle-slider" aria-hidden="true" />
+          </label>
+        )}
+      </td>
+    </tr>
+  )
+})
+
+/* ------------------------------------------------------------------ */
 /*  Composant principal                                               */
 /* ------------------------------------------------------------------ */
 
@@ -42,6 +160,20 @@ export default function FeaturesAdminPage() {
   // Detail modal
   interface DetailItem { code: string; label?: string; description?: string }
   const [detailModal, setDetailModal] = useState<{ title: string; items: DetailItem[]; loading: boolean } | null>(null)
+  const detailModalRef = useRef<HTMLDivElement>(null)
+  const detailModalTitleId = 'features-detail-modal-title'
+
+  // Escape key handler for detail modal
+  useEffect(() => {
+    if (!detailModal) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setDetailModal(null)
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    // Focus trap: focus the modal on open
+    detailModalRef.current?.focus()
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [detailModal])
 
   const loadFeatures = useCallback(async () => {
     try {
@@ -94,6 +226,51 @@ export default function FeaturesAdminPage() {
     }
   }
 
+  const handleBadgeKeyDown = useCallback((e: React.KeyboardEvent, action: () => void) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      action()
+    }
+  }, [])
+
+  const handlePermissionsClick = useCallback(async (feature: Feature) => {
+    setDetailModal({
+      title: t('features_admin.permissions_of', { label: feature.label }),
+      items: [],
+      loading: true,
+    })
+    try {
+      const res = await api.get('/permissions/', { params: { feature: feature.name } })
+      setDetailModal({
+        title: t('features_admin.permissions_of', { label: feature.label }),
+        items: res.data.map((p: any) => ({ code: p.code, label: p.label, description: p.description })),
+        loading: false,
+      })
+    } catch {
+      setDetailModal({
+        title: t('features_admin.permissions_of', { label: feature.label }),
+        items: feature.permissions.map(code => ({ code })),
+        loading: false,
+      })
+    }
+  }, [t])
+
+  const handleChildrenClick = useCallback((feature: Feature) => {
+    const childItems = feature.children.map(name => {
+      const child = features.find(f => f.name === name)
+      return {
+        code: name,
+        label: child?.label,
+        description: child?.description,
+      }
+    })
+    setDetailModal({
+      title: t('features_admin.children_of', { label: feature.label }),
+      items: childItems,
+      loading: false,
+    })
+  }, [features, t])
+
   // --- Group features: parents first, then children ---
   const rootFeatures = features.filter(f => !f.parent).sort((a, b) => a.name.localeCompare(b.name))
   const childrenMap = features.reduce<Record<string, Feature[]>>((acc, f) => {
@@ -132,7 +309,7 @@ export default function FeaturesAdminPage() {
     : orderedFeatures
 
   return (
-    <Layout breadcrumb={[{ label: t('common.home'), path: '/' }, { label: t('features_admin.breadcrumb_features') }]} title={t('features_admin.breadcrumb_features')}>
+    <Layout breadcrumb={[{ label: t('common.home'), path: '/' }, { label: t('features_admin.breadcrumb_features') }]} title={t('features_admin.page_title')}>
       <div className="unified-card page-header-card">
         <div className="unified-page-header">
           <div className="unified-page-header-info">
@@ -143,13 +320,19 @@ export default function FeaturesAdminPage() {
       </div>
 
       {message && (
-        <div className={`alert-dynamic alert-dynamic--${message.type === 'success' ? 'success' : 'error'}`}>
+        <div
+          className={`alert-dynamic alert-dynamic--${message.type === 'success' ? 'success' : 'error'}`}
+          role={message.type === 'success' ? 'status' : 'alert'}
+          aria-live="polite"
+        >
           {message.text}
         </div>
       )}
 
       {loading ? (
-        <div className="spinner" />
+        <div className="spinner" role="status" aria-busy="true">
+          <span className="sr-only">{t('common.loading')}</span>
+        </div>
       ) : features.length === 0 ? (
         <div className="unified-card empty-state">
           {t('features_admin.empty_state')}
@@ -157,26 +340,28 @@ export default function FeaturesAdminPage() {
       ) : (
         <div className="unified-card full-width-breakout">
           {/* Search bar */}
-          <div className="section-header">
+          <div className="section-header" role="search">
             <input
               type="text"
               placeholder={t('features_admin.search_placeholder')}
               value={searchValue}
               onChange={(e) => handleSearchChange(e.target.value)}
               className="input-search-wide"
+              aria-label={t('features_admin.search_placeholder')}
             />
           </div>
 
           <div className="table-container">
             <table className="unified-table">
+              <caption className="sr-only">{t('a11y.table_caption_features')}</caption>
               <thead>
                 <tr>
-                  <th>{t('features_admin.th_feature')}</th>
-                  <th>{t('features_admin.th_description')}</th>
-                  <th>{t('features_admin.th_status')}</th>
-                  <th>{t('features_admin.th_info')}</th>
-                  <th>{t('features_admin.th_dependencies')}</th>
-                  <th className="text-center">{t('features_admin.th_toggle')}</th>
+                  <th scope="col">{t('features_admin.th_feature')}</th>
+                  <th scope="col">{t('features_admin.th_description')}</th>
+                  <th scope="col">{t('features_admin.th_status')}</th>
+                  <th scope="col">{t('features_admin.th_info')}</th>
+                  <th scope="col">{t('features_admin.th_dependencies')}</th>
+                  <th scope="col" className="text-center">{t('features_admin.th_toggle')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -188,123 +373,18 @@ export default function FeaturesAdminPage() {
                   </tr>
                 ) : (
                   filteredFeatures.map(({ feature, isChild }) => (
-                    <tr
+                    <FeatureTableRow
                       key={feature.name}
-                      className={feature.active ? '' : 'opacity-60'}
-                    >
-                      {/* Feature name */}
-                      <td style={{ paddingLeft: isChild ? '48px' : undefined }}>
-                        <div className="feature-name-col">
-                          {isChild && (
-                            <span className="feature-child-arrow">└</span>
-                          )}
-                          <div>
-                            <div className="font-medium">{feature.label}</div>
-                            <code className="text-gray-400-code">{feature.name}</code>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Description */}
-                      <td className="feature-desc-col">
-                        {feature.description || '\u2014'}
-                      </td>
-
-                      {/* Status */}
-                      <td>
-                        <span className={`badge ${feature.active ? 'badge-success' : 'badge-warning'} text-xs`}>
-                          {feature.active ? t('common.active') : t('common.inactive')}
-                        </span>
-                      </td>
-
-                      {/* Info badges */}
-                      <td>
-                        <div className="flex-row-xs flex-wrap">
-                          {feature.is_core && (
-                            <span className="badge badge-secondary text-xs">Core</span>
-                          )}
-                          {feature.has_routes && (
-                            <span className="badge badge-info text-xs">Routes</span>
-                          )}
-                          {feature.permissions.length > 0 && (
-                            <span
-                              className="badge badge-secondary text-xs cursor-pointer"
-                              onClick={async () => {
-                                setDetailModal({
-                                  title: t('features_admin.permissions_of', { label: feature.label }),
-                                  items: [],
-                                  loading: true,
-                                })
-                                try {
-                                  const res = await api.get('/permissions/', { params: { feature: feature.name } })
-                                  setDetailModal({
-                                    title: t('features_admin.permissions_of', { label: feature.label }),
-                                    items: res.data.map((p: any) => ({ code: p.code, label: p.label, description: p.description })),
-                                    loading: false,
-                                  })
-                                } catch {
-                                  setDetailModal({
-                                    title: t('features_admin.permissions_of', { label: feature.label }),
-                                    items: feature.permissions.map(code => ({ code })),
-                                    loading: false,
-                                  })
-                                }
-                              }}
-                              title={t('features_admin.tooltip_view_permissions')}
-                            >
-                              {feature.permissions.length > 1 ? t('features_admin.badge_perms_plural', { count: feature.permissions.length }) : t('features_admin.badge_perms', { count: feature.permissions.length })}
-                            </span>
-                          )}
-                          {feature.children.length > 0 && (
-                            <span
-                              className="badge badge-secondary text-xs cursor-pointer"
-                              onClick={() => {
-                                const childItems = feature.children.map(name => {
-                                  const child = features.find(f => f.name === name)
-                                  return {
-                                    code: name,
-                                    label: child?.label,
-                                    description: child?.description,
-                                  }
-                                })
-                                setDetailModal({
-                                  title: t('features_admin.children_of', { label: feature.label }),
-                                  items: childItems,
-                                  loading: false,
-                                })
-                              }}
-                              title={t('features_admin.tooltip_view_children')}
-                            >
-                              {feature.children.length > 1 ? t('features_admin.badge_children_plural', { count: feature.children.length }) : t('features_admin.badge_children', { count: feature.children.length })}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Dependencies */}
-                      <td className="text-gray-500-sm">
-                        {feature.depends.length > 0 ? feature.depends.join(', ') : '\u2014'}
-                      </td>
-
-                      {/* Toggle */}
-                      <td className="text-center">
-                        {feature.is_core ? (
-                          <span className="feature-locked">
-                            {t('features_admin.locked')}
-                          </span>
-                        ) : (
-                          <label className="toggle" style={{ cursor: toggling === feature.name ? 'wait' : 'pointer' }}>
-                            <input
-                              type="checkbox"
-                              checked={feature.active}
-                              onChange={() => handleToggle(feature)}
-                              disabled={toggling === feature.name || !can('features.manage')}
-                            />
-                            <span className="toggle-slider" />
-                          </label>
-                        )}
-                      </td>
-                    </tr>
+                      feature={feature}
+                      isChild={isChild}
+                      toggling={toggling}
+                      canManage={can('features.manage')}
+                      onToggle={handleToggle}
+                      onPermissionsClick={handlePermissionsClick}
+                      onChildrenClick={handleChildrenClick}
+                      onBadgeKeyDown={handleBadgeKeyDown}
+                      t={t}
+                    />
                   ))
                 )}
               </tbody>
@@ -316,14 +396,26 @@ export default function FeaturesAdminPage() {
       {/* Detail modal (permissions / children list) */}
       {detailModal && (
         <div className="modal-overlay" onClick={() => setDetailModal(null)}>
-          <div className="modal modal-narrow" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="modal modal-narrow"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={detailModalTitleId}
+            ref={detailModalRef}
+            tabIndex={-1}
+          >
             <div className="modal-header">
-              <h2>{detailModal.title}</h2>
-              <button className="modal-close" onClick={() => setDetailModal(null)}>&times;</button>
+              <h2 id={detailModalTitleId}>{detailModal.title}</h2>
+              <button className="modal-close" onClick={() => setDetailModal(null)} aria-label={t('common.close')}>&times;</button>
             </div>
             <div className="modal-body modal-body-scroll">
               {detailModal.loading ? (
-                <div className="text-center p-24"><div className="spinner" /></div>
+                <div className="text-center p-24" aria-busy="true">
+                  <div className="spinner" role="status">
+                    <span className="sr-only">{t('common.loading')}</span>
+                  </div>
+                </div>
               ) : detailModal.items.length === 0 ? (
                 <p className="text-gray-400 text-center">{t('common.no_element')}</p>
               ) : (

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useRef, useEffect, useCallback, ReactNode } from 'react'
+import { createContext, useContext, useState, useRef, useEffect, useCallback, useMemo, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { useAuth } from '../AuthContext'
@@ -203,7 +203,7 @@ export function DraftPreferenceProvider({ children }: { children: ReactNode }) {
   const [resetVersion, setResetVersion] = useState(0)
   const hasChangesRef = useRef(false)
 
-  const hasChanges = JSON.stringify(draft) !== JSON.stringify(snapshot)
+  const hasChanges = useMemo(() => JSON.stringify(draft) !== JSON.stringify(snapshot), [draft, snapshot])
   hasChangesRef.current = hasChanges
 
   const getDraftPreference = useCallback((key: string, defaultValue: any = null) => {
@@ -267,17 +267,19 @@ export function DraftPreferenceProvider({ children }: { children: ReactNode }) {
     }
   }, [snapshot])
 
+  const contextValue = useMemo(() => ({
+    getDraftPreference,
+    setDraftPreference,
+    hasChanges,
+    saveError,
+    getChanges,
+    saveAll,
+    discardAll,
+    resetVersion,
+  }), [getDraftPreference, setDraftPreference, hasChanges, saveError, getChanges, saveAll, discardAll, resetVersion])
+
   return (
-    <DraftPreferenceContext.Provider value={{
-      getDraftPreference,
-      setDraftPreference,
-      hasChanges,
-      saveError,
-      getChanges,
-      saveAll,
-      discardAll,
-      resetVersion,
-    }}>
+    <DraftPreferenceContext.Provider value={contextValue}>
       {children}
     </DraftPreferenceContext.Provider>
   )

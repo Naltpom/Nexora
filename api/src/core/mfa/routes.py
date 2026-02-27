@@ -3,7 +3,7 @@
 import json
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,6 +18,7 @@ from ..security import (
     create_refresh_token,
     decode_mfa_token,
     get_current_user,
+    set_refresh_cookie,
     verify_password,
 )
 from .models import MFABackupCode, MFARolePolicy, UserMFA
@@ -103,6 +104,7 @@ async def get_mfa_status(
 async def verify_mfa(
     data: MFAVerifyRequest,
     request: Request,
+    response: Response,
     db: AsyncSession = Depends(get_db),
 ):
     """Verifier un code MFA pendant le login et retourner les vrais tokens."""
@@ -146,9 +148,11 @@ async def verify_mfa(
     token_data = {"sub": str(user.id), "email": user.email, "lang": user.language}
     preferences = user.preferences if isinstance(user.preferences, dict) else (json.loads(user.preferences) if user.preferences else None)
 
+    refresh = create_refresh_token(token_data)
+    set_refresh_cookie(response, refresh)
+
     return MFAVerifyResponse(
         access_token=create_access_token(token_data),
-        refresh_token=create_refresh_token(token_data),
         must_change_password=user.must_change_password,
         preferences=preferences,
     )

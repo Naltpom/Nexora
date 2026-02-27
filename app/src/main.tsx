@@ -12,46 +12,21 @@ import { RealtimeSyncBridge } from './core/realtime/RealtimeSyncBridge'
 import I18nProvider from './core/i18n/I18nProvider'
 import ErrorBoundary from './core/ErrorBoundary'
 import { hasConsent } from './core/rgpd/consentManager'
-import { applyAllPreferences } from './core/preference/applyPreferences'
 import './core/i18n/i18n'
 import './core/styles/global.scss'
 import './core/styles/animations.scss'
 
 // Apply theme + preferences before render to prevent flash
 ;(() => {
-  const token = localStorage.getItem('access_token')
-  if (token && hasConsent('functional')) {
-    // Authenticated: apply user preferences synchronously
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]))
-      const userId = payload.sub
-      if (userId) {
-        const raw = localStorage.getItem(`preferences_${userId}`)
-        if (raw) {
-          const prefs = JSON.parse(raw)
-          if (prefs.theme) {
-            document.documentElement.setAttribute('data-theme', prefs.theme)
-          }
-          if (prefs.backgroundTheme) {
-            document.documentElement.setAttribute('data-bg-theme', String(prefs.backgroundTheme))
-          }
-          if (prefs.customColors) {
-            const theme = prefs.theme === 'dark' ? 'dark' : 'light'
-            const colors = prefs.customColors[theme]
-            if (colors) {
-              const el = document.documentElement.style
-              for (const [k, v] of Object.entries(colors)) {
-                if (v) el.setProperty(`--${k}`, v as string)
-              }
-            }
-          }
-          applyAllPreferences(prefs)
-        }
-      }
-    } catch {
-      // ignore
-    }
-  } else if (!token) {
+  const hasSession = localStorage.getItem('has_session')
+  if (hasSession && hasConsent('functional')) {
+    // Returning user: apply cached theme preferences synchronously
+    const theme = localStorage.getItem('last_theme')
+    const bgTheme = localStorage.getItem('last_bg_theme')
+    if (theme) document.documentElement.setAttribute('data-theme', theme)
+    if (bgTheme) document.documentElement.setAttribute('data-bg-theme', bgTheme)
+    // Full preferences (font, density, etc.) applied by AuthContext after auth
+  } else if (!hasSession) {
     // Public page (login/register): follow browser preference
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
     document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light')

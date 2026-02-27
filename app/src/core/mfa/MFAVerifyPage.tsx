@@ -34,6 +34,11 @@ export default function MFAVerifyPage() {
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
+  // SEO: set document.title for public page
+  useEffect(() => {
+    document.title = t('verify_document_title')
+  }, [t])
+
   useEffect(() => {
     if (!mfaToken || mfaMethods.length === 0) {
       navigate('/login', { replace: true })
@@ -180,9 +185,9 @@ export default function MFAVerifyPage() {
 
   return (
     <div className="mfa-verify-container">
-      <div className="mfa-verify-card">
+      <main className="mfa-verify-card" aria-busy={loading}>
         <div className="login-header">
-          <svg width="48" height="48" viewBox="0 0 32 32" fill="none">
+          <svg width="48" height="48" viewBox="0 0 32 32" fill="none" role="img" aria-label={t('verify_logo_alt')}>
             <rect width="32" height="32" rx="6" fill="var(--primary)" />
             <text x="16" y="22" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold">K</text>
           </svg>
@@ -191,13 +196,17 @@ export default function MFAVerifyPage() {
         </div>
 
         {mfaMethods.length > 1 && (
-          <div className="mfa-methods-tabs">
+          <div className="mfa-methods-tabs" role="tablist" aria-label={t('verify_methods_label')}>
             {mfaMethods.map((method) => (
               <button
                 key={method}
                 className={`mfa-method-tab${activeMethod === method ? ' active' : ''}`}
                 onClick={() => setActiveMethod(method)}
                 type="button"
+                role="tab"
+                aria-selected={activeMethod === method}
+                aria-controls={`mfa-panel-${method}`}
+                id={`mfa-tab-${method}`}
               >
                 {METHOD_LABELS[method] || method}
               </button>
@@ -205,10 +214,10 @@ export default function MFAVerifyPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} aria-label={t('verify_title')} id={`mfa-panel-${activeMethod}`} role="tabpanel" aria-labelledby={mfaMethods.length > 1 ? `mfa-tab-${activeMethod}` : undefined}>
           {error && <div className="alert alert-error" role="alert">{error}</div>}
           {attemptsHint && (
-            <div className="mfa-attempts-hint" aria-live="polite">{attemptsHint}</div>
+            <div className="mfa-attempts-hint" role="status" aria-live="polite">{attemptsHint}</div>
           )}
 
           {activeMethod === 'email' && !emailSent && (
@@ -219,6 +228,7 @@ export default function MFAVerifyPage() {
                 className="btn btn-primary btn-block"
                 onClick={handleSendEmailCode}
                 disabled={emailSending}
+                aria-busy={emailSending}
               >
                 {emailSending ? t('verify_email_sending') : t('verify_email_send')}
               </button>
@@ -228,7 +238,7 @@ export default function MFAVerifyPage() {
           {(activeMethod !== 'email' || emailSent) && (
             <>
               <div className="form-group">
-                <label>
+                <label htmlFor="mfa-code-input">
                   {activeMethod === 'totp' && t('verify_label_totp')}
                   {activeMethod === 'email' && t('verify_label_email')}
                   {activeMethod === 'backup' && t('verify_label_backup')}
@@ -236,6 +246,7 @@ export default function MFAVerifyPage() {
                 {activeMethod === 'backup' ? (
                   <input
                     ref={inputRef}
+                    id="mfa-code-input"
                     type="text"
                     className="mfa-backup-input"
                     value={code}
@@ -243,10 +254,14 @@ export default function MFAVerifyPage() {
                     placeholder="xxxxxx-xxxxxx"
                     autoFocus
                     autoComplete="one-time-code"
+                    aria-required="true"
+                    aria-invalid={!!error}
+                    aria-describedby={error ? 'mfa-code-error' : undefined}
                   />
                 ) : (
                   <input
                     ref={inputRef}
+                    id="mfa-code-input"
                     type="text"
                     inputMode="numeric"
                     className="mfa-code-input"
@@ -256,14 +271,19 @@ export default function MFAVerifyPage() {
                     maxLength={6}
                     autoFocus
                     autoComplete="one-time-code"
+                    aria-required="true"
+                    aria-invalid={!!error}
+                    aria-describedby={error ? 'mfa-code-error' : undefined}
                   />
                 )}
+                {error && <span id="mfa-code-error" className="sr-only">{error}</span>}
               </div>
 
               <button
                 type="submit"
                 className="btn btn-primary btn-block"
                 disabled={loading || !code.trim()}
+                aria-busy={loading}
               >
                 {loading ? t('verify_verifying') : t('verify_submit')}
               </button>
@@ -274,6 +294,7 @@ export default function MFAVerifyPage() {
                   className="mfa-resend-btn"
                   onClick={handleSendEmailCode}
                   disabled={emailSending || emailResendCooldown > 0}
+                  aria-busy={emailSending}
                 >
                   {emailSending ? t('verify_email_resending') : emailResendCooldown > 0 ? t('verify_email_resend_cooldown', { time: formatCooldown(emailResendCooldown) }) : t('verify_email_resend')}
                 </button>
@@ -291,7 +312,7 @@ export default function MFAVerifyPage() {
             {t('verify_back_to_login')}
           </button>
         </div>
-      </div>
+      </main>
     </div>
   )
 }

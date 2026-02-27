@@ -14,7 +14,7 @@ from ..database import get_db
 from ..events import event_bus
 from ..permissions import invalidate_permission_cache, load_user_permissions, require_permission
 from ..realtime.services import sse_broadcaster
-from ..security import get_current_user, hash_password
+from ..security import get_current_user, hash_password, validate_password
 from .models import (
     GlobalPermission,
     Permission,
@@ -216,6 +216,7 @@ async def create_user(
         is_active=True,
     )
     if data.password:
+        validate_password(data.password)
         user.password_hash = hash_password(data.password)
 
     db.add(user)
@@ -383,7 +384,7 @@ async def trigger_reset_password(
                 resource_id=user_id,
                 payload={"email": user.email, "triggered_by": current_user.email, "email_sent": False},
             )
-            return {"message": "Email desactive -- token genere mais email non envoye", "token": token}
+            return {"message": "Email desactive -- utilisez 'Forcer changement MDP' ou configurez le service email"}
     except Exception:
         await event_bus.emit(
             "admin.password_reset_triggered",
@@ -393,7 +394,7 @@ async def trigger_reset_password(
             resource_id=user_id,
             payload={"email": user.email, "triggered_by": current_user.email, "email_sent": False},
         )
-        return {"message": "Email desactive -- token genere mais email non envoye", "token": token}
+        return {"message": "Email desactive -- utilisez 'Forcer changement MDP' ou configurez le service email"}
 
     await event_bus.emit(
         "admin.password_reset_triggered",

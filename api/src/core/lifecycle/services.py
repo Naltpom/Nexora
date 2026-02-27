@@ -372,3 +372,25 @@ def get_lifecycle_settings() -> dict:
     }
 
 
+# ── pg_partman maintenance ─────────────────────────────────────────────
+
+_PARTITIONED_TABLES = ["public.events", "public.notifications"]
+
+
+async def partman_maintenance(db: AsyncSession) -> dict:
+    """Run pg_partman maintenance to create future partitions and apply retention."""
+    from sqlalchemy import text
+
+    results = {}
+    for table in _PARTITIONED_TABLES:
+        try:
+            await db.execute(text("SELECT partman.run_maintenance(:table)"), {"table": table})
+            results[table] = "ok"
+            logger.info("pg_partman maintenance completed for %s", table)
+        except Exception as e:
+            results[table] = f"error: {e}"
+            logger.exception("pg_partman maintenance failed for %s", table)
+
+    return {"tables": results}
+
+

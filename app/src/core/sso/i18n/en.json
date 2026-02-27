@@ -19,5 +19,6 @@
   "aucun_compte_externe_lie": "No external accounts linked.",
   "lier_nouveau_compte": "Link a new account",
   "redirection_en_cours": "Redirecting...",
-  "lier_provider": "Link {{label}}"
+  "lier_provider": "Link {{label}}",
+  "page_title": "SSO Authentication"
 }

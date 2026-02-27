@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import './_identity.scss'
 import axios from 'axios'
+import PageSEO from './PageSEO'
 
 export default function ForgotPassword() {
   const { t } = useTranslation('_identity')
@@ -29,14 +30,15 @@ export default function ForgotPassword() {
   if (success) {
     return (
       <div className="reset-password-container">
-        <div className="reset-password-card">
+        <PageSEO page="forgot_password" />
+        <div className="reset-password-card" role="main">
           <div className="reset-password-header">
-            <svg width="48" height="48" viewBox="0 0 32 32" fill="none">
+            <svg width="48" height="48" viewBox="0 0 32 32" fill="none" aria-hidden="true">
               <rect width="32" height="32" rx="6" fill="var(--success)" />
               <text x="16" y="22" textAnchor="middle" fill="white" fontSize="18" fontWeight="bold">&#10003;</text>
             </svg>
             <h1>{t('forgot_password.success_title')}</h1>
-            <p>{t('forgot_password.success_message')}</p>
+            <p role="status">{t('forgot_password.success_message')}</p>
           </div>
           <Link to="/login" className="btn btn-primary btn-block">
             {t('common.back_to_login')}
@@ -48,9 +50,10 @@ export default function ForgotPassword() {
 
   return (
     <div className="reset-password-container">
-      <div className="reset-password-card">
+      <PageSEO page="forgot_password" />
+      <div className="reset-password-card" role="main" aria-busy={loading}>
         <div className="reset-password-header">
-          <svg width="48" height="48" viewBox="0 0 32 32" fill="none">
+          <svg width="48" height="48" viewBox="0 0 32 32" fill="none" aria-hidden="true">
             <rect width="32" height="32" rx="6" fill="var(--primary)" />
             <text x="16" y="22" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold">K</text>
           </svg>
@@ -58,8 +61,12 @@ export default function ForgotPassword() {
           <p>{t('forgot_password.subtitle')}</p>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          {error && <div className="alert alert-error">{error}</div>}
+        <form onSubmit={handleSubmit} aria-label={t('forgot_password.form_aria_label')} noValidate>
+          {error && (
+            <div className="alert alert-error" role="alert" aria-live="polite" id="forgot-password-error">
+              {error}
+            </div>
+          )}
 
           <div className="form-group">
             <label htmlFor="email">{t('forgot_password.email_label')}</label>
@@ -70,20 +77,29 @@ export default function ForgotPassword() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder={t('common.email_placeholder')}
               required
+              aria-required="true"
+              aria-invalid={!!error}
+              aria-describedby={error ? 'forgot-password-error' : undefined}
               autoFocus
+              autoComplete="email"
             />
           </div>
 
-          <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
+          <button
+            type="submit"
+            className="btn btn-primary btn-block"
+            disabled={loading}
+            aria-disabled={loading}
+          >
             {loading ? t('forgot_password.submitting') : t('forgot_password.submit')}
           </button>
         </form>
 
-        <div className="login-footer">
+        <nav className="login-footer" aria-label={t('forgot_password.nav_aria_label')}>
           <Link to="/login" className="link-primary">
             {t('common.back_to_login')}
           </Link>
-        </div>
+        </nav>
       </div>
     </div>
   )

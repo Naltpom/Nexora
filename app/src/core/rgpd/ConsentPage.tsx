@@ -93,7 +93,7 @@ export default function ConsentPage() {
   if (loading) {
     return (
       <Layout title={t('consent_page.page_title')} breadcrumb={[{ label: t('consent_page.breadcrumb_home'), path: '/' }, { label: t('consent_page.breadcrumb_label') }]}>
-        <div className="text-center loading-pad-lg"><div className="spinner" /></div>
+        <div className="text-center loading-pad-lg" aria-busy="true"><div className="spinner" role="status"><span className="sr-only">{t('consent_page.aria_loading')}</span></div></div>
       </Layout>
     )
   }
@@ -109,37 +109,45 @@ export default function ConsentPage() {
         </div>
       </div>
 
-      {success && <div className="alert alert-success mb-16">{success}</div>}
-      {error && <div className="alert alert-danger mb-16">{error}</div>}
+      {success && <div className="alert alert-success mb-16" role="status">{success}</div>}
+      {error && <div className="alert alert-danger mb-16" role="alert">{error}</div>}
 
-      <div className="rgpd-consent-list">
-        {CONSENT_TYPES.map((info) => (
-          <div key={info.key} className="unified-card rgpd-consent-item">
-            <div className="rgpd-consent-item-info">
-              <div className="rgpd-consent-item-header">
-                <h3>{t(info.labelKey)}</h3>
-                {info.required && <span className="rgpd-badge rgpd-badge-required">{t('consent_page.badge_required')}</span>}
+      <form
+        className="rgpd-consent-list"
+        onSubmit={(e) => { e.preventDefault(); handleSave() }}
+        aria-label={t('consent_page.aria_form_label')}
+      >
+        {CONSENT_TYPES.map((info) => {
+          const descriptionId = `consent-desc-${info.key}`
+          return (
+            <div key={info.key} className="unified-card rgpd-consent-item">
+              <div className="rgpd-consent-item-info">
+                <div className="rgpd-consent-item-header">
+                  <h2>{t(info.labelKey)}</h2>
+                  {info.required && <span className="rgpd-badge rgpd-badge-required">{t('consent_page.badge_required')}</span>}
+                </div>
+                <p id={descriptionId}>{t(info.descriptionKey)}</p>
               </div>
-              <p>{t(info.descriptionKey)}</p>
+              <label className="rgpd-toggle" aria-label={t(info.labelKey)}>
+                <input
+                  type="checkbox"
+                  checked={consent[info.key as keyof ConsentState]}
+                  onChange={() => handleToggle(info.key)}
+                  disabled={info.required}
+                  aria-describedby={descriptionId}
+                />
+                <span className="rgpd-toggle-slider" />
+              </label>
             </div>
-            <label className="rgpd-toggle">
-              <input
-                type="checkbox"
-                checked={consent[info.key as keyof ConsentState]}
-                onChange={() => handleToggle(info.key)}
-                disabled={info.required}
-              />
-              <span className="rgpd-toggle-slider" />
-            </label>
-          </div>
-        ))}
-      </div>
+          )
+        })}
 
-      <div className="form-actions">
-        <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
-          {saving ? t('consent_page.btn_saving') : t('consent_page.btn_save')}
-        </button>
-      </div>
+        <div className="form-actions">
+          <button type="submit" className="btn btn-primary" disabled={saving} aria-busy={saving}>
+            {saving ? t('consent_page.btn_saving') : t('consent_page.btn_save')}
+          </button>
+        </div>
+      </form>
     </Layout>
   )
 }

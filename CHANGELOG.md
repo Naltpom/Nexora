@@ -1,5 +1,47 @@
 # Changelog
 
+## 2026.02.56
+
+### code quality
+
+- **SCSS compliance** : remplacement des `border-radius` hardcodes par `var(--radius)` dans `_identity.scss`, `notifications.scss`, `_misc.scss` ; padding density vars dans `mfa.scss`
+- **Import sorting (ruff)** : correction de l'ordre des imports dans `middleware.py`, `sso/github/routes.py`, `sso/google/routes.py`
+- **TypeScript** : correction du type de ref `HTMLDivElement` → `HTMLOListElement` dans `HomePage.tsx`
+- **pywebpush** : downgrade `2.4.0` → `2.3.0` (version inexistante)
+- **Event manifest** : ajout de `preference.updated` dans le manifest `_identity`
+
+### security (HttpOnly cookie migration)
+
+- **Refresh token → HttpOnly cookie** : le `refresh_token` est desormais stocke dans un cookie `HttpOnly/Secure/SameSite=Lax` (Path=/api/auth) au lieu de localStorage — invisible au JavaScript, empechant l'exfiltration XSS
+- **Access token → memoire JS** : le `access_token` est stocke dans une variable module (`api.ts`) au lieu de localStorage — perdu au reload, recupere par silent refresh via cookie
+- **Backend: 7 fichiers routes migres** : login, refresh, verify-email, logout (nouveau), invitations, SSO Google/GitHub, MFA verify, impersonation start/stop/switch — tous utilisent `set_refresh_cookie()` et retournent uniquement `access_token` dans le JSON
+- **Endpoint POST /auth/logout** : revoque la session en DB via le hash du cookie + `clear_refresh_cookie()`
+- **Frontend: token store centralise** : `setAccessToken()`, `getAccessToken()`, `clearAccessToken()` dans `api.ts` — remplacement de tous les `localStorage.getItem/setItem('access_token'/'refresh_token')` dans 10 fichiers
+- **Anti-flash theme** : `main.tsx` utilise `has_session` + `last_theme`/`last_bg_theme` (caches par AuthContext) au lieu de parser le JWT pour appliquer le theme avant le rendu React
+- **Silent refresh** : sur page reload, `fetchUser()` detecte `has_session` → 401 → intercepteur Axios → `POST /api/auth/refresh` (cookie auto) → nouveau `access_token` en memoire
+- **RGPD** : `last_theme` et `last_bg_theme` ajoutees a `cleanupFunctionalStorage()` dans `consentManager.ts`
+
+## 2026.02.55
+
+### security (hardening)
+
+- **Validation POSTGRES_PASSWORD** : l'API refuse de demarrer si `POSTGRES_PASSWORD` a sa valeur par defaut en dehors de `ENV=dev`
+- **OpenAPI docs masquees en production** : `docs_url` et `openapi_url` sont `None` quand `ENV != "dev"`
+- **SSL intranet configurable** : nouveau setting `INTRANET_SSL_CA_BUNDLE` pour configurer le certificat CA intranet ; `verify=False` uniquement en dev
+- **Migration python-jose vers PyJWT** : remplacement de `python-jose` (abandonne) par `pyjwt[crypto]` (activement maintenu)
+- **Suppression passlib** : remplacement de `passlib[bcrypt]` + monkey-patch par usage direct de `bcrypt` (meme format de hash, compatible avec les mots de passe existants)
+- **Mise a jour des dependances** : bump de 18 packages Python vers leurs dernieres versions stables
+- **Token reset-password non expose** : suppression du token brut dans la reponse admin `/users/{id}/reset-password` quand l'email est desactive
+- **Anti-enumeration /register** : reponse generique identique que l'email existe deja ou non, empechant l'enumeration de comptes
+
+## 2026.02.54
+
+### security (hardening)
+
+- **Validation au demarrage** : l'API refuse de demarrer si `SECRET_KEY` a sa valeur par defaut (`dev_secret_key_change_in_production`) en dehors de `ENV=dev`, et si `ENCRYPTION_KEY` est absente en production
+- **Codes de verification cryptographiques** : remplacement de `random.randint()` par `secrets.randbelow()` dans les 3 fichiers qui generent des codes 6 chiffres (`routes_auth.py`, `routes_invitations.py`, `services.py`)
+- **debug_code conditionne a ENV=dev** : les codes de verification ne sont plus exposes dans les reponses API quand `EMAIL_ENABLED=false` — uniquement quand `ENV=dev`
+
 ## 2026.02.53
 
 ### batch_utils (NEW)

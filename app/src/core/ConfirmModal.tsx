@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 interface ConfirmOptions {
@@ -83,8 +83,10 @@ export function ConfirmProvider({ children }: ConfirmProviderProps) {
 
   const variantClass = options?.variant || 'info'
 
+  const contextValue = useMemo(() => ({ confirm, alert }), [confirm, alert])
+
   return (
-    <ConfirmContext.Provider value={{ confirm, alert }}>
+    <ConfirmContext.Provider value={contextValue}>
       {children}
       {isOpen && options && (
         <div className="modal-overlay" onClick={handleOverlayClick}>

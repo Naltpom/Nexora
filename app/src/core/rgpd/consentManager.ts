@@ -47,6 +47,8 @@ export function cleanupFunctionalStorage(): void {
     if (!key) continue
     if (key.startsWith('preferences_')) keysToRemove.push(key)
     if (key === 'push_prompt_dismissed') keysToRemove.push(key)
+    if (key === 'last_theme') keysToRemove.push(key)
+    if (key === 'last_bg_theme') keysToRemove.push(key)
   }
   keysToRemove.forEach((k) => localStorage.removeItem(k))
   FUNCTIONAL_SESSION_KEYS.forEach((k) => sessionStorage.removeItem(k))

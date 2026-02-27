@@ -70,12 +70,29 @@ def import_all_models():
 
 
 def create_app() -> FastAPI:
+    # ── Security validation ───────────────────────────────────────────
+    if settings.SECRET_KEY == "dev_secret_key_change_in_production" and settings.ENV != "dev":
+        raise RuntimeError(
+            "FATAL: SECRET_KEY has default value in non-dev environment. "
+            "Set a secure SECRET_KEY in your .env file."
+        )
+    if settings.ENV != "dev" and not settings.ENCRYPTION_KEY:
+        raise RuntimeError(
+            "FATAL: ENCRYPTION_KEY is required in production. "
+            "Generate one with: python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())'"
+        )
+    if settings.POSTGRES_PASSWORD == "template_dev_password" and settings.ENV != "dev":
+        raise RuntimeError(
+            "FATAL: POSTGRES_PASSWORD has default value in non-dev environment. "
+            "Set a secure POSTGRES_PASSWORD in your .env file."
+        )
+
     application = FastAPI(
         title="Nexora",
         description="Feature-based modular application template",
-        version="2026.02.53",
-        docs_url="/api/docs",
-        openapi_url="/api/openapi.json",
+        version="2026.02.56",
+        docs_url="/api/docs" if settings.is_dev else None,
+        openapi_url="/api/openapi.json" if settings.is_dev else None,
     )
 
     # ── CORS ─────────────────────────────────────────────────────────

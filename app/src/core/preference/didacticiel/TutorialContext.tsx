@@ -390,32 +390,40 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const contextValue = useMemo(() => ({
+    featureTutorials,
+    permissionsSeen,
+    active,
+    currentStep,
+    currentPermissionTutorial,
+    currentFeatureTutorial,
+    totalStepsInChain,
+    currentStepInChain,
+    startFeatureTutorial,
+    startPermissionTutorial,
+    startUnseenTutorials,
+    startAllTutorials,
+    nextStep,
+    prevStep,
+    skipCurrent,
+    skipAll,
+    closeTutorial,
+    markPermissionSeen,
+    resetAll,
+    pendingNewPermissions,
+    dismissPending,
+  }), [
+    featureTutorials, permissionsSeen, active,
+    currentStep, currentPermissionTutorial, currentFeatureTutorial,
+    totalStepsInChain, currentStepInChain,
+    startFeatureTutorial, startPermissionTutorial, startUnseenTutorials, startAllTutorials,
+    nextStep, prevStep, skipCurrent, skipAll,
+    closeTutorial, markPermissionSeen, resetAll,
+    pendingNewPermissions, dismissPending,
+  ])
+
   return (
-    <TutorialContext.Provider
-      value={{
-        featureTutorials,
-        permissionsSeen,
-        active,
-        currentStep,
-        currentPermissionTutorial,
-        currentFeatureTutorial,
-        totalStepsInChain,
-        currentStepInChain,
-        startFeatureTutorial,
-        startPermissionTutorial,
-        startUnseenTutorials,
-        startAllTutorials,
-        nextStep,
-        prevStep,
-        skipCurrent,
-        skipAll,
-        closeTutorial,
-        markPermissionSeen,
-        resetAll,
-        pendingNewPermissions,
-        dismissPending,
-      }}
-    >
+    <TutorialContext.Provider value={contextValue}>
       {children}
     </TutorialContext.Provider>
   )

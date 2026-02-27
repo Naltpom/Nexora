@@ -218,5 +218,7 @@
   "misc_toggle_notifications_on": "Notifications enabled",
   "misc_toggle_maintenance": "Maintenance mode",
   "misc_toggle_security_locked": "Enhanced security (locked)",
-  "misc_toggle_feature_disabled": "Feature disabled (locked)"
+  "misc_toggle_feature_disabled": "Feature disabled (locked)",
+
+  "aria_tablist": "Component catalogue sections"
 }

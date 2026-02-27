@@ -31,6 +31,9 @@ export default function Layout({ children, breadcrumb, fullWidth, title }: Props
 
   return (
     <div className="layout">
+      <a href="#main-content" className="skip-nav">
+        Aller au contenu principal
+      </a>
       <Header />
       <ImpersonationBanner />
       {isActive('mfa') && (
@@ -38,7 +41,7 @@ export default function Layout({ children, breadcrumb, fullWidth, title }: Props
           <MFASetupBanner />
         </Suspense>
       )}
-      <main className={`main-content page-enter${fullWidth ? ' main-content-full' : ''}`}>
+      <main id="main-content" className={`main-content page-enter${fullWidth ? ' main-content-full' : ''}`}>
         {breadcrumb && breadcrumb.length > 0 && <Breadcrumb items={breadcrumb} />}
         {children}
       </main>

@@ -46,7 +46,7 @@ class MFAVerifyRequest(BaseModel):
 
 class MFAVerifyResponse(BaseModel):
     access_token: str
-    refresh_token: str
+    refresh_token: str = ""
     token_type: str = "bearer"
     must_change_password: bool = False
     preferences: dict | None = None

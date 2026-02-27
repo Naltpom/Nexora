@@ -31,6 +31,10 @@ export default function SSOCallbackPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    document.title = t('page_title')
+  }, [t])
+
+  useEffect(() => {
     const code = searchParams.get('code')
 
     // Guard: skip if code already submitted (handles StrictMode + unmount/remount)
@@ -72,7 +76,7 @@ export default function SSOCallbackPage() {
               }
             }
 
-            await loginWithSSO(data.access_token, data.refresh_token)
+            await loginWithSSO(data.access_token)
 
             // Handle MFA setup enforcement
             if (data.mfa_setup_required) {
@@ -100,9 +104,11 @@ export default function SSOCallbackPage() {
   return (
     <div className="login-container">
       <div className="login-card">
+        <h1 className="sr-only">{t('page_title')}</h1>
+
         {loading && !error && (
-          <div className="sso-callback-loading">
-            <div className="sso-spinner" />
+          <div className="sso-callback-loading" role="status" aria-busy="true" aria-live="polite">
+            <div className="sso-spinner" aria-hidden="true" />
             <p className="sso-callback-loading-text">
               {t('connexion_en_cours')}
             </p>
@@ -110,8 +116,8 @@ export default function SSOCallbackPage() {
         )}
 
         {error && (
-          <div className="sso-callback-error">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <div className="sso-callback-error" role="alert">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <circle cx="12" cy="12" r="10" />
               <line x1="15" y1="9" x2="9" y2="15" />
               <line x1="9" y1="9" x2="15" y2="15" />

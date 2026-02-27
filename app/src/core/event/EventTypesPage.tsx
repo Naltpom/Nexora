@@ -75,7 +75,7 @@ export default function EventTypesPage() {
   const featureCount = Object.keys(filteredGroups).length
 
   return (
-    <Layout breadcrumb={[{ label: t('breadcrumb_accueil'), path: '/' }, { label: t('breadcrumb_events'), path: '/admin/events' }, { label: t('breadcrumb_types') }]} title={t('breadcrumb_types')}>
+    <Layout breadcrumb={[{ label: t('breadcrumb_accueil'), path: '/' }, { label: t('breadcrumb_events'), path: '/admin/events' }, { label: t('breadcrumb_types') }]} title={t('page_title_catalogue')}>
       <div className="unified-card page-header-card">
         <div className="unified-page-header">
           <div className="unified-page-header-info">
@@ -96,25 +96,28 @@ export default function EventTypesPage() {
       </div>
 
       {loading ? (
-        <div className="spinner" />
+        <div className="spinner" aria-busy="true" role="status">
+          <span className="sr-only">{t('aria_loading')}</span>
+        </div>
       ) : eventTypes.length === 0 ? (
-        <div className="unified-card events-empty-state">
+        <div className="unified-card events-empty-state" role="status">
           {t('aucun_type_declare')}
         </div>
       ) : (
         <>
-          <div className="unified-card events-search-standalone">
+          <div className="unified-card events-search-standalone" role="search" aria-label={t('aria_search_event_types')}>
             <input
               type="text"
               className="events-search-input"
               placeholder={t('rechercher_type')}
               value={searchValue}
               onChange={(e) => handleSearchChange(e.target.value)}
+              aria-label={t('aria_search_event_types')}
             />
           </div>
 
           {Object.keys(filteredGroups).length === 0 ? (
-            <div className="unified-card events-empty-state">
+            <div className="unified-card events-empty-state" role="status">
               {t('aucun_evenement_correspondant')}
             </div>
           ) : (
@@ -128,13 +131,14 @@ export default function EventTypesPage() {
                 </h2>
                 <div className="unified-card card-table">
                   <div className="table-container">
-                    <table className="unified-table">
+                    <table className="unified-table" aria-label={t('aria_types_table_caption', { feature })}>
+                      <caption className="sr-only">{t('aria_types_table_caption', { feature })}</caption>
                       <thead>
                         <tr>
-                          <th className="col-200">{t('col_event_type')}</th>
-                          <th className="col-200">{t('col_label')}</th>
-                          <th className="col-120">{t('col_categorie')}</th>
-                          <th>{t('col_description')}</th>
+                          <th scope="col" className="col-200">{t('col_event_type')}</th>
+                          <th scope="col" className="col-200">{t('col_label')}</th>
+                          <th scope="col" className="col-120">{t('col_categorie')}</th>
+                          <th scope="col">{t('col_description')}</th>
                         </tr>
                       </thead>
                       <tbody>

@@ -218,5 +218,7 @@
   "misc_toggle_notifications_on": "Notifications activees",
   "misc_toggle_maintenance": "Mode maintenance",
   "misc_toggle_security_locked": "Securite renforcee (verrouille)",
-  "misc_toggle_feature_disabled": "Fonctionnalite desactivee (verrouille)"
+  "misc_toggle_feature_disabled": "Fonctionnalite desactivee (verrouille)",
+
+  "aria_tablist": "Sections du catalogue de composants"
 }

@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,6 +17,7 @@ from ..security import (
     get_current_user,
     get_original_admin_id,
     is_impersonating,
+    set_refresh_cookie,
 )
 from .models import ImpersonationLog, User
 from .schemas import (
@@ -43,6 +44,7 @@ router = APIRouter()
 async def start_impersonation(
     target_user_id: int,
     request: Request,
+    response: Response,
     current_admin=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -95,13 +97,14 @@ async def start_impersonation(
         session_id=session_id,
         lang=target.language,
     )
-    refresh_token = create_refresh_token({
+    refresh = create_refresh_token({
         "sub": str(target.id),
         "email": target.email,
         "lang": target.language,
         "impersonated_by": current_admin.id,
         "impersonation_session_id": session_id,
     })
+    set_refresh_cookie(response, refresh)
 
     await event_bus.emit(
         "admin.impersonation_started",
@@ -119,7 +122,6 @@ async def start_impersonation(
 
     return ImpersonationStartResponse(
         access_token=access_token,
-        refresh_token=refresh_token,
         impersonated_user_id=target.id,
         impersonated_user_email=target.email,
         session_id=session_id,
@@ -133,6 +135,7 @@ async def start_impersonation(
 
 @router.post("/stop", response_model=ImpersonationStopResponse)
 async def stop_impersonation(
+    response: Response,
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -173,9 +176,10 @@ async def stop_impersonation(
     )
 
     token_data = {"sub": str(admin.id), "email": admin.email, "lang": admin.language}
+    refresh = create_refresh_token(token_data)
+    set_refresh_cookie(response, refresh)
     return ImpersonationStopResponse(
         access_token=create_access_token(token_data),
-        refresh_token=create_refresh_token(token_data),
         message="Impersonation terminee avec succes",
     )
 
@@ -189,6 +193,7 @@ async def stop_impersonation(
 async def switch_impersonation(
     target_user_id: int,
     request: Request,
+    response: Response,
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -278,17 +283,17 @@ async def switch_impersonation(
         session_id=session_id,
         lang=target.language,
     )
-    refresh_token = create_refresh_token({
+    refresh = create_refresh_token({
         "sub": str(target.id),
         "email": target.email,
         "lang": target.language,
         "impersonated_by": admin_user_id,
         "impersonation_session_id": session_id,
     })
+    set_refresh_cookie(response, refresh)
 
     return ImpersonationStartResponse(
         access_token=access_token,
-        refresh_token=refresh_token,
         impersonated_user_id=target.id,
         impersonated_user_email=target.email,
         session_id=session_id,

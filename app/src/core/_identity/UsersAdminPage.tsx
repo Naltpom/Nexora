@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, FormEvent } from 'react'
+import { useState, useEffect, useRef, useCallback, memo, FormEvent, KeyboardEvent } from 'react'
 import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Layout from '../../core/Layout'
@@ -42,6 +42,186 @@ type FieldChanges = Record<string, any>
 type PendingChanges = Record<number, FieldChanges>
 
 type UsersTab = 'users' | 'invitations'
+
+interface UserTableRowProps {
+  user: User
+  fieldChanges: FieldChanges | undefined
+  currentUserId: number | undefined
+  canUpdate: boolean
+  canDelete: boolean
+  canImpersonate: boolean
+  onFieldChange: (userId: number, field: string, value: any) => void
+  onImpersonate: (user: User) => void
+  onResetPassword: (user: User) => void
+  onDelete: (id: number) => void
+}
+
+const UserTableRow = memo(function UserTableRow({
+  user: u,
+  fieldChanges,
+  currentUserId,
+  canUpdate,
+  canDelete,
+  canImpersonate,
+  onFieldChange,
+  onImpersonate,
+  onResetPassword,
+  onDelete,
+}: UserTableRowProps) {
+  const { t } = useTranslation('_identity')
+
+  const getEffective = (field: string) => {
+    if (fieldChanges && field in fieldChanges) return fieldChanges[field]
+    return (u as any)[field]
+  }
+
+  const isModified = (field: string) => {
+    return fieldChanges !== undefined && field in fieldChanges
+  }
+
+  const userName = `${u.first_name} ${u.last_name}`
+
+  return (
+    <tr>
+      <td className={isModified('email') ? 'cell-modified' : ''}>
+        <input
+          className="inline-input"
+          value={getEffective('email')}
+          onChange={(e) => onFieldChange(u.id, 'email', e.target.value)}
+          aria-label={t('a11y.user_email_input', { name: userName })}
+        />
+      </td>
+      <td className={isModified('first_name') ? 'cell-modified' : ''}>
+        <input
+          className="inline-input"
+          value={getEffective('first_name')}
+          onChange={(e) => onFieldChange(u.id, 'first_name', e.target.value)}
+          aria-label={t('a11y.user_firstname_input', { name: userName })}
+        />
+      </td>
+      <td className={isModified('last_name') ? 'cell-modified' : ''}>
+        <input
+          className="inline-input"
+          value={getEffective('last_name')}
+          onChange={(e) => onFieldChange(u.id, 'last_name', e.target.value)}
+          aria-label={t('a11y.user_lastname_input', { name: userName })}
+        />
+      </td>
+      <td>
+        <div className="flex-row-xs flex-wrap">
+          {u.roles.map(r => (
+            <span
+              key={r.id}
+              className="badge-role"
+              {...(r.color ? { style: { '--role-color': r.color } as React.CSSProperties } : {})}
+            >
+              {r.name}
+            </span>
+          ))}
+        </div>
+      </td>
+      <td className={isModified('is_active') ? 'cell-modified' : ''}>
+        <button
+          className={`badge-active ${getEffective('is_active') ? 'badge-active-on' : 'badge-active-off'}`}
+          onClick={() => onFieldChange(u.id, 'is_active', !getEffective('is_active'))}
+          disabled={!canUpdate}
+          aria-pressed={getEffective('is_active')}
+          aria-label={t('a11y.toggle_active_user', { name: userName })}
+        >
+          {getEffective('is_active') ? t('common.active') : t('common.inactive')}
+        </button>
+      </td>
+      <td className="text-gray-500-sm nowrap">
+        {u.last_active
+          ? new Date(u.last_active).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+          : '\u2014'}
+      </td>
+      <td>
+        {(() => {
+          if (!u.last_active) return <span className="badge-status badge-status-offline">{t('users_admin.status_offline')}</span>
+          const diff = Date.now() - new Date(u.last_active).getTime()
+          if (diff < 5 * 60 * 1000) return <span className="badge-status badge-status-online">{t('users_admin.status_online')}</span>
+          if (diff < 10 * 60 * 1000) return <span className="badge-status badge-status-away">{t('users_admin.status_away')}</span>
+          return <span className="badge-status badge-status-offline">{t('users_admin.status_offline')}</span>
+        })()}
+      </td>
+      <td>
+        <div className="flex-row-xs">
+          {/* Detail button */}
+          <Link
+            to={`/admin/users/${u.uuid}`}
+            className="btn-icon btn-icon-secondary"
+            aria-label={t('a11y.btn_view_detail', { name: userName })}
+            title={t('users_admin.tooltip_view_detail')}
+          >
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+          </Link>
+
+          {/* Impersonate button - hidden for immune users and self */}
+          {canImpersonate && !u.is_impersonation_immune && u.id !== currentUserId ? (
+            <button
+              className="btn-icon btn-icon-primary impersonate-btn"
+              onClick={() => onImpersonate(u)}
+              aria-label={t('a11y.btn_impersonate', { name: userName })}
+              title={t('users_admin.tooltip_impersonate')}
+            >
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+            </button>
+          ) : (
+            <div className="spacer-32" />
+          )}
+
+          {canUpdate && (
+            <button
+              className="btn-icon btn-icon-warning"
+              onClick={() => onResetPassword(u)}
+              aria-label={t('a11y.btn_reset_password', { name: userName })}
+              title={t('users_admin.tooltip_reset_password')}
+            >
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </button>
+          )}
+
+          {canDelete && (
+            <button
+              className="btn-icon btn-icon-danger"
+              onClick={() => onDelete(u.id)}
+              aria-label={t('a11y.btn_delete_user', { name: userName })}
+              title={t('users_admin.tooltip_delete')}
+            >
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              </svg>
+            </button>
+          )}
+        </div>
+      </td>
+    </tr>
+  )
+}, (prevProps, nextProps) => {
+  // Custom comparison: re-render only when this specific user's data or modifications change
+  if (prevProps.user !== nextProps.user) return false
+  if (prevProps.fieldChanges !== nextProps.fieldChanges) return false
+  if (prevProps.currentUserId !== nextProps.currentUserId) return false
+  if (prevProps.canUpdate !== nextProps.canUpdate) return false
+  if (prevProps.canDelete !== nextProps.canDelete) return false
+  if (prevProps.canImpersonate !== nextProps.canImpersonate) return false
+  if (prevProps.onFieldChange !== nextProps.onFieldChange) return false
+  if (prevProps.onImpersonate !== nextProps.onImpersonate) return false
+  if (prevProps.onResetPassword !== nextProps.onResetPassword) return false
+  if (prevProps.onDelete !== nextProps.onDelete) return false
+  return true
+})
 
 export default function Users() {
   const { t } = useTranslation('_identity')
@@ -253,13 +433,7 @@ export default function Users() {
   }
 
   // --- Change tracking ---
-  const getEffectiveValue = (user: User, field: string) => {
-    const changes = pendingChanges[user.id]
-    if (changes && field in changes) return changes[field]
-    return (user as any)[field]
-  }
-
-  const setFieldChange = (userId: number, field: string, value: any) => {
+  const setFieldChange = useCallback((userId: number, field: string, value: any) => {
     setPendingChanges(prev => {
       const userChanges = { ...(prev[userId] || {}), [field]: value }
       const user = userSnapshots[userId] || users.find(u => u.id === userId)
@@ -272,11 +446,7 @@ export default function Users() {
       }
       return { ...prev, [userId]: userChanges }
     })
-  }
-
-  const isFieldModified = (userId: number, field: string) => {
-    return pendingChanges[userId] && field in pendingChanges[userId]
-  }
+  }, [userSnapshots, users])
 
   const hasChanges = Object.keys(pendingChanges).length > 0
 
@@ -368,7 +538,7 @@ export default function Users() {
   }
 
   // --- Delete user ---
-  const handleDelete = async (id: number) => {
+  const handleDelete = useCallback(async (id: number) => {
     const confirmed = await confirm({
       title: t('users_admin.confirm_delete_title'),
       message: t('users_admin.confirm_delete_message'),
@@ -382,10 +552,10 @@ export default function Users() {
     } catch (err: any) {
       await alert({ message: err.response?.data?.detail || t('common.error'), variant: 'danger' })
     }
-  }
+  }, [confirm, alert, t])
 
   // --- Reset password ---
-  const handleResetPassword = async (user: User) => {
+  const handleResetPassword = useCallback(async (user: User) => {
     const confirmed = await confirm({
       title: t('users_admin.confirm_reset_title'),
       message: t('users_admin.confirm_reset_message', { email: user.email }),
@@ -397,15 +567,15 @@ export default function Users() {
       const res = await api.post(`/users/${user.id}/reset-password`)
       await alert({
         title: t('common.success'),
-        message: res.data.message + (res.data.token ? `\n\nToken: ${res.data.token}` : ''),
+        message: res.data.message,
       })
     } catch (err: any) {
       await alert({ message: err.response?.data?.detail || t('common.error'), variant: 'danger' })
     }
-  }
+  }, [confirm, alert, t])
 
   // --- Impersonate ---
-  const handleImpersonate = async (user: User) => {
+  const handleImpersonate = useCallback(async (user: User) => {
     const confirmed = await confirm({
       title: t('users_admin.confirm_impersonate_title'),
       message: t('users_admin.confirm_impersonate_message', { name: `${user.first_name} ${user.last_name}` }),
@@ -420,7 +590,34 @@ export default function Users() {
     } catch (error: any) {
       await alert({ message: error.message || t('users_admin.impersonate_error'), variant: 'danger' })
     }
+  }, [confirm, alert, t, startImpersonation, navigate])
+
+  // Keyboard handler for sortable table headers
+  const handleSortKeyDown = (e: KeyboardEvent, field: 'email' | 'first_name' | 'last_name') => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      handleSort(field)
+    }
   }
+
+  // Helper to get aria-sort value
+  const getAriaSort = (field: string): 'ascending' | 'descending' | 'none' => {
+    if (sortBy !== field) return 'none'
+    return sortDir === 'asc' ? 'ascending' : 'descending'
+  }
+
+  // Close modals on Escape
+  useEffect(() => {
+    const handleEscape = (e: globalThis.KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showRecapModal) setShowRecapModal(false)
+        else if (showCreateModal) setShowCreateModal(false)
+        else if (showInviteModal) setShowInviteModal(false)
+      }
+    }
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [showRecapModal, showCreateModal, showInviteModal])
 
   return (
     <Layout breadcrumb={[{ label: t('common.home'), path: '/' }, { label: t('users_admin.breadcrumb_users') }]} title={t('users_admin.breadcrumb_users')}>
@@ -434,11 +631,15 @@ export default function Users() {
       </div>
 
       {showInvitationsTab && (
-        <div className="tab-bar">
+        <div className="tab-bar" role="tablist">
           <button
             className={`tab-button ${activeTab === 'users' ? 'tab-button--active' : 'tab-button--inactive'}`}
             onClick={() => setActiveTab('users')}
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'users'}
+            aria-controls="tabpanel-users"
+            id="tab-users"
           >
             {t('users_admin.tab_users')}
           </button>
@@ -446,6 +647,10 @@ export default function Users() {
             className={`tab-button ${activeTab === 'invitations' ? 'tab-button--active' : 'tab-button--inactive'}`}
             onClick={() => setActiveTab('invitations')}
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'invitations'}
+            aria-controls="tabpanel-invitations"
+            id="tab-invitations"
           >
             {t('users_admin.tab_invitations')}
           </button>
@@ -453,7 +658,7 @@ export default function Users() {
       )}
 
       {activeTab === 'invitations' && showInvitationsTab ? (
-        <>
+        <div role="tabpanel" id="tabpanel-invitations" aria-labelledby="tab-invitations">
           <div className="unified-card page-header-card">
             <div className="unified-page-header">
               <div className="unified-page-header-info">
@@ -462,7 +667,7 @@ export default function Users() {
               <div className="unified-page-header-actions">
                 {can('invitations.create') && (
                   <button className="btn-unified-primary" onClick={() => { setInviteEmail(''); setInviteError(''); setShowInviteModal(true) }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M12 5v14M5 12h14" />
                     </svg>
                     {t('users_admin.btn_invite')}
@@ -473,19 +678,20 @@ export default function Users() {
           </div>
 
           {invitationsLoading ? (
-            <div className="spinner" />
+            <div className="spinner" role="status" aria-label={t('a11y.loading_invitations')} />
           ) : (
             <div className="unified-card full-width-breakout card-table">
               <div className="table-container">
                 <table className="unified-table invitations-table">
+                  <caption className="sr-only">{t('a11y.table_caption_invitations')}</caption>
                   <thead>
                     <tr>
-                      <th>{t('users_admin.inv_th_email')}</th>
-                      <th>{t('users_admin.inv_th_invited_by')}</th>
-                      <th>{t('users_admin.inv_th_sent_at')}</th>
-                      <th>{t('users_admin.inv_th_expires_at')}</th>
-                      <th>{t('users_admin.inv_th_status')}</th>
-                      {can('invitations.delete') && <th>{t('users_admin.inv_th_actions')}</th>}
+                      <th scope="col">{t('users_admin.inv_th_email')}</th>
+                      <th scope="col">{t('users_admin.inv_th_invited_by')}</th>
+                      <th scope="col">{t('users_admin.inv_th_sent_at')}</th>
+                      <th scope="col">{t('users_admin.inv_th_expires_at')}</th>
+                      <th scope="col">{t('users_admin.inv_th_status')}</th>
+                      {can('invitations.delete') && <th scope="col">{t('users_admin.inv_th_actions')}</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -509,9 +715,10 @@ export default function Users() {
                               <button
                                 className="btn-icon btn-icon-danger"
                                 onClick={() => handleDeleteInvitation(inv.id)}
+                                aria-label={t('a11y.btn_cancel_invitation', { email: inv.email })}
                                 title={t('users_admin.inv_tooltip_cancel')}
                               >
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                   <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                                 </svg>
                               </button>
@@ -529,22 +736,24 @@ export default function Users() {
           {/* Invite Modal */}
           {showInviteModal && (
             <div className="modal-overlay" onClick={() => setShowInviteModal(false)}>
-              <div className="modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal" role="dialog" aria-modal="true" aria-labelledby="invite-modal-title" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header">
-                  <h2>{t('users_admin.inv_modal_title')}</h2>
-                  <button className="modal-close" onClick={() => setShowInviteModal(false)}>&times;</button>
+                  <h2 id="invite-modal-title">{t('users_admin.inv_modal_title')}</h2>
+                  <button className="modal-close" onClick={() => setShowInviteModal(false)} aria-label={t('a11y.close_modal')}>&times;</button>
                 </div>
                 <form onSubmit={handleInvite}>
                   <div className="modal-body">
-                    {inviteError && <div className="alert alert-error">{inviteError}</div>}
+                    {inviteError && <div className="alert alert-error" role="alert">{inviteError}</div>}
                     <div className="form-group">
-                      <label>{t('users_admin.inv_modal_email_label')}</label>
+                      <label htmlFor="invite-email">{t('users_admin.inv_modal_email_label')}</label>
                       <input
+                        id="invite-email"
                         type="email"
                         value={inviteEmail}
                         onChange={(e) => setInviteEmail(e.target.value)}
                         placeholder={t('users_admin.inv_modal_email_placeholder')}
                         required
+                        aria-required="true"
                       />
                     </div>
                   </div>
@@ -558,7 +767,7 @@ export default function Users() {
               </div>
             </div>
           )}
-        </>
+        </div>
       ) : (
         <>
           {/* Users tab header actions */}
@@ -581,8 +790,8 @@ export default function Users() {
                     placeholder={t('users_admin.filter_roles_placeholder')}
                   />
                 )}
-                <div className="unified-search-box">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <div className="unified-search-box" role="search">
+                  <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
                   </svg>
                   <input
@@ -590,11 +799,12 @@ export default function Users() {
                     placeholder={t('common.search')}
                     value={search}
                     onChange={(e) => handleSearchChange(e.target.value)}
+                    aria-label={t('a11y.search_users')}
                   />
                 </div>
                 {can('users.create') && (
                   <button className="btn-unified-primary" onClick={openCreate}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M12 5v14M5 12h14" />
                     </svg>
                     {t('users_admin.btn_new_user')}
@@ -605,160 +815,59 @@ export default function Users() {
           </div>
 
       {loading ? (
-        <div className="spinner" />
+        <div className="spinner" role="status" aria-label={t('a11y.loading_users')} />
       ) : (
         <>
           <div className="unified-card full-width-breakout card-table">
             <div className="table-container">
               <table className="unified-table">
+                <caption className="sr-only">{t('a11y.table_caption_users')}</caption>
                 <thead>
                   <tr>
-                    <th className="col-email th-sortable" onClick={() => handleSort('email')}>
-                      {t('users_admin.th_email')} {sortBy === 'email' && <span className="sort-indicator">{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span>}
+                    <th scope="col" className="col-email th-sortable" role="button" tabIndex={0} aria-sort={getAriaSort('email')} onClick={() => handleSort('email')} onKeyDown={(e) => handleSortKeyDown(e, 'email')}>
+                      {t('users_admin.th_email')} {sortBy === 'email' && <span className="sort-indicator" aria-hidden="true">{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span>}
                     </th>
-                    <th className="col-name th-sortable" onClick={() => handleSort('first_name')}>
-                      {t('users_admin.th_first_name')} {sortBy === 'first_name' && <span className="sort-indicator">{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span>}
+                    <th scope="col" className="col-name th-sortable" role="button" tabIndex={0} aria-sort={getAriaSort('first_name')} onClick={() => handleSort('first_name')} onKeyDown={(e) => handleSortKeyDown(e, 'first_name')}>
+                      {t('users_admin.th_first_name')} {sortBy === 'first_name' && <span className="sort-indicator" aria-hidden="true">{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span>}
                     </th>
-                    <th className="col-name th-sortable" onClick={() => handleSort('last_name')}>
-                      {t('users_admin.th_last_name')} {sortBy === 'last_name' && <span className="sort-indicator">{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span>}
+                    <th scope="col" className="col-name th-sortable" role="button" tabIndex={0} aria-sort={getAriaSort('last_name')} onClick={() => handleSort('last_name')} onKeyDown={(e) => handleSortKeyDown(e, 'last_name')}>
+                      {t('users_admin.th_last_name')} {sortBy === 'last_name' && <span className="sort-indicator" aria-hidden="true">{sortDir === 'asc' ? '\u25B2' : '\u25BC'}</span>}
                     </th>
-                    <th>{t('users_admin.th_roles')}</th>
-                    <th>{t('users_admin.th_active')}</th>
-                    <th>{t('users_admin.th_last_activity')}</th>
-                    <th>{t('users_admin.th_status')}</th>
-                    <th>{t('users_admin.th_actions')}</th>
+                    <th scope="col">{t('users_admin.th_roles')}</th>
+                    <th scope="col">{t('users_admin.th_active')}</th>
+                    <th scope="col">{t('users_admin.th_last_activity')}</th>
+                    <th scope="col">{t('users_admin.th_status')}</th>
+                    <th scope="col">{t('users_admin.th_actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {users.map((u) => (
-                    <tr key={u.id}>
-                      <td className={isFieldModified(u.id, 'email') ? 'cell-modified' : ''}>
-                        <input
-                          className="inline-input"
-                          value={getEffectiveValue(u, 'email')}
-                          onChange={(e) => setFieldChange(u.id, 'email', e.target.value)}
-                        />
-                      </td>
-                      <td className={isFieldModified(u.id, 'first_name') ? 'cell-modified' : ''}>
-                        <input
-                          className="inline-input"
-                          value={getEffectiveValue(u, 'first_name')}
-                          onChange={(e) => setFieldChange(u.id, 'first_name', e.target.value)}
-                        />
-                      </td>
-                      <td className={isFieldModified(u.id, 'last_name') ? 'cell-modified' : ''}>
-                        <input
-                          className="inline-input"
-                          value={getEffectiveValue(u, 'last_name')}
-                          onChange={(e) => setFieldChange(u.id, 'last_name', e.target.value)}
-                        />
-                      </td>
-                      <td>
-                        <div className="flex-row-xs flex-wrap">
-                          {u.roles.map(r => (
-                            <span
-                              key={r.id}
-                              className="badge-role"
-                              {...(r.color ? { style: { '--role-color': r.color } as React.CSSProperties } : {})}
-                            >
-                              {r.name}
-                            </span>
-                          ))}
-                        </div>
-                      </td>
-                      <td className={isFieldModified(u.id, 'is_active') ? 'cell-modified' : ''}>
-                        <button
-                          className={`badge-active ${getEffectiveValue(u, 'is_active') ? 'badge-active-on' : 'badge-active-off'}`}
-                          onClick={() => setFieldChange(u.id, 'is_active', !getEffectiveValue(u, 'is_active'))}
-                          disabled={!can('users.update')}
-                        >
-                          {getEffectiveValue(u, 'is_active') ? t('common.active') : t('common.inactive')}
-                        </button>
-                      </td>
-                      <td className="text-gray-500-sm nowrap">
-                        {u.last_active
-                          ? new Date(u.last_active).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-                          : '\u2014'}
-                      </td>
-                      <td>
-                        {(() => {
-                          if (!u.last_active) return <span className="badge-status badge-status-offline">{t('users_admin.status_offline')}</span>
-                          const diff = Date.now() - new Date(u.last_active).getTime()
-                          if (diff < 5 * 60 * 1000) return <span className="badge-status badge-status-online">{t('users_admin.status_online')}</span>
-                          if (diff < 10 * 60 * 1000) return <span className="badge-status badge-status-away">{t('users_admin.status_away')}</span>
-                          return <span className="badge-status badge-status-offline">{t('users_admin.status_offline')}</span>
-                        })()}
-                      </td>
-                      <td>
-                        <div className="flex-row-xs">
-                          {/* Detail button */}
-                          <Link
-                            to={`/admin/users/${u.uuid}`}
-                            className="btn-icon btn-icon-secondary"
-                            title={t('users_admin.tooltip_view_detail')}
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                              <circle cx="12" cy="12" r="3" />
-                            </svg>
-                          </Link>
-
-                          {/* Impersonate button - hidden for immune users and self */}
-                          {can('impersonation.start') && !u.is_impersonation_immune && u.id !== currentUser?.id ? (
-                            <button
-                              className="btn-icon btn-icon-primary impersonate-btn"
-                              onClick={() => handleImpersonate(u)}
-                              title={t('users_admin.tooltip_impersonate')}
-                            >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                                <circle cx="9" cy="7" r="4" />
-                                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                              </svg>
-                            </button>
-                          ) : (
-                            <div className="spacer-32" />
-                          )}
-
-                          {can('users.update') && (
-                            <button
-                              className="btn-icon btn-icon-warning"
-                              onClick={() => handleResetPassword(u)}
-                              title={t('users_admin.tooltip_reset_password')}
-                            >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                              </svg>
-                            </button>
-                          )}
-
-                          {can('users.delete') && (
-                            <button
-                              className="btn-icon btn-icon-danger"
-                              onClick={() => handleDelete(u.id)}
-                              title={t('users_admin.tooltip_delete')}
-                            >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                              </svg>
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
+                    <UserTableRow
+                      key={u.id}
+                      user={u}
+                      fieldChanges={pendingChanges[u.id]}
+                      currentUserId={currentUser?.id}
+                      canUpdate={can('users.update')}
+                      canDelete={can('users.delete')}
+                      canImpersonate={can('impersonation.start')}
+                      onFieldChange={setFieldChange}
+                      onImpersonate={handleImpersonate}
+                      onResetPassword={handleResetPassword}
+                      onDelete={handleDelete}
+                    />
                   ))}
                 </tbody>
               </table>
           </div>
           </div>
 
-          <div className="unified-pagination">
+          <nav aria-label={t('a11y.pagination')} className="unified-pagination">
             <span className="unified-pagination-info">{total > 1 ? t('users_admin.pagination_count_plural', { count: total }) : t('users_admin.pagination_count', { count: total })}</span>
             <div className="unified-pagination-controls">
               <select
                 className="per-page-select"
                 value={perPage}
+                aria-label={t('a11y.per_page_select')}
                 onChange={(e) => {
                   const newPerPage = parseInt(e.target.value)
                   setPerPage(newPerPage)
@@ -777,8 +886,9 @@ export default function Users() {
                     className="unified-pagination-btn"
                     disabled={page <= 1}
                     onClick={() => goToPage(page - 1)}
+                    aria-label={t('a11y.pagination_previous')}
                   >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="15 18 9 12 15 6" />
                     </svg>
                   </button>
@@ -793,12 +903,14 @@ export default function Users() {
                     }, [])
                     .map((p, i) =>
                       typeof p === 'string' ? (
-                        <span key={`dots-${i}`} className="unified-pagination-dots">...</span>
+                        <span key={`dots-${i}`} className="unified-pagination-dots" aria-hidden="true">...</span>
                       ) : (
                         <button
                           key={p}
                           className={`unified-pagination-btn${p === page ? ' active' : ''}`}
                           onClick={() => goToPage(p)}
+                          aria-label={t('a11y.pagination_page', { page: p })}
+                          aria-current={p === page ? 'page' : undefined}
                         >
                           {p}
                         </button>
@@ -808,20 +920,21 @@ export default function Users() {
                     className="unified-pagination-btn"
                     disabled={page >= totalPages}
                     onClick={() => goToPage(page + 1)}
+                    aria-label={t('a11y.pagination_next')}
                   >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="9 18 15 12 9 6" />
                     </svg>
                   </button>
                 </>
               )}
             </div>
-          </div>
+          </nav>
 
           {hasChanges && (
-            <div className="unified-changes-bar">
+            <div className="unified-changes-bar" role="status" aria-live="polite" aria-label={t('a11y.changes_pending')}>
               <span className="unified-changes-bar-text">
-                <span className="unified-changes-bar-dot" />
+                <span className="unified-changes-bar-dot" aria-hidden="true" />
                 {t('users_admin.changes_bar_text', { count: Object.keys(pendingChanges).length })}
               </span>
               <div className="unified-changes-bar-actions">
@@ -840,26 +953,29 @@ export default function Users() {
       {/* Create User Modal */}
       {showCreateModal && (
         <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal" role="dialog" aria-modal="true" aria-labelledby="create-user-modal-title" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{t('users_admin.modal_create_title')}</h2>
-              <button className="modal-close" onClick={() => setShowCreateModal(false)}>&times;</button>
+              <h2 id="create-user-modal-title">{t('users_admin.modal_create_title')}</h2>
+              <button className="modal-close" onClick={() => setShowCreateModal(false)} aria-label={t('a11y.close_modal')}>&times;</button>
             </div>
             <form onSubmit={handleCreate}>
               <div className="modal-body">
-                {createError && <div className="alert alert-error">{createError}</div>}
+                {createError && <div className="alert alert-error" role="alert">{createError}</div>}
                 <div className="form-group">
-                  <label>{t('common.email')}</label>
+                  <label htmlFor="create-email">{t('common.email')}</label>
                   <input
+                    id="create-email"
                     type="email"
                     value={createForm.email}
                     onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
                     required
+                    aria-required="true"
                   />
                 </div>
                 <div className="form-group">
-                  <label>{t('users_admin.modal_create_password_label')}</label>
+                  <label htmlFor="create-password">{t('users_admin.modal_create_password_label')}</label>
                   <input
+                    id="create-password"
                     type="password"
                     value={createForm.password}
                     onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
@@ -867,19 +983,23 @@ export default function Users() {
                 </div>
                 <div className="form-row">
                   <div className="form-group">
-                    <label>{t('common.first_name')}</label>
+                    <label htmlFor="create-firstname">{t('common.first_name')}</label>
                     <input
+                      id="create-firstname"
                       value={createForm.first_name}
                       onChange={(e) => setCreateForm({ ...createForm, first_name: e.target.value })}
                       required
+                      aria-required="true"
                     />
                   </div>
                   <div className="form-group">
-                    <label>{t('common.last_name')}</label>
+                    <label htmlFor="create-lastname">{t('common.last_name')}</label>
                     <input
+                      id="create-lastname"
                       value={createForm.last_name}
                       onChange={(e) => setCreateForm({ ...createForm, last_name: e.target.value })}
                       required
+                      aria-required="true"
                     />
                   </div>
                 </div>
@@ -910,10 +1030,10 @@ export default function Users() {
       {/* Recap Modal */}
       {showRecapModal && (
         <div className="modal-overlay" onClick={() => setShowRecapModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal" role="dialog" aria-modal="true" aria-labelledby="recap-modal-title" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{t('users_admin.modal_recap_title')}</h2>
-              <button className="modal-close" onClick={() => setShowRecapModal(false)}>&times;</button>
+              <h2 id="recap-modal-title">{t('users_admin.modal_recap_title')}</h2>
+              <button className="modal-close" onClick={() => setShowRecapModal(false)} aria-label={t('a11y.close_modal')}>&times;</button>
             </div>
             <div className="modal-body">
               <ul className="recap-list">

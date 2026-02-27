@@ -114,6 +114,28 @@ export default function AdminRGPDPage() {
     setSearchParams({ tab }, { replace: true })
   }, [setSearchParams])
 
+  const handleTabKeyDown = (e: React.KeyboardEvent, tab: Tab) => {
+    const currentIndex = visibleTabs.findIndex(t => t.key === tab)
+    let nextIndex = -1
+
+    if (e.key === 'ArrowRight') {
+      nextIndex = (currentIndex + 1) % visibleTabs.length
+    } else if (e.key === 'ArrowLeft') {
+      nextIndex = (currentIndex - 1 + visibleTabs.length) % visibleTabs.length
+    } else if (e.key === 'Home') {
+      nextIndex = 0
+    } else if (e.key === 'End') {
+      nextIndex = visibleTabs.length - 1
+    }
+
+    if (nextIndex >= 0) {
+      e.preventDefault()
+      setActiveTab(visibleTabs[nextIndex].key)
+      const el = document.getElementById(`rgpd-tab-${visibleTabs[nextIndex].key}`)
+      el?.focus()
+    }
+  }
+
   return (
     <Layout
       title={t('admin_rgpd_page.page_title')}
@@ -128,22 +150,35 @@ export default function AdminRGPDPage() {
         </div>
       </div>
 
-      <div className="rgpd-tabs">
+      <div className="rgpd-tabs" role="tablist" aria-label={t('admin_rgpd_page.aria_tablist')}>
         {visibleTabs.map((tab) => (
           <button
             key={tab.key}
+            id={`rgpd-tab-${tab.key}`}
             className={`rgpd-tab${activeTab === tab.key ? ' rgpd-tab--active' : ''}`}
             onClick={() => setActiveTab(tab.key)}
+            onKeyDown={(e) => handleTabKeyDown(e, tab.key)}
+            role="tab"
+            aria-selected={activeTab === tab.key}
+            aria-controls={`rgpd-tabpanel-${tab.key}`}
+            tabIndex={activeTab === tab.key ? 0 : -1}
           >
             {tab.label}
           </button>
         ))}
       </div>
 
-      {activeTab === 'registre' && <RegisterTab />}
-      {activeTab === 'droits' && <RightsTab />}
-      {activeTab === 'audit' && <AuditTab />}
-      {activeTab === 'pages' && <LegalPagesTab />}
+      <div
+        id={`rgpd-tabpanel-${activeTab}`}
+        role="tabpanel"
+        aria-labelledby={`rgpd-tab-${activeTab}`}
+        tabIndex={0}
+      >
+        {activeTab === 'registre' && <RegisterTab />}
+        {activeTab === 'droits' && <RightsTab />}
+        {activeTab === 'audit' && <AuditTab />}
+        {activeTab === 'pages' && <LegalPagesTab />}
+      </div>
     </Layout>
   )
 }
@@ -193,7 +228,8 @@ function RegisterTab() {
     setShowForm(true)
   }
 
-  const handleSave = async () => {
+  const handleSave = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
     setSaving(true)
     try {
       if (editId) {
@@ -220,32 +256,42 @@ function RegisterTab() {
     }
   }
 
-  if (loading) return <div className="text-center loading-pad-lg"><div className="spinner" /></div>
+  if (loading) return <div className="text-center loading-pad-lg" aria-busy="true"><div className="spinner" role="status"><span className="sr-only">{t('admin_register_tab.aria_loading')}</span></div></div>
 
   return (
     <div>
-      {error && <div className="alert alert-danger mb-16">{error}</div>}
+      {error && <div className="alert alert-danger mb-16" role="alert">{error}</div>}
 
       <div className="rgpd-section-header">
         <h2>{t('admin_register_tab.heading')}</h2>
         {can('rgpd.registre.manage') && (
-          <button className="btn btn-primary btn-sm" onClick={() => { resetForm(); setShowForm(true) }}>
+          <button
+            className="btn btn-primary btn-sm"
+            onClick={() => { resetForm(); setShowForm(true) }}
+            aria-expanded={showForm}
+            aria-controls="register-form"
+          >
             {t('admin_register_tab.btn_add')}
           </button>
         )}
       </div>
 
       {showForm && (
-        <div className="unified-card rgpd-register-form">
+        <form
+          id="register-form"
+          className="unified-card rgpd-register-form"
+          onSubmit={handleSave}
+          aria-label={editId ? t('admin_register_tab.form_title_edit') : t('admin_register_tab.form_title_new')}
+        >
           <h3>{editId ? t('admin_register_tab.form_title_edit') : t('admin_register_tab.form_title_new')}</h3>
           <div className="settings-grid">
             <div className="form-group">
-              <label>{t('admin_register_tab.label_name')}</label>
-              <input type="text" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />
+              <label htmlFor="register-name">{t('admin_register_tab.label_name')}</label>
+              <input id="register-name" type="text" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} aria-required="true" />
             </div>
             <div className="form-group">
-              <label>{t('admin_register_tab.label_legal_basis')}</label>
-              <select value={form.legal_basis} onChange={e => setForm(p => ({ ...p, legal_basis: e.target.value }))}>
+              <label htmlFor="register-legal-basis">{t('admin_register_tab.label_legal_basis')}</label>
+              <select id="register-legal-basis" value={form.legal_basis} onChange={e => setForm(p => ({ ...p, legal_basis: e.target.value }))} aria-required="true">
                 <option value="consentement">{t('admin_register_tab.option_consentement')}</option>
                 <option value="contrat">{t('admin_register_tab.option_contrat')}</option>
                 <option value="obligation_legale">{t('admin_register_tab.option_obligation_legale')}</option>
@@ -255,37 +301,37 @@ function RegisterTab() {
               </select>
             </div>
             <div className="form-group">
-              <label>{t('admin_register_tab.label_purpose')}</label>
-              <textarea value={form.purpose} onChange={e => setForm(p => ({ ...p, purpose: e.target.value }))} rows={2} />
+              <label htmlFor="register-purpose">{t('admin_register_tab.label_purpose')}</label>
+              <textarea id="register-purpose" value={form.purpose} onChange={e => setForm(p => ({ ...p, purpose: e.target.value }))} rows={2} aria-required="true" />
             </div>
             <div className="form-group">
-              <label>{t('admin_register_tab.label_data_categories')}</label>
-              <input type="text" value={form.data_categories} onChange={e => setForm(p => ({ ...p, data_categories: e.target.value }))} />
+              <label htmlFor="register-data-categories">{t('admin_register_tab.label_data_categories')}</label>
+              <input id="register-data-categories" type="text" value={form.data_categories} onChange={e => setForm(p => ({ ...p, data_categories: e.target.value }))} aria-required="true" />
             </div>
             <div className="form-group">
-              <label>{t('admin_register_tab.label_data_subjects')}</label>
-              <input type="text" value={form.data_subjects} onChange={e => setForm(p => ({ ...p, data_subjects: e.target.value }))} />
+              <label htmlFor="register-data-subjects">{t('admin_register_tab.label_data_subjects')}</label>
+              <input id="register-data-subjects" type="text" value={form.data_subjects} onChange={e => setForm(p => ({ ...p, data_subjects: e.target.value }))} aria-required="true" />
             </div>
             <div className="form-group">
-              <label>{t('admin_register_tab.label_recipients')}</label>
-              <input type="text" value={form.recipients} onChange={e => setForm(p => ({ ...p, recipients: e.target.value }))} />
+              <label htmlFor="register-recipients">{t('admin_register_tab.label_recipients')}</label>
+              <input id="register-recipients" type="text" value={form.recipients} onChange={e => setForm(p => ({ ...p, recipients: e.target.value }))} />
             </div>
             <div className="form-group">
-              <label>{t('admin_register_tab.label_retention_period')}</label>
-              <input type="text" value={form.retention_period} onChange={e => setForm(p => ({ ...p, retention_period: e.target.value }))} />
+              <label htmlFor="register-retention">{t('admin_register_tab.label_retention_period')}</label>
+              <input id="register-retention" type="text" value={form.retention_period} onChange={e => setForm(p => ({ ...p, retention_period: e.target.value }))} aria-required="true" />
             </div>
             <div className="form-group">
-              <label>{t('admin_register_tab.label_security_measures')}</label>
-              <textarea value={form.security_measures} onChange={e => setForm(p => ({ ...p, security_measures: e.target.value }))} rows={2} />
+              <label htmlFor="register-security">{t('admin_register_tab.label_security_measures')}</label>
+              <textarea id="register-security" value={form.security_measures} onChange={e => setForm(p => ({ ...p, security_measures: e.target.value }))} rows={2} />
             </div>
           </div>
           <div className="form-actions">
-            <button className="btn btn-secondary" onClick={resetForm}>{t('admin_register_tab.btn_cancel')}</button>
-            <button className="btn btn-primary" onClick={handleSave} disabled={saving || !form.name}>
+            <button type="button" className="btn btn-secondary" onClick={resetForm}>{t('admin_register_tab.btn_cancel')}</button>
+            <button type="submit" className="btn btn-primary" disabled={saving || !form.name} aria-busy={saving}>
               {saving ? t('admin_register_tab.btn_saving') : t('admin_register_tab.btn_save')}
             </button>
           </div>
-        </div>
+        </form>
       )}
 
       {entries.length === 0 ? (
@@ -293,29 +339,29 @@ function RegisterTab() {
       ) : (
         <div className="rgpd-register-list">
           {entries.map(entry => (
-            <div key={entry.id} className="unified-card rgpd-register-item">
+            <article key={entry.id} className="unified-card rgpd-register-item">
               <div className="rgpd-register-item-header">
                 <h3>{entry.name}</h3>
                 {can('rgpd.registre.manage') && (
                   <div className="rgpd-register-actions">
-                    <button className="btn-icon btn-icon-secondary" onClick={() => handleEdit(entry)} title={t('admin_register_tab.btn_edit_title')}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    <button className="btn-icon btn-icon-secondary" onClick={() => handleEdit(entry)} aria-label={t('admin_register_tab.btn_edit_title')}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     </button>
-                    <button className="btn-icon btn-icon-danger" onClick={() => handleDelete(entry.id)} title={t('admin_register_tab.btn_delete_title')}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    <button className="btn-icon btn-icon-danger" onClick={() => handleDelete(entry.id)} aria-label={t('admin_register_tab.btn_delete_title')}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                     </button>
                   </div>
                 )}
               </div>
-              <div className="rgpd-register-item-details">
-                <div><strong>{t('admin_register_tab.detail_purpose')}</strong> {entry.purpose}</div>
-                <div><strong>{t('admin_register_tab.detail_legal_basis')}</strong> {entry.legal_basis}</div>
-                <div><strong>{t('admin_register_tab.detail_data')}</strong> {entry.data_categories}</div>
-                <div><strong>{t('admin_register_tab.detail_subjects')}</strong> {entry.data_subjects}</div>
-                <div><strong>{t('admin_register_tab.detail_retention')}</strong> {entry.retention_period}</div>
-                {entry.recipients && <div><strong>{t('admin_register_tab.detail_recipients')}</strong> {entry.recipients}</div>}
-              </div>
-            </div>
+              <dl className="rgpd-register-item-details">
+                <div><dt>{t('admin_register_tab.detail_purpose')}</dt><dd>{entry.purpose}</dd></div>
+                <div><dt>{t('admin_register_tab.detail_legal_basis')}</dt><dd>{entry.legal_basis}</dd></div>
+                <div><dt>{t('admin_register_tab.detail_data')}</dt><dd>{entry.data_categories}</dd></div>
+                <div><dt>{t('admin_register_tab.detail_subjects')}</dt><dd>{entry.data_subjects}</dd></div>
+                <div><dt>{t('admin_register_tab.detail_retention')}</dt><dd>{entry.retention_period}</dd></div>
+                {entry.recipients && <div><dt>{t('admin_register_tab.detail_recipients')}</dt><dd>{entry.recipients}</dd></div>}
+              </dl>
+            </article>
           ))}
         </div>
       )}
@@ -346,7 +392,8 @@ function RightsTab() {
 
   useEffect(() => { load() }, [load])
 
-  const handleProcess = async (id: number) => {
+  const handleProcess = async (id: number, e?: React.FormEvent) => {
+    if (e) e.preventDefault()
     try {
       await api.put(`/rgpd/rights/admin/${id}`, {
         status: responseStatus,
@@ -358,7 +405,9 @@ function RightsTab() {
     } catch { /* */ }
   }
 
-  if (loading) return <div className="text-center loading-pad-lg"><div className="spinner" /></div>
+  const totalPages = Math.ceil(total / 25)
+
+  if (loading) return <div className="text-center loading-pad-lg" aria-busy="true"><div className="spinner" role="status"><span className="sr-only">{t('admin_rights_tab.aria_loading')}</span></div></div>
 
   return (
     <div>
@@ -372,7 +421,7 @@ function RightsTab() {
             const statusLabelKey = STATUS_LABEL_KEYS[req.status] || STATUS_LABEL_KEYS.pending
             const typeLabelKey = TYPE_LABEL_KEYS[req.request_type]
             return (
-              <div key={req.id} className="unified-card rgpd-request-admin-item">
+              <article key={req.id} className="unified-card rgpd-request-admin-item">
                 <div className="rgpd-request-header">
                   <div>
                     <h3>{typeLabelKey ? t(typeLabelKey) : req.request_type}</h3>
@@ -388,41 +437,45 @@ function RightsTab() {
                 )}
                 {can('rgpd.droits.manage') && (req.status === 'pending' || req.status === 'processing') ? (
                   processingId === req.id ? (
-                    <div className="rgpd-process-form">
+                    <form
+                      className="rgpd-process-form"
+                      onSubmit={(e) => handleProcess(req.id, e)}
+                      aria-label={t('admin_rights_tab.aria_process_form')}
+                    >
                       <div className="form-group">
-                        <label>{t('admin_rights_tab.form_status_label')}</label>
-                        <select value={responseStatus} onChange={e => setResponseStatus(e.target.value)}>
+                        <label htmlFor={`process-status-${req.id}`}>{t('admin_rights_tab.form_status_label')}</label>
+                        <select id={`process-status-${req.id}`} value={responseStatus} onChange={e => setResponseStatus(e.target.value)}>
                           <option value="processing">{t('admin_rights_tab.option_processing')}</option>
                           <option value="completed">{t('admin_rights_tab.option_completed')}</option>
                           <option value="rejected">{t('admin_rights_tab.option_rejected')}</option>
                         </select>
                       </div>
                       <div className="form-group">
-                        <label>{t('admin_rights_tab.form_response_label')}</label>
-                        <textarea value={responseText} onChange={e => setResponseText(e.target.value)} rows={2} placeholder={t('admin_rights_tab.form_response_placeholder')} />
+                        <label htmlFor={`process-response-${req.id}`}>{t('admin_rights_tab.form_response_label')}</label>
+                        <textarea id={`process-response-${req.id}`} value={responseText} onChange={e => setResponseText(e.target.value)} rows={2} placeholder={t('admin_rights_tab.form_response_placeholder')} />
                       </div>
                       <div className="form-actions">
-                        <button className="btn btn-secondary btn-sm" onClick={() => setProcessingId(null)}>{t('admin_rights_tab.btn_cancel')}</button>
-                        <button className="btn btn-primary btn-sm" onClick={() => handleProcess(req.id)}>{t('admin_rights_tab.btn_validate')}</button>
+                        <button type="button" className="btn btn-secondary btn-sm" onClick={() => setProcessingId(null)}>{t('admin_rights_tab.btn_cancel')}</button>
+                        <button type="submit" className="btn btn-primary btn-sm">{t('admin_rights_tab.btn_validate')}</button>
                       </div>
-                    </div>
+                    </form>
                   ) : (
                     <button className="btn btn-primary btn-sm" onClick={() => { setProcessingId(req.id); setResponseStatus(req.status === 'pending' ? 'processing' : 'completed') }}>
                       {t('admin_rights_tab.btn_process')}
                     </button>
                   )
                 ) : null}
-              </div>
+              </article>
             )
           })}
         </div>
       )}
       {total > 25 && (
-        <div className="rgpd-pagination">
-          <button className="btn btn-secondary btn-sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>{t('admin_rights_tab.btn_previous')}</button>
-          <span>{t('admin_rights_tab.page_label')} {page}</span>
-          <button className="btn btn-secondary btn-sm" disabled={requests.length < 25} onClick={() => setPage(p => p + 1)}>{t('admin_rights_tab.btn_next')}</button>
-        </div>
+        <nav className="rgpd-pagination" aria-label={t('admin_rights_tab.aria_pagination')}>
+          <button className="btn btn-secondary btn-sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)} aria-label={t('admin_rights_tab.btn_previous')}>{t('admin_rights_tab.btn_previous')}</button>
+          <span aria-current="page">{t('admin_rights_tab.page_label')} {page} / {totalPages}</span>
+          <button className="btn btn-secondary btn-sm" disabled={requests.length < 25} onClick={() => setPage(p => p + 1)} aria-label={t('admin_rights_tab.btn_next')}>{t('admin_rights_tab.btn_next')}</button>
+        </nav>
       )}
     </div>
   )
@@ -451,25 +504,28 @@ function AuditTab() {
 
   useEffect(() => { load() }, [load])
 
-  if (loading) return <div className="text-center loading-pad-lg"><div className="spinner" /></div>
+  const totalPages = Math.ceil(total / 25)
+
+  if (loading) return <div className="text-center loading-pad-lg" aria-busy="true"><div className="spinner" role="status"><span className="sr-only">{t('admin_audit_tab.aria_loading')}</span></div></div>
 
   return (
     <div>
       <h2>{t('admin_audit_tab.heading')}</h2>
-      {error && <div className="alert alert-danger mb-16">{error}</div>}
+      {error && <div className="alert alert-danger mb-16" role="alert">{error}</div>}
       {logs.length === 0 && !error ? (
         <div className="unified-card"><p className="text-center text-secondary">{t('admin_audit_tab.no_logs')}</p></div>
       ) : logs.length > 0 && (
         <div className="table-container">
           <table className="rgpd-audit-table">
+            <caption className="sr-only">{t('admin_audit_tab.aria_table_caption')}</caption>
             <thead>
               <tr>
-                <th>{t('admin_audit_tab.col_date')}</th>
-                <th>{t('admin_audit_tab.col_user')}</th>
-                <th>{t('admin_audit_tab.col_target')}</th>
-                <th>{t('admin_audit_tab.col_action')}</th>
-                <th>{t('admin_audit_tab.col_resource')}</th>
-                <th>{t('admin_audit_tab.col_details')}</th>
+                <th scope="col">{t('admin_audit_tab.col_date')}</th>
+                <th scope="col">{t('admin_audit_tab.col_user')}</th>
+                <th scope="col">{t('admin_audit_tab.col_target')}</th>
+                <th scope="col">{t('admin_audit_tab.col_action')}</th>
+                <th scope="col">{t('admin_audit_tab.col_resource')}</th>
+                <th scope="col">{t('admin_audit_tab.col_details')}</th>
               </tr>
             </thead>
             <tbody>
@@ -488,11 +544,11 @@ function AuditTab() {
         </div>
       )}
       {total > 25 && (
-        <div className="rgpd-pagination">
-          <button className="btn btn-secondary btn-sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>{t('admin_audit_tab.btn_previous')}</button>
-          <span>{t('admin_audit_tab.page_label')} {page}</span>
-          <button className="btn btn-secondary btn-sm" disabled={logs.length < 25} onClick={() => setPage(p => p + 1)}>{t('admin_audit_tab.btn_next')}</button>
-        </div>
+        <nav className="rgpd-pagination" aria-label={t('admin_audit_tab.aria_pagination')}>
+          <button className="btn btn-secondary btn-sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)} aria-label={t('admin_audit_tab.btn_previous')}>{t('admin_audit_tab.btn_previous')}</button>
+          <span aria-current="page">{t('admin_audit_tab.page_label')} {page} / {totalPages}</span>
+          <button className="btn btn-secondary btn-sm" disabled={logs.length < 25} onClick={() => setPage(p => p + 1)} aria-label={t('admin_audit_tab.btn_next')}>{t('admin_audit_tab.btn_next')}</button>
+        </nav>
       )}
     </div>
   )
@@ -530,7 +586,8 @@ function LegalPagesTab() {
     setEditingSlug(page.slug)
   }
 
-  const handleSave = async () => {
+  const handleSave = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
     if (!editingSlug) return
     setSaving(true)
     try {
@@ -570,29 +627,33 @@ function LegalPagesTab() {
   const editingPage = editingSlug ? pages.find(p => p.slug === editingSlug) : null
   const showUpdateWarning = editingPage && editingPage.requires_acceptance && editingPage.version > 0
 
-  if (loading) return <div className="text-center loading-pad-lg"><div className="spinner" /></div>
+  if (loading) return <div className="text-center loading-pad-lg" aria-busy="true"><div className="spinner" role="status"><span className="sr-only">{t('admin_legal_pages_tab.aria_loading')}</span></div></div>
 
   return (
     <div>
-      {error && <div className="alert alert-danger mb-16">{error}</div>}
+      {error && <div className="alert alert-danger mb-16" role="alert">{error}</div>}
 
       <h2>{t('admin_legal_pages_tab.heading')}</h2>
 
       {editingSlug && (
-        <div className="unified-card rgpd-legal-form">
+        <form
+          className="unified-card rgpd-legal-form"
+          onSubmit={handleSave}
+          aria-label={t('admin_legal_pages_tab.form_title_prefix') + ' ' + editingSlug}
+        >
           <h3>{t('admin_legal_pages_tab.form_title_prefix')} {editingSlug}</h3>
           {showUpdateWarning && (
-            <div className="alert alert-warning mb-16">
+            <div className="alert alert-warning mb-16" role="alert">
               {t('admin_legal_pages_tab.warning_acceptance_invalidation')}
             </div>
           )}
           <div className="form-group">
-            <label>{t('admin_legal_pages_tab.label_title')}</label>
-            <input type="text" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} />
+            <label htmlFor="legal-edit-title">{t('admin_legal_pages_tab.label_title')}</label>
+            <input id="legal-edit-title" type="text" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} aria-required="true" />
           </div>
           <div className="form-group">
-            <label>{t('admin_legal_pages_tab.label_content_html')}</label>
-            <textarea value={form.content_html} onChange={e => setForm(p => ({ ...p, content_html: e.target.value }))} rows={12} className="rgpd-html-editor" />
+            <label htmlFor="legal-edit-content">{t('admin_legal_pages_tab.label_content_html')}</label>
+            <textarea id="legal-edit-content" value={form.content_html} onChange={e => setForm(p => ({ ...p, content_html: e.target.value }))} rows={12} className="rgpd-html-editor" aria-required="true" />
           </div>
           <div className="form-group">
             <label className="rgpd-checkbox-label">
@@ -602,23 +663,23 @@ function LegalPagesTab() {
           </div>
           <div className="form-group">
             <label className="rgpd-checkbox-label">
-              <input type="checkbox" checked={form.requires_acceptance} onChange={e => setForm(p => ({ ...p, requires_acceptance: e.target.checked }))} />
+              <input type="checkbox" checked={form.requires_acceptance} onChange={e => setForm(p => ({ ...p, requires_acceptance: e.target.checked }))} aria-describedby="acceptance-hint" />
               {t('admin_legal_pages_tab.label_requires_acceptance')}
             </label>
-            <p className="text-secondary text-sm">{t('admin_legal_pages_tab.acceptance_hint')}</p>
+            <p id="acceptance-hint" className="text-secondary text-sm">{t('admin_legal_pages_tab.acceptance_hint')}</p>
           </div>
           <div className="form-actions">
-            <button className="btn btn-secondary" onClick={() => setEditingSlug(null)}>{t('admin_legal_pages_tab.btn_cancel')}</button>
-            <button className="btn btn-primary" onClick={handleSave} disabled={saving || !form.title}>
+            <button type="button" className="btn btn-secondary" onClick={() => setEditingSlug(null)}>{t('admin_legal_pages_tab.btn_cancel')}</button>
+            <button type="submit" className="btn btn-primary" disabled={saving || !form.title} aria-busy={saving}>
               {saving ? t('admin_legal_pages_tab.btn_saving') : t('admin_legal_pages_tab.btn_save')}
             </button>
           </div>
-        </div>
+        </form>
       )}
 
       <div className="rgpd-legal-list">
         {pages.map(page => (
-          <div key={page.slug} className="unified-card rgpd-legal-item">
+          <article key={page.slug} className="unified-card rgpd-legal-item">
             <div className="rgpd-legal-item-header">
               <div>
                 <h3>{page.title}</h3>
@@ -631,7 +692,12 @@ function LegalPagesTab() {
                 <span className={`rgpd-badge ${page.is_published ? 'rgpd-badge-success' : 'rgpd-badge-draft'}`}>
                   {page.is_published ? t('admin_legal_pages_tab.badge_published') : t('admin_legal_pages_tab.badge_draft')}
                 </span>
-                <button className="btn btn-secondary btn-sm" onClick={() => handleShowVersions(page.slug)}>
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => handleShowVersions(page.slug)}
+                  aria-expanded={versionsSlug === page.slug}
+                  aria-controls={`version-history-${page.slug}`}
+                >
                   {t('admin_legal_pages_tab.btn_history')}
                 </button>
                 {can('rgpd.politique.manage') && (
@@ -643,9 +709,9 @@ function LegalPagesTab() {
             </div>
 
             {versionsSlug === page.slug && (
-              <div className="legal-version-history">
+              <div id={`version-history-${page.slug}`} className="legal-version-history">
                 {loadingVersions ? (
-                  <div className="text-center"><div className="spinner spinner-sm" /></div>
+                  <div className="text-center" aria-busy="true"><div className="spinner spinner-sm" role="status"><span className="sr-only">{t('admin_legal_pages_tab.aria_loading')}</span></div></div>
                 ) : versions.length === 0 ? (
                   <p className="text-secondary">{t('admin_legal_pages_tab.no_previous_versions')}</p>
                 ) : (
@@ -654,7 +720,7 @@ function LegalPagesTab() {
                       <div key={v.version} className="legal-version-item">
                         <div className="legal-version-item-header">
                           <strong>{t('admin_legal_pages_tab.version_label')} {v.version}</strong>
-                          <span className="text-secondary">{formatDate(v.created_at)}</span>
+                          <span className="text-secondary"><time dateTime={v.created_at}>{formatDate(v.created_at)}</time></span>
                         </div>
                         <p className="text-secondary text-sm">{v.title}</p>
                       </div>
@@ -663,7 +729,7 @@ function LegalPagesTab() {
                 )}
               </div>
             )}
-          </div>
+          </article>
         ))}
       </div>
     </div>

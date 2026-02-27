@@ -1,10 +1,10 @@
 """Invitation management endpoints."""
 
-import random
+import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,6 +16,9 @@ from ..security import (
     create_refresh_token,
     get_current_user,
     hash_password,
+    hash_refresh_token,
+    set_refresh_cookie,
+    validate_password,
     verify_password,
 )
 from .models import Invitation, User
@@ -39,7 +42,7 @@ router = APIRouter()
 
 
 def _generate_verification_code() -> str:
-    return str(random.randint(100000, 999999))
+    return str(secrets.randbelow(900000) + 100000)
 
 
 # ---------------------------------------------------------------------------
@@ -84,6 +87,7 @@ async def create_invitation(
         invited_by_id=current_user.id,
         email=email,
         token_hash=hash_password(token),
+        token_hmac=hash_refresh_token(token),
         expires_at=datetime.now(timezone.utc) + timedelta(hours=48),
     )
     db.add(invitation)
@@ -233,8 +237,7 @@ async def accept_invitation(
     else:
         if not data.first_name or not data.last_name:
             raise HTTPException(status_code=400, detail="Prenom et nom requis")
-        if len(data.password) < 6:
-            raise HTTPException(status_code=400, detail="Le mot de passe doit contenir au moins 6 caracteres")
+        validate_password(data.password)
         user = User(
             email=inv.email,
             password_hash=hash_password(data.password),
@@ -318,6 +321,7 @@ async def resend_verification_code(
 async def verify_invitation_code(
     token: str,
     data: InvitationVerify,
+    response: Response,
     db: AsyncSession = Depends(get_db),
 ):
     """Verify code and finalize invitation acceptance."""
@@ -356,7 +360,8 @@ async def verify_invitation_code(
     )
 
     token_data = {"sub": str(user.id), "email": user.email, "lang": user.language}
+    refresh = create_refresh_token(token_data)
+    set_refresh_cookie(response, refresh)
     return InvitationTokenResponse(
         access_token=create_access_token(token_data),
-        refresh_token=create_refresh_token(token_data),
     )

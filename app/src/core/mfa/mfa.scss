@@ -210,7 +210,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 18px 24px;
+    padding: var(--density-padding, 18px 24px);
     border-bottom: 1px solid var(--gray-100);
 
     @at-root [data-theme="dark"] & {
@@ -223,13 +223,14 @@
     align-items: flex-start;
     gap: 14px;
 
-    h3 {
+    h2, h3 {
       font-size: 0.9375rem;
       font-weight: 600;
       color: var(--gray-800);
       margin: 0 0 2px 0;
     }
 
+    @at-root [data-theme="dark"] & h2,
     @at-root [data-theme="dark"] & h3 {
       color: rgba(255, 255, 255, 0.9);
     }
@@ -263,7 +264,7 @@
   }
 
   &-body {
-    padding: 18px 24px;
+    padding: var(--density-padding, 18px 24px);
   }
 }
 

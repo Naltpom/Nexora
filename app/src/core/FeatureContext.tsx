@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react'
 import api from '../api'
 import type { FeatureManifest } from '../types'
 
@@ -15,7 +15,7 @@ export function FeatureProvider({ children }: { children: ReactNode }) {
   const [features, setFeatures] = useState<Record<string, FeatureManifest>>({})
   const [loading, setLoading] = useState(true)
 
-  const fetchFeatures = async () => {
+  const fetchFeatures = useCallback(async () => {
     try {
       const response = await api.get('/features/manifest')
       const list: FeatureManifest[] = response.data
@@ -30,20 +30,24 @@ export function FeatureProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     fetchFeatures()
-  }, [])
+  }, [fetchFeatures])
 
-  const isActive = (name: string): boolean => {
+  const isActive = useCallback((name: string): boolean => {
     const feature = features[name]
     if (!feature) return false
     return feature.active
-  }
+  }, [features])
+
+  const contextValue = useMemo(() => ({
+    features, loading, isActive, refreshFeatures: fetchFeatures
+  }), [features, loading, isActive, fetchFeatures])
 
   return (
-    <FeatureContext.Provider value={{ features, loading, isActive, refreshFeatures: fetchFeatures }}>
+    <FeatureContext.Provider value={contextValue}>
       {children}
     </FeatureContext.Provider>
   )

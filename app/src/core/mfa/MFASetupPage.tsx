@@ -344,8 +344,8 @@ export default function MFASetupPage() {
   if (loading) {
     return (
       <Layout breadcrumb={[{ label: t('setup_breadcrumb_home'), path: '/' }, { label: t('setup_breadcrumb_profile'), path: '/profile' }, { label: t('setup_breadcrumb_mfa') }]} title={t('setup_page_title_breadcrumb')}>
-        <div className="loading-screen">
-          <div className="spinner" />
+        <div className="loading-screen" aria-busy="true" role="status">
+          <div className="spinner" aria-hidden="true" />
           <p>{t('loading')}</p>
         </div>
       </Layout>
@@ -366,7 +366,7 @@ export default function MFASetupPage() {
         </div>
 
         {error && <div className="alert alert-error" role="alert">{error}</div>}
-        {successMessage && <div className="alert alert-success" aria-live="polite">{successMessage}</div>}
+        {successMessage && <div className="alert alert-success" role="status" aria-live="polite">{successMessage}</div>}
 
         {/* Backup Codes Modal/Inline */}
         {backupCodes && (
@@ -375,26 +375,26 @@ export default function MFASetupPage() {
 
         {/* TOTP Section */}
         {isMethodAvailable('totp') && (
-          <div className="unified-card mfa-setup-section">
+          <section className="unified-card mfa-setup-section" aria-labelledby="setup-totp-title">
             <div className="mfa-setup-section-header">
               <div className="mfa-setup-section-info">
-                <div className="mfa-setup-section-icon">
+                <div className="mfa-setup-section-icon" aria-hidden="true">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
                     <line x1="12" y1="18" x2="12.01" y2="18" />
                   </svg>
                 </div>
                 <div>
-                  <h3>{t('setup_totp_title')}</h3>
+                  <h2 id="setup-totp-title">{t('setup_totp_title')}</h2>
                   <p className="mfa-setup-section-desc">
                     {t('setup_totp_description')}
                   </p>
                 </div>
               </div>
               {totpEnabled ? (
-                <span className="mfa-badge mfa-badge-active">{t('badge_status_active')}</span>
+                <span className="mfa-badge mfa-badge-active" aria-label={t('badge_aria_active')}>{t('badge_status_active')}</span>
               ) : (
-                <span className="mfa-badge mfa-badge-inactive">{t('badge_status_inactive')}</span>
+                <span className="mfa-badge mfa-badge-inactive" aria-label={t('badge_aria_inactive')}>{t('badge_status_inactive')}</span>
               )}
             </div>
 
@@ -419,8 +419,9 @@ export default function MFASetupPage() {
                 <div className="mfa-totp-setup">
                   <p className="mfa-setup-totp-instructions">{t('setup_totp_disable_confirm_hint')}</p>
                   <div className="form-group">
-                    <label>{t('verify_label_totp')}</label>
+                    <label htmlFor="setup-totp-disable-code">{t('verify_label_totp')}</label>
                     <input
+                      id="setup-totp-disable-code"
                       type="text"
                       inputMode="numeric"
                       className="mfa-code-input"
@@ -429,13 +430,18 @@ export default function MFASetupPage() {
                       placeholder="000000"
                       maxLength={6}
                       autoFocus
+                      aria-required="true"
+                      aria-invalid={!!totpError}
+                      aria-describedby={totpError ? 'setup-totp-disable-error' : undefined}
                     />
+                    {totpError && <span id="setup-totp-disable-error" className="sr-only">{totpError}</span>}
                   </div>
                   <div className="flex-row-sm">
                     <button
                       className="btn btn-danger"
                       onClick={handleTotpDisable}
                       disabled={totpDisabling || totpDisableCode.length !== 6}
+                      aria-busy={totpDisabling}
                     >
                       {totpDisabling ? t('setup_totp_disabling') : t('setup_totp_disable_confirm')}
                     </button>
@@ -455,6 +461,7 @@ export default function MFASetupPage() {
                   className="btn btn-primary"
                   onClick={handleTotpSetup}
                   disabled={totpSaving}
+                  aria-busy={totpSaving}
                 >
                   {totpSaving ? t('setup_totp_setup_loading') : t('setup_totp_setup')}
                 </button>
@@ -482,8 +489,9 @@ export default function MFASetupPage() {
                   </div>
 
                   <div className="form-group mt-16">
-                    <label>{t('setup_totp_verification_label')}</label>
+                    <label htmlFor="setup-totp-verify-code">{t('setup_totp_verification_label')}</label>
                     <input
+                      id="setup-totp-verify-code"
                       type="text"
                       inputMode="numeric"
                       className="mfa-code-input"
@@ -492,7 +500,11 @@ export default function MFASetupPage() {
                       placeholder="000000"
                       maxLength={6}
                       autoFocus
+                      aria-required="true"
+                      aria-invalid={!!totpError}
+                      aria-describedby={totpError ? 'setup-totp-verify-error' : undefined}
                     />
+                    {totpError && <span id="setup-totp-verify-error" className="sr-only">{totpError}</span>}
                   </div>
 
                   <div className="flex-row-sm">
@@ -500,6 +512,7 @@ export default function MFASetupPage() {
                       className="btn btn-primary"
                       onClick={handleTotpVerify}
                       disabled={totpSaving || totpCode.length !== 6}
+                      aria-busy={totpSaving}
                     >
                       {totpSaving ? t('setup_totp_verifying') : t('setup_totp_confirm')}
                     </button>
@@ -514,31 +527,31 @@ export default function MFASetupPage() {
                 </div>
               )}
             </div>
-          </div>
+          </section>
         )}
 
         {/* Email Section */}
         {isMethodAvailable('email') && (
-          <div className="unified-card mfa-setup-section">
+          <section className="unified-card mfa-setup-section" aria-labelledby="setup-email-title">
             <div className="mfa-setup-section-header">
               <div className="mfa-setup-section-info">
-                <div className="mfa-setup-section-icon">
+                <div className="mfa-setup-section-icon" aria-hidden="true">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                     <polyline points="22,6 12,13 2,6" />
                   </svg>
                 </div>
                 <div>
-                  <h3>{t('setup_email_title')}</h3>
+                  <h2 id="setup-email-title">{t('setup_email_title')}</h2>
                   <p className="mfa-setup-section-desc">
                     {t('setup_email_description')}
                   </p>
                 </div>
               </div>
               {emailEnabled ? (
-                <span className="mfa-badge mfa-badge-active">{t('badge_status_active')}</span>
+                <span className="mfa-badge mfa-badge-active" aria-label={t('badge_aria_active')}>{t('badge_status_active')}</span>
               ) : (
-                <span className="mfa-badge mfa-badge-inactive">{t('badge_status_inactive')}</span>
+                <span className="mfa-badge mfa-badge-inactive" aria-label={t('badge_aria_inactive')}>{t('badge_status_inactive')}</span>
               )}
             </div>
 
@@ -552,6 +565,7 @@ export default function MFASetupPage() {
                     className="btn btn-danger btn-sm"
                     onClick={handleEmailDisableSendCode}
                     disabled={emailDisableCodeSending}
+                    aria-busy={emailDisableCodeSending}
                   >
                     {emailDisableCodeSending ? t('verify_email_sending') : t('setup_email_disable')}
                   </button>
@@ -560,8 +574,9 @@ export default function MFASetupPage() {
                 <div className="mfa-totp-setup">
                   <p className="mfa-setup-totp-instructions">{t('setup_email_disable_confirm_hint')}</p>
                   <div className="form-group">
-                    <label>{t('verify_label_email')}</label>
+                    <label htmlFor="setup-email-disable-code">{t('verify_label_email')}</label>
                     <input
+                      id="setup-email-disable-code"
                       type="text"
                       inputMode="numeric"
                       className="mfa-code-input"
@@ -570,13 +585,18 @@ export default function MFASetupPage() {
                       placeholder="000000"
                       maxLength={6}
                       autoFocus
+                      aria-required="true"
+                      aria-invalid={!!error}
+                      aria-describedby={error ? 'setup-email-disable-error' : undefined}
                     />
+                    {error && <span id="setup-email-disable-error" className="sr-only">{error}</span>}
                   </div>
                   <div className="flex-row-sm">
                     <button
                       className="btn btn-danger"
                       onClick={handleEmailDisable}
                       disabled={emailDisabling || emailDisableCode.length !== 6}
+                      aria-busy={emailDisabling}
                     >
                       {emailDisabling ? t('setup_email_disabling') : t('setup_email_disable_confirm')}
                     </button>
@@ -584,6 +604,7 @@ export default function MFASetupPage() {
                       className="btn btn-secondary"
                       onClick={handleEmailDisableResendCode}
                       disabled={emailDisableCodeSending || emailDisableResendCooldown > 0}
+                      aria-busy={emailDisableCodeSending}
                     >
                       {emailDisableCodeSending ? t('verify_email_resending') : emailDisableResendCooldown > 0 ? t('verify_email_resend_cooldown', { time: formatCooldown(emailDisableResendCooldown) }) : t('verify_email_resend')}
                     </button>
@@ -601,8 +622,9 @@ export default function MFASetupPage() {
                   <p className="mfa-setup-totp-instructions">{t('setup_email_verify_instructions')}</p>
                   {emailVerifyError && <div className="alert alert-error alert-spaced" role="alert">{emailVerifyError}</div>}
                   <div className="form-group">
-                    <label>{t('verify_label_email')}</label>
+                    <label htmlFor="setup-email-verify-code">{t('verify_label_email')}</label>
                     <input
+                      id="setup-email-verify-code"
                       type="text"
                       inputMode="numeric"
                       className="mfa-code-input"
@@ -611,13 +633,18 @@ export default function MFASetupPage() {
                       placeholder="000000"
                       maxLength={6}
                       autoFocus
+                      aria-required="true"
+                      aria-invalid={!!emailVerifyError}
+                      aria-describedby={emailVerifyError ? 'setup-email-verify-error' : undefined}
                     />
+                    {emailVerifyError && <span id="setup-email-verify-error" className="sr-only">{emailVerifyError}</span>}
                   </div>
                   <div className="flex-row-sm">
                     <button
                       className="btn btn-primary"
                       onClick={handleEmailVerifySetup}
                       disabled={emailVerifying || emailVerifyCode.length !== 6}
+                      aria-busy={emailVerifying}
                     >
                       {emailVerifying ? t('setup_totp_verifying') : t('setup_totp_confirm')}
                     </button>
@@ -625,6 +652,7 @@ export default function MFASetupPage() {
                       className="btn btn-secondary"
                       onClick={handleEmailResendCode}
                       disabled={emailSaving || emailResendCooldown > 0}
+                      aria-busy={emailSaving}
                     >
                       {emailSaving ? t('verify_email_resending') : emailResendCooldown > 0 ? t('verify_email_resend_cooldown', { time: formatCooldown(emailResendCooldown) }) : t('verify_email_resend')}
                     </button>
@@ -642,26 +670,27 @@ export default function MFASetupPage() {
                   className="btn btn-primary"
                   onClick={handleEmailEnable}
                   disabled={emailSaving}
+                  aria-busy={emailSaving}
                 >
                   {emailSaving ? t('setup_email_activating') : t('setup_email_activate')}
                 </button>
               )}
             </div>
-          </div>
+          </section>
         )}
 
         {/* Backup Codes Section */}
-        <div className="unified-card mfa-setup-section">
+        <section className="unified-card mfa-setup-section" aria-labelledby="setup-backup-title">
           <div className="mfa-setup-section-header">
             <div className="mfa-setup-section-info">
-              <div className="mfa-setup-section-icon">
+              <div className="mfa-setup-section-icon" aria-hidden="true">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
               </div>
               <div>
-                <h3>{t('setup_backup_title')}</h3>
+                <h2 id="setup-backup-title">{t('setup_backup_title')}</h2>
                 <p className="mfa-setup-section-desc">
                   {t('setup_backup_description')}
                 </p>
@@ -676,7 +705,7 @@ export default function MFASetupPage() {
 
           <div className="mfa-setup-section-body">
             {status && status.backup_codes_remaining === 0 && (
-              <p className="mfa-setup-no-backup-warning">
+              <p className="mfa-setup-no-backup-warning" role="alert">
                 {t('setup_backup_no_codes_warning')}
               </p>
             )}
@@ -684,11 +713,12 @@ export default function MFASetupPage() {
               className="btn btn-secondary"
               onClick={handleGenerateBackupCodes}
               disabled={backupGenerating}
+              aria-busy={backupGenerating}
             >
               {backupGenerating ? t('setup_backup_generating') : (status && status.backup_codes_remaining > 0 ? t('setup_backup_regenerate') : t('setup_backup_generate'))}
             </button>
           </div>
-        </div>
+        </section>
       </div>
     </Layout>
   )

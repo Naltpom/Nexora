@@ -49,6 +49,7 @@ class Settings(BaseSettings):
     # Intranet SSO
     INTRANET_AUTH_URL: str = ""
     INTRANET_EMAIL_DOMAIN: str = ""
+    INTRANET_SSL_CA_BUNDLE: str = ""  # Path to CA bundle for intranet SSL verification
 
     # Seed defaults
     DEFAULT_ADMIN_EMAIL: str = "admin@example.com"
@@ -102,6 +103,10 @@ class Settings(BaseSettings):
 
     # Webhook delivery log retention
     DELIVERY_LOG_RETENTION_DAYS: int = 90  # Delete webhook delivery logs older than N days
+
+    # RGPD retention
+    RGPD_AUDIT_LOG_RETENTION_DAYS: int = 365  # Delete data access audit logs older than N days
+    RGPD_CONSENT_RETENTION_DAYS: int = 1095  # Delete consent records older than N days (~3 ans)
 
     # Lifecycle (user account lifecycle management)
     LIFECYCLE_INACTIVITY_DAYS: int = 1460  # ~48 months of inactivity before archive

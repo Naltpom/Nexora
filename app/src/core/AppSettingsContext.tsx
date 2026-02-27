@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react'
 import api from '../api'
 
 export interface SSOProvider {
@@ -59,8 +59,10 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
     fetchSettings()
   }, [fetchSettings])
 
+  const contextValue = useMemo(() => ({ settings, loading, settled, refreshSettings: fetchSettings }), [settings, loading, settled, fetchSettings])
+
   return (
-    <AppSettingsContext.Provider value={{ settings, loading, settled, refreshSettings: fetchSettings }}>
+    <AppSettingsContext.Provider value={contextValue}>
       {children}
     </AppSettingsContext.Provider>
   )

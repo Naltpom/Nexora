@@ -31,5 +31,22 @@
   "pagination_10": "10 / page",
   "pagination_25": "25 / page",
   "pagination_50": "50 / page",
-  "pagination_100": "100 / page"
+  "pagination_100": "100 / page",
+
+  "page_title_journal": "Event Log",
+  "page_title_catalogue": "Event Catalogue",
+
+  "aria_loading": "Loading...",
+  "aria_search_events": "Search events",
+  "aria_search_event_types": "Search event types",
+  "aria_events_table_caption": "Event log table",
+  "aria_types_table_caption": "Event types for feature {{feature}}",
+  "aria_voir_payload": "View data for event {{type}}",
+  "aria_no_payload": "No data",
+  "aria_payload_for": "Data for event {{type}}",
+  "aria_pagination": "Events pagination",
+  "aria_per_page": "Number of items per page",
+  "aria_previous_page": "Previous page",
+  "aria_next_page": "Next page",
+  "aria_page_number": "Page {{page}}"
 }

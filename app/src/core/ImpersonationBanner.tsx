@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from './AuthContext'
 import { useConfirm } from './ConfirmModal'
-import api from '../api'
+import api, { setAccessToken } from '../api'
 
 export default function ImpersonationBanner() {
   const { t } = useTranslation('common')
@@ -49,10 +49,9 @@ export default function ImpersonationBanner() {
     const currentPath = window.location.pathname
     try {
       const response = await api.post(`/impersonation/switch/${userId}`)
-      const { access_token, refresh_token } = response.data
+      const { access_token } = response.data
 
-      localStorage.setItem('access_token', access_token)
-      localStorage.setItem('refresh_token', refresh_token)
+      setAccessToken(access_token)
 
       setSearchQuery('')
       setSearchResults([])

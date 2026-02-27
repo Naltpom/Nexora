@@ -1,5 +1,5 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import api from '../api'
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react'
+import api, { getAccessToken } from '../api'
 import { useAuth } from './AuthContext'
 
 interface PermissionContextType {
@@ -18,10 +18,10 @@ export function PermissionProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const { user } = useAuth()
 
-  const fetchPermissions = async () => {
+  const fetchPermissions = useCallback(async () => {
     try {
-      const token = localStorage.getItem('access_token')
-      if (!token) {
+      const token = getAccessToken()
+      if (!token && !localStorage.getItem('has_session')) {
         setPermissions([])
         setLoading(false)
         return
@@ -33,18 +33,22 @@ export function PermissionProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     fetchPermissions()
-  }, [user?.id])
+  }, [user?.id, fetchPermissions])
 
-  const can = (code: string): boolean => permissions.includes(code)
-  const canAny = (...codes: string[]): boolean => codes.some(c => permissions.includes(c))
-  const canAll = (...codes: string[]): boolean => codes.every(c => permissions.includes(c))
+  const can = useCallback((code: string): boolean => permissions.includes(code), [permissions])
+  const canAny = useCallback((...codes: string[]): boolean => codes.some(c => permissions.includes(c)), [permissions])
+  const canAll = useCallback((...codes: string[]): boolean => codes.every(c => permissions.includes(c)), [permissions])
+
+  const contextValue = useMemo(() => ({
+    permissions, loading, can, canAny, canAll, refreshPermissions: fetchPermissions
+  }), [permissions, loading, can, canAny, canAll, fetchPermissions])
 
   return (
-    <PermissionContext.Provider value={{ permissions, loading, can, canAny, canAll, refreshPermissions: fetchPermissions }}>
+    <PermissionContext.Provider value={contextValue}>
       {children}
     </PermissionContext.Provider>
   )

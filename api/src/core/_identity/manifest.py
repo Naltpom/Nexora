@@ -48,6 +48,8 @@ manifest = FeatureManifest(
         # Commandes
         {"event_type": "command.executed", "label": "Commande executee", "category": "Administration", "description": "Une commande de maintenance a ete executee"},
         {"event_type": "command.toggled", "label": "Commande activee/desactivee", "category": "Administration", "description": "Une commande a ete activee ou desactivee"},
+        # Preferences
+        {"event_type": "preference.updated", "label": "Preferences modifiees", "category": "Utilisateurs", "description": "Un utilisateur a modifie ses preferences"},
     ],
     tutorials=[
         {

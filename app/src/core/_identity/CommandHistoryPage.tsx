@@ -46,8 +46,21 @@ export default function CommandHistoryPage() {
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [searchValue, setSearchValue] = useState('')
   const [detailModal, setDetailModal] = useState<CommandExecution | null>(null)
+  const detailModalRef = useRef<HTMLDivElement>(null)
+  const detailModalTitleId = 'command-detail-modal-title'
 
   const perPage = 20
+
+  // Escape key handler for detail modal
+  useEffect(() => {
+    if (!detailModal) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setDetailModal(null)
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    detailModalRef.current?.focus()
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [detailModal])
 
   const loadHistory = useCallback(async () => {
     setLoading(true)
@@ -120,7 +133,7 @@ export default function CommandHistoryPage() {
           </div>
           <div className="unified-page-header-actions">
             <Link to="/admin/commands" className="btn btn-secondary btn-sm">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <polyline points="15 18 9 12 15 6" />
               </svg>
               {t('command_history.btn_commands')}
@@ -130,22 +143,26 @@ export default function CommandHistoryPage() {
       </div>
 
       {loading && !data ? (
-        <div className="spinner" />
+        <div className="spinner" role="status" aria-busy="true">
+          <span className="sr-only">{t('common.loading')}</span>
+        </div>
       ) : (
         <div className="unified-card full-width-breakout">
           {/* Filters */}
-          <div className="section-header">
+          <div className="section-header" role="search">
             <input
               type="text"
               placeholder={t('command_history.filter_placeholder')}
               value={searchValue}
               onChange={(e) => handleSearchChange(e.target.value)}
               className="input-search-wide"
+              aria-label={t('command_history.filter_placeholder')}
             />
             <select
               value={statusFilter}
               onChange={(e) => { setStatusFilter(e.target.value); setPage(1) }}
               className="input-select"
+              aria-label={t('a11y.filter_status')}
             >
               <option value="">{t('command_history.filter_all_statuses')}</option>
               <option value="success">{t('command_history.filter_success')}</option>
@@ -154,17 +171,18 @@ export default function CommandHistoryPage() {
           </div>
 
           <div className="table-container">
-            <table className="unified-table">
+            <table className="unified-table" aria-busy={loading}>
+              <caption className="sr-only">{t('a11y.table_caption_command_history')}</caption>
               <thead>
                 <tr>
-                  <th>{t('command_history.th_date')}</th>
-                  <th>{t('command_history.th_command')}</th>
-                  <th>{t('command_history.th_feature')}</th>
-                  <th>{t('command_history.th_status')}</th>
-                  <th>{t('command_history.th_duration')}</th>
-                  <th>{t('command_history.th_source')}</th>
-                  <th>{t('command_history.th_executed_by')}</th>
-                  <th>{t('command_history.th_result')}</th>
+                  <th scope="col">{t('command_history.th_date')}</th>
+                  <th scope="col">{t('command_history.th_command')}</th>
+                  <th scope="col">{t('command_history.th_feature')}</th>
+                  <th scope="col">{t('command_history.th_status')}</th>
+                  <th scope="col">{t('command_history.th_duration')}</th>
+                  <th scope="col">{t('command_history.th_source')}</th>
+                  <th scope="col">{t('command_history.th_executed_by')}</th>
+                  <th scope="col">{t('command_history.th_result')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -209,7 +227,7 @@ export default function CommandHistoryPage() {
                         <button
                           className="btn btn-xs btn-secondary"
                           onClick={() => setDetailModal(exec)}
-                          title={t('command_history.btn_view_detail')}
+                          aria-label={t('command_history.btn_view_detail')}
                         >
                           {formatResult(exec).length > 40
                             ? formatResult(exec).substring(0, 40) + '...'
@@ -225,25 +243,27 @@ export default function CommandHistoryPage() {
 
           {/* Pagination */}
           {data && data.pages > 1 && (
-            <div className="pagination">
+            <nav className="pagination" aria-label={t('a11y.pagination')}>
               <button
                 className="btn btn-sm btn-secondary"
                 disabled={page <= 1}
                 onClick={() => setPage(p => p - 1)}
+                aria-label={t('common.previous')}
               >
                 {t('common.previous')}
               </button>
-              <span className="pagination-info">
+              <span className="pagination-info" aria-live="polite" aria-atomic="true">
                 {t('command_history.pagination_page', { current: data.page, total: data.pages, count: data.total })}
               </span>
               <button
                 className="btn btn-sm btn-secondary"
                 disabled={page >= data.pages}
                 onClick={() => setPage(p => p + 1)}
+                aria-label={t('common.next')}
               >
                 {t('common.next')}
               </button>
-            </div>
+            </nav>
           )}
         </div>
       )}
@@ -251,10 +271,18 @@ export default function CommandHistoryPage() {
       {/* Detail modal */}
       {detailModal && (
         <div className="modal-overlay" onClick={() => setDetailModal(null)}>
-          <div className="modal modal-narrow" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="modal modal-narrow"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={detailModalTitleId}
+            ref={detailModalRef}
+            tabIndex={-1}
+          >
             <div className="modal-header">
-              <h2>{detailModal.command_label}</h2>
-              <button className="modal-close" onClick={() => setDetailModal(null)}>&times;</button>
+              <h2 id={detailModalTitleId}>{detailModal.command_label}</h2>
+              <button className="modal-close" onClick={() => setDetailModal(null)} aria-label={t('common.close')}>&times;</button>
             </div>
             <div className="modal-body modal-body-scroll">
               <div className="flex-col-sm">

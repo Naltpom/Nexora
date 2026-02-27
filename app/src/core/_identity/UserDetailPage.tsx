@@ -188,7 +188,7 @@ export default function UserDetailPage() {
   if (loading) {
     return (
       <Layout breadcrumb={[{ label: t('common.home'), path: '/' }, { label: t('user_detail.breadcrumb_users'), path: '/admin/users' }, { label: '...' }]} title={t('user_detail.page_title')}>
-        <div className="spinner" />
+        <div className="spinner" role="status" aria-label={t('a11y.loading_users')} />
       </Layout>
     )
   }
@@ -215,7 +215,7 @@ export default function UserDetailPage() {
       title={`${user.first_name} ${user.last_name}`}
     >
       {message && (
-        <div className={`alert-dynamic ${message.type === 'success' ? 'alert-dynamic--success' : 'alert-dynamic--error'}`}>
+        <div className={`alert-dynamic ${message.type === 'success' ? 'alert-dynamic--success' : 'alert-dynamic--error'}`} role={message.type === 'success' ? 'status' : 'alert'}>
           {message.text}
         </div>
       )}
@@ -223,11 +223,11 @@ export default function UserDetailPage() {
       {/* Header card */}
       <div className="unified-card ud-header-card">
         <div className="flex-center-xl">
-          <div className="avatar-circle">
+          <div className="avatar-circle" aria-hidden="true">
             {avatarInitial}
           </div>
           <div className="flex-1">
-            <div className="ud-name">{user.first_name} {user.last_name.toUpperCase()}</div>
+            <h1 className="ud-name">{user.first_name} {user.last_name.toUpperCase()}</h1>
             <div className="text-gray-500-sm">{user.email}</div>
           </div>
           <div className="ud-badges">
@@ -250,7 +250,7 @@ export default function UserDetailPage() {
       <div className="flex-row-lg section-mb">
         {/* Profile form */}
         <div className="unified-card ud-main-panel">
-          <h3 className="title-section mb-16">{t('user_detail.section_info')}</h3>
+          <h2 className="title-section mb-16">{t('user_detail.section_info')}</h2>
           <div className="flex-col-lg">
             <label className="text-sm">
               <span className="field-label">{t('user_detail.field_email')}</span>
@@ -259,6 +259,7 @@ export default function UserDetailPage() {
                 value={form.email}
                 onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                 className="input-styled"
+                aria-required="true"
               />
             </label>
             <div className="flex-row">
@@ -269,6 +270,7 @@ export default function UserDetailPage() {
                   value={form.first_name}
                   onChange={e => setForm(f => ({ ...f, first_name: e.target.value }))}
                   className="input-styled"
+                  aria-required="true"
                 />
               </label>
               <label className="text-sm flex-1">
@@ -278,6 +280,7 @@ export default function UserDetailPage() {
                   value={form.last_name}
                   onChange={e => setForm(f => ({ ...f, last_name: e.target.value }))}
                   className="input-styled"
+                  aria-required="true"
                 />
               </label>
             </div>
@@ -285,8 +288,8 @@ export default function UserDetailPage() {
               <label className="ud-toggle-label">
                 <span className="text-gray-500-sm font-medium">{t('user_detail.field_active')}</span>
                 <label className="toggle">
-                  <input type="checkbox" checked={form.is_active} onChange={e => setForm(f => ({ ...f, is_active: e.target.checked }))} />
-                  <span className="toggle-slider" />
+                  <input type="checkbox" checked={form.is_active} onChange={e => setForm(f => ({ ...f, is_active: e.target.checked }))} aria-label={t('a11y.toggle_active_status')} />
+                  <span className="toggle-slider" aria-hidden="true" />
                 </label>
               </label>
             </div>
@@ -300,7 +303,7 @@ export default function UserDetailPage() {
 
         {/* Roles */}
         <div className="unified-card ud-side-panel">
-          <h3 className="title-section mb-16">{t('user_detail.section_roles')}</h3>
+          <h2 className="title-section mb-16">{t('user_detail.section_roles')}</h2>
           <div className="flex-col-md">
             {allRoles.map(role => {
               const assigned = user.roles.some(r => r.id === role.id)
@@ -332,34 +335,38 @@ export default function UserDetailPage() {
       {/* Permissions table */}
       <div className="unified-card full-width-breakout">
         <div className="section-header flex-between">
-          <h3 className="title-section mb-0">{t('user_detail.section_permissions')}</h3>
+          <h2 className="title-section mb-0">{t('user_detail.section_permissions')}</h2>
           <div className="flex-center-xl">
             {/* Legend */}
-            <div className="ud-legend">
+            <div className="ud-legend" aria-hidden="true">
               <span className="badge-tag badge-tag--purple">U</span>
               <span className="badge-tag badge-tag--blue-outline">R</span>
               <span className="badge-tag badge-tag--green-outline">G</span>
             </div>
-            <input
-              type="text"
-              placeholder={t('common.search')}
-              value={permSearch}
-              onChange={e => setPermSearch(e.target.value)}
-              className="input-filter"
-            />
+            <div role="search">
+              <input
+                type="text"
+                placeholder={t('common.search')}
+                value={permSearch}
+                onChange={e => setPermSearch(e.target.value)}
+                className="input-filter"
+                aria-label={t('a11y.search_permissions')}
+              />
+            </div>
           </div>
         </div>
         <div className="table-container">
           <table className="unified-table">
+            <caption className="sr-only">{t('a11y.table_caption_user_permissions')}</caption>
             <thead>
               <tr>
-                <th>{t('user_detail.th_permission')}</th>
-                <th>{t('user_detail.th_code')}</th>
-                <th>{t('user_detail.th_feature')}</th>
-                <th className="text-center">{t('user_detail.th_user')}</th>
-                <th className="text-center">{t('user_detail.th_role')}</th>
-                <th className="text-center">{t('user_detail.th_global')}</th>
-                <th className="text-center">{t('user_detail.th_effective')}</th>
+                <th scope="col">{t('user_detail.th_permission')}</th>
+                <th scope="col">{t('user_detail.th_code')}</th>
+                <th scope="col">{t('user_detail.th_feature')}</th>
+                <th scope="col" className="text-center">{t('user_detail.th_user')}</th>
+                <th scope="col" className="text-center">{t('user_detail.th_role')}</th>
+                <th scope="col" className="text-center">{t('user_detail.th_global')}</th>
+                <th scope="col" className="text-center">{t('user_detail.th_effective')}</th>
               </tr>
             </thead>
             <tbody>
@@ -389,6 +396,7 @@ export default function UserDetailPage() {
                         onClick={() => handlePermissionCycle(perm)}
                         className={`perm-indicator perm-indicator--btn ${perm.user_override === true ? 'perm-indicator--user-granted' : perm.user_override === false ? 'perm-indicator--user-denied' : 'perm-indicator--none'}`}
                         title={perm.user_override === true ? t('user_detail.tooltip_user_granted') : perm.user_override === false ? t('user_detail.tooltip_user_denied') : t('user_detail.tooltip_user_none')}
+                        aria-label={t('a11y.permission_cycle', { name: perm.label || perm.code })}
                         disabled={!can('permissions.manage')}
                       >
                         {perm.user_override === true ? '\u2713' : perm.user_override === false ? '\u2717' : '\u2014'}

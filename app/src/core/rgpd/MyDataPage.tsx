@@ -56,7 +56,7 @@ export default function MyDataPage() {
   if (loading) {
     return (
       <Layout title={t('my_data_page.page_title')} breadcrumb={[{ label: t('my_data_page.breadcrumb_home'), path: '/' }, { label: t('my_data_page.breadcrumb_label') }]}>
-        <div className="text-center loading-pad-lg"><div className="spinner" /></div>
+        <div className="text-center loading-pad-lg" aria-busy="true"><div className="spinner" role="status"><span className="sr-only">{t('my_data_page.aria_loading')}</span></div></div>
       </Layout>
     )
   }
@@ -74,6 +74,7 @@ export default function MyDataPage() {
               className="btn btn-secondary btn-sm"
               onClick={() => handleExport('csv')}
               disabled={exporting !== null}
+              aria-busy={exporting === 'csv'}
             >
               {exporting === 'csv' ? t('my_data_page.btn_export_csv_loading') : t('my_data_page.btn_export_csv')}
             </button>
@@ -81,6 +82,7 @@ export default function MyDataPage() {
               className="btn btn-primary btn-sm"
               onClick={() => handleExport('json')}
               disabled={exporting !== null}
+              aria-busy={exporting === 'json'}
             >
               {exporting === 'json' ? t('my_data_page.btn_export_json_loading') : t('my_data_page.btn_export_json')}
             </button>
@@ -88,32 +90,34 @@ export default function MyDataPage() {
         </div>
       </div>
 
-      {error && <div className="alert alert-error mb-16">{error}</div>}
+      {error && <div className="alert alert-error mb-16" role="alert">{error}</div>}
 
       {sections.length === 0 ? (
         <div className="unified-card">
           <p className="text-center text-secondary">{t('my_data_page.no_data')}</p>
         </div>
       ) : (
-        <div className="rgpd-data-sections">
-          {sections.map((s) => (
-            <div key={s.section} className="unified-card rgpd-data-section">
-              <div className="rgpd-data-section-header">
-                <h3>{s.section}</h3>
-                <span className="rgpd-badge">{s.count} {s.count > 1 ? t('my_data_page.record_plural') : t('my_data_page.record_singular')}</span>
+        <section aria-label={t('my_data_page.aria_data_sections')}>
+          <div className="rgpd-data-sections">
+            {sections.map((s) => (
+              <div key={s.section} className="unified-card rgpd-data-section">
+                <div className="rgpd-data-section-header">
+                  <h2>{s.section}</h2>
+                  <span className="rgpd-badge">{s.count} {s.count > 1 ? t('my_data_page.record_plural') : t('my_data_page.record_singular')}</span>
+                </div>
+                <div className="rgpd-data-fields" role="list" aria-label={t('my_data_page.aria_fields_label', { section: s.section })}>
+                  {s.fields.map((f) => (
+                    <span key={f} className="rgpd-field-tag" role="listitem">{f}</span>
+                  ))}
+                </div>
               </div>
-              <div className="rgpd-data-fields">
-                {s.fields.map((f) => (
-                  <span key={f} className="rgpd-field-tag">{f}</span>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </section>
       )}
 
       <div className="unified-card rgpd-rights-cta">
-        <h3>{t('my_data_page.manage_preferences_title')}</h3>
+        <h2>{t('my_data_page.manage_preferences_title')}</h2>
         <p>{t('my_data_page.manage_preferences_description')}</p>
         <Link to="/rgpd/consent" className="btn btn-secondary btn-sm">
           {t('my_data_page.btn_consent_preferences')}
@@ -121,7 +125,7 @@ export default function MyDataPage() {
       </div>
 
       <div className="unified-card rgpd-rights-cta">
-        <h3>{t('my_data_page.exercise_rights_title')}</h3>
+        <h2>{t('my_data_page.exercise_rights_title')}</h2>
         <p>{t('my_data_page.exercise_rights_description')}</p>
         <Link to="/rgpd/rights" className="btn btn-primary btn-sm">
           {t('my_data_page.btn_make_request')}

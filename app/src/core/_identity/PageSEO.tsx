@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useAppSettings } from '../AppSettingsContext'
 
 interface PageSEOProps {
-  page: 'login' | 'register'
+  page: 'login' | 'register' | 'forgot_password' | 'reset_password' | 'verify_email' | 'force_change_password' | 'accept_invitation'
 }
 
 function setMeta(attr: 'name' | 'property', key: string, content: string) {

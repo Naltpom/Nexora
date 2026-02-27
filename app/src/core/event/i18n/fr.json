@@ -31,5 +31,22 @@
   "pagination_10": "10 / page",
   "pagination_25": "25 / page",
   "pagination_50": "50 / page",
-  "pagination_100": "100 / page"
+  "pagination_100": "100 / page",
+
+  "page_title_journal": "Journal des evenements",
+  "page_title_catalogue": "Catalogue d'evenements",
+
+  "aria_loading": "Chargement en cours...",
+  "aria_search_events": "Rechercher des evenements",
+  "aria_search_event_types": "Rechercher des types d'evenements",
+  "aria_events_table_caption": "Tableau du journal des evenements",
+  "aria_types_table_caption": "Types d'evenements de la feature {{feature}}",
+  "aria_voir_payload": "Voir les donnees de l'evenement {{type}}",
+  "aria_no_payload": "Aucune donnee",
+  "aria_payload_for": "Donnees de l'evenement {{type}}",
+  "aria_pagination": "Pagination des evenements",
+  "aria_per_page": "Nombre d'elements par page",
+  "aria_previous_page": "Page precedente",
+  "aria_next_page": "Page suivante",
+  "aria_page_number": "Page {{page}}"
 }

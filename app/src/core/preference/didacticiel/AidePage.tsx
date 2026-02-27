@@ -36,27 +36,32 @@ export default function AidePage() {
       title={t('aide_title')}
     >
       <div className="page-narrow">
-        <div>
+        <header>
           <h1 className="title-md">{t('aide_title')}</h1>
           <p className="text-gray-500">
             {t('aide_description')}
           </p>
-        </div>
+        </header>
 
-        <div className="aide-stats">
-          <div className="aide-stats__card">
-            <span className="aide-stats__value">{stats.totalSteps}</span>
-            <span className="aide-stats__label">{t('aide_stats_tutorial_steps')}</span>
+        <section aria-label={t('aide_aria_stats')}>
+          <div className="aide-stats">
+            <div className="aide-stats__card" aria-label={t('aide_stats_tutorial_steps')}>
+              <span className="aide-stats__value" aria-hidden="true">{stats.totalSteps}</span>
+              <span className="aide-stats__label">{t('aide_stats_tutorial_steps')}</span>
+              <span className="sr-only">{stats.totalSteps} {t('aide_stats_tutorial_steps')}</span>
+            </div>
+            <div className="aide-stats__card" aria-label={t('aide_stats_permissions_with_tutorial')}>
+              <span className="aide-stats__value" aria-hidden="true">{stats.withTuto}</span>
+              <span className="aide-stats__label">{t('aide_stats_permissions_with_tutorial')}</span>
+              <span className="sr-only">{stats.withTuto} {t('aide_stats_permissions_with_tutorial')}</span>
+            </div>
+            <div className="aide-stats__card" aria-label={t('aide_stats_permissions_without_tutorial')}>
+              <span className="aide-stats__value" aria-hidden="true">{stats.withoutTuto}</span>
+              <span className="aide-stats__label">{t('aide_stats_permissions_without_tutorial')}</span>
+              <span className="sr-only">{stats.withoutTuto} {t('aide_stats_permissions_without_tutorial')}</span>
+            </div>
           </div>
-          <div className="aide-stats__card">
-            <span className="aide-stats__value">{stats.withTuto}</span>
-            <span className="aide-stats__label">{t('aide_stats_permissions_with_tutorial')}</span>
-          </div>
-          <div className="aide-stats__card">
-            <span className="aide-stats__value">{stats.withoutTuto}</span>
-            <span className="aide-stats__label">{t('aide_stats_permissions_without_tutorial')}</span>
-          </div>
-        </div>
+        </section>
 
         <Suspense fallback={null}>
           <TutorialSection />

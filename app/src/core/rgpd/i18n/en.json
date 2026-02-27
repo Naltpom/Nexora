@@ -32,7 +32,9 @@
     "status_pending": "Pending",
     "status_processing": "Processing",
     "status_completed": "Completed",
-    "status_rejected": "Rejected"
+    "status_rejected": "Rejected",
+    "aria_loading": "Loading...",
+    "aria_requests_list": "Your rights requests list"
   },
   "cookie_banner": {
     "title": "We respect your privacy",
@@ -59,7 +61,9 @@
     "consent_analytics_label": "Analytics",
     "consent_analytics_description": "Cookies and trackers that help us understand how you use the site so we can improve it.",
     "consent_marketing_label": "Marketing",
-    "consent_marketing_description": "Cookies and trackers used to display relevant advertisements. None at this time."
+    "consent_marketing_description": "Cookies and trackers used to display relevant advertisements. None at this time.",
+    "aria_loading": "Loading...",
+    "aria_form_label": "Consent preferences form"
   },
   "my_data_page": {
     "page_title": "My data",
@@ -81,7 +85,10 @@
     "exercise_rights_description": "You have the right to access your data, rectify it, delete it, object to its processing, or request its portability.",
     "btn_make_request": "Make a request",
     "error_load": "Failed to load your data.",
-    "error_export": "Export failed. Please try again."
+    "error_export": "Export failed. Please try again.",
+    "aria_loading": "Loading...",
+    "aria_data_sections": "Personal data sections",
+    "aria_fields_label": "Fields for section {{section}}"
   },
   "legal_page": {
     "default_title": "Legal page",
@@ -92,7 +99,13 @@
     "not_available": "This page is not yet available.",
     "btn_back_home": "Back to home",
     "last_updated": "Last updated:",
-    "version_label": "Version"
+    "version_label": "Version",
+    "aria_loading": "Loading...",
+    "aria_nav_back": "Back navigation",
+    "meta_privacy_policy": "Privacy policy - information about how your personal data is processed.",
+    "meta_terms": "Terms of use for the service.",
+    "meta_legal_notice": "Legal notice and information about the website publisher.",
+    "meta_cookie_policy": "Cookies and trackers policy - information about cookies used on the site."
   },
   "accept_legal_page": {
     "update_heading": "Legal documents update",
@@ -116,7 +129,8 @@
     "confirm_delete_title": "Delete my account",
     "confirm_delete_message": "Your account will be deactivated for 30 days. If you log back in during this period, it will be automatically reactivated. After this period, all your data will be permanently deleted.\n\nAre you sure you want to continue?",
     "confirm_delete_confirm": "Yes, delete my account",
-    "confirm_delete_cancel": "Cancel"
+    "confirm_delete_cancel": "Cancel",
+    "aria_accept_form": "Legal documents acceptance"
   },
   "admin_rgpd_page": {
     "page_title": "GDPR Administration",
@@ -137,7 +151,8 @@
     "status_pending": "Pending",
     "status_processing": "Processing",
     "status_completed": "Completed",
-    "status_rejected": "Rejected"
+    "status_rejected": "Rejected",
+    "aria_tablist": "GDPR sections navigation"
   },
   "admin_register_tab": {
     "heading": "Processing register (Article 30)",
@@ -173,7 +188,8 @@
     "btn_delete_title": "Delete",
     "error_load": "Failed to load the register.",
     "error_save": "Failed to save the entry.",
-    "error_delete": "Failed to delete the entry."
+    "error_delete": "Failed to delete the entry.",
+    "aria_loading": "Loading..."
   },
   "admin_rights_tab": {
     "heading": "Rights exercise requests",
@@ -191,7 +207,10 @@
     "btn_process": "Process",
     "btn_previous": "Previous",
     "btn_next": "Next",
-    "page_label": "Page"
+    "page_label": "Page",
+    "aria_loading": "Loading...",
+    "aria_pagination": "Rights requests pagination",
+    "aria_process_form": "Request processing form"
   },
   "admin_audit_tab": {
     "heading": "Access audit log",
@@ -205,7 +224,10 @@
     "col_details": "Details",
     "btn_previous": "Previous",
     "btn_next": "Next",
-    "page_label": "Page"
+    "page_label": "Page",
+    "aria_loading": "Loading...",
+    "aria_table_caption": "Access audit log for personal data",
+    "aria_pagination": "Audit log pagination"
   },
   "admin_legal_pages_tab": {
     "heading": "Legal pages",
@@ -228,6 +250,7 @@
     "version_label": "Version",
     "error_load": "Failed to load legal pages.",
     "error_save": "Failed to save the page.",
-    "error_versions": "Failed to load version history."
+    "error_versions": "Failed to load version history.",
+    "aria_loading": "Loading..."
   }
 }

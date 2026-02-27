@@ -1,11 +1,21 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback, memo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import { useNotifications } from './NotificationContext'
 import { useFeature } from '../../core/FeatureContext'
 import './notifications.scss'
 
-function timeAgo(dateStr: string, t: (key: string, opts?: Record<string, unknown>) => string): string {
+interface NotifItem {
+  id: number
+  title: string
+  body: string | null
+  link: string | null
+  is_read: boolean
+  created_at: string
+}
+
+function timeAgo(dateStr: string, t: TFunction): string {
   const now = new Date()
   const date = new Date(dateStr)
   const seconds = Math.floor((now.getTime() - date.getTime()) / 1000)
@@ -19,6 +29,59 @@ function timeAgo(dateStr: string, t: (key: string, opts?: Record<string, unknown
   if (days < 7) return t('time_ago_days', { days })
   return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
 }
+
+// ── Memoized notification item ──
+
+interface NotificationBellItemProps {
+  notif: NotifItem
+  onClick: (notif: NotifItem) => void
+  onMarkAsUnread: (id: number) => void
+  onDelete: (id: number) => void
+  t: TFunction
+}
+
+const NotificationBellItem = memo(function NotificationBellItem({
+  notif, onClick, onMarkAsUnread, onDelete, t
+}: NotificationBellItemProps) {
+  return (
+    <div
+      className={`notification-item ${!notif.is_read ? 'unread' : ''}`}
+      onClick={() => onClick(notif)}
+    >
+      <div className={`notification-item-dot ${notif.is_read ? 'read' : ''}`} />
+      <div className="notification-item-content">
+        <div className="notification-item-title">{notif.title}</div>
+        {notif.body && (
+          <div className="notification-item-body">{notif.body}</div>
+        )}
+        <div className="notification-item-time">{timeAgo(notif.created_at, t)}</div>
+      </div>
+      {notif.is_read && (
+        <button
+          className="notification-item-unread-btn"
+          onClick={(e) => { e.stopPropagation(); onMarkAsUnread(notif.id) }}
+          title={t('dropdown_mark_as_unread')}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="5" />
+          </svg>
+        </button>
+      )}
+      <button
+        className="notification-item-delete"
+        onClick={(e) => { e.stopPropagation(); onDelete(notif.id) }}
+        title={t('dropdown_delete')}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+    </div>
+  )
+})
+
+// ── Bell component ──
 
 export default function NotificationBell() {
   const { t } = useTranslation('notification')
@@ -58,18 +121,17 @@ export default function NotificationBell() {
     }
   }
 
-  const handleNotificationClick = (notif: typeof notifications[0]) => {
+  const handleNotificationClick = useCallback((notif: NotifItem) => {
     if (!notif.is_read) markAsRead(notif.id)
     if (notif.link) {
       navigate(notif.link)
     }
     setOpen(false)
-  }
+  }, [markAsRead, navigate])
 
-  const handleDelete = (e: React.MouseEvent, id: number) => {
-    e.stopPropagation()
+  const handleDelete = useCallback((id: number) => {
     deleteNotification(id)
-  }
+  }, [deleteNotification])
 
   return (
     <div className={`notification-bell${wiggle ? ' notification-bell-wiggle' : ''}`} ref={dropdownRef}>
@@ -113,41 +175,14 @@ export default function NotificationBell() {
               </div>
             ) : (
               notifications.slice(0, 20).map(notif => (
-                <div
+                <NotificationBellItem
                   key={notif.id}
-                  className={`notification-item ${!notif.is_read ? 'unread' : ''}`}
-                  onClick={() => handleNotificationClick(notif)}
-                >
-                  <div className={`notification-item-dot ${notif.is_read ? 'read' : ''}`} />
-                  <div className="notification-item-content">
-                    <div className="notification-item-title">{notif.title}</div>
-                    {notif.body && (
-                      <div className="notification-item-body">{notif.body}</div>
-                    )}
-                    <div className="notification-item-time">{timeAgo(notif.created_at, t)}</div>
-                  </div>
-                  {notif.is_read && (
-                    <button
-                      className="notification-item-unread-btn"
-                      onClick={(e) => { e.stopPropagation(); markAsUnread(notif.id) }}
-                      title={t('dropdown_mark_as_unread')}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="5" />
-                      </svg>
-                    </button>
-                  )}
-                  <button
-                    className="notification-item-delete"
-                    onClick={(e) => handleDelete(e, notif.id)}
-                    title={t('dropdown_delete')}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="18" y1="6" x2="6" y2="18" />
-                      <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
-                  </button>
-                </div>
+                  notif={notif}
+                  onClick={handleNotificationClick}
+                  onMarkAsUnread={markAsUnread}
+                  onDelete={handleDelete}
+                  t={t}
+                />
               ))
             )}
           </div>

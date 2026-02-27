@@ -33,6 +33,13 @@
     "email_placeholder": "votre@email.com",
     "password_min_6": "Minimum 6 caracteres",
     "password_min_8": "Minimum 8 caracteres",
+    "password_policy_hint": "Min. 8 car., 1 majuscule, 1 chiffre, 1 special",
+    "password_policy": {
+      "min_length": "Au moins 8 caracteres",
+      "uppercase": "Au moins une lettre majuscule",
+      "digit": "Au moins un chiffre",
+      "special": "Au moins un caractere special (!@#$...)"
+    },
     "confirm_password_placeholder": "Confirmez votre mot de passe",
     "confirm_password_placeholder_short": "Confirmer le mot de passe",
     "home": "Accueil",
@@ -44,7 +51,17 @@
     "login_title": "Connexion — {{app_name}}",
     "login_description": "Connectez-vous a {{app_name}} pour acceder a la plateforme. {{app_description}}",
     "register_title": "Inscription — {{app_name}}",
-    "register_description": "Creez votre compte sur {{app_name}}. {{app_description}}"
+    "register_description": "Creez votre compte sur {{app_name}}. {{app_description}}",
+    "forgot_password_title": "Mot de passe oublie — {{app_name}}",
+    "forgot_password_description": "Reinitialisation du mot de passe sur {{app_name}}. {{app_description}}",
+    "reset_password_title": "Nouveau mot de passe — {{app_name}}",
+    "reset_password_description": "Definissez un nouveau mot de passe pour votre compte {{app_name}}. {{app_description}}",
+    "verify_email_title": "Verification de l'email — {{app_name}}",
+    "verify_email_description": "Verifiez votre adresse email pour activer votre compte {{app_name}}. {{app_description}}",
+    "force_change_password_title": "Changement de mot de passe — {{app_name}}",
+    "force_change_password_description": "Changement de mot de passe requis pour acceder a {{app_name}}. {{app_description}}",
+    "accept_invitation_title": "Accepter l'invitation — {{app_name}}",
+    "accept_invitation_description": "Acceptez votre invitation pour rejoindre {{app_name}}. {{app_description}}"
   },
 
   "login": {
@@ -60,7 +77,9 @@
     "no_account_link": "Pas encore de compte ? Creez-en un",
     "error_default": "Erreur de connexion",
     "legal_refused_warning": "Vous avez refuse les conditions d'utilisation. L'acces au service necessite l'acceptation des documents legaux.",
-    "account_deleted_info": "Votre compte a ete desactive. Si vous vous reconnectez dans les 30 jours, il sera automatiquement reactive."
+    "account_deleted_info": "Votre compte a ete desactive. Si vous vous reconnectez dans les 30 jours, il sera automatiquement reactive.",
+    "form_aria_label": "Formulaire de connexion",
+    "nav_aria_label": "Liens de navigation"
   },
 
   "register": {
@@ -74,7 +93,9 @@
     "error_default": "Erreur lors de l'inscription",
     "error_invalid_email": "Veuillez entrer une adresse email valide",
     "error_password_min_8": "Le mot de passe doit contenir au moins 8 caracteres",
-    "error_password_mismatch": "Les mots de passe ne correspondent pas"
+    "error_password_mismatch": "Les mots de passe ne correspondent pas",
+    "form_aria_label": "Formulaire d'inscription",
+    "nav_aria_label": "Liens de navigation"
   },
 
   "forgot_password": {
@@ -85,7 +106,9 @@
     "submitting": "Envoi...",
     "success_title": "Demande envoyee",
     "success_message": "Si cette adresse existe dans notre systeme, un email sera envoye sous peu avec un lien valable 30 minutes.",
-    "error_default": "Erreur lors de l'envoi"
+    "error_default": "Erreur lors de l'envoi",
+    "form_aria_label": "Formulaire de reinitialisation du mot de passe",
+    "nav_aria_label": "Liens de navigation"
   },
 
   "reset_password": {
@@ -101,7 +124,8 @@
     "error_default": "Erreur lors de la reinitialisation",
     "error_token_invalid": "Token invalide ou expire",
     "error_password_min_6": "Le mot de passe doit contenir au moins 6 caracteres",
-    "error_password_mismatch": "Les mots de passe ne correspondent pas"
+    "error_password_mismatch": "Les mots de passe ne correspondent pas",
+    "form_aria_label": "Formulaire de nouveau mot de passe"
   },
 
   "force_change_password": {
@@ -111,7 +135,8 @@
     "submitting": "Enregistrement...",
     "error_default": "Erreur lors du changement de mot de passe",
     "error_password_min_6": "Le mot de passe doit contenir au moins 6 caracteres",
-    "error_password_mismatch": "Les mots de passe ne correspondent pas"
+    "error_password_mismatch": "Les mots de passe ne correspondent pas",
+    "form_aria_label": "Formulaire de changement de mot de passe"
   },
 
   "verify_email": {
@@ -128,7 +153,10 @@
     "success_title": "Email verifie !",
     "success_message": "Votre compte a ete active avec succes.",
     "error_code_incorrect": "Code incorrect",
-    "error_resend": "Erreur lors du renvoi"
+    "error_resend": "Erreur lors du renvoi",
+    "form_aria_label": "Formulaire de verification de l'email",
+    "nav_aria_label": "Liens de navigation",
+    "debug_aria_label": "Code de verification en mode developpement"
   },
 
   "accept_invitation": {
@@ -160,7 +188,10 @@
     "error_password_mismatch": "Les mots de passe ne correspondent pas",
     "error_password_min_6": "Le mot de passe doit contenir au moins 6 caracteres",
     "error_code_incorrect": "Code incorrect",
-    "error_resend": "Erreur lors du renvoi"
+    "error_resend": "Erreur lors du renvoi",
+    "form_aria_label": "Formulaire d'acceptation de l'invitation",
+    "verify_form_aria_label": "Formulaire de verification du code",
+    "nav_aria_label": "Liens de navigation"
   },
 
   "home": {
@@ -194,7 +225,8 @@
     "time_just_now": "A l'instant",
     "time_minutes_ago": "Il y a {{count}} min",
     "time_hours_ago": "Il y a {{count}}h",
-    "time_days_ago": "Il y a {{count}}j"
+    "time_days_ago": "Il y a {{count}}j",
+    "aria_stats_section": "Statistiques du tableau de bord"
   },
 
   "profile": {
@@ -603,5 +635,66 @@
     "inv_confirm_cancel_message": "Etes-vous sur de vouloir annuler cette invitation ?",
     "inv_confirm_cancel_btn": "Annuler l'invitation",
     "inv_error_send": "Erreur lors de l'envoi"
+  },
+
+  "a11y": {
+    "table_caption_users": "Liste des utilisateurs",
+    "table_caption_invitations": "Liste des invitations en attente",
+    "table_caption_roles": "Liste des roles",
+    "table_caption_role_permissions": "Permissions du role {{name}}",
+    "table_caption_permissions_feature": "Permissions de la feature {{feature}}",
+    "table_caption_user_permissions": "Permissions de l'utilisateur",
+    "pagination": "Pagination",
+    "pagination_page": "Page {{page}}",
+    "pagination_previous": "Page precedente",
+    "pagination_next": "Page suivante",
+    "search_users": "Rechercher des utilisateurs",
+    "search_permissions": "Rechercher des permissions",
+    "search_role_permissions": "Rechercher des permissions du role",
+    "sort_ascending": "Tri croissant",
+    "sort_descending": "Tri decroissant",
+    "sort_none": "Non trie",
+    "close_modal": "Fermer la fenetre",
+    "toggle_active_user": "Basculer le statut actif de l'utilisateur {{name}}",
+    "toggle_active_status": "Basculer le statut actif",
+    "btn_view_detail": "Voir le detail de {{name}}",
+    "btn_impersonate": "Se connecter en tant que {{name}}",
+    "btn_reset_password": "Reinitialiser le mot de passe de {{name}}",
+    "btn_delete_user": "Supprimer l'utilisateur {{name}}",
+    "btn_cancel_invitation": "Annuler l'invitation de {{email}}",
+    "btn_manage_permissions": "Gerer les permissions du role {{name}}",
+    "btn_edit_role": "Modifier le role {{name}}",
+    "btn_delete_role": "Supprimer le role {{name}}",
+    "btn_close_permissions_panel": "Fermer le panneau de permissions",
+    "btn_back_full_table": "Retour au tableau complet des roles",
+    "toggle_permission": "Basculer la permission {{name}}",
+    "toggle_global_permission": "Basculer la permission globale {{name}}",
+    "permission_cycle": "Cycle de permission utilisateur pour {{name}}",
+    "per_page_select": "Nombre d'elements par page",
+    "user_email_input": "Email de l'utilisateur {{name}}",
+    "user_firstname_input": "Prenom de l'utilisateur {{name}}",
+    "user_lastname_input": "Nom de l'utilisateur {{name}}",
+    "loading_users": "Chargement des utilisateurs",
+    "loading_roles": "Chargement des roles",
+    "loading_permissions": "Chargement des permissions",
+    "loading_invitations": "Chargement des invitations",
+    "tab_users": "Onglet utilisateurs",
+    "tab_invitations": "Onglet invitations",
+    "tab_permissions_list": "Onglet liste des permissions",
+    "tab_global_permissions": "Onglet permissions globales",
+    "changes_pending": "Modifications en attente",
+    "global_permissions_section": "Section des permissions globales pour {{feature}}",
+    "table_caption_features": "Liste des features de l'application",
+    "table_caption_commands": "Liste des commandes de maintenance",
+    "table_caption_command_history": "Historique d'execution des commandes",
+    "toggle_feature": "Activer ou desactiver la feature {{label}}",
+    "toggle_command": "Activer ou desactiver la commande {{label}}",
+    "filter_status": "Filtrer par statut",
+    "form_app_settings": "Formulaire des parametres de l'application",
+    "logo_preview": "Apercu du logo",
+    "favicon_preview": "Apercu du favicon",
+    "color_picker": "Selecteur de couleur principale",
+    "reset_logo": "Reinitialiser le logo par defaut",
+    "reset_favicon": "Reinitialiser le favicon par defaut"
   }
 }

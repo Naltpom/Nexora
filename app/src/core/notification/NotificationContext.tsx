@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import api from '../../api'
 import { useAuth } from '../../core/AuthContext'
@@ -221,16 +221,18 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   const deleteNotification = useCallback(async (id: number) => {
     try {
-      const notif = notifications.find(n => n.id === id)
       await api.delete(`/notifications/${id}`)
-      setNotifications(prev => prev.filter(n => n.id !== id))
-      if (notif && !notif.is_read) {
-        setUnreadCount(prev => Math.max(0, prev - 1))
-      }
+      setNotifications(prev => {
+        const notif = prev.find(n => n.id === id)
+        if (notif && !notif.is_read) {
+          setUnreadCount(uc => Math.max(0, uc - 1))
+        }
+        return prev.filter(n => n.id !== id)
+      })
     } catch {
       // silently ignore
     }
-  }, [notifications])
+  }, [])
 
   // Push notification methods
   const refreshPushStatus = useCallback(async () => {
@@ -344,25 +346,33 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(PUSH_PROMPT_DISMISSED_KEY, String(Date.now()))
   }
 
+  const contextValue = useMemo(() => ({
+    notifications,
+    unreadCount,
+    loading,
+    fetchNotifications,
+    markAsRead,
+    markAsUnread,
+    markAllAsRead,
+    deleteNotification,
+    hasMore,
+    currentPage,
+    pushSupported,
+    pushPermission,
+    pushSubscribed,
+    subscribePush: handleSubscribePush,
+    unsubscribePush: handleUnsubscribePush,
+    refreshPushStatus,
+  }), [
+    notifications, unreadCount, loading,
+    fetchNotifications, markAsRead, markAsUnread, markAllAsRead, deleteNotification,
+    hasMore, currentPage,
+    pushSupported, pushPermission, pushSubscribed,
+    handleSubscribePush, handleUnsubscribePush, refreshPushStatus,
+  ])
+
   return (
-    <NotificationContext.Provider value={{
-      notifications,
-      unreadCount,
-      loading,
-      fetchNotifications,
-      markAsRead,
-      markAsUnread,
-      markAllAsRead,
-      deleteNotification,
-      hasMore,
-      currentPage,
-      pushSupported,
-      pushPermission,
-      pushSubscribed,
-      subscribePush: handleSubscribePush,
-      unsubscribePush: handleUnsubscribePush,
-      refreshPushStatus,
-    }}>
+    <NotificationContext.Provider value={contextValue}>
       {children}
       {showPushPrompt && (
         <div className="push-prompt-overlay">

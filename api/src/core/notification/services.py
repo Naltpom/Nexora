@@ -4,7 +4,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from sqlalchemy import asc, desc, func, or_, select
+from sqlalchemy import asc, desc, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..event.models import Event
@@ -377,9 +377,10 @@ async def list_notifications(
         query = query.where(Notification.is_read.is_(False))
 
     if search:
+        search_escaped = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
         search_filter = or_(
-            Notification.title.ilike(f"%{search}%"),
-            Notification.body.ilike(f"%{search}%"),
+            Notification.title.ilike(f"%{search_escaped}%"),
+            Notification.body.ilike(f"%{search_escaped}%"),
         )
         query = query.where(search_filter)
 
@@ -475,17 +476,16 @@ async def mark_notification_unread(db: AsyncSession, notification_id: int, user_
 
 async def mark_all_notifications_read(db: AsyncSession, user_id: int) -> None:
     """Mark all unread notifications as read for a user."""
-    result = await db.execute(
-        select(Notification).where(
+    now = datetime.now(timezone.utc)
+    await db.execute(
+        update(Notification)
+        .where(
             Notification.user_id == user_id,
             Notification.is_read.is_(False),
             Notification.deleted_at.is_(None),
         )
+        .values(is_read=True, read_at=now)
     )
-    now = datetime.now(timezone.utc)
-    for notif in result.scalars().all():
-        notif.is_read = True
-        notif.read_at = now
     await db.flush()
 
 

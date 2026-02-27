@@ -169,8 +169,8 @@ export default function MFAAdminPolicy() {
   if (loading) {
     return (
       <Layout breadcrumb={[{ label: t('admin_breadcrumb_home'), path: '/' }, { label: t('admin_breadcrumb_administration') }, { label: t('admin_breadcrumb_policy') }]} title={t('admin_breadcrumb_policy')}>
-        <div className="loading-screen">
-          <div className="spinner" />
+        <div className="loading-screen" aria-busy="true" role="status">
+          <div className="spinner" aria-hidden="true" />
           <p>{t('loading')}</p>
         </div>
       </Layout>
@@ -188,18 +188,18 @@ export default function MFAAdminPolicy() {
         </div>
 
         {error && <div className="alert alert-error" role="alert">{error}</div>}
-        {successMessage && <div className="alert alert-success" aria-live="polite">{successMessage}</div>}
+        {successMessage && <div className="alert alert-success" role="status" aria-live="polite">{successMessage}</div>}
 
         <div className="unified-card">
-          <div className="mfa-policy-table-wrapper">
+          <div className="mfa-policy-table-wrapper" role="region" aria-label={t('admin_page_title')} tabIndex={0}>
             <table className="mfa-policy-table">
               <thead>
                 <tr>
-                  <th>{t('admin_table_role')}</th>
-                  <th>{t('admin_table_mfa_required')}</th>
-                  <th>{t('admin_table_allowed_methods')}</th>
-                  <th>{t('admin_table_grace_period')}</th>
-                  <th>{t('admin_table_actions')}</th>
+                  <th scope="col">{t('admin_table_role')}</th>
+                  <th scope="col">{t('admin_table_mfa_required')}</th>
+                  <th scope="col">{t('admin_table_allowed_methods')}</th>
+                  <th scope="col">{t('admin_table_grace_period')}</th>
+                  <th scope="col">{t('admin_table_actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -231,7 +231,7 @@ export default function MFAAdminPolicy() {
                             onChange={(e) => updateEditField(role.id, 'mfa_required', e.target.checked)}
                             aria-label={`${t('admin_table_mfa_required')} — ${role.name}`}
                           />
-                          <span className="mfa-toggle-slider" />
+                          <span className="mfa-toggle-slider" aria-hidden="true" />
                         </label>
                       </td>
                       <td>
@@ -242,6 +242,7 @@ export default function MFAAdminPolicy() {
                                 type="checkbox"
                                 checked={isMethodChecked(role.id, method)}
                                 onChange={() => toggleMethod(role.id, method)}
+                                aria-label={t('admin_method_label', { method: METHOD_LABELS[method], role: role.name })}
                               />
                               <span>{METHOD_LABELS[method]}</span>
                             </label>
@@ -256,6 +257,7 @@ export default function MFAAdminPolicy() {
                           onChange={(e) => updateEditField(role.id, 'grace_period_days', parseInt(e.target.value) || 0)}
                           min={0}
                           max={365}
+                          aria-label={t('admin_grace_period_label', { role: role.name })}
                         />
                       </td>
                       <td>
@@ -264,8 +266,9 @@ export default function MFAAdminPolicy() {
                             className="btn btn-primary btn-sm"
                             onClick={() => handleSave(role.id)}
                             disabled={isSaving}
+                            aria-busy={isSaving}
                           >
-                            {isSaving ? '...' : t('admin_save')}
+                            {isSaving ? t('admin_saving') : t('admin_save')}
                           </button>
                           {hasPolicy && (
                             <button

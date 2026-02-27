@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../core/AuthContext'
 import api from '../../api'
+import PageSEO from './PageSEO'
+import { validatePassword } from './passwordPolicy'
 
 export default function ForceChangePassword() {
   const { t } = useTranslation('_identity')
@@ -17,8 +19,9 @@ export default function ForceChangePassword() {
     e.preventDefault()
     setError('')
 
-    if (newPassword.length < 6) {
-      setError(t('force_change_password.error_password_min_6'))
+    const pwdErrors = validatePassword(newPassword)
+    if (pwdErrors.length > 0) {
+      setError(pwdErrors.map(k => t(k)).join(', '))
       return
     }
     if (newPassword !== confirmPassword) {
@@ -40,14 +43,19 @@ export default function ForceChangePassword() {
 
   return (
     <div className="login-container">
-      <div className="login-card">
+      <PageSEO page="force_change_password" />
+      <div className="login-card" role="main" aria-busy={loading}>
         <div className="login-header">
           <h1>{t('force_change_password.title')}</h1>
           <p>{t('force_change_password.subtitle')}</p>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          {error && <div className="alert alert-error">{error}</div>}
+        <form onSubmit={handleSubmit} aria-label={t('force_change_password.form_aria_label')} noValidate>
+          {error && (
+            <div className="alert alert-error" role="alert" aria-live="polite" id="force-change-password-error">
+              {error}
+            </div>
+          )}
 
           <div className="form-group">
             <label htmlFor="newPassword">{t('common.new_password')}</label>
@@ -56,9 +64,13 @@ export default function ForceChangePassword() {
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              placeholder={t('common.password_min_6')}
+              placeholder={t('common.password_policy_hint')}
               required
+              aria-required="true"
+              aria-invalid={!!error}
+              aria-describedby={error ? 'force-change-password-error' : undefined}
               autoFocus
+              autoComplete="new-password"
             />
           </div>
 
@@ -71,10 +83,17 @@ export default function ForceChangePassword() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder={t('common.confirm_password_placeholder_short')}
               required
+              aria-required="true"
+              autoComplete="new-password"
             />
           </div>
 
-          <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
+          <button
+            type="submit"
+            className="btn btn-primary btn-block"
+            disabled={loading}
+            aria-disabled={loading}
+          >
             {loading ? t('force_change_password.submitting') : t('force_change_password.submit')}
           </button>
         </form>

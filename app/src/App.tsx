@@ -62,7 +62,7 @@ export default function App() {
   const { isActive, loading: featuresLoading } = useFeature()
   const [showBgPicker, setShowBgPicker] = useState(false)
   const [timedOut, setTimedOut] = useState(false)
-  const hasToken = !!localStorage.getItem('access_token')
+  const hasToken = !!localStorage.getItem('has_session')
 
   // Public pages: render immediately (no skeleton). Authenticated: wait for auth+features.
   const anyLoading = hasToken ? (authLoading || featuresLoading) : false

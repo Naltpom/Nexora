@@ -123,7 +123,7 @@ export default function CommandsAdminPage() {
     : commands
 
   return (
-    <Layout breadcrumb={[{ label: t('common.home'), path: '/' }, { label: t('commands_admin.breadcrumb_commands') }]} title={t('commands_admin.breadcrumb_commands')}>
+    <Layout breadcrumb={[{ label: t('common.home'), path: '/' }, { label: t('commands_admin.breadcrumb_commands') }]} title={t('commands_admin.page_title')}>
       <div className="unified-card page-header-card">
         <div className="unified-page-header">
           <div className="unified-page-header-info">
@@ -132,7 +132,7 @@ export default function CommandsAdminPage() {
           </div>
           <div className="unified-page-header-actions">
             <Link to="/admin/commands/history" className="btn btn-secondary btn-sm">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <circle cx="12" cy="12" r="10" />
                 <polyline points="12 6 12 12 16 14" />
               </svg>
@@ -143,13 +143,19 @@ export default function CommandsAdminPage() {
       </div>
 
       {message && (
-        <div className={`alert-dynamic alert-dynamic--${message.type === 'success' ? 'success' : 'error'}`}>
+        <div
+          className={`alert-dynamic alert-dynamic--${message.type === 'success' ? 'success' : 'error'}`}
+          role={message.type === 'success' ? 'status' : 'alert'}
+          aria-live="polite"
+        >
           {message.text}
         </div>
       )}
 
       {loading ? (
-        <div className="spinner" />
+        <div className="spinner" role="status" aria-busy="true">
+          <span className="sr-only">{t('common.loading')}</span>
+        </div>
       ) : commands.length === 0 ? (
         <div className="unified-card empty-state">
           {t('commands_admin.empty_state')}
@@ -157,27 +163,29 @@ export default function CommandsAdminPage() {
       ) : (
         <div className="unified-card full-width-breakout">
           {/* Search bar */}
-          <div className="section-header">
+          <div className="section-header" role="search">
             <input
               type="text"
               placeholder={t('commands_admin.search_placeholder')}
               value={searchValue}
               onChange={(e) => handleSearchChange(e.target.value)}
               className="input-search-wide"
+              aria-label={t('commands_admin.search_placeholder')}
             />
           </div>
 
           <div className="table-container">
             <table className="unified-table">
+              <caption className="sr-only">{t('a11y.table_caption_commands')}</caption>
               <thead>
                 <tr>
-                  <th>{t('commands_admin.th_command')}</th>
-                  <th>{t('commands_admin.th_description')}</th>
-                  <th>{t('commands_admin.th_feature')}</th>
-                  <th>{t('commands_admin.th_schedule')}</th>
-                  <th>{t('commands_admin.th_config')}</th>
-                  <th className="text-center">{t('commands_admin.th_active')}</th>
-                  <th className="text-center">{t('commands_admin.th_actions')}</th>
+                  <th scope="col">{t('commands_admin.th_command')}</th>
+                  <th scope="col">{t('commands_admin.th_description')}</th>
+                  <th scope="col">{t('commands_admin.th_feature')}</th>
+                  <th scope="col">{t('commands_admin.th_schedule')}</th>
+                  <th scope="col">{t('commands_admin.th_config')}</th>
+                  <th scope="col" className="text-center">{t('commands_admin.th_active')}</th>
+                  <th scope="col" className="text-center">{t('commands_admin.th_actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -232,14 +240,15 @@ export default function CommandsAdminPage() {
                       {/* Toggle */}
                       <td className="text-center">
                         {can('commands.manage') ? (
-                          <label className="toggle" style={{ cursor: toggling === cmd.name ? 'wait' : 'pointer' }}>
+                          <label className="toggle" aria-label={t('a11y.toggle_command', { label: cmd.label })}>
                             <input
                               type="checkbox"
                               checked={cmd.enabled}
                               onChange={() => handleToggle(cmd)}
                               disabled={toggling === cmd.name}
+                              aria-checked={cmd.enabled}
                             />
-                            <span className="toggle-slider" />
+                            <span className="toggle-slider" aria-hidden="true" />
                           </label>
                         ) : (
                           <span className={`badge ${cmd.enabled ? 'badge-success' : 'badge-warning'} text-xs`}>
@@ -255,12 +264,15 @@ export default function CommandsAdminPage() {
                             className="btn btn-sm btn-primary"
                             onClick={() => handleRun(cmd)}
                             disabled={!cmd.enabled || running === cmd.name}
-                            title={!cmd.enabled ? t('commands_admin.tooltip_run_disabled') : t('commands_admin.tooltip_run')}
+                            aria-label={!cmd.enabled ? t('commands_admin.tooltip_run_disabled') : t('commands_admin.tooltip_run')}
+                            aria-busy={running === cmd.name}
                           >
                             {running === cmd.name ? (
-                              <span className="spinner-sm" />
+                              <span className="spinner-sm" role="status">
+                                <span className="sr-only">{t('common.loading')}</span>
+                              </span>
                             ) : (
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
                                 <polygon points="5 3 19 12 5 21 5 3" />
                               </svg>
                             )}

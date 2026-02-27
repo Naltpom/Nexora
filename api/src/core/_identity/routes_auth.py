@@ -1,11 +1,11 @@
 """Auth endpoints: login, refresh, me, preferences, change-password,
 forgot-password, reset-password, register, verify-email."""
 
-import random
+import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Request, Response, status
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,12 +15,15 @@ from ..events import event_bus
 from ..permissions import get_user_permission_codes, require_permission
 from ..rate_limit import limiter, login_limiter
 from ..security import (
+    clear_refresh_cookie,
     create_access_token,
     create_refresh_token,
     decode_token,
     get_current_user,
     hash_password,
     hash_refresh_token,
+    set_refresh_cookie,
+    validate_password,
     verify_password,
 )
 from .models import User, UserSession
@@ -29,7 +32,6 @@ from .schemas import (
     ForgotPasswordRequest,
     LoginRequest,
     ProfileUpdate,
-    RefreshRequest,
     RegisterRequest,
     RegisterResponse,
     ResendVerificationRequest,
@@ -74,7 +76,7 @@ async def _create_session(
 
 @router.post("/login", response_model=TokenResponse)
 @limiter.limit(settings.RATE_LIMIT_LOGIN)
-async def login(data: LoginRequest, request: Request, db: AsyncSession = Depends(get_db)):
+async def login(data: LoginRequest, request: Request, response: Response, db: AsyncSession = Depends(get_db)):
     ip = request.client.host if request.client else "unknown"
     data.email = data.email.lower()
 
@@ -95,12 +97,14 @@ async def login(data: LoginRequest, request: Request, db: AsyncSession = Depends
 
     login_limiter.record_success(data.email)
 
-    # Create session if tokens were issued
-    if result.get("refresh_token"):
+    # Set refresh token as HttpOnly cookie + create session
+    refresh = result.pop("refresh_token", "")
+    if refresh:
+        set_refresh_cookie(response, refresh)
         token_payload = decode_token(result["access_token"])
         user_id = int(token_payload.get("sub", 0))
         if user_id:
-            await _create_session(db, user_id, result["refresh_token"], request)
+            await _create_session(db, user_id, refresh, request)
             await db.flush()
 
             await event_bus.emit(
@@ -116,9 +120,17 @@ async def login(data: LoginRequest, request: Request, db: AsyncSession = Depends
 
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh_token(
-    request: RefreshRequest, req: Request, db: AsyncSession = Depends(get_db),
+    req: Request, response: Response, db: AsyncSession = Depends(get_db),
 ):
-    payload = decode_token(request.refresh_token)
+    # Read refresh token from HttpOnly cookie
+    cookie_token = req.cookies.get("refresh_token")
+    if not cookie_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token de rafraichissement manquant",
+        )
+
+    payload = decode_token(cookie_token)
     if payload.get("type") != "refresh":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -127,7 +139,7 @@ async def refresh_token(
     user_id = int(payload.get("sub", 0))
 
     # Look up session by token hash (FOR UPDATE prevents concurrent reuse)
-    old_hash = hash_refresh_token(request.refresh_token)
+    old_hash = hash_refresh_token(cookie_token)
     sess_result = await db.execute(
         select(UserSession)
         .where(UserSession.refresh_token_hash == old_hash)
@@ -144,6 +156,7 @@ async def refresh_token(
                 .values(is_revoked=True)
             )
             await db.flush()
+            clear_refresh_cookie(response)
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Token reutilise — toutes les sessions ont ete revoquees",
@@ -154,6 +167,7 @@ async def refresh_token(
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
     if not user or not user.is_active or user.deleted_at is not None or user.archived_at is not None:
+        clear_refresh_cookie(response)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Utilisateur introuvable",
@@ -162,13 +176,13 @@ async def refresh_token(
     token_data = {"sub": str(user.id), "email": user.email, "lang": user.language}
     new_refresh = create_refresh_token(token_data)
 
-    # Create new session
+    # Create new session + set new cookie
     await _create_session(db, user.id, new_refresh, req)
     await db.flush()
+    set_refresh_cookie(response, new_refresh)
 
     return TokenResponse(
         access_token=create_access_token(token_data),
-        refresh_token=new_refresh,
     )
 
 
@@ -364,11 +378,7 @@ async def change_password(
                 detail="Mot de passe actuel incorrect",
             )
 
-    if len(request.new_password) < 6:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Le mot de passe doit contenir au moins 6 caracteres",
-        )
+    validate_password(request.new_password)
 
     user.password_hash = hash_password(request.new_password)
     user.must_change_password = False
@@ -426,11 +436,7 @@ async def reset_password(
     db: AsyncSession = Depends(get_db),
 ):
     """Public endpoint -- validates token and sets new password."""
-    if len(data.new_password) < 6:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Le mot de passe doit contenir au moins 6 caracteres",
-        )
+    validate_password(data.new_password)
 
     token = await verify_security_token(db, data.token, "password_reset")
     if not token:
@@ -486,7 +492,7 @@ async def verify_reset_token_endpoint(
 
 
 def _generate_verification_code() -> str:
-    return str(random.randint(100000, 999999))
+    return str(secrets.randbelow(900000) + 100000)
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
@@ -497,13 +503,20 @@ async def register(
     db: AsyncSession = Depends(get_db),
 ):
     email = data.email.lower()
+    generic_message = "Si cette adresse n'est pas deja enregistree, un code de verification a ete envoye"
+
     result = await db.execute(select(User).where(User.email == email))
     existing = result.scalar_one_or_none()
     if existing:
-        raise HTTPException(status_code=400, detail="Un utilisateur avec cet email existe deja")
+        # Anti-enumeration: return same response shape without revealing account existence
+        return RegisterResponse(
+            message=generic_message,
+            email=email,
+            email_verification_required=True,
+            debug_code=None,
+        )
 
-    if len(data.password) < 6:
-        raise HTTPException(status_code=400, detail="Le mot de passe doit contenir au moins 6 caracteres")
+    validate_password(data.password)
 
     user = User(
         email=email,
@@ -548,10 +561,10 @@ async def register(
     )
 
     return RegisterResponse(
-        message="Code de verification envoye par email",
+        message=generic_message,
         email=user.email,
         email_verification_required=True,
-        debug_code=code if not settings.EMAIL_ENABLED else None,
+        debug_code=code if settings.is_dev else None,
     )
 
 
@@ -565,6 +578,7 @@ async def register(
 async def verify_email(
     data: VerifyEmailRequest,
     request: Request,
+    response: Response,
     db: AsyncSession = Depends(get_db),
 ):
     """Verify email with 6-digit code after registration."""
@@ -598,10 +612,10 @@ async def verify_email(
     refresh = create_refresh_token(token_data)
     await _create_session(db, user.id, refresh, request)
     await db.flush()
+    set_refresh_cookie(response, refresh)
 
     return TokenResponse(
         access_token=create_access_token(token_data),
-        refresh_token=refresh,
     )
 
 
@@ -647,8 +661,29 @@ async def resend_verification(
 
     return {
         "message": "Si cette adresse necessite une verification, un code a ete envoye.",
-        "debug_code": code if not settings.EMAIL_ENABLED else None,
+        "debug_code": code if settings.is_dev else None,
     }
+
+
+# ---------------------------------------------------------------------------
+#  Logout
+# ---------------------------------------------------------------------------
+
+
+@router.post("/logout", status_code=204)
+async def logout(request: Request, response: Response, db: AsyncSession = Depends(get_db)):
+    """Revoke the current session and clear the refresh cookie."""
+    cookie_token = request.cookies.get("refresh_token")
+    if cookie_token:
+        token_hash = hash_refresh_token(cookie_token)
+        result = await db.execute(
+            select(UserSession).where(UserSession.refresh_token_hash == token_hash)
+        )
+        session = result.scalar_one_or_none()
+        if session and not session.is_revoked:
+            session.is_revoked = True
+            await db.flush()
+    clear_refresh_cookie(response)
 
 
 # ---------------------------------------------------------------------------

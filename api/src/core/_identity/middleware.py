@@ -2,8 +2,9 @@
 
 from datetime import datetime, timezone
 
+import jwt
 from fastapi import Request
-from jose import JWTError, jwt
+from jwt.exceptions import PyJWTError
 from sqlalchemy import update
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -73,7 +74,7 @@ class LastActiveMiddleware(BaseHTTPMiddleware):
         token = auth_header[7:]
         try:
             payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        except JWTError:
+        except PyJWTError:
             return response
 
         # Skip refresh tokens and impersonation

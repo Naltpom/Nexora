@@ -26,6 +26,12 @@ export default function AcceptLegalPage() {
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
+  // SEO: set document.title for this protected but standalone page
+  useEffect(() => {
+    document.title = isUpdate ? t('accept_legal_page.update_heading') : t('accept_legal_page.registration_heading')
+    return () => { document.title = '' }
+  }, [isUpdate, t])
+
   // Reset scroll position when step changes
   useEffect(() => {
     const el = scrollContainerRef.current
@@ -123,24 +129,24 @@ export default function AcceptLegalPage() {
 
     return (
       <div className="login-container">
-        <div className="legal-accept-card">
+        <main className="legal-accept-card" aria-label={t('accept_legal_page.aria_accept_form')}>
           <div className="login-header">
             <h1>{t('accept_legal_page.update_heading')}</h1>
             <p>{t('accept_legal_page.update_description')}</p>
             {pending.length > 1 && (
-              <div className="legal-step-indicator">
+              <div className="legal-step-indicator" aria-live="polite">
                 {t('accept_legal_page.step_indicator', { current: currentStep + 1, total: pending.length })}
               </div>
             )}
           </div>
 
-          {error && <div className="alert alert-error">{error}</div>}
+          {error && <div className="alert alert-error" role="alert">{error}</div>}
 
-          <div className="legal-accept-document">
+          <article className="legal-accept-document">
             <div className="legal-accept-document-header">
-              <h3>{currentDoc.title}</h3>
+              <h2>{currentDoc.title}</h2>
               <span className="text-secondary">
-                {t('accept_legal_page.updated_at_prefix')} {formatDate(currentDoc.updated_at)} — {t('accept_legal_page.version_prefix')} {currentDoc.version}
+                <time dateTime={currentDoc.updated_at}>{t('accept_legal_page.updated_at_prefix')} {formatDate(currentDoc.updated_at)}</time> — {t('accept_legal_page.version_prefix')} {currentDoc.version}
               </span>
             </div>
             <div
@@ -148,9 +154,12 @@ export default function AcceptLegalPage() {
               className="legal-document-scroll"
               onScroll={handleScroll(currentDoc.slug)}
               dangerouslySetInnerHTML={{ __html: currentDoc.content_html }}
+              tabIndex={0}
+              role="document"
+              aria-label={currentDoc.title}
             />
             {!canCheck && (
-              <p className="legal-scroll-hint">
+              <p className="legal-scroll-hint" role="status" aria-live="polite">
                 {t('accept_legal_page.scroll_hint')}
               </p>
             )}
@@ -160,10 +169,11 @@ export default function AcceptLegalPage() {
                 checked={isChecked}
                 onChange={() => handleToggle(currentDoc.slug)}
                 disabled={!canCheck}
+                aria-describedby={!canCheck ? 'scroll-hint-update' : undefined}
               />
               {t('accept_legal_page.checkbox_read_and_accept', { title: currentDoc.title })}
             </label>
-          </div>
+          </article>
 
           <div className="legal-accept-actions">
             <div className="legal-accept-actions-left">
@@ -179,6 +189,7 @@ export default function AcceptLegalPage() {
                 className="btn btn-primary"
                 onClick={handleAccept}
                 disabled={!allAccepted || loading}
+                aria-busy={loading}
               >
                 {loading ? t('accept_legal_page.btn_validating') : t('accept_legal_page.btn_validate')}
               </button>
@@ -192,7 +203,7 @@ export default function AcceptLegalPage() {
               </button>
             )}
           </div>
-        </div>
+        </main>
       </div>
     )
   }
@@ -200,17 +211,17 @@ export default function AcceptLegalPage() {
   // ── Mode "Inscription" : compact, checkbox + bouton Voir ───────────────
   return (
     <div className="login-container">
-      <div className="legal-accept-card">
+      <main className="legal-accept-card" aria-label={t('accept_legal_page.aria_accept_form')}>
         <div className="login-header">
           <h1>{t('accept_legal_page.registration_heading')}</h1>
           <p>{t('accept_legal_page.registration_description')}</p>
         </div>
 
-        {error && <div className="alert alert-error">{error}</div>}
+        {error && <div className="alert alert-error" role="alert">{error}</div>}
 
         <div className="legal-accept-documents">
           {pending.map((doc) => (
-            <div key={doc.slug} className="legal-accept-document-compact">
+            <article key={doc.slug} className="legal-accept-document-compact">
               <div className="legal-accept-compact-row">
                 <label className="legal-accept-checkbox">
                   <input
@@ -223,17 +234,23 @@ export default function AcceptLegalPage() {
                 <button
                   className="btn btn-sm btn-secondary"
                   onClick={() => setExpanded((prev) => ({ ...prev, [doc.slug]: !prev[doc.slug] }))}
+                  aria-expanded={!!expanded[doc.slug]}
+                  aria-controls={`legal-content-${doc.slug}`}
                 >
                   {expanded[doc.slug] ? t('accept_legal_page.btn_hide') : t('accept_legal_page.btn_show')}
                 </button>
               </div>
               {expanded[doc.slug] && (
                 <div
+                  id={`legal-content-${doc.slug}`}
                   className="legal-document-scroll"
                   dangerouslySetInnerHTML={{ __html: doc.content_html }}
+                  tabIndex={0}
+                  role="document"
+                  aria-label={doc.title}
                 />
               )}
-            </div>
+            </article>
           ))}
         </div>
 
@@ -250,11 +267,12 @@ export default function AcceptLegalPage() {
             className="btn btn-primary"
             onClick={handleAccept}
             disabled={!allAccepted || loading}
+            aria-busy={loading}
           >
             {loading ? t('accept_legal_page.btn_validating') : t('accept_legal_page.btn_validate')}
           </button>
         </div>
-      </div>
+      </main>
     </div>
   )
 }

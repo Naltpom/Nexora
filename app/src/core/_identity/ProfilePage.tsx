@@ -8,6 +8,7 @@ import { useFeature } from '../../core/FeatureContext'
 import { useScrollReveal } from '../../core/hooks'
 import { applyCustomColors } from '../preference/couleur/applyCustomColors'
 import api from '../../api'
+import { validatePassword } from './passwordPolicy'
 
 const SSOAccountLinks = lazy(() => import('../sso/SSOAccountLinks'))
 const MFAStatusBadge = lazy(() => import('../mfa/MFAStatusBadge'))
@@ -72,8 +73,9 @@ export default function Profile() {
     setPwdError('')
     setPwdMessage('')
 
-    if (newPassword.length < 6) {
-      setPwdError(t('profile.password_min_6_error'))
+    const pwdErrors = validatePassword(newPassword)
+    if (pwdErrors.length > 0) {
+      setPwdError(pwdErrors.map(k => t(k)).join(', '))
       return
     }
     if (newPassword !== confirmPassword) {
@@ -113,40 +115,48 @@ export default function Profile() {
   return (
     <Layout breadcrumb={[{ label: t('profile.breadcrumb_home'), path: '/' }, { label: t('profile.breadcrumb_profile') }]} title={t('profile.page_title')}>
       <div className="page-narrow">
+        <h1 className="sr-only">{t('profile.page_title')}</h1>
+
         {/* User Info Section */}
-        <div className="unified-card card-padded reveal-up" ref={infoRef}>
-          <h2 className="title-sm">{t('profile.section_personal_info')}</h2>
-          <form onSubmit={handleSaveInfo}>
-            {infoError && <div className="alert alert-error alert-spaced">{infoError}</div>}
-            {infoMessage && <div className="alert alert-success alert-spaced">{infoMessage}</div>}
+        <section className="unified-card card-padded reveal-up" ref={infoRef} aria-labelledby="profile-info-title">
+          <h2 className="title-sm" id="profile-info-title">{t('profile.section_personal_info')}</h2>
+          <form onSubmit={handleSaveInfo} aria-labelledby="profile-info-title">
+            {infoError && <div className="alert alert-error alert-spaced" role="alert">{infoError}</div>}
+            {infoMessage && <div className="alert alert-success alert-spaced" role="status">{infoMessage}</div>}
 
             <div className="form-group">
-              <label>{t('common.email')}</label>
+              <label htmlFor="profile-email">{t('common.email')}</label>
               <input
+                id="profile-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                aria-required="true"
               />
             </div>
 
             <div className="form-grid-2col">
               <div className="form-group">
-                <label>{t('common.first_name')}</label>
+                <label htmlFor="profile-firstname">{t('common.first_name')}</label>
                 <input
+                  id="profile-firstname"
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   required
+                  aria-required="true"
                 />
               </div>
               <div className="form-group">
-                <label>{t('common.last_name')}</label>
+                <label htmlFor="profile-lastname">{t('common.last_name')}</label>
                 <input
+                  id="profile-lastname"
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   required
+                  aria-required="true"
                 />
               </div>
             </div>
@@ -155,43 +165,54 @@ export default function Profile() {
               {infoSaving ? t('profile.saving') : t('profile.save')}
             </button>
           </form>
-        </div>
+        </section>
 
         {/* Password Section */}
-        <div className="unified-card card-padded reveal-up" ref={passwordRef}>
-          <h2 className="title-sm">{t('profile.section_change_password')}</h2>
-          <form onSubmit={handleChangePassword}>
-            {pwdError && <div className="alert alert-error alert-spaced">{pwdError}</div>}
-            {pwdMessage && <div className="alert alert-success alert-spaced">{pwdMessage}</div>}
+        <section className="unified-card card-padded reveal-up" ref={passwordRef} aria-labelledby="profile-password-title">
+          <h2 className="title-sm" id="profile-password-title">{t('profile.section_change_password')}</h2>
+          <form onSubmit={handleChangePassword} aria-labelledby="profile-password-title">
+            {pwdError && <div className="alert alert-error alert-spaced" role="alert">{pwdError}</div>}
+            {pwdMessage && <div className="alert alert-success alert-spaced" role="status">{pwdMessage}</div>}
 
             <div className="form-group">
-              <label>{t('common.current_password')}</label>
+              <label htmlFor="profile-current-password">{t('common.current_password')}</label>
               <input
+                id="profile-current-password"
                 type="password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 required
+                aria-required="true"
+                autoComplete="current-password"
               />
             </div>
 
             <div className="form-group">
-              <label>{t('common.new_password')}</label>
+              <label htmlFor="profile-new-password">{t('common.new_password')}</label>
               <input
+                id="profile-new-password"
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder={t('common.password_min_6')}
+                placeholder={t('common.password_policy_hint')}
                 required
+                aria-required="true"
+                aria-describedby="profile-new-password-hint"
+                autoComplete="new-password"
               />
+              <span id="profile-new-password-hint" className="sr-only">{t('common.password_policy_hint')}</span>
             </div>
 
             <div className="form-group">
-              <label>{t('common.confirm_new_password')}</label>
+              <label htmlFor="profile-confirm-password">{t('common.confirm_new_password')}</label>
               <input
+                id="profile-confirm-password"
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
+                aria-required="true"
+                autoComplete="new-password"
               />
             </div>
 
@@ -199,13 +220,13 @@ export default function Profile() {
               {pwdSaving ? t('profile.password_submitting') : t('profile.password_submit')}
             </button>
           </form>
-        </div>
+        </section>
 
         {/* MFA Section */}
         {isActive('mfa') && (
-          <div className="unified-card card-padded reveal-up" ref={mfaRef}>
+          <section className="unified-card card-padded reveal-up" ref={mfaRef} aria-labelledby="profile-mfa-title">
             <div className="flex-between mb-16">
-              <h2 className="title-sm mb-0">{t('profile.section_mfa')}</h2>
+              <h2 className="title-sm mb-0" id="profile-mfa-title">{t('profile.section_mfa')}</h2>
               <Suspense fallback={null}>
                 <MFAStatusBadge />
               </Suspense>
@@ -216,43 +237,45 @@ export default function Profile() {
             <Link to="/profile/mfa" className="btn btn-secondary">
               {t('profile.mfa_configure')}
             </Link>
-          </div>
+          </section>
         )}
 
         {/* SSO Section */}
         {isActive('sso') && (
-          <div className="unified-card card-padded sso-profile-section reveal-up" ref={ssoRef}>
-            <h2 className="title-sm">{t('profile.section_sso')}</h2>
+          <section className="unified-card card-padded sso-profile-section reveal-up" ref={ssoRef} aria-labelledby="profile-sso-title">
+            <h2 className="title-sm" id="profile-sso-title">{t('profile.section_sso')}</h2>
             <p className="text-secondary">
               {t('profile.sso_description')}
             </p>
             <Suspense fallback={null}>
               <SSOAccountLinks />
             </Suspense>
-          </div>
+          </section>
         )}
 
         {/* Preferences Section */}
         {isActive('preference') ? (
-          <div className="unified-card card-padded reveal-up" ref={prefsRef}>
-            <h2 className="title-sm">{t('profile.section_preferences')}</h2>
+          <section className="unified-card card-padded reveal-up" ref={prefsRef} aria-labelledby="profile-prefs-title">
+            <h2 className="title-sm" id="profile-prefs-title">{t('profile.section_preferences')}</h2>
             <p className="text-secondary">
               {t('profile.preferences_description')}
             </p>
             <Link to="/profile/preferences" className="btn btn-secondary">
               {t('profile.preferences_manage')}
             </Link>
-          </div>
+          </section>
         ) : (
-          <div className="unified-card card-padded reveal-up" ref={prefsRef}>
-            <h2 className="title-sm">{t('profile.section_preferences')}</h2>
-            <div className="form-group">
+          <section className="unified-card card-padded reveal-up" ref={prefsRef} aria-labelledby="profile-prefs-title-fallback">
+            <h2 className="title-sm" id="profile-prefs-title-fallback">{t('profile.section_preferences')}</h2>
+            <fieldset className="form-group">
+              <legend className="sr-only">{t('profile.theme_label')}</legend>
               <label>{t('profile.theme_label')}</label>
-              <div className="flex-row">
+              <div className="flex-row" role="group" aria-label={t('profile.theme_label')}>
                 <button
                   className={`btn ${currentTheme === 'light' ? 'btn-primary' : 'btn-secondary'}`}
                   onClick={() => handleThemeChange('light')}
                   type="button"
+                  aria-pressed={currentTheme === 'light'}
                 >
                   {t('profile.theme_light')}
                 </button>
@@ -260,12 +283,13 @@ export default function Profile() {
                   className={`btn ${currentTheme === 'dark' ? 'btn-primary' : 'btn-secondary'}`}
                   onClick={() => handleThemeChange('dark')}
                   type="button"
+                  aria-pressed={currentTheme === 'dark'}
                 >
                   {t('profile.theme_dark')}
                 </button>
               </div>
-            </div>
-          </div>
+            </fieldset>
+          </section>
         )}
       </div>
     </Layout>

@@ -56,5 +56,6 @@
   "a11y_label_focus_visible": "Focus renforce",
   "a11y_label_underline_links": "Liens soulignes",
   "a11y_label_large_targets": "Grandes zones tactiles",
-  "save_error": "Erreur lors de la sauvegarde. Veuillez reessayer."
+  "save_error": "Erreur lors de la sauvegarde. Veuillez reessayer.",
+  "aria_tablist": "Sections de preferences"
 }

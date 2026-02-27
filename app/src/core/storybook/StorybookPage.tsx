@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState, useEffect, useCallback } from 'react'
+import { Suspense, lazy, useState, useEffect, useCallback, useRef, type KeyboardEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Layout from '../../core/Layout'
@@ -52,6 +52,31 @@ export default function StorybookPage() {
 
   const activeTabDef = TABS.find(tab => tab.id === activeTab)
   const ActiveComponent = activeTabDef?.component
+  const tabsRef = useRef<HTMLDivElement>(null)
+
+  const handleTabKeyDown = useCallback((e: KeyboardEvent<HTMLButtonElement>) => {
+    if (!tabsRef.current) return
+    const tabs = Array.from(tabsRef.current.querySelectorAll<HTMLButtonElement>('[role="tab"]'))
+    const currentIndex = tabs.indexOf(e.currentTarget)
+    let nextIndex = -1
+
+    if (e.key === 'ArrowRight') {
+      nextIndex = (currentIndex + 1) % tabs.length
+    } else if (e.key === 'ArrowLeft') {
+      nextIndex = (currentIndex - 1 + tabs.length) % tabs.length
+    } else if (e.key === 'Home') {
+      nextIndex = 0
+    } else if (e.key === 'End') {
+      nextIndex = tabs.length - 1
+    }
+
+    if (nextIndex >= 0) {
+      e.preventDefault()
+      tabs[nextIndex].focus()
+      const tabId = TABS[nextIndex]?.id
+      if (tabId) setActiveTab(tabId)
+    }
+  }, [setActiveTab])
 
   return (
     <Layout
@@ -71,13 +96,19 @@ export default function StorybookPage() {
         </div>
       </div>
 
-      <div className="storybook-tabs">
+      <div className="storybook-tabs" role="tablist" aria-label={t('aria_tablist')} ref={tabsRef}>
         {TABS.map(tab => (
           <button
             key={tab.id}
             className={`storybook-tab${activeTab === tab.id ? ' storybook-tab--active' : ''}`}
             onClick={() => setActiveTab(tab.id)}
+            onKeyDown={handleTabKeyDown}
             type="button"
+            role="tab"
+            id={`storybook-tab-${tab.id}`}
+            aria-selected={activeTab === tab.id}
+            aria-controls={`storybook-tabpanel-${tab.id}`}
+            tabIndex={activeTab === tab.id ? 0 : -1}
           >
             {t(tab.labelKey)}
           </button>
@@ -89,6 +120,7 @@ export default function StorybookPage() {
           className="storybook-tabs-select"
           value={activeTab}
           onChange={(e) => setActiveTab(e.target.value)}
+          aria-label={t('aria_tablist')}
         >
           {TABS.map(tab => (
             <option key={tab.id} value={tab.id}>{t(tab.labelKey)}</option>
@@ -96,7 +128,13 @@ export default function StorybookPage() {
         </select>
       </div>
 
-      <div className="unified-card storybook-content">
+      <div
+        className="unified-card storybook-content"
+        role="tabpanel"
+        id={`storybook-tabpanel-${activeTab}`}
+        aria-labelledby={`storybook-tab-${activeTab}`}
+        tabIndex={0}
+      >
         <div className="card-body">
           {ActiveComponent && (
             <Suspense fallback={null}>

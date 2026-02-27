@@ -19,5 +19,6 @@
   "aucun_compte_externe_lie": "Aucun compte externe lie.",
   "lier_nouveau_compte": "Lier un nouveau compte",
   "redirection_en_cours": "Redirection...",
-  "lier_provider": "Lier {{label}}"
+  "lier_provider": "Lier {{label}}",
+  "page_title": "Authentification SSO"
 }

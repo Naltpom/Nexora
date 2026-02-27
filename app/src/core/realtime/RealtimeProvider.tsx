@@ -1,6 +1,7 @@
-import { createContext, useContext, useState, useEffect, useRef, useCallback, type ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo, type ReactNode } from 'react'
 import { useAuth } from '../AuthContext'
 import { useFeature } from '../FeatureContext'
+import { getAccessToken } from '../../api'
 
 type RealtimeEventHandler = (data: unknown) => void
 
@@ -66,7 +67,7 @@ export function RealtimeProvider({ children }: { children: ReactNode }) {
   }, [dispatch])
 
   const connectSSE = useCallback(() => {
-    const token = localStorage.getItem('access_token')
+    const token = getAccessToken()
     if (!token) return
 
     if (eventSourceRef.current) {
@@ -151,8 +152,10 @@ export function RealtimeProvider({ children }: { children: ReactNode }) {
     }
   }, [user, realtimeActive, connectSSE])
 
+  const contextValue = useMemo(() => ({ connected, subscribe }), [connected, subscribe])
+
   return (
-    <RealtimeContext.Provider value={{ connected, subscribe }}>
+    <RealtimeContext.Provider value={contextValue}>
       {children}
     </RealtimeContext.Provider>
   )

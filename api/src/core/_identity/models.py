@@ -219,6 +219,7 @@ class Invitation(Base):
     invited_by_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     token_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    token_hmac: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     user_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)

@@ -1,6 +1,6 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef, ReactNode } from 'react'
 import i18next from 'i18next'
-import api from '../api'
+import api, { setAccessToken, getAccessToken, clearAccessToken } from '../api'
 import type { User } from '../types'
 import { hasConsent } from './rgpd/consentManager'
 import { applyAllPreferences } from './preference/applyPreferences'
@@ -21,9 +21,9 @@ interface AuthContextType {
   user: User | null
   loading: boolean
   login: (email: string, password: string) => Promise<LoginResult>
-  loginWithSSO: (accessToken: string, refreshToken: string) => Promise<void>
+  loginWithSSO: (accessToken: string) => Promise<void>
   verifyMFA: (mfaToken: string, code: string, method: string) => Promise<{ must_change_password: boolean }>
-  logout: () => void
+  logout: () => Promise<void>
   refreshUser: () => Promise<void>
   getPreference: (key: string, defaultValue?: any) => any
   updatePreference: (key: string, value: any) => Promise<void>
@@ -37,108 +37,164 @@ interface AuthContextType {
   searchUsersForImpersonation: (query: string) => Promise<any[]>
 }
 
+// ── Reducer ──
+
+interface AuthState {
+  user: User | null
+  loading: boolean
+  isImpersonating: boolean
+  impersonatedUser: { id: number; name: string } | null
+}
+
+type AuthAction =
+  | { type: 'FETCH_USER_SUCCESS'; user: User; isImpersonating: boolean; impersonatedUser: { id: number; name: string } | null }
+  | { type: 'FETCH_USER_FAILURE' }
+  | { type: 'UPDATE_PREFERENCE'; key: string; value: any }
+  | { type: 'LOGOUT' }
+
+const initialState: AuthState = {
+  user: null,
+  loading: true,
+  isImpersonating: false,
+  impersonatedUser: null,
+}
+
+function authReducer(state: AuthState, action: AuthAction): AuthState {
+  switch (action.type) {
+    case 'FETCH_USER_SUCCESS':
+      return {
+        user: action.user,
+        loading: false,
+        isImpersonating: action.isImpersonating,
+        impersonatedUser: action.impersonatedUser,
+      }
+    case 'FETCH_USER_FAILURE':
+      return { ...initialState, loading: false }
+    case 'UPDATE_PREFERENCE':
+      if (!state.user) return state
+      return {
+        ...state,
+        user: {
+          ...state.user,
+          preferences: { ...(state.user.preferences || {}), [action.key]: action.value },
+        },
+      }
+    case 'LOGOUT':
+      return { ...initialState, loading: false }
+    default:
+      return state
+  }
+}
+
+// ── Helpers (pure functions, no hooks) ──
+
+function getLocalPreferences(userId: number): Record<string, any> {
+  if (!hasConsent('functional')) return {}
+  try {
+    const raw = localStorage.getItem(`preferences_${userId}`)
+    return raw ? JSON.parse(raw) : {}
+  } catch {
+    return {}
+  }
+}
+
+function setLocalPreferences(userId: number, prefs: Record<string, any>) {
+  if (!hasConsent('functional')) return
+  localStorage.setItem(`preferences_${userId}`, JSON.stringify(prefs))
+}
+
+function applyUserPreferences(userData: User) {
+  if (!userData.preferences || !userData.id) return
+
+  const local = getLocalPreferences(userData.id)
+  const merged = { ...userData.preferences, ...local }
+  setLocalPreferences(userData.id, merged)
+  userData.preferences = merged
+
+  if (merged.theme) {
+    document.documentElement.setAttribute('data-theme', merged.theme)
+  }
+  if (merged.backgroundTheme !== undefined) {
+    document.documentElement.setAttribute('data-bg-theme', String(merged.backgroundTheme))
+  }
+  if (merged.customColors) {
+    const themeKey = (merged.theme || 'light') === 'dark' ? 'dark' : 'light'
+    const colors = merged.customColors[themeKey]
+    if (colors) {
+      for (const [k, v] of Object.entries(colors)) {
+        if (v) document.documentElement.style.setProperty(`--${k}`, v as string)
+      }
+    }
+  }
+  applyAllPreferences(merged)
+  if (hasConsent('functional')) {
+    if (merged.theme) localStorage.setItem('last_theme', merged.theme)
+    if (merged.backgroundTheme !== undefined) localStorage.setItem('last_bg_theme', String(merged.backgroundTheme))
+  }
+}
+
+function syncMfaStatus(userData: User) {
+  if (userData.mfa_setup_required) {
+    localStorage.setItem('mfa_setup_required', 'true')
+    if (userData.mfa_grace_period_expires) {
+      localStorage.setItem('mfa_grace_period_expires', userData.mfa_grace_period_expires)
+    }
+  } else {
+    localStorage.removeItem('mfa_setup_required')
+    localStorage.removeItem('mfa_grace_period_expires')
+  }
+}
+
+// ── Provider ──
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [isImpersonating, setIsImpersonating] = useState(false)
-  const [impersonatedUser, setImpersonatedUser] = useState<{ id: number; name: string } | null>(null)
+  const [state, dispatch] = useReducer(authReducer, initialState)
+  const { user, loading, isImpersonating, impersonatedUser } = state
 
-  const getLocalPreferences = (userId: number): Record<string, any> => {
-    if (!hasConsent('functional')) return {}
+  // Ref to access latest user in stable callbacks without adding user as a dep
+  const userRef = useRef(user)
+  useEffect(() => { userRef.current = user }, [user])
+
+  const fetchUser = useCallback(async () => {
     try {
-      const raw = localStorage.getItem(`preferences_${userId}`)
-      return raw ? JSON.parse(raw) : {}
-    } catch {
-      return {}
-    }
-  }
-
-  const setLocalPreferences = (userId: number, prefs: Record<string, any>) => {
-    if (!hasConsent('functional')) return
-    localStorage.setItem(`preferences_${userId}`, JSON.stringify(prefs))
-  }
-
-  const checkImpersonationStatus = async () => {
-    try {
-      const response = await api.get('/impersonation/status')
-      const data = response.data
-      if (data.is_impersonating) {
-        setIsImpersonating(true)
-        setImpersonatedUser({ id: data.target_user_id, name: data.target_user_name })
-        localStorage.setItem('impersonation_active', 'true')
-      } else {
-        setIsImpersonating(false)
-        setImpersonatedUser(null)
-        localStorage.removeItem('impersonation_active')
-      }
-    } catch {
-      setIsImpersonating(false)
-      setImpersonatedUser(null)
-    }
-  }
-
-  const fetchUser = async () => {
-    try {
-      const token = localStorage.getItem('access_token')
-      if (!token) {
-        setUser(null)
-        setLoading(false)
+      const token = getAccessToken()
+      if (!token && !localStorage.getItem('has_session')) {
+        dispatch({ type: 'FETCH_USER_FAILURE' })
         return
       }
       const response = await api.get('/auth/me')
       const userData = response.data as User
-      if (userData.preferences && userData.id) {
-        const local = getLocalPreferences(userData.id)
-        const merged = { ...userData.preferences, ...local }
-        setLocalPreferences(userData.id, merged)
-        userData.preferences = merged
-        // Apply theme to DOM (handles SSO/login where pre-render didn't have token yet)
-        if (merged.theme) {
-          document.documentElement.setAttribute('data-theme', merged.theme)
-        }
-        if (merged.backgroundTheme !== undefined) {
-          document.documentElement.setAttribute('data-bg-theme', String(merged.backgroundTheme))
-        }
-        // Apply custom colors
-        if (merged.customColors) {
-          const themeKey = (merged.theme || 'light') === 'dark' ? 'dark' : 'light'
-          const colors = merged.customColors[themeKey]
-          if (colors) {
-            for (const [k, v] of Object.entries(colors)) {
-              if (v) document.documentElement.style.setProperty(`--${k}`, v as string)
-            }
-          }
-        }
-        // Apply font, layout, composants, accessibilite preferences
-        applyAllPreferences(merged)
-      }
-      setUser(userData)
-      await checkImpersonationStatus()
+      applyUserPreferences(userData)
+      syncMfaStatus(userData)
 
-      // Sync MFA policy status from /me response (handles policy changes mid-session)
-      if (userData.mfa_setup_required) {
-        localStorage.setItem('mfa_setup_required', 'true')
-        if (userData.mfa_grace_period_expires) {
-          localStorage.setItem('mfa_grace_period_expires', userData.mfa_grace_period_expires)
+      // Check impersonation status
+      let impersonating = false
+      let impersonatedUsr: { id: number; name: string } | null = null
+      try {
+        const impRes = await api.get('/impersonation/status')
+        if (impRes.data.is_impersonating) {
+          impersonating = true
+          impersonatedUsr = { id: impRes.data.target_user_id, name: impRes.data.target_user_name }
+          localStorage.setItem('impersonation_active', 'true')
+        } else {
+          localStorage.removeItem('impersonation_active')
         }
-      } else {
-        localStorage.removeItem('mfa_setup_required')
-        localStorage.removeItem('mfa_grace_period_expires')
+      } catch {
+        localStorage.removeItem('impersonation_active')
       }
+
+      dispatch({ type: 'FETCH_USER_SUCCESS', user: userData, isImpersonating: impersonating, impersonatedUser: impersonatedUsr })
     } catch {
-      setUser(null)
-      localStorage.removeItem('access_token')
-      localStorage.removeItem('refresh_token')
-    } finally {
-      setLoading(false)
+      clearAccessToken()
+      dispatch({ type: 'FETCH_USER_FAILURE' })
     }
-  }
+  }, [])
 
   useEffect(() => {
     fetchUser()
-  }, [])
+  }, [fetchUser])
 
   // Poll for legal document updates every 2 minutes (mid-session detection)
   useEffect(() => {
@@ -150,11 +206,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch { /* ignore */ }
     }, 120_000)
     return () => clearInterval(interval)
-  }, [user?.id])
+  }, [user?.id, fetchUser])
 
-  const login = async (email: string, password: string): Promise<LoginResult> => {
+  const login = useCallback(async (email: string, password: string): Promise<LoginResult> => {
     const response = await api.post('/auth/login', { email, password })
-    const { access_token, refresh_token, must_change_password, mfa_required, mfa_token, mfa_methods, mfa_setup_required, mfa_grace_period_expires, email_verification_required, email_verification_email, debug_code } = response.data
+    const { access_token, must_change_password, mfa_required, mfa_token, mfa_methods, mfa_setup_required, mfa_grace_period_expires, email_verification_required, email_verification_email, debug_code } = response.data
 
     if (email_verification_required) {
       return { must_change_password: false, mfa_required: false, mfa_token: null, mfa_methods: null, mfa_setup_required: false, mfa_grace_period_expires: null, email_verification_required: true, email_verification_email: email_verification_email || email, debug_code: debug_code || null }
@@ -164,8 +220,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { must_change_password: false, mfa_required: true, mfa_token, mfa_methods, mfa_setup_required: false, mfa_grace_period_expires: null, email_verification_required: false, email_verification_email: null, debug_code: null }
     }
 
-    localStorage.setItem('access_token', access_token)
-    localStorage.setItem('refresh_token', refresh_token)
+    setAccessToken(access_token)
 
     if (mfa_setup_required) {
       localStorage.setItem('mfa_setup_required', 'true')
@@ -176,102 +231,100 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     await fetchUser()
     return { must_change_password, mfa_required: false, mfa_token: null, mfa_methods: null, mfa_setup_required: mfa_setup_required || false, mfa_grace_period_expires: mfa_grace_period_expires || null, email_verification_required: false, email_verification_email: null, debug_code: null }
-  }
+  }, [fetchUser])
 
-  const loginWithSSO = async (accessToken: string, refreshToken: string) => {
-    localStorage.setItem('access_token', accessToken)
-    localStorage.setItem('refresh_token', refreshToken)
+  const loginWithSSO = useCallback(async (token: string) => {
+    setAccessToken(token)
     await fetchUser()
-  }
+  }, [fetchUser])
 
-  const verifyMFA = async (mfaToken: string, code: string, method: string) => {
+  const verifyMFA = useCallback(async (mfaToken: string, code: string, method: string) => {
     const response = await api.post('/mfa/verify', { mfa_token: mfaToken, code, method })
-    const { access_token, refresh_token, must_change_password } = response.data
-    localStorage.setItem('access_token', access_token)
-    localStorage.setItem('refresh_token', refresh_token)
+    const { access_token, must_change_password } = response.data
+    setAccessToken(access_token)
     await fetchUser()
     return { must_change_password }
-  }
+  }, [fetchUser])
 
-  const isMfaSetupRequired = (): boolean => {
+  const isMfaSetupRequired = useCallback((): boolean => {
     return localStorage.getItem('mfa_setup_required') === 'true'
-  }
+  }, [])
 
-  const getMfaGraceExpires = (): Date | null => {
+  const getMfaGraceExpires = useCallback((): Date | null => {
     const raw = localStorage.getItem('mfa_grace_period_expires')
     return raw ? new Date(raw) : null
-  }
+  }, [])
 
-  const clearMfaSetupRequired = () => {
+  const clearMfaSetupRequired = useCallback(() => {
     localStorage.removeItem('mfa_setup_required')
     localStorage.removeItem('mfa_grace_period_expires')
-  }
+  }, [])
 
-  const logout = () => {
-    localStorage.removeItem('access_token')
-    localStorage.removeItem('refresh_token')
+  const logout = useCallback(async () => {
+    try {
+      await api.post('/auth/logout')
+    } catch {
+      // Best-effort: cookie cleared server-side
+    }
+    clearAccessToken()
     localStorage.removeItem('impersonation_active')
     localStorage.removeItem('mfa_setup_required')
     localStorage.removeItem('mfa_grace_period_expires')
-    setUser(null)
-    setIsImpersonating(false)
-    setImpersonatedUser(null)
-  }
+    dispatch({ type: 'LOGOUT' })
+  }, [])
 
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     await fetchUser()
-  }
+  }, [fetchUser])
 
-  const getPreference = (key: string, defaultValue: any = null): any => {
-    if (!user) return defaultValue
-    const local = getLocalPreferences(user.id)
+  const getPreference = useCallback((key: string, defaultValue: any = null): any => {
+    const u = userRef.current
+    if (!u) return defaultValue
+    const local = getLocalPreferences(u.id)
     if (key in local) return local[key]
-    if (user.preferences && key in user.preferences) return user.preferences[key]
+    if (u.preferences && key in u.preferences) return u.preferences[key]
     return defaultValue
-  }
+  }, [])
 
-  const updatePreference = async (key: string, value: any) => {
-    if (!user) return
-    const local = getLocalPreferences(user.id)
+  const updatePreference = useCallback(async (key: string, value: any) => {
+    const u = userRef.current
+    if (!u) return
+    const local = getLocalPreferences(u.id)
     local[key] = value
-    setLocalPreferences(user.id, local)
-    setUser(prev => prev ? { ...prev, preferences: { ...(prev.preferences || {}), [key]: value } } : null)
+    setLocalPreferences(u.id, local)
+    dispatch({ type: 'UPDATE_PREFERENCE', key, value })
     try {
       await api.put('/auth/me/preferences', { [key]: value })
     } catch {
       // localStorage already updated
     }
-  }
+  }, [])
 
-  const startImpersonation = async (userId: number) => {
+  const startImpersonation = useCallback(async (userId: number) => {
     try {
       const response = await api.post(`/impersonation/start/${userId}`)
-      const { access_token, refresh_token } = response.data
-      localStorage.setItem('access_token', access_token)
-      localStorage.setItem('refresh_token', refresh_token)
+      const { access_token } = response.data
+      setAccessToken(access_token)
       localStorage.setItem('impersonation_active', 'true')
-      // Full reload to apply impersonated user's preferences from scratch
-      // (main.tsx IIFE reads preferences from the new token)
       window.location.href = '/'
     } catch (error: any) {
       throw new Error(error.response?.data?.detail || i18next.t('common:impersonation_start_error'))
     }
-  }
+  }, [])
 
-  const stopImpersonation = async () => {
+  const stopImpersonation = useCallback(async () => {
     try {
       const response = await api.post('/impersonation/stop')
-      const { access_token, refresh_token } = response.data
-      localStorage.setItem('access_token', access_token)
-      localStorage.setItem('refresh_token', refresh_token)
+      const { access_token } = response.data
+      setAccessToken(access_token)
       localStorage.removeItem('impersonation_active')
       window.location.href = window.location.pathname
     } catch (error: any) {
       throw new Error(error.response?.data?.detail || i18next.t('common:impersonation_stop_error'))
     }
-  }
+  }, [])
 
-  const searchUsersForImpersonation = async (query: string) => {
+  const searchUsersForImpersonation = useCallback(async (query: string) => {
     if (query.length < 2) return []
     try {
       const response = await api.get('/impersonation/search-users', { params: { q: query } })
@@ -279,16 +332,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       return []
     }
-  }
+  }, [])
+
+  const contextValue = useMemo(() => ({
+    user, loading, login, loginWithSSO, verifyMFA, logout, refreshUser,
+    getPreference, updatePreference,
+    isMfaSetupRequired, getMfaGraceExpires, clearMfaSetupRequired,
+    isImpersonating, impersonatedUser,
+    startImpersonation, stopImpersonation, searchUsersForImpersonation,
+  }), [
+    user, loading, login, loginWithSSO, verifyMFA, logout, refreshUser,
+    getPreference, updatePreference,
+    isMfaSetupRequired, getMfaGraceExpires, clearMfaSetupRequired,
+    isImpersonating, impersonatedUser,
+    startImpersonation, stopImpersonation, searchUsersForImpersonation,
+  ])
 
   return (
-    <AuthContext.Provider value={{
-      user, loading, login, loginWithSSO, verifyMFA, logout, refreshUser,
-      getPreference, updatePreference,
-      isMfaSetupRequired, getMfaGraceExpires, clearMfaSetupRequired,
-      isImpersonating, impersonatedUser,
-      startImpersonation, stopImpersonation, searchUsersForImpersonation,
-    }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   )

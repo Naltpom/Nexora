@@ -31,6 +31,11 @@ export default function MFAForceSetupPage() {
   const [emailResendCooldown, setEmailResendCooldown] = useState(0)
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
+  // SEO: set document.title for public page
+  useEffect(() => {
+    document.title = t('force_document_title')
+  }, [t])
+
   const fetchMethods = useCallback(async () => {
     try {
       const res = await api.get('/mfa/methods')
@@ -179,9 +184,10 @@ export default function MFAForceSetupPage() {
 
   if (loading) {
     return (
-      <div className="login-container">
-        <div className="login-card">
-          <div className="spinner" />
+      <div className="login-container" aria-busy="true">
+        <div className="login-card" role="status">
+          <div className="spinner" aria-hidden="true" />
+          <span className="sr-only">{t('force_loading_alt')}</span>
         </div>
       </div>
     )
@@ -189,9 +195,9 @@ export default function MFAForceSetupPage() {
 
   return (
     <div className="login-container">
-      <div className="login-card mfa-force-card">
+      <main className="login-card mfa-force-card" aria-busy={totpSaving || emailSaving || emailVerifying}>
         <div className="login-header">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--warning, #D97706)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--warning, #D97706)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" role="img" aria-label={t('force_logo_alt')}>
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
           </svg>
           <h1 className="mfa-force-title">{t('force_title')}</h1>
@@ -201,14 +207,14 @@ export default function MFAForceSetupPage() {
         </div>
 
         {error && <div className="alert alert-error" role="alert">{error}</div>}
-        {successMessage && <div className="alert alert-success" aria-live="polite">{successMessage}</div>}
+        {successMessage && <div className="alert alert-success" role="status" aria-live="polite">{successMessage}</div>}
 
         {!successMessage && (
           <div className="mfa-force-methods-col">
             {/* TOTP */}
             {availableMethods.includes('totp') && (
-              <div className="mfa-force-method-card">
-                <h3 className="mfa-force-method-title">{t('force_totp_title')}</h3>
+              <section className="mfa-force-method-card" aria-labelledby="force-totp-title">
+                <h2 className="mfa-force-method-title" id="force-totp-title">{t('force_totp_title')}</h2>
                 <p className="mfa-force-method-desc">
                   {t('force_totp_description')}
                 </p>
@@ -216,7 +222,7 @@ export default function MFAForceSetupPage() {
                 {totpError && <div className="alert alert-error alert-spaced" role="alert">{totpError}</div>}
 
                 {!totpSetupData ? (
-                  <button className="btn btn-primary" onClick={handleTotpSetup} disabled={totpSaving}>
+                  <button className="btn btn-primary" onClick={handleTotpSetup} disabled={totpSaving} aria-busy={totpSaving}>
                     {totpSaving ? t('force_totp_loading') : t('force_totp_setup')}
                   </button>
                 ) : (
@@ -232,8 +238,9 @@ export default function MFAForceSetupPage() {
                       {t('force_totp_secret_label')} <code>{totpSetupData.secret}</code>
                     </div>
                     <div className="form-group">
-                      <label>{t('force_totp_verification_label')}</label>
+                      <label htmlFor="force-totp-code">{t('force_totp_verification_label')}</label>
                       <input
+                        id="force-totp-code"
                         type="text"
                         inputMode="numeric"
                         value={totpCode}
@@ -241,10 +248,14 @@ export default function MFAForceSetupPage() {
                         placeholder="000000"
                         maxLength={6}
                         autoFocus
+                        aria-required="true"
+                        aria-invalid={!!totpError}
+                        aria-describedby={totpError ? 'force-totp-error' : undefined}
                       />
+                      {totpError && <span id="force-totp-error" className="sr-only">{totpError}</span>}
                     </div>
                     <div className="flex-row-sm">
-                      <button className="btn btn-primary" onClick={handleTotpVerify} disabled={totpSaving || totpCode.length !== 6}>
+                      <button className="btn btn-primary" onClick={handleTotpVerify} disabled={totpSaving || totpCode.length !== 6} aria-busy={totpSaving}>
                         {totpSaving ? t('force_totp_verifying') : t('force_totp_confirm')}
                       </button>
                       <button className="btn btn-secondary" onClick={() => { setTotpSetupData(null); setTotpCode(''); setTotpError('') }}>
@@ -253,13 +264,13 @@ export default function MFAForceSetupPage() {
                     </div>
                   </div>
                 )}
-              </div>
+              </section>
             )}
 
             {/* Email */}
             {availableMethods.includes('email') && (
-              <div className="mfa-force-method-card">
-                <h3 className="mfa-force-method-title">{t('force_email_title')}</h3>
+              <section className="mfa-force-method-card" aria-labelledby="force-email-title">
+                <h2 className="mfa-force-method-title" id="force-email-title">{t('force_email_title')}</h2>
                 <p className="mfa-force-method-desc">
                   {t('force_email_description')}
                 </p>
@@ -267,15 +278,16 @@ export default function MFAForceSetupPage() {
                 {emailVerifyError && <div className="alert alert-error alert-spaced" role="alert">{emailVerifyError}</div>}
 
                 {!emailSetupPending ? (
-                  <button className="btn btn-primary" onClick={handleEmailEnable} disabled={emailSaving}>
+                  <button className="btn btn-primary" onClick={handleEmailEnable} disabled={emailSaving} aria-busy={emailSaving}>
                     {emailSaving ? t('force_email_activating') : t('force_email_activate')}
                   </button>
                 ) : (
                   <div>
                     <p className="mfa-force-method-desc">{t('setup_email_verify_instructions')}</p>
                     <div className="form-group">
-                      <label>{t('verify_label_email')}</label>
+                      <label htmlFor="force-email-code">{t('verify_label_email')}</label>
                       <input
+                        id="force-email-code"
                         type="text"
                         inputMode="numeric"
                         value={emailVerifyCode}
@@ -283,16 +295,21 @@ export default function MFAForceSetupPage() {
                         placeholder="000000"
                         maxLength={6}
                         autoFocus
+                        aria-required="true"
+                        aria-invalid={!!emailVerifyError}
+                        aria-describedby={emailVerifyError ? 'force-email-error' : undefined}
                       />
+                      {emailVerifyError && <span id="force-email-error" className="sr-only">{emailVerifyError}</span>}
                     </div>
                     <div className="flex-row-sm">
-                      <button className="btn btn-primary" onClick={handleEmailVerifySetup} disabled={emailVerifying || emailVerifyCode.length !== 6}>
+                      <button className="btn btn-primary" onClick={handleEmailVerifySetup} disabled={emailVerifying || emailVerifyCode.length !== 6} aria-busy={emailVerifying}>
                         {emailVerifying ? t('force_totp_verifying') : t('force_totp_confirm')}
                       </button>
                       <button
                         className="btn btn-secondary"
                         onClick={handleEmailResendCode}
                         disabled={emailSaving || emailResendCooldown > 0}
+                        aria-busy={emailSaving}
                       >
                         {emailSaving ? t('verify_email_resending') : emailResendCooldown > 0 ? t('verify_email_resend_cooldown', { time: formatCooldown(emailResendCooldown) }) : t('verify_email_resend')}
                       </button>
@@ -302,11 +319,11 @@ export default function MFAForceSetupPage() {
                     </div>
                   </div>
                 )}
-              </div>
+              </section>
             )}
 
             {availableMethods.length === 0 && (
-              <p className="mfa-force-no-methods">
+              <p className="mfa-force-no-methods" role="status">
                 {t('force_no_methods')}
               </p>
             )}
@@ -319,7 +336,7 @@ export default function MFAForceSetupPage() {
         >
           {t('force_logout')}
         </button>
-      </div>
+      </main>
     </div>
   )
 }

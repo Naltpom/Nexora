@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, FormEvent } from 'react'
+import { useState, useEffect, useCallback, useRef, memo, FormEvent, KeyboardEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import Layout from '../../core/Layout'
 import { useConfirm } from '../../core/ConfirmModal'
@@ -37,6 +37,147 @@ interface PermsPaginated {
   per_page: number
   pages: number
 }
+
+/* ------------------------------------------------------------------ */
+/*  RoleTableRow (memoized)                                           */
+/* ------------------------------------------------------------------ */
+
+interface RoleTableRowProps {
+  role: Role
+  isPermsMode: boolean
+  permsRoleId: number | undefined
+  canUpdate: boolean
+  canDelete: boolean
+  openPerms: (role: Role) => void
+  openEdit: (role: Role) => void
+  handleDelete: (role: Role) => void
+  closePerms: () => void
+  handleRoleRowKeyDown: (e: KeyboardEvent, role: Role) => void
+  formatDate: (iso: string) => string
+  t: (key: string, options?: Record<string, unknown>) => string
+}
+
+const RoleTableRow = memo(function RoleTableRow({
+  role,
+  isPermsMode,
+  permsRoleId,
+  canUpdate,
+  canDelete,
+  openPerms,
+  openEdit,
+  handleDelete,
+  closePerms,
+  handleRoleRowKeyDown,
+  formatDate,
+  t,
+}: RoleTableRowProps) {
+  const isSelected = permsRoleId === role.id
+
+  return (
+    <tr
+      style={{
+        backgroundColor: isSelected ? 'rgba(30, 64, 175, 0.08)' : undefined,
+        cursor: isPermsMode ? 'pointer' : undefined,
+      }}
+      onClick={isPermsMode ? () => openPerms(role) : undefined}
+      onKeyDown={isPermsMode ? (e) => handleRoleRowKeyDown(e, role) : undefined}
+      tabIndex={isPermsMode ? 0 : undefined}
+      role={isPermsMode ? 'button' : undefined}
+      aria-current={isPermsMode && isSelected ? true : undefined}
+    >
+      <td>
+        <span
+          className="badge-role"
+          {...(role.color ? { style: { '--role-color': role.color } as React.CSSProperties } : {})}
+        >
+          {role.name}
+        </span>
+      </td>
+
+      {!isPermsMode && (
+        <td className="text-gray-500">{role.description || '\u2014'}</td>
+      )}
+
+      {!isPermsMode && (
+        <td>
+          <span
+            className="badge badge-info cursor-pointer"
+            onClick={() => openPerms(role)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPerms(role) } }}
+            role="button"
+            tabIndex={0}
+            title={t('roles_admin.tooltip_manage_permissions')}
+            aria-label={t('a11y.btn_manage_permissions', { name: role.name })}
+          >
+            {role.permissions.length !== 1 ? t('roles_admin.badge_permissions_plural', { count: role.permissions.length }) : t('roles_admin.badge_permissions', { count: role.permissions.length })}
+          </span>
+        </td>
+      )}
+
+      {!isPermsMode && (
+        <td className="text-gray-500-sm nowrap">
+          {formatDate(role.created_at)}
+        </td>
+      )}
+
+      <td>
+        {isPermsMode ? (
+          isSelected ? (
+            <button
+              className="btn-icon btn-icon-secondary"
+              onClick={(e) => { e.stopPropagation(); closePerms() }}
+              aria-label={t('a11y.btn_back_full_table')}
+              title={t('roles_admin.tooltip_back_full_table')}
+            >
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+            </button>
+          ) : null
+        ) : (
+          <div className="flex-row-xs">
+            <button
+              className="btn-icon btn-icon-primary"
+              onClick={() => openPerms(role)}
+              aria-label={t('a11y.btn_manage_permissions', { name: role.name })}
+              title={t('roles_admin.tooltip_manage_permissions')}
+            >
+              <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+            </button>
+            {canUpdate && (
+              <button
+                className="btn-icon btn-icon-primary"
+                onClick={() => openEdit(role)}
+                aria-label={t('a11y.btn_edit_role', { name: role.name })}
+                title={t('roles_admin.tooltip_edit')}
+              >
+                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+              </button>
+            )}
+            {canDelete && (
+              <button
+                className="btn-icon btn-icon-danger"
+                onClick={() => handleDelete(role)}
+                aria-label={t('a11y.btn_delete_role', { name: role.name })}
+                title={t('roles_admin.tooltip_delete')}
+              >
+                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6" />
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                </svg>
+              </button>
+            )}
+          </div>
+        )}
+      </td>
+    </tr>
+  )
+})
 
 /* ------------------------------------------------------------------ */
 /*  Composant principal                                               */
@@ -120,10 +261,10 @@ export default function RolesAdminPage() {
   /*  Helpers                                                         */
   /* ---------------------------------------------------------------- */
 
-  const formatDate = (iso: string) => {
+  const formatDate = useCallback((iso: string) => {
     const d = new Date(iso)
     return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-  }
+  }, [])
 
   /* ---------------------------------------------------------------- */
   /*  Create / Edit role                                              */
@@ -143,12 +284,12 @@ export default function RolesAdminPage() {
     setShowModal(true)
   }
 
-  const openEdit = (role: Role) => {
+  const openEdit = useCallback((role: Role) => {
     setEditingRole(role)
     setForm({ name: role.name, slug: role.slug, description: role.description, color: role.color || '#6B7280' })
     setFormError('')
     setShowModal(true)
-  }
+  }, [])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -173,7 +314,7 @@ export default function RolesAdminPage() {
   /*  Delete                                                          */
   /* ---------------------------------------------------------------- */
 
-  const handleDelete = async (role: Role) => {
+  const handleDelete = useCallback(async (role: Role) => {
     const confirmed = await confirm({
       title: t('roles_admin.confirm_delete_title'),
       message: t('roles_admin.confirm_delete_message', { name: role.name }),
@@ -190,25 +331,25 @@ export default function RolesAdminPage() {
     } catch (err: any) {
       console.error(err.response?.data?.detail || 'Erreur lors de la suppression')
     }
-  }
+  }, [confirm, t, permsRole?.id, loadRoles])
 
   /* ---------------------------------------------------------------- */
   /*  Permission panel                                                */
   /* ---------------------------------------------------------------- */
 
-  const openPerms = (role: Role) => {
+  const openPerms = useCallback((role: Role) => {
     setPermsRole(role)
     setPermsSearch('')
     setPermsPage(1)
     loadPerms(role.id, 1, '', permsPerPage)
-  }
+  }, [loadPerms, permsPerPage])
 
-  const closePerms = () => {
+  const closePerms = useCallback(() => {
     setPermsRole(null)
     setPerms([])
     setPermsSearch('')
     setPermsPage(1)
-  }
+  }, [])
 
   const handlePermsSearch = (value: string) => {
     setPermsSearch(value)
@@ -278,7 +419,7 @@ export default function RolesAdminPage() {
     }
 
     return (
-      <div className="unified-pagination">
+      <nav aria-label={t('a11y.pagination')} className="unified-pagination">
         <div className="unified-pagination-info">
           {permsTotal !== 1 ? t('roles_admin.badge_permissions_plural', { count: permsTotal }) : t('roles_admin.badge_permissions', { count: permsTotal })}
         </div>
@@ -287,6 +428,7 @@ export default function RolesAdminPage() {
             className="per-page-select"
             value={permsPerPage}
             onChange={(e) => handlePermsPerPageChange(Number(e.target.value))}
+            aria-label={t('a11y.per_page_select')}
           >
             <option value={10}>10</option>
             <option value={20}>20</option>
@@ -296,17 +438,20 @@ export default function RolesAdminPage() {
             className="unified-pagination-btn"
             disabled={permsPage <= 1}
             onClick={() => handlePermsPageChange(permsPage - 1)}
+            aria-label={t('a11y.pagination_previous')}
           >
             &laquo;
           </button>
           {pages.map((p, i) =>
             p === '...' ? (
-              <span key={`dots-${i}`} className="unified-pagination-dots">...</span>
+              <span key={`dots-${i}`} className="unified-pagination-dots" aria-hidden="true">...</span>
             ) : (
               <button
                 key={p}
                 className={`unified-pagination-btn ${p === permsPage ? 'active' : ''}`}
                 onClick={() => handlePermsPageChange(p)}
+                aria-label={t('a11y.pagination_page', { page: p })}
+                aria-current={p === permsPage ? 'page' : undefined}
               >
                 {p}
               </button>
@@ -316,13 +461,33 @@ export default function RolesAdminPage() {
             className="unified-pagination-btn"
             disabled={permsPage >= permsTotalPages}
             onClick={() => handlePermsPageChange(permsPage + 1)}
+            aria-label={t('a11y.pagination_next')}
           >
             &raquo;
           </button>
         </div>
-      </div>
+      </nav>
     )
   }
+
+  // Close modal on Escape
+  useEffect(() => {
+    const handleEscape = (e: globalThis.KeyboardEvent) => {
+      if (e.key === 'Escape' && showModal) {
+        setShowModal(false)
+      }
+    }
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [showModal])
+
+  // Keyboard handler for clickable role rows
+  const handleRoleRowKeyDown = useCallback((e: KeyboardEvent, role: Role) => {
+    if ((e.key === 'Enter' || e.key === ' ') && isPermsMode) {
+      e.preventDefault()
+      openPerms(role)
+    }
+  }, [isPermsMode, openPerms])
 
   /* ---------------------------------------------------------------- */
   /*  Render                                                          */
@@ -339,7 +504,7 @@ export default function RolesAdminPage() {
           <div className="unified-page-header-actions">
             {can('roles.create') && (
               <button className="btn-unified-primary" onClick={openCreate}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 5v14M5 12h14" />
                 </svg>
                 {t('roles_admin.btn_new_role')}
@@ -350,7 +515,7 @@ export default function RolesAdminPage() {
       </div>
 
       {loading ? (
-        <div className="spinner" />
+        <div className="spinner" role="status" aria-label={t('a11y.loading_roles')} />
       ) : (
         <div className={isPermsMode ? 'flex-row-lg' : ''}>
           {/* ---- Roles table ---- */}
@@ -360,13 +525,14 @@ export default function RolesAdminPage() {
           >
             <div className="table-container">
               <table className="unified-table">
+                <caption className="sr-only">{t('a11y.table_caption_roles')}</caption>
                 <thead>
                   <tr>
-                    <th>{t('roles_admin.th_name')}</th>
-                    {!isPermsMode && <th>{t('roles_admin.th_description')}</th>}
-                    {!isPermsMode && <th>{t('roles_admin.th_permissions')}</th>}
-                    {!isPermsMode && <th>{t('roles_admin.th_created_at')}</th>}
-                    <th>{isPermsMode ? '' : t('roles_admin.th_actions')}</th>
+                    <th scope="col">{t('roles_admin.th_name')}</th>
+                    {!isPermsMode && <th scope="col">{t('roles_admin.th_description')}</th>}
+                    {!isPermsMode && <th scope="col">{t('roles_admin.th_permissions')}</th>}
+                    {!isPermsMode && <th scope="col">{t('roles_admin.th_created_at')}</th>}
+                    <th scope="col">{isPermsMode ? '' : t('roles_admin.th_actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -378,97 +544,21 @@ export default function RolesAdminPage() {
                     </tr>
                   ) : (
                     roles.map((role) => (
-                      <tr
+                      <RoleTableRow
                         key={role.id}
-                        style={{
-                          backgroundColor: permsRole?.id === role.id ? 'rgba(30, 64, 175, 0.08)' : undefined,
-                          cursor: isPermsMode ? 'pointer' : undefined,
-                        }}
-                        onClick={isPermsMode ? () => openPerms(role) : undefined}
-                      >
-                        <td>
-                          <span
-                            className="badge-role"
-                            {...(role.color ? { style: { '--role-color': role.color } as React.CSSProperties } : {})}
-                          >
-                            {role.name}
-                          </span>
-                        </td>
-
-                        {!isPermsMode && (
-                          <td className="text-gray-500">{role.description || '\u2014'}</td>
-                        )}
-
-                        {!isPermsMode && (
-                          <td>
-                            <span
-                              className="badge badge-info cursor-pointer"
-                              onClick={() => openPerms(role)}
-                              title={t('roles_admin.tooltip_manage_permissions')}
-                            >
-                              {role.permissions.length !== 1 ? t('roles_admin.badge_permissions_plural', { count: role.permissions.length }) : t('roles_admin.badge_permissions', { count: role.permissions.length })}
-                            </span>
-                          </td>
-                        )}
-
-                        {!isPermsMode && (
-                          <td className="text-gray-500-sm nowrap">
-                            {formatDate(role.created_at)}
-                          </td>
-                        )}
-
-                        <td>
-                          {isPermsMode ? (
-                            permsRole?.id === role.id ? (
-                              <button
-                                className="btn-icon btn-icon-secondary"
-                                onClick={(e) => { e.stopPropagation(); closePerms() }}
-                                title={t('roles_admin.tooltip_back_full_table')}
-                              >
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M19 12H5M12 19l-7-7 7-7" />
-                                </svg>
-                              </button>
-                            ) : null
-                          ) : (
-                            <div className="flex-row-xs">
-                              <button
-                                className="btn-icon btn-icon-primary"
-                                onClick={() => openPerms(role)}
-                                title={t('roles_admin.tooltip_manage_permissions')}
-                              >
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                                </svg>
-                              </button>
-                              {can('roles.update') && (
-                                <button
-                                  className="btn-icon btn-icon-primary"
-                                  onClick={() => openEdit(role)}
-                                  title={t('roles_admin.tooltip_edit')}
-                                >
-                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                                  </svg>
-                                </button>
-                              )}
-                              {can('roles.delete') && (
-                                <button
-                                  className="btn-icon btn-icon-danger"
-                                  onClick={() => handleDelete(role)}
-                                  title={t('roles_admin.tooltip_delete')}
-                                >
-                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <polyline points="3 6 5 6 21 6" />
-                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                                  </svg>
-                                </button>
-                              )}
-                            </div>
-                          )}
-                        </td>
-                      </tr>
+                        role={role}
+                        isPermsMode={isPermsMode}
+                        permsRoleId={permsRole?.id}
+                        canUpdate={can('roles.update')}
+                        canDelete={can('roles.delete')}
+                        openPerms={openPerms}
+                        openEdit={openEdit}
+                        handleDelete={handleDelete}
+                        closePerms={closePerms}
+                        handleRoleRowKeyDown={handleRoleRowKeyDown}
+                        formatDate={formatDate}
+                        t={t}
+                      />
                     ))
                   )}
                 </tbody>
@@ -480,6 +570,8 @@ export default function RolesAdminPage() {
           {isPermsMode && permsRole && (
             <div
               className="unified-card perms-panel-flex"
+              role="region"
+              aria-label={t('roles_admin.perms_panel_title', { name: permsRole.name })}
             >
               {/* Panel header */}
               <div className="section-header">
@@ -495,37 +587,42 @@ export default function RolesAdminPage() {
                   <button
                     className="btn-icon btn-icon-secondary"
                     onClick={closePerms}
+                    aria-label={t('a11y.btn_close_permissions_panel')}
                     title={t('roles_admin.tooltip_close')}
                   >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="18" y1="6" x2="6" y2="18" />
                       <line x1="6" y1="6" x2="18" y2="18" />
                     </svg>
                   </button>
                 </div>
-                <input
-                  type="text"
-                  placeholder={t('roles_admin.perms_search_placeholder')}
-                  value={permsSearch}
-                  onChange={(e) => handlePermsSearch(e.target.value)}
-                  className="input-styled"
-                />
+                <div role="search">
+                  <input
+                    type="text"
+                    placeholder={t('roles_admin.perms_search_placeholder')}
+                    value={permsSearch}
+                    onChange={(e) => handlePermsSearch(e.target.value)}
+                    className="input-styled"
+                    aria-label={t('a11y.search_role_permissions')}
+                  />
+                </div>
               </div>
 
               {/* Permissions table */}
-              <div className="table-container">
+              <div className="table-container" aria-busy={permsLoading}>
                 {permsLoading ? (
                   <div className="perms-panel-spinner">
-                    <div className="spinner" />
+                    <div className="spinner" role="status" aria-label={t('a11y.loading_permissions')} />
                   </div>
                 ) : (
                   <table className="unified-table">
+                    <caption className="sr-only">{t('a11y.table_caption_role_permissions', { name: permsRole.name })}</caption>
                     <thead>
                       <tr>
-                        <th>{t('roles_admin.perms_th_name')}</th>
-                        <th>{t('roles_admin.perms_th_slug')}</th>
-                        <th>{t('roles_admin.perms_th_description')}</th>
-                        <th className="text-center">{t('roles_admin.perms_th_active')}</th>
+                        <th scope="col">{t('roles_admin.perms_th_name')}</th>
+                        <th scope="col">{t('roles_admin.perms_th_slug')}</th>
+                        <th scope="col">{t('roles_admin.perms_th_description')}</th>
+                        <th scope="col" className="text-center">{t('roles_admin.perms_th_active')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -556,8 +653,9 @@ export default function RolesAdminPage() {
                                   checked={perm.granted}
                                   onChange={() => handleTogglePerm(perm)}
                                   disabled={togglingPermId === perm.id || !can('roles.update')}
+                                  aria-label={t('a11y.toggle_permission', { name: perm.label || perm.code })}
                                 />
-                                <span className="toggle-slider" />
+                                <span className="toggle-slider" aria-hidden="true" />
                               </label>
                             </td>
                           </tr>
@@ -582,17 +680,18 @@ export default function RolesAdminPage() {
       {/* Create / Edit Role Modal */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal" role="dialog" aria-modal="true" aria-labelledby="role-modal-title" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{editingRole ? t('roles_admin.modal_edit_title') : t('roles_admin.modal_create_title')}</h2>
-              <button className="modal-close" onClick={() => setShowModal(false)}>&times;</button>
+              <h2 id="role-modal-title">{editingRole ? t('roles_admin.modal_edit_title') : t('roles_admin.modal_create_title')}</h2>
+              <button className="modal-close" onClick={() => setShowModal(false)} aria-label={t('a11y.close_modal')}>&times;</button>
             </div>
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
-                {formError && <div className="alert alert-error">{formError}</div>}
+                {formError && <div className="alert alert-error" role="alert">{formError}</div>}
                 <div className="form-group">
-                  <label>{t('roles_admin.modal_name_label')}</label>
+                  <label htmlFor="role-name">{t('roles_admin.modal_name_label')}</label>
                   <input
+                    id="role-name"
                     type="text"
                     value={form.name}
                     onChange={(e) => {
@@ -602,26 +701,30 @@ export default function RolesAdminPage() {
                       setForm(update)
                     }}
                     required
+                    aria-required="true"
                     placeholder={t('roles_admin.modal_name_placeholder')}
                   />
                 </div>
                 <div className="form-group">
-                  <label>{t('roles_admin.modal_slug_label')}</label>
+                  <label htmlFor="role-slug">{t('roles_admin.modal_slug_label')}</label>
                   <input
+                    id="role-slug"
                     type="text"
                     value={form.slug}
                     onChange={(e) => !editingRole && setForm({ ...form, slug: e.target.value })}
                     readOnly={!!editingRole}
                     placeholder={t('roles_admin.modal_slug_placeholder')}
                     className={editingRole ? 'input-readonly' : ''}
+                    aria-readonly={!!editingRole}
                   />
                   {!editingRole && (
-                    <span className="form-hint">{t('roles_admin.modal_slug_hint')}</span>
+                    <span className="form-hint" id="role-slug-hint">{t('roles_admin.modal_slug_hint')}</span>
                   )}
                 </div>
                 <div className="form-group">
-                  <label>{t('roles_admin.modal_description_label')}</label>
+                  <label htmlFor="role-description">{t('roles_admin.modal_description_label')}</label>
                   <textarea
+                    id="role-description"
                     value={form.description}
                     onChange={(e) => setForm({ ...form, description: e.target.value })}
                     rows={3}
@@ -629,15 +732,17 @@ export default function RolesAdminPage() {
                   />
                 </div>
                 <div className="form-group">
-                  <label>{t('roles_admin.modal_color_label')}</label>
+                  <label htmlFor="role-color">{t('roles_admin.modal_color_label')}</label>
                   <div className="color-picker-row">
                     <input
+                      id="role-color"
                       type="color"
                       value={form.color}
                       onChange={(e) => setForm({ ...form, color: e.target.value })}
                     />
                     <span
                       className="badge-role"
+                      aria-hidden="true"
                       {...(form.color ? { style: { '--role-color': form.color } as React.CSSProperties } : {})}
                     >
                       {form.name || 'Preview'}

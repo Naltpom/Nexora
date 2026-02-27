@@ -147,22 +147,26 @@ export default function AppSettingsAdminPage() {
       </div>
 
       {loading ? (
-        <div className="text-center loading-pad-lg">
-          <div className="spinner" />
+        <div className="text-center loading-pad-lg" aria-busy="true">
+          <div className="spinner" role="status">
+            <span className="sr-only">{t('common.loading')}</span>
+          </div>
         </div>
       ) : (
-        <form onSubmit={handleSubmit}>
-          {error && <div className="alert alert-error mb-16">{error}</div>}
-          {success && <div className="alert alert-success mb-16">{success}</div>}
+        <form onSubmit={handleSubmit} aria-label={t('a11y.form_app_settings')}>
+          {error && <div className="alert alert-error mb-16" role="alert" aria-live="polite">{error}</div>}
+          {success && <div className="alert alert-success mb-16" role="status" aria-live="polite">{success}</div>}
 
           {/* Identite */}
-          <div className="unified-card settings-section">
-            <h3 className="settings-section-title">{t('app_settings.section_identity')}</h3>
+          <fieldset className="unified-card settings-section">
+            <legend className="sr-only">{t('app_settings.section_identity')}</legend>
+            <h2 className="settings-section-title">{t('app_settings.section_identity')}</h2>
 
             <div className="settings-grid">
               <div className="form-group mb-0">
-                <label>{t('app_settings.label_app_name')}</label>
+                <label htmlFor="settings-app-name">{t('app_settings.label_app_name')}</label>
                 <input
+                  id="settings-app-name"
                   type="text"
                   value={form.app_name || ''}
                   onChange={(e) => setForm(prev => ({ ...prev, app_name: e.target.value }))}
@@ -171,8 +175,9 @@ export default function AppSettingsAdminPage() {
               </div>
 
               <div className="form-group mb-0">
-                <label>{t('app_settings.label_support_email')}</label>
+                <label htmlFor="settings-support-email">{t('app_settings.label_support_email')}</label>
                 <input
+                  id="settings-support-email"
                   type="email"
                   value={form.support_email || ''}
                   onChange={(e) => setForm(prev => ({ ...prev, support_email: e.target.value }))}
@@ -182,31 +187,33 @@ export default function AppSettingsAdminPage() {
             </div>
 
             <div className="form-group mt-16 mb-0">
-              <label>{t('app_settings.label_description')}</label>
+              <label htmlFor="settings-description">{t('app_settings.label_description')}</label>
               <textarea
+                id="settings-description"
                 value={form.app_description || ''}
                 onChange={(e) => setForm(prev => ({ ...prev, app_description: e.target.value }))}
                 rows={3}
                 placeholder={t('app_settings.placeholder_description')}
               />
             </div>
-          </div>
+          </fieldset>
 
           {/* Apparence */}
-          <div className="unified-card settings-section">
-            <h3 className="settings-section-title">{t('app_settings.section_appearance')}</h3>
+          <fieldset className="unified-card settings-section">
+            <legend className="sr-only">{t('app_settings.section_appearance')}</legend>
+            <h2 className="settings-section-title">{t('app_settings.section_appearance')}</h2>
 
             <div className="settings-grid-align">
               {/* Logo */}
               <div className="form-group mb-0">
-                <label>{t('app_settings.label_logo')}</label>
-                <p className="text-gray-500-sm mb-8">{t('app_settings.logo_help')}</p>
+                <label htmlFor="settings-logo-url">{t('app_settings.label_logo')}</label>
+                <p className="text-gray-500-sm mb-8" id="settings-logo-help">{t('app_settings.logo_help')}</p>
                 <div className="flex-center-lg">
                   {form.app_logo && (
-                    <div className="header-logo-icon flex-shrink-0" style={{ backgroundColor: form.primary_color || '#1E40AF' }}>
+                    <div className="header-logo-icon flex-shrink-0" style={{ '--settings-logo-bg': form.primary_color || '#1E40AF' } as React.CSSProperties}>
                       <img
                         src={form.app_logo}
-                        alt="Logo"
+                        alt={t('a11y.logo_preview')}
                         className="logo-preview-img"
                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                       />
@@ -214,18 +221,20 @@ export default function AppSettingsAdminPage() {
                   )}
                   <div className="flex-1 min-w-0">
                     <input
+                      id="settings-logo-url"
                       type="text"
                       value={form.app_logo || ''}
                       onChange={(e) => setForm(prev => ({ ...prev, app_logo: e.target.value }))}
                       placeholder={t('app_settings.placeholder_logo')}
                       className="mb-8"
+                      aria-describedby="settings-logo-help"
                     />
                     {can('settings.manage') && (
                       <div className="flex-center gap-8">
                         <label
                           className="btn btn-secondary cursor-pointer flex-center text-sm"
                         >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                             <polyline points="17 8 12 3 7 8" />
                             <line x1="12" y1="3" x2="12" y2="15" />
@@ -235,6 +244,7 @@ export default function AppSettingsAdminPage() {
                             type="file"
                             accept="image/*"
                             className="hidden-input"
+                            aria-label={t('app_settings.upload_logo')}
                             onChange={(e) => {
                               const f = e.target.files?.[0]
                               if (f) handleLogoUpload(f)
@@ -242,8 +252,8 @@ export default function AppSettingsAdminPage() {
                           />
                         </label>
                         {isLogoCustom && (
-                          <button type="button" className="btn btn-ghost text-sm" onClick={handleResetLogo}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <button type="button" className="btn btn-ghost text-sm" onClick={handleResetLogo} aria-label={t('a11y.reset_logo')}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                               <polyline points="1 4 1 10 7 10" />
                               <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
                             </svg>
@@ -258,53 +268,58 @@ export default function AppSettingsAdminPage() {
 
               {/* Couleur principale */}
               <div className="form-group mb-0">
-                <label>{t('app_settings.label_primary_color')}</label>
-                <p className="text-gray-500-sm mb-8">{t('app_settings.primary_color_help')}</p>
+                <label htmlFor="settings-primary-color">{t('app_settings.label_primary_color')}</label>
+                <p className="text-gray-500-sm mb-8" id="settings-color-help">{t('app_settings.primary_color_help')}</p>
                 <div className="flex-center-lg">
                   <input
                     type="color"
                     value={form.primary_color || '#1E40AF'}
                     onChange={(e) => setForm(prev => ({ ...prev, primary_color: e.target.value }))}
                     className="color-picker-input"
+                    aria-label={t('a11y.color_picker')}
                   />
                   <input
+                    id="settings-primary-color"
                     type="text"
                     value={form.primary_color || ''}
                     onChange={(e) => setForm(prev => ({ ...prev, primary_color: e.target.value }))}
                     placeholder="#1E40AF"
                     className="flex-1"
+                    aria-describedby="settings-color-help"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Favicon — full width row */}
+            {/* Favicon -- full width row */}
             <div className="form-group mt-16 mb-0">
-              <label>{t('app_settings.label_favicon')}</label>
-              <p className="text-gray-500-sm mb-8">{t('app_settings.favicon_help')}</p>
+              <label htmlFor="settings-favicon-url">{t('app_settings.label_favicon')}</label>
+              <p className="text-gray-500-sm mb-8" id="settings-favicon-help">{t('app_settings.favicon_help')}</p>
               <div className="flex-center-lg">
                 {form.app_favicon && (
                   <img
                     src={form.app_favicon}
-                    alt="Favicon"
+                    alt={t('a11y.favicon_preview')}
                     className="favicon-preview-img flex-shrink-0"
                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                   />
                 )}
                 <div className="flex-1 min-w-0">
                   <input
+                    id="settings-favicon-url"
                     type="text"
                     value={form.app_favicon || ''}
                     onChange={(e) => setForm(prev => ({ ...prev, app_favicon: e.target.value }))}
                     placeholder={t('app_settings.placeholder_favicon')}
                     className="mb-8"
+                    aria-describedby="settings-favicon-help"
                   />
                   {can('settings.manage') && (
                     <div className="flex-center gap-8">
                       <label
                         className="btn btn-secondary cursor-pointer flex-center text-sm"
                       >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                           <polyline points="17 8 12 3 7 8" />
                           <line x1="12" y1="3" x2="12" y2="15" />
@@ -314,6 +329,7 @@ export default function AppSettingsAdminPage() {
                           type="file"
                           accept=".ico,.png,.svg,image/x-icon,image/png,image/svg+xml"
                           className="hidden-input"
+                          aria-label={t('app_settings.upload_favicon')}
                           onChange={(e) => {
                             const f = e.target.files?.[0]
                             if (f) handleFaviconUpload(f)
@@ -321,8 +337,8 @@ export default function AppSettingsAdminPage() {
                         />
                       </label>
                       {isFaviconCustom && (
-                        <button type="button" className="btn btn-ghost text-sm" onClick={handleResetFavicon}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <button type="button" className="btn btn-ghost text-sm" onClick={handleResetFavicon} aria-label={t('a11y.reset_favicon')}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                             <polyline points="1 4 1 10 7 10" />
                             <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
                           </svg>
@@ -339,48 +355,52 @@ export default function AppSettingsAdminPage() {
               <div className="form-group mb-0">
                 <div className="flex-between">
                   <div>
-                    <label>{t('app_settings.label_header_show_logo')}</label>
+                    <label id="settings-show-logo-label">{t('app_settings.label_header_show_logo')}</label>
                     <p className="text-gray-500-sm">{t('app_settings.header_show_logo_help')}</p>
                   </div>
-                  <label className="toggle">
+                  <label className="toggle" aria-label={t('app_settings.label_header_show_logo')}>
                     <input
                       type="checkbox"
                       checked={form.header_show_logo !== 'false'}
                       onChange={(e) => setForm(prev => ({ ...prev, header_show_logo: e.target.checked ? 'true' : 'false' }))}
+                      aria-checked={form.header_show_logo !== 'false'}
                     />
-                    <span className="toggle-slider" />
+                    <span className="toggle-slider" aria-hidden="true" />
                   </label>
                 </div>
               </div>
               <div className="form-group mb-0">
                 <div className="flex-between">
                   <div>
-                    <label>{t('app_settings.label_header_show_name')}</label>
+                    <label id="settings-show-name-label">{t('app_settings.label_header_show_name')}</label>
                     <p className="text-gray-500-sm">{t('app_settings.header_show_name_help')}</p>
                   </div>
-                  <label className="toggle">
+                  <label className="toggle" aria-label={t('app_settings.label_header_show_name')}>
                     <input
                       type="checkbox"
                       checked={form.header_show_name !== 'false'}
                       onChange={(e) => setForm(prev => ({ ...prev, header_show_name: e.target.checked ? 'true' : 'false' }))}
+                      aria-checked={form.header_show_name !== 'false'}
                     />
-                    <span className="toggle-slider" />
+                    <span className="toggle-slider" aria-hidden="true" />
                   </label>
                 </div>
               </div>
             </div>
-          </div>
+          </fieldset>
 
           {/* Extra settings not in predefined keys */}
           {settings.filter(s => !orderedKeys.includes(s.key)).length > 0 && (
-            <div className="unified-card settings-section">
-              <h3 className="settings-section-title">{t('app_settings.section_other')}</h3>
+            <fieldset className="unified-card settings-section">
+              <legend className="sr-only">{t('app_settings.section_other')}</legend>
+              <h2 className="settings-section-title">{t('app_settings.section_other')}</h2>
               {settings
                 .filter(s => !orderedKeys.includes(s.key))
                 .map(s => (
                   <div className="form-group" key={s.key}>
-                    <label>{s.key}</label>
+                    <label htmlFor={`settings-other-${s.key}`}>{s.key}</label>
                     <input
+                      id={`settings-other-${s.key}`}
                       type="text"
                       value={form[s.key] || ''}
                       onChange={(e) => setForm(prev => ({ ...prev, [s.key]: e.target.value }))}
@@ -388,12 +408,12 @@ export default function AppSettingsAdminPage() {
                   </div>
                 ))
               }
-            </div>
+            </fieldset>
           )}
 
           {can('settings.manage') && (
             <div className="flex-end pt-8">
-              <button type="submit" className="btn btn-primary" disabled={saving}>
+              <button type="submit" className="btn btn-primary" disabled={saving} aria-busy={saving}>
                 {saving ? t('app_settings.submitting') : t('app_settings.submit')}
               </button>
             </div>

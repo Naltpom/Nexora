@@ -316,13 +316,14 @@ function StatCardItem({ config, value, delay }: { config: StatCardConfig; value:
     <Tag
       {...tagProps as any}
       className={`stat-card stat-card--${config.variant} stat-glow card-hover-lift reveal-child`}
+      aria-label={`${t(config.labelKey)} : ${counter.value}`}
     >
-      <div className="stat-card-icon">{config.icon}</div>
+      <div className="stat-card-icon" aria-hidden="true">{config.icon}</div>
       <div className="stat-card-info">
         <div className="stat-card-value" ref={counter.ref}>{counter.value}</div>
         <div className="stat-card-label">{t(config.labelKey)}</div>
       </div>
-      {config.pulse?.(value) && <div className="stat-card-pulse" />}
+      {config.pulse?.(value) && <div className="stat-card-pulse" aria-hidden="true" />}
     </Tag>
   )
 }
@@ -339,7 +340,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
 
   const statGridRef = useScrollReveal<HTMLDivElement>({ stagger: true })
-  const timelineRef = useScrollReveal<HTMLDivElement>({ stagger: true })
+  const timelineRef = useScrollReveal<HTMLOListElement>({ stagger: true })
   const featuresGridRef = useScrollReveal<HTMLDivElement>({ stagger: true })
   const userGridRef = useScrollReveal<HTMLDivElement>({ stagger: true })
   const adminGridRef = useScrollReveal<HTMLDivElement>({ stagger: true })
@@ -418,8 +419,12 @@ export default function Home() {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="loading-screen"><div className="spinner" /></div>
+      <Layout title={t('home.page_title')}>
+        <div className="loading-screen" aria-busy="true">
+          <div className="spinner" role="status">
+            <span className="sr-only">{t('common:loading')}</span>
+          </div>
+        </div>
       </Layout>
     )
   }
@@ -428,24 +433,24 @@ export default function Home() {
     <Layout title={t('home.page_title')}>
       <div className="page-wide">
         {/* Welcome */}
-        <div className="section-mb-xl">
-          <h1 className="title-lg">
+        <section className="section-mb-xl" aria-labelledby="home-greeting">
+          <h1 className="title-lg" id="home-greeting">
             {t('home.greeting', { name: user?.first_name })}
           </h1>
           <p className="text-gray-500">{today}</p>
-        </div>
+        </section>
 
         {/* Welcome banner for new users */}
         {showWelcomeBanner && (
-          <div className="home-welcome-banner">
-            <div className="home-welcome-banner-title">{t('home.welcome_banner_title')}</div>
+          <aside className="home-welcome-banner" role="status" aria-labelledby="home-welcome-title">
+            <div className="home-welcome-banner-title" id="home-welcome-title">{t('home.welcome_banner_title')}</div>
             <p className="home-welcome-banner-text">{t('home.welcome_banner_text')}</p>
-          </div>
+          </aside>
         )}
 
         {/* Stat cards — permission-gated */}
         {visibleStatCards.length > 0 && (
-          <div className="stat-grid section-mb-xl reveal-stagger" ref={statGridRef}>
+          <section className="stat-grid section-mb-xl reveal-stagger" ref={statGridRef} aria-label={t('home.aria_stats_section')}>
             {visibleStatCards.map((card, index) => (
               <StatCardItem
                 key={card.id}
@@ -454,14 +459,14 @@ export default function Home() {
                 delay={200 + index * 150}
               />
             ))}
-          </div>
+          </section>
         )}
 
         {/* Recent activity timeline */}
         {showTimeline && (
-          <div className="unified-card card-padded section-mb-xl">
-            <h2 className="home-section-title">
-              <svg className="home-section-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <section className="unified-card card-padded section-mb-xl" aria-labelledby="home-activity-title">
+            <h2 className="home-section-title" id="home-activity-title">
+              <svg className="home-section-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
               </svg>
               {t('home.activity_title')}
@@ -470,10 +475,10 @@ export default function Home() {
               <div className="home-timeline-empty">{t('home.activity_empty')}</div>
             ) : (
               <>
-                <div className="home-timeline-list reveal-stagger" ref={timelineRef}>
+                <ol className="home-timeline-list reveal-stagger" ref={timelineRef} aria-label={t('home.activity_title')}>
                   {recentEvents.map(evt => (
-                    <div key={evt.id} className="home-timeline-item reveal-child">
-                      <div className="home-timeline-dot-col">
+                    <li key={evt.id} className="home-timeline-item reveal-child">
+                      <div className="home-timeline-dot-col" aria-hidden="true">
                         <div className={`home-timeline-dot home-timeline-dot--${getEventDotClass(evt.event_type)}`} />
                       </div>
                       <div className="home-timeline-content">
@@ -482,25 +487,25 @@ export default function Home() {
                         </div>
                         <div className="home-timeline-actor">{evt.actor_email}</div>
                       </div>
-                      <div className="home-timeline-time">
+                      <time className="home-timeline-time" dateTime={evt.created_at}>
                         {formatRelativeTime(evt.created_at, t)}
-                      </div>
-                    </div>
+                      </time>
+                    </li>
                   ))}
-                </div>
+                </ol>
                 <div className="home-timeline-footer">
                   <Link to="/admin/events">{t('home.activity_view_all')} →</Link>
                 </div>
               </>
             )}
-          </div>
+          </section>
         )}
 
         {/* Feature showcase */}
         {showcaseFeatures.length > 0 && (
-          <div className="unified-card card-padded section-mb-xl">
-            <h2 className="home-section-title">
-              <svg className="home-section-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <section className="unified-card card-padded section-mb-xl" aria-labelledby="home-features-title">
+            <h2 className="home-section-title" id="home-features-title">
+              <svg className="home-section-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <rect x="3" y="3" width="7" height="7" />
                 <rect x="14" y="3" width="7" height="7" />
                 <rect x="14" y="14" width="7" height="7" />
@@ -521,8 +526,9 @@ export default function Home() {
                     key={feature.name}
                     {...tagProps as any}
                     className={`home-feature-card reveal-child${!feature.active ? ' home-feature-card--inactive' : ''}`}
+                    aria-label={`${feature.label} — ${feature.active ? t('home.feature_active') : t('home.feature_inactive')}`}
                   >
-                    <div className="home-feature-icon">
+                    <div className="home-feature-icon" aria-hidden="true">
                       {meta?.icon || (
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <rect x="3" y="3" width="7" height="7" />
@@ -543,20 +549,20 @@ export default function Home() {
                 )
               })}
             </div>
-          </div>
+          </section>
         )}
 
         {/* Quick access: Your space */}
         {visibleUserLinks.length > 0 && (
-          <div className="unified-card card-padded section-mb-xl">
-            <h2 className="home-section-title">
-              <svg className="home-section-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <section className="unified-card card-padded section-mb-xl" aria-labelledby="home-quick-access-title">
+            <h2 className="home-section-title" id="home-quick-access-title">
+              <svg className="home-section-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
                 <polyline points="9 22 9 12 15 12 15 22" />
               </svg>
               {t('home.quick_access_title')}
             </h2>
-            <div className="auto-grid-sm reveal-stagger" ref={userGridRef}>
+            <nav className="auto-grid-sm reveal-stagger" ref={userGridRef} aria-label={t('home.quick_access_title')}>
               {visibleUserLinks.map(link => (
                 <Link key={link.path + link.labelKey} to={link.path} className="card-link-item reveal-child card-hover-lift">
                   <div className="unified-card">
@@ -567,21 +573,21 @@ export default function Home() {
                   </div>
                 </Link>
               ))}
-            </div>
-          </div>
+            </nav>
+          </section>
         )}
 
         {/* Quick access: Administration */}
         {visibleAdminLinks.length > 0 && (
-          <div className="unified-card card-padded">
-            <h2 className="home-section-title">
-              <svg className="home-section-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <section className="unified-card card-padded" aria-labelledby="home-admin-access-title">
+            <h2 className="home-section-title" id="home-admin-access-title">
+              <svg className="home-section-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="3" />
                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
               </svg>
               {t('home.admin_access_title')}
             </h2>
-            <div className="auto-grid-sm reveal-stagger" ref={adminGridRef}>
+            <nav className="auto-grid-sm reveal-stagger" ref={adminGridRef} aria-label={t('home.admin_access_title')}>
               {visibleAdminLinks.map(link => (
                 <Link key={link.path} to={link.path} className="card-link-item reveal-child card-hover-lift">
                   <div className="unified-card">
@@ -592,8 +598,8 @@ export default function Home() {
                   </div>
                 </Link>
               ))}
-            </div>
-          </div>
+            </nav>
+          </section>
         )}
       </div>
     </Layout>

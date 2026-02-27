@@ -19,6 +19,13 @@ const SLUG_TITLE_KEYS: Record<string, string> = {
   'cookie-policy': 'legal_page.slug_cookie_policy',
 }
 
+const SLUG_META_DESCRIPTION_KEYS: Record<string, string> = {
+  'privacy-policy': 'legal_page.meta_privacy_policy',
+  'terms': 'legal_page.meta_terms',
+  'legal-notice': 'legal_page.meta_legal_notice',
+  'cookie-policy': 'legal_page.meta_cookie_policy',
+}
+
 export default function LegalPage() {
   const { t } = useTranslation('rgpd')
   const { slug } = useParams<{ slug: string }>()
@@ -36,11 +43,38 @@ export default function LegalPage() {
       .finally(() => setLoading(false))
   }, [slug])
 
+  // SEO: set document.title and meta description for public page
+  useEffect(() => {
+    if (page) {
+      document.title = page.title
+      let meta = document.querySelector('meta[name="description"]')
+      const descKey = SLUG_META_DESCRIPTION_KEYS[slug || '']
+      if (descKey) {
+        const content = t(descKey)
+        if (!meta) {
+          meta = document.createElement('meta')
+          meta.setAttribute('name', 'description')
+          document.head.appendChild(meta)
+        }
+        meta.setAttribute('content', content)
+      }
+    } else if (notFound) {
+      const titleKey = SLUG_TITLE_KEYS[slug || '']
+      document.title = titleKey ? t(titleKey) : t('legal_page.default_title')
+    }
+
+    return () => {
+      document.title = ''
+      const meta = document.querySelector('meta[name="description"]')
+      if (meta) meta.setAttribute('content', '')
+    }
+  }, [page, notFound, slug, t])
+
   if (loading) {
     return (
       <div className="rgpd-legal-page">
-        <div className="rgpd-legal-container">
-          <div className="text-center loading-pad-lg"><div className="spinner" /></div>
+        <div className="rgpd-legal-container" aria-busy="true">
+          <div className="text-center loading-pad-lg"><div className="spinner" role="status"><span className="sr-only">{t('legal_page.aria_loading')}</span></div></div>
         </div>
       </div>
     )
@@ -50,31 +84,33 @@ export default function LegalPage() {
     const titleKey = SLUG_TITLE_KEYS[slug || '']
     return (
       <div className="rgpd-legal-page">
-        <div className="rgpd-legal-container">
+        <main className="rgpd-legal-container">
           <h1>{titleKey ? t(titleKey) : t('legal_page.default_title')}</h1>
           <p className="text-secondary">{t('legal_page.not_available')}</p>
           <Link to="/" className="btn btn-primary btn-sm">{t('legal_page.btn_back_home')}</Link>
-        </div>
+        </main>
       </div>
     )
   }
 
   return (
     <div className="rgpd-legal-page">
-      <div className="rgpd-legal-container">
-        <h1>{page.title}</h1>
-        <div className="rgpd-legal-meta">
-          {t('legal_page.last_updated')} {new Date(page.updated_at).toLocaleDateString('fr-FR')}
-          {' — '}{t('legal_page.version_label')} {page.version}
-        </div>
-        <div
-          className="rgpd-legal-content"
-          dangerouslySetInnerHTML={{ __html: page.content_html }}
-        />
-        <div className="rgpd-legal-footer">
+      <main className="rgpd-legal-container">
+        <article>
+          <h1>{page.title}</h1>
+          <div className="rgpd-legal-meta">
+            <time dateTime={page.updated_at}>{t('legal_page.last_updated')} {new Date(page.updated_at).toLocaleDateString('fr-FR')}</time>
+            {' — '}{t('legal_page.version_label')} {page.version}
+          </div>
+          <div
+            className="rgpd-legal-content"
+            dangerouslySetInnerHTML={{ __html: page.content_html }}
+          />
+        </article>
+        <nav className="rgpd-legal-footer" aria-label={t('legal_page.aria_nav_back')}>
           <Link to="/" className="btn btn-secondary btn-sm">{t('legal_page.btn_back_home')}</Link>
-        </div>
-      </div>
+        </nav>
+      </main>
     </div>
   )
 }

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import './_identity.scss'
 import api from '../../api'
 import PageSEO from './PageSEO'
+import { validatePassword } from './passwordPolicy'
 
 export default function Register() {
   const { t } = useTranslation('_identity')
@@ -27,8 +28,9 @@ export default function Register() {
       return
     }
 
-    if (password.length < 8) {
-      setError(t('register.error_password_min_8'))
+    const pwdErrors = validatePassword(password)
+    if (pwdErrors.length > 0) {
+      setError(pwdErrors.map(k => t(k)).join(', '))
       return
     }
 
@@ -62,9 +64,9 @@ export default function Register() {
   return (
     <div className="login-container">
       <PageSEO page="register" />
-      <div className="login-card">
+      <div className="login-card" role="main" aria-busy={loading}>
         <div className="login-header">
-          <svg width="48" height="48" viewBox="0 0 32 32" fill="none">
+          <svg width="48" height="48" viewBox="0 0 32 32" fill="none" aria-hidden="true">
             <rect width="32" height="32" rx="6" fill="var(--primary)" />
             <text x="16" y="22" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold">K</text>
           </svg>
@@ -72,8 +74,12 @@ export default function Register() {
           <p>{t('register.subtitle')}</p>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          {error && <div className="alert alert-error">{error}</div>}
+        <form onSubmit={handleSubmit} aria-label={t('register.form_aria_label')} noValidate>
+          {error && (
+            <div className="alert alert-error" role="alert" aria-live="polite" id="register-error">
+              {error}
+            </div>
+          )}
 
           <div className="form-group">
             <label htmlFor="email">{t('common.email')}</label>
@@ -84,7 +90,11 @@ export default function Register() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder={t('common.email_placeholder')}
               required
+              aria-required="true"
+              aria-invalid={!!error}
+              aria-describedby={error ? 'register-error' : undefined}
               autoFocus
+              autoComplete="email"
             />
           </div>
 
@@ -98,6 +108,8 @@ export default function Register() {
                 onChange={(e) => setFirstName(e.target.value)}
                 placeholder={t('register.first_name_placeholder')}
                 required
+                aria-required="true"
+                autoComplete="given-name"
               />
             </div>
             <div className="form-group">
@@ -109,6 +121,8 @@ export default function Register() {
                 onChange={(e) => setLastName(e.target.value)}
                 placeholder={t('register.last_name_placeholder')}
                 required
+                aria-required="true"
+                autoComplete="family-name"
               />
             </div>
           </div>
@@ -120,8 +134,10 @@ export default function Register() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder={t('common.password_min_8')}
+              placeholder={t('common.password_policy_hint')}
               required
+              aria-required="true"
+              autoComplete="new-password"
             />
           </div>
 
@@ -134,19 +150,26 @@ export default function Register() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder={t('common.confirm_password_placeholder')}
               required
+              aria-required="true"
+              autoComplete="new-password"
             />
           </div>
 
-          <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
+          <button
+            type="submit"
+            className="btn btn-primary btn-block"
+            disabled={loading}
+            aria-disabled={loading}
+          >
             {loading ? t('register.submitting') : t('register.submit')}
           </button>
         </form>
 
-        <div className="login-footer">
+        <nav className="login-footer" aria-label={t('register.nav_aria_label')}>
           <Link to="/login" className="link-primary">
             {t('register.already_have_account')}
           </Link>
-        </div>
+        </nav>
       </div>
     </div>
   )

@@ -1,35 +1,48 @@
 import hashlib
 import hmac
+import re
 from datetime import datetime, timedelta, timezone
 
-# Workaround: passlib 1.7.4 expects bcrypt.__about__ removed in bcrypt >= 4.x
-import bcrypt as _bcrypt
-
-if not hasattr(_bcrypt, "__about__"):
-    _bcrypt.__about__ = type("about", (), {"__version__": _bcrypt.__version__})()
-
-from fastapi import Depends, HTTPException, Query, status
+import bcrypt
+import jwt
+from fastapi import Depends, HTTPException, Query, Response, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import JWTError, jwt
-from passlib.context import CryptContext
+from jwt.exceptions import PyJWTError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .config import settings
 from .database import get_db
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security_scheme = HTTPBearer()
 
 IMPERSONATION_TOKEN_EXPIRE_MINUTES = 120
 
 
+def validate_password(password: str) -> None:
+    """Enforce password policy: min 8 chars, 1 uppercase, 1 digit, 1 special."""
+    errors = []
+    if len(password) < 8:
+        errors.append("au moins 8 caracteres")
+    if not re.search(r"[A-Z]", password):
+        errors.append("au moins une majuscule")
+    if not re.search(r"\d", password):
+        errors.append("au moins un chiffre")
+    if not re.search(r"[^a-zA-Z0-9]", password):
+        errors.append("au moins un caractere special")
+    if errors:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Le mot de passe doit contenir : " + ", ".join(errors),
+        )
+
+
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
 
 
 def hash_refresh_token(token: str) -> str:
@@ -53,6 +66,24 @@ def create_refresh_token(data: dict) -> str:
     expire = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     to_encode.update({"exp": expire, "type": "refresh"})
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+
+def set_refresh_cookie(response: Response, refresh_token: str) -> None:
+    """Set the refresh token as an HttpOnly cookie on the response."""
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=settings.ENV != "dev",
+        samesite="lax",
+        path="/api/auth",
+        max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 86400,
+    )
+
+
+def clear_refresh_cookie(response: Response) -> None:
+    """Remove the refresh token cookie."""
+    response.delete_cookie(key="refresh_token", path="/api/auth")
 
 
 def create_impersonation_token(
@@ -104,7 +135,7 @@ def decode_mfa_token(token: str) -> dict:
 def decode_token(token: str) -> dict:
     try:
         return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-    except JWTError:
+    except PyJWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token invalide ou expiré",

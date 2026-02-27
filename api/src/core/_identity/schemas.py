@@ -29,10 +29,6 @@ class TokenResponse(BaseModel):
     debug_code: str | None = None
 
 
-class RefreshRequest(BaseModel):
-    refresh_token: str
-
-
 class ChangePasswordRequest(BaseModel):
     current_password: str | None = None
     new_password: str
@@ -310,7 +306,7 @@ class InvitationVerify(BaseModel):
 
 class InvitationTokenResponse(BaseModel):
     access_token: str
-    refresh_token: str
+    refresh_token: str = ""
 
 
 # ── App Settings ────────────────────────────────────────────────────────
@@ -331,7 +327,7 @@ class AppSettingsUpdate(BaseModel):
 
 class ImpersonationStartResponse(BaseModel):
     access_token: str
-    refresh_token: str
+    refresh_token: str = ""
     token_type: str = "bearer"
     impersonated_user_id: int
     impersonated_user_email: str
@@ -341,7 +337,7 @@ class ImpersonationStartResponse(BaseModel):
 
 class ImpersonationStopResponse(BaseModel):
     access_token: str
-    refresh_token: str
+    refresh_token: str = ""
     token_type: str = "bearer"
     message: str = "Impersonation terminée"
 
