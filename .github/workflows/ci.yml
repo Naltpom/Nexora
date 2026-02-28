@@ -242,7 +242,7 @@ jobs:
           docker compose -f docker-compose.yml exec -T -e PLAYWRIGHT_ORIGIN=http://localhost:5472 api \
             python -m tests.generate_auth_state > app/tests/.auth-state.json
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "20"
 
