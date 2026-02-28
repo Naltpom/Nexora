@@ -83,7 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       # ── AWS ECS ──────────────────────────────────────────────────
       # Uncomment and configure for AWS ECS deployment:
