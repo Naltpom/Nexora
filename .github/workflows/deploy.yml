@@ -42,12 +42,39 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
           script: |
+            set -e
             cd ${{ secrets.APP_DIR || '/app' }}
+
+            echo "=== Pull latest code ==="
             git pull origin main
-            docker compose down
-            docker compose up -d --build
-            docker compose exec -T api alembic upgrade head
-            echo "Deployment complete"
+
+            echo "=== Build new images (without stopping running containers) ==="
+            docker compose build
+
+            echo "=== Run migrations BEFORE switching to new code ==="
+            docker compose run --rm api alembic -c alembic/alembic.ini upgrade head
+
+            echo "=== Rolling update: recreate services one by one ==="
+            docker compose up -d --no-deps --force-recreate api
+
+            echo "=== Wait for API to be healthy ==="
+            for i in $(seq 1 30); do
+              if docker compose exec -T api python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')" 2>/dev/null; then
+                echo "API is healthy (attempt $i)"
+                break
+              fi
+              echo "Waiting for API health... (attempt $i)"
+              sleep 2
+            done
+
+            docker compose up -d --no-deps --force-recreate worker
+            docker compose up -d --no-deps --force-recreate app
+
+            echo "=== Cleanup old images ==="
+            docker image prune -f
+
+            echo "=== Deployment complete ==="
+            docker compose ps
 
   # ─── Cloud Deployment (Container Services) ───────────────────────
   deploy-cloud:

@@ -1,12 +1,57 @@
 {
   "name": "nexora",
   "private": true,
-  "version": "2026.02.56",
+  "version": "2026.02.57",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint:scss": "./node_modules/.bin/stylelint 'src/**/*.scss'"
+  },
+  "stylelint": {
+    "extends": "stylelint-config-standard-scss",
+    "rules": {
+      "declaration-property-unit-allowed-list": {
+        "font-size": ["rem", "em", "%"]
+      },
+      "declaration-property-value-disallowed-list": {
+        "border-radius": ["/^\\d{1,2}px/"]
+      },
+      "declaration-no-important": [true, {
+        "severity": "warning"
+      }],
+      "selector-class-pattern": null,
+      "no-descending-specificity": null,
+      "color-function-notation": null,
+      "alpha-value-notation": null,
+      "keyframes-name-pattern": null,
+      "comment-empty-line-before": null,
+      "rule-empty-line-before": null,
+      "at-rule-empty-line-before": null,
+      "declaration-block-single-line-max-declarations": null,
+      "declaration-block-no-redundant-longhand-properties": null,
+      "shorthand-property-no-redundant-values": null,
+      "media-feature-range-notation": null,
+      "font-family-name-quotes": null,
+      "no-duplicate-selectors": null,
+      "function-url-quotes": null,
+      "value-keyword-case": null,
+      "declaration-empty-line-before": null,
+      "block-no-empty": null,
+      "scss/at-rule-no-unknown": true,
+      "scss/at-extend-no-missing-placeholder": null,
+      "scss/no-global-function-names": null
+    },
+    "overrides": [
+      {
+        "files": ["**/accessibilite/**/*.scss", "**/animations.scss"],
+        "rules": {
+          "declaration-no-important": null,
+          "declaration-property-value-disallowed-list": null
+        }
+      }
+    ]
   },
   "dependencies": {
     "@tiptap/extension-image": "^2.1.13",
@@ -24,10 +69,13 @@
     "react-router-dom": "^6.21.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
     "@vitejs/plugin-react": "^4.2.1",
     "sass": "^1.97.3",
+    "stylelint": "^16.12.0",
+    "stylelint-config-standard-scss": "^14.0.0",
     "typescript": "^5.3.3",
     "vite": "^5.0.8"
   }

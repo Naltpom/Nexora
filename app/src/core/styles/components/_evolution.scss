@@ -24,7 +24,7 @@
 .evolution-date-field input[type="date"] {
   padding: 8px 12px;
   border: 1px solid var(--gray-200);
-  border-radius: 8px;
+  border-radius: var(--radius);
   font-size: 0.875rem;
   font-family: inherit;
   color: var(--gray-700);
@@ -95,7 +95,7 @@
 
 .evolution-summary-card {
   background: white;
-  border-radius: 16px;
+  border-radius: var(--radius);
   border: 1px solid var(--gray-100);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   padding: 20px;

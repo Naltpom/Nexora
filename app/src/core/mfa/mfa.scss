@@ -230,9 +230,10 @@
       margin: 0 0 2px 0;
     }
 
-    @at-root [data-theme="dark"] & h2,
-    @at-root [data-theme="dark"] & h3 {
-      color: rgba(255, 255, 255, 0.9);
+    @at-root [data-theme="dark"] & {
+      h2, h3 {
+        color: rgba(255, 255, 255, 0.9);
+      }
     }
   }
 
@@ -819,7 +820,7 @@
     right: 0;
     bottom: 0;
     background-color: var(--gray-300);
-    border-radius: 10px;
+    border-radius: var(--radius);
     transition: background-color 0.2s;
 
     &::before {

@@ -1,7 +1,7 @@
 /* Per-page selector */
 .per-page-select {
   padding: 4px 8px;
-  border-radius: 4px;
+  border-radius: var(--radius);
   border: 1px solid var(--gray-300);
   font-size: 0.8125rem;
   background: white;
@@ -14,7 +14,7 @@
   align-items: center;
   gap: 6px;
   padding: 4px 12px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
@@ -47,7 +47,7 @@
   align-items: center;
   gap: 6px;
   padding: 4px 12px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
@@ -86,7 +86,7 @@
   align-items: center;
   justify-content: center;
   padding: 2px 8px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -146,7 +146,7 @@
   align-items: center;
   gap: 6px;
   padding: 4px 12px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   font-size: 0.75rem;
   font-weight: 600;
   white-space: nowrap;
@@ -218,7 +218,7 @@
   display: inline-flex;
   align-items: center;
   padding: 2px 8px;
-  border-radius: 12px;
+  border-radius: var(--radius);
   font-size: 0.75rem;
   font-weight: 600;
   white-space: nowrap;

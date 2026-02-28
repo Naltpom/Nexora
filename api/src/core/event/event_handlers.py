@@ -14,14 +14,24 @@ logger = logging.getLogger(__name__)
 
 async def _persist_and_relay(
     event_type: str,
-    db,
-    actor_id: int,
-    resource_type: str,
-    resource_id: int,
-    payload: dict,
+    db=None,
+    actor_id: int | None = None,
+    resource_type: str | None = None,
+    resource_id: int | None = None,
+    payload: dict | None = None,
     **_kwargs,
 ) -> None:
-    """Persist the event then re-emit for downstream subscribers."""
+    """Persist the event then re-emit for downstream subscribers.
+
+    Silently skips events that don't carry the required persistence fields
+    (e.g. ``event.persisted`` itself, or events emitted without resource info).
+    """
+    # Skip events that are not meant for persistence
+    if event_type == "event.persisted":
+        return
+    if db is None or actor_id is None or resource_type is None or resource_id is None:
+        return
+
     from ..feature_registry import get_registry
 
     registry = get_registry()
@@ -36,7 +46,7 @@ async def _persist_and_relay(
         actor_id=actor_id,
         resource_type=resource_type,
         resource_id=resource_id,
-        payload=payload,
+        payload=payload or {},
     )
 
     # Re-emit so downstream features get the persisted Event object

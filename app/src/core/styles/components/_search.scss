@@ -2,7 +2,7 @@
 .home-search-input {
   padding: 8px 12px 8px 36px;
   border: 1px solid var(--gray-300);
-  border-radius: 6px;
+  border-radius: var(--radius);
   font-size: 0.875rem;
   width: 240px;
   outline: none;

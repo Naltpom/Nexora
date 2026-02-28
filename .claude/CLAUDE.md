@@ -113,7 +113,18 @@ Pour ajouter des donnees de bootstrap (nouveaux roles, nouvelles global_permissi
 
 ## Tests
 
-Aucun framework de tests configure. Ne pas en ajouter sauf demande explicite.
+### Backend (pytest)
+
+- Tests dans `api/tests/`, dependances dans `api/requirements-test.txt`
+- Auto-decouverte des routes API, test parametrise `status != 500`
+- Execution : `docker compose exec api sh -c "pip install -r requirements-test.txt && python -m pytest tests/ -v --tb=short"`
+
+### Frontend (Playwright)
+
+- Tests dans `app/tests/`, config dans `app/playwright.config.ts`
+- Auth generee par `api/tests/generate_auth_state.py` (refresh token + UserSession en DB)
+- Execution (dans le container app) : `npx playwright test`
+- Prerequis : `nodejs npm` installes dans le container, `npx playwright install chromium && npx playwright install-deps chromium`
 
 ## Versioning
 

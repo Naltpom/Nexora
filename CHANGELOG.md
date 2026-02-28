@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026.02.57
+
+### tests (NEW)
+
+- **Backend smoke tests (pytest)** : auto-decouverte de toutes les routes API (181 routes), test parametrise verifiant `status != 500` avec auth super_admin via JWT genere, execution dans le container API
+- **Frontend smoke tests (Playwright)** : 6 pages publiques + 24 pages protegees, verification d'absence d'erreurs JS (`pageerror`), detection de redirections non voulues vers `/login`
+- **Auth Playwright** : login via `fetch()` dans le navigateur (Set-Cookie natif) — contourne les quirks Chromium headless avec les cookies storageState sur localhost
+- **CI integration** : les smoke tests backend (pytest) et frontend (Playwright) s'executent dans le job `build-and-check` de GitHub Actions ; admin CI avec `email_verified=True` (get-or-create)
+
+### security (bugfix)
+
+- **HTTPBearer auto_error** : correction du `HTTPBearer()` → `HTTPBearer(auto_error=False)` dans `security.py` — l'API renvoyait 403 au lieu de 401 quand aucun token n'etait fourni, empechant le silent refresh du frontend de se declencher sur page reload
+
+### event (bugfix)
+
+- **event_handlers** : parametres optionnels dans `_persist_and_relay()`, skip automatique des events `event.persisted` pour eviter les boucles
+
+### code quality
+
+- **SCSS compliance** : remplacement des `border-radius` hardcodes par `var(--radius)` dans 20 fichiers SCSS (identity, mfa, navigation, notifications, rgpd, animations, components)
+
 ## 2026.02.56
 
 ### code quality

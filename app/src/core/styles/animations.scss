@@ -300,7 +300,7 @@
     transform: scaleX(0);
     transform-origin: center;
     transition: transform 0.25s ease;
-    border-radius: 1px;
+    border-radius: var(--radius);
   }
 
   &:hover::after {
@@ -394,7 +394,7 @@
   @extend .skeleton;
   height: 14px;
   margin-bottom: 8px;
-  border-radius: 4px;
+  border-radius: var(--radius);
 
   &:last-child {
     width: 60%;
@@ -406,13 +406,13 @@
   height: 24px;
   width: 40%;
   margin-bottom: 12px;
-  border-radius: 6px;
+  border-radius: var(--radius);
 }
 
 .skeleton-card {
   @extend .skeleton;
   height: 100px;
-  border-radius: 12px;
+  border-radius: var(--radius);
 }
 
 .skeleton-avatar {

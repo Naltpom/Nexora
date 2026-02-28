@@ -3,6 +3,9 @@ services:
     volumes:
       - ./api/src:/app/src
       - ./api/alembic:/app/alembic
+      - ./api/tests:/app/tests
+      - ./api/pytest.ini:/app/pytest.ini
+      - ./api/requirements-test.txt:/app/requirements-test.txt
       - ./backups:/app/backups
 
   worker:
