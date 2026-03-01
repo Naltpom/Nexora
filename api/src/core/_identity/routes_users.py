@@ -1,17 +1,17 @@
 """User CRUD endpoints."""
 
-import math
 import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import delete as sa_delete
-from sqlalchemy import func, or_, select, text
+from sqlalchemy import or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..config import settings
 from ..database import get_db
 from ..events import event_bus
+from ..pagination import PaginatedResponse, PaginationParams, paginate, search_like_pattern
 from ..permissions import invalidate_permission_cache, load_user_permissions, require_permission
 from ..realtime.services import sse_broadcaster
 from ..security import get_current_user, hash_password, validate_password
@@ -30,7 +30,6 @@ from .schemas import (
     UserCreate,
     UserDetailResponse,
     UserListItem,
-    UserListPaginatedResponse,
     UserPermissionOverrideRequest,
     UserResponse,
     UserRolesUpdateRequest,
@@ -59,16 +58,16 @@ def _user_to_response(user: User) -> UserResponse:
 
 @router.get(
     "/",
-    response_model=UserListPaginatedResponse,
+    response_model=PaginatedResponse[UserListItem],
     dependencies=[Depends(require_permission("users.read"))],
 )
 async def list_users(
-    page: int = Query(1, ge=1),
-    per_page: int = Query(20, ge=1, le=100),
-    search: str = Query("", description="Search email, first_name, last_name"),
+    pagination: PaginationParams = Depends(PaginationParams(
+        default_per_page=20,
+        default_sort_by="email",
+        default_sort_dir="asc",
+    )),
     active_only: bool = Query(True, description="Filter active users only"),
-    sort_by: str = Query("email", description="Sort field: email, first_name, last_name"),
-    sort_dir: str = Query("asc", description="Sort direction: asc or desc"),
     role_ids: str = Query("", description="Comma-separated role IDs to filter by"),
     db: AsyncSession = Depends(get_db),
 ):
@@ -77,9 +76,8 @@ async def list_users(
     if active_only:
         query = query.where(User.is_active.is_(True))
 
-    if search:
-        search_escaped = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
-        like = f"%{search_escaped}%"
+    if pagination.search:
+        like = search_like_pattern(pagination.search)
         query = query.where(
             or_(
                 User.email.ilike(like),
@@ -96,23 +94,16 @@ async def list_users(
                 User.id.in_(select(UserRole.user_id).where(UserRole.role_id.in_(ids)))
             )
 
-    # Count total
-    count_q = select(func.count()).select_from(query.subquery())
-    total = (await db.execute(count_q)).scalar_one()
-
-    # Sorting
-    sort_col = getattr(User, sort_by, User.email)
-    if sort_dir.lower() == "desc":
-        sort_col = sort_col.desc()
-    else:
-        sort_col = sort_col.asc()
-    query = query.order_by(sort_col)
-
-    # Pagination
-    offset = (page - 1) * per_page
-    query = query.offset(offset).limit(per_page)
-
-    result = await db.execute(query)
+    sort_whitelist = {
+        "email": User.email,
+        "first_name": User.first_name,
+        "last_name": User.last_name,
+    }
+    result, total, pages = await paginate(
+        db, query, pagination,
+        sort_whitelist=sort_whitelist,
+        default_sort_column=User.email,
+    )
     users = result.scalars().all()
     user_ids = [u.id for u in users]
 
@@ -182,12 +173,11 @@ async def list_users(
         )
         items.append(item)
 
-    pages = max(1, math.ceil(total / per_page))
-    return UserListPaginatedResponse(
+    return PaginatedResponse(
         items=items,
         total=total,
-        page=page,
-        per_page=per_page,
+        page=pagination.page,
+        per_page=pagination.per_page,
         pages=pages,
     )
 

@@ -9,13 +9,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..event.models import Event
 from ..events import event_bus
+from ..pagination import PaginatedResponse, PaginationParams
 from ..permissions import load_user_permissions, require_permission
 from ..security import get_current_user
 from .models import Notification, NotificationRule, UserRulePreference
 from .schemas import (
-    AdminNotificationListResponse,
     AdminNotificationResponse,
-    NotificationListResponse,
     NotificationResponse,
     NotificationRuleCreate,
     NotificationRuleResponse,
@@ -152,29 +151,25 @@ async def _build_rule_response_from_entity(
 
 @router.get(
     "/",
-    response_model=NotificationListResponse,
+    response_model=PaginatedResponse[NotificationResponse],
     dependencies=[Depends(require_permission("notification.read"))],
 )
 async def list_notifications_endpoint(
-    page: int = Query(1, ge=1),
-    per_page: int = Query(20, ge=1, le=100),
+    pagination: PaginationParams = Depends(PaginationParams(
+        default_per_page=20,
+        default_sort_by="created_at",
+        default_sort_dir="desc",
+    )),
     unread_only: bool = Query(False),
-    search: str = Query(""),
-    sort_by: str = Query("created_at"),
-    sort_dir: str = Query("desc"),
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Liste paginee des notifications de l'utilisateur."""
-    rows, total = await svc_list_notifications(
+    rows, total, pages = await svc_list_notifications(
         db,
+        pagination,
         user_id=current_user.id,
         unread_only=unread_only,
-        search=search,
-        sort_by=sort_by,
-        sort_dir=sort_dir,
-        page=page,
-        per_page=per_page,
     )
 
     items = [
@@ -193,8 +188,9 @@ async def list_notifications_endpoint(
         for row in rows
     ]
 
-    pages = (total + per_page - 1) // per_page if total > 0 else 1
-    return NotificationListResponse(items=items, total=total, page=page, per_page=per_page, pages=pages)
+    return PaginatedResponse(
+        items=items, total=total, page=pagination.page, per_page=pagination.per_page, pages=pages,
+    )
 
 
 @router.get(
@@ -212,30 +208,26 @@ async def get_unread_count_endpoint(
 
 @router.get(
     "/admin",
-    response_model=AdminNotificationListResponse,
+    response_model=PaginatedResponse[AdminNotificationResponse],
     dependencies=[Depends(require_permission("notification.admin"))],
 )
 async def list_all_notifications(
-    page: int = Query(1, ge=1),
-    per_page: int = Query(25, ge=1, le=100),
-    search: str = Query(""),
+    pagination: PaginationParams = Depends(PaginationParams(
+        default_per_page=25,
+        default_sort_by="created_at",
+        default_sort_dir="desc",
+    )),
     my_only: bool = Query(True),
     include_deleted: bool = Query(False),
-    sort_by: str = Query("created_at"),
-    sort_dir: str = Query("desc"),
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     user_id = current_user.id if my_only else None
-    rows, total = await svc_list_notifications(
+    rows, total, pages = await svc_list_notifications(
         db,
+        pagination,
         user_id=user_id,
         include_deleted=include_deleted,
-        search=search,
-        sort_by=sort_by,
-        sort_dir=sort_dir,
-        page=page,
-        per_page=per_page,
         include_admin_fields=True,
     )
 
@@ -259,9 +251,8 @@ async def list_all_notifications(
         for row in rows
     ]
 
-    pages = (total + per_page - 1) // per_page if total > 0 else 1
-    return AdminNotificationListResponse(
-        items=items, total=total, page=page, per_page=per_page, pages=pages,
+    return PaginatedResponse(
+        items=items, total=total, page=pagination.page, per_page=pagination.per_page, pages=pages,
     )
 
 
@@ -629,7 +620,7 @@ async def list_my_rules_endpoint(
     "/rules/my",
     response_model=NotificationRuleResponse,
     status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(require_permission("notification.rules.read"))],
+    dependencies=[Depends(require_permission("notification.rules.create"))],
 )
 async def create_my_rule(
     data: NotificationRuleCreate,

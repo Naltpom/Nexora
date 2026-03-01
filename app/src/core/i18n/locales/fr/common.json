@@ -78,5 +78,13 @@
   "bg_theme_constellations": "Constellations",
   "error_boundary_title": "Oups, quelque chose s'est mal passe",
   "error_boundary_description": "Une erreur inattendue est survenue. Veuillez recharger la page.",
-  "error_boundary_reload": "Recharger la page"
+  "error_boundary_reload": "Recharger la page",
+  "pagination_total": "{{count}} elements",
+  "pagination_total_one": "{{count}} element",
+  "pagination_per_page_aria": "Nombre d'elements par page",
+  "pagination_per_page_option": "{{count}} / page",
+  "pagination_aria_label": "Pagination",
+  "pagination_previous": "Page precedente",
+  "pagination_next": "Page suivante",
+  "pagination_page_number": "Page {{page}}"
 }

@@ -19,14 +19,6 @@ class NotificationResponse(BaseModel):
     created_at: datetime
 
 
-class NotificationListResponse(BaseModel):
-    items: list[NotificationResponse]
-    total: int
-    page: int
-    per_page: int
-    pages: int
-
-
 class AdminNotificationResponse(BaseModel):
     id: int
     user_id: int
@@ -42,14 +34,6 @@ class AdminNotificationResponse(BaseModel):
     push_sent_at: datetime | None = None
     deleted_at: datetime | None = None
     created_at: datetime
-
-
-class AdminNotificationListResponse(BaseModel):
-    items: list[AdminNotificationResponse]
-    total: int
-    page: int
-    per_page: int
-    pages: int
 
 
 class UnreadCountResponse(BaseModel):

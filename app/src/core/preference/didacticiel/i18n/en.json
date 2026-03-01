@@ -29,6 +29,10 @@
   "tutorial_notification_view": "View",
   "tutorial_notification_later": "Later",
 
+  "tutorial_resume_text": "A tutorial was in progress. Resume where you left off?",
+  "tutorial_resume_yes": "Resume",
+  "tutorial_resume_no": "Close",
+
   "tutorial_engine_element_not_found_title": "Element not found",
   "tutorial_engine_element_not_found_description": "The target element was not found on this page. Skip to the next step.",
   "tutorial_engine_previous": "Previous",

@@ -1,0 +1,96 @@
+{
+  "banner_dismiss": "Dismiss",
+  "banner_aria_dismiss": "Dismiss this announcement",
+
+  "breadcrumb_home": "Home",
+  "breadcrumb_announcements": "Announcements",
+
+  "admin_title": "System Announcements",
+  "admin_subtitle": "Manage announcements shown to users (banners and modals)",
+  "admin_btn_create": "New announcement",
+  "admin_search_placeholder": "Search...",
+  "admin_empty": "No announcements",
+
+  "col_title": "Title",
+  "col_mode": "Mode",
+  "col_type": "Type",
+  "col_target": "Target",
+  "col_ack": "Read",
+  "col_start": "Start",
+  "col_end": "End",
+  "col_active": "Active",
+  "col_actions": "Actions",
+
+  "type_info": "Info",
+  "type_warning": "Warning",
+  "type_success": "Success",
+  "type_danger": "Urgent",
+
+  "display_banner": "Banner",
+  "display_modal": "Modal",
+  "display_mandatory": "Mandatory",
+
+  "target_all": "All",
+
+  "modal_create_title": "New announcement",
+  "modal_edit_title": "Edit announcement",
+  "field_title": "Title",
+  "field_title_placeholder": "Announcement title",
+  "field_body": "Content (optional)",
+  "field_body_placeholder": "Announcement body...",
+  "field_type": "Type",
+  "field_display": "Display",
+  "field_target_roles": "Target roles",
+  "field_target_roles_placeholder": "All users if empty",
+  "field_start_date": "Start date",
+  "field_end_date": "End date (optional)",
+  "field_priority": "Priority",
+  "field_dismissible": "Dismissible by user",
+  "field_requires_ack": "Mandatory reading",
+  "field_active": "Active",
+  "btn_save": "Save",
+  "btn_cancel": "Cancel",
+
+  "confirm_delete": "Delete this announcement?",
+  "btn_edit": "Edit",
+  "btn_delete": "Delete",
+
+  "stat_annonces": "",
+
+  "ack_details_title": "View acknowledgments",
+  "ack_modal_title": "Acknowledgments: {{title}}",
+  "ack_modal_empty": "No acknowledgments yet",
+  "ack_col_user": "User",
+  "ack_col_email": "Email",
+  "ack_col_date": "Date",
+
+  "megaphone_title": "Announcements",
+  "megaphone_dropdown_title": "Announcements",
+  "megaphone_dropdown_empty": "No announcements",
+  "megaphone_view_all": "View all",
+
+  "modal_acknowledge_btn": "I have read and understood",
+  "modal_close_btn": "Close",
+
+  "page_title": "Announcements",
+  "page_subtitle": "History of all announcements",
+  "page_empty": "No announcements yet",
+
+  "time_ago_just_now": "Just now",
+  "time_ago_minutes": "{{minutes}} min ago",
+  "time_ago_hours": "{{hours}} h ago",
+  "time_ago_days": "{{days}} d ago",
+
+  "aria_table": "System announcements table",
+  "aria_loading": "Loading...",
+
+  "rte_bold": "Bold",
+  "rte_italic": "Italic",
+  "rte_strike": "Strikethrough",
+  "rte_code": "Inline code",
+  "rte_heading": "Heading H3",
+  "rte_bullet_list": "Bullet list",
+  "rte_ordered_list": "Ordered list",
+  "rte_code_block": "Code block",
+  "rte_image": "Image"
+}

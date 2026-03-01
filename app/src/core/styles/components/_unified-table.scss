@@ -221,6 +221,50 @@
   gap: 10px;
 }
 
+/* Empty state / no match (used across features) */
+.table-no-match {
+  text-align: center;
+  padding: var(--density-card-padding, 24px);
+  color: var(--gray-400);
+}
+
+/* Resource badge (type + id, used across features) */
+.resource-badge {
+  font-size: 0.8125rem;
+
+  &-id {
+    margin-left: 4px;
+    color: var(--gray-400);
+    font-size: 0.75rem;
+  }
+}
+
+/* Page header stats (used across features) */
+.page-header-stats {
+  display: flex;
+  gap: var(--section-gap, 24px);
+}
+
+.page-header-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+
+  &-value {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary, var(--gray-700));
+  }
+
+  &-label {
+    font-size: 0.75rem;
+    color: var(--gray-400);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
 /* Unified Button - Primary Rounded */
 .btn-unified-primary {
   display: inline-flex;

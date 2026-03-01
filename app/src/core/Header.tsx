@@ -9,6 +9,8 @@ import { applyCustomColors } from './preference/couleur/applyCustomColors'
 import { UserMenu } from './navigation'
 
 const NotificationBell = lazy(() => import('./notification/NotificationBell'))
+const AnnouncementButton = lazy(() => import('./announcement/AnnouncementButton'))
+const FavoriteButton = lazy(() => import('./favorite/FavoriteButton'))
 
 export default function Header() {
   const { t } = useTranslation('common')
@@ -31,7 +33,7 @@ export default function Header() {
       <div className="header-left">
         <Link to="/" className="header-logo">
           {appSettings.header_show_logo !== 'false' && (
-            <div className="header-logo-icon" style={{ backgroundColor: appSettings.primary_color || '#1E40AF' }}>
+            <div className="header-logo-icon" style={{ '--header-logo-bg': appSettings.primary_color || '#1E40AF' } as React.CSSProperties}>
               <img src={appSettings.app_logo || '/logo_full.svg'} alt={appSettings.app_name} className="header-logo-img" />
             </div>
           )}
@@ -71,6 +73,18 @@ export default function Header() {
             {isActive('notification') && (
               <Suspense fallback={null}>
                 <NotificationBell />
+              </Suspense>
+            )}
+
+            {isActive('announcement') && (
+              <Suspense fallback={null}>
+                <AnnouncementButton />
+              </Suspense>
+            )}
+
+            {isActive('favorite') && (
+              <Suspense fallback={null}>
+                <FavoriteButton />
               </Suspense>
             )}
 

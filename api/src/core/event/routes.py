@@ -5,9 +5,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
 from ..feature_registry import get_registry
+from ..pagination import PaginatedResponse, PaginationParams
 from ..permissions import load_user_permissions, require_permission
 from ..security import get_current_user
-from .schemas import EventListItem, EventListPaginatedResponse, EventTypeResponse
+from .schemas import EventListItem, EventTypeResponse
 from .services import list_events
 
 router = APIRouter()
@@ -15,16 +16,16 @@ router = APIRouter()
 
 @router.get(
     "/",
-    response_model=EventListPaginatedResponse,
+    response_model=PaginatedResponse[EventListItem],
     dependencies=[Depends(require_permission("event.read"))],
 )
 async def list_events_endpoint(
-    page: int = Query(1, ge=1),
-    per_page: int = Query(25, ge=1, le=100),
-    search: str = Query("", description="Search event_type, resource_type, actor email"),
+    pagination: PaginationParams = Depends(PaginationParams(
+        default_per_page=25,
+        default_sort_by="created_at",
+        default_sort_dir="desc",
+    )),
     event_type_filter: str = Query("", description="Filter by exact event_type"),
-    sort_by: str = Query("created_at", description="Sort field: created_at, event_type, resource_type"),
-    sort_dir: str = Query("desc", description="Sort direction: asc or desc"),
     show_all: bool = Query(False, description="Show events from all users (requires event.read_all)"),
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -40,20 +41,16 @@ async def list_events_endpoint(
 
     rows, total, pages = await list_events(
         db,
+        pagination,
         user_id=user_id,
-        search=search,
         event_type_filter=event_type_filter,
-        sort_by=sort_by,
-        sort_dir=sort_dir,
-        page=page,
-        per_page=per_page,
     )
 
-    return EventListPaginatedResponse(
+    return PaginatedResponse(
         items=[EventListItem(**row) for row in rows],
         total=total,
-        page=page,
-        per_page=per_page,
+        page=pagination.page,
+        per_page=pagination.per_page,
         pages=pages,
     )
 

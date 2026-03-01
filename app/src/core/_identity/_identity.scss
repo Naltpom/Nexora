@@ -1516,6 +1516,23 @@ fieldset.form-group {
 
 // ── Roles / Permissions panel ──
 
+.role-row--selected {
+  background-color: rgba(30, 64, 175, 0.08);
+}
+
+.role-row--clickable {
+  cursor: pointer;
+}
+
+.roles-table-narrow {
+  flex: 0 0 240px;
+  overflow: hidden;
+}
+
+.toggle--loading {
+  cursor: wait;
+}
+
 .perms-panel-flex {
   flex: 1 1 auto;
   overflow: hidden;

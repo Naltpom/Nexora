@@ -158,22 +158,6 @@ class UserListItem(UserResponse):
     is_impersonation_immune: bool = False
 
 
-class UserPaginatedResponse(BaseModel):
-    items: list[UserResponse]
-    total: int
-    page: int
-    per_page: int
-    pages: int
-
-
-class UserListPaginatedResponse(BaseModel):
-    items: list[UserListItem]
-    total: int
-    page: int
-    per_page: int
-    pages: int
-
-
 # ── Role ─────────────────────────────────────────────────────────────────
 
 class RoleCreate(BaseModel):
@@ -238,14 +222,6 @@ class PermissionWithGranted(BaseModel):
     granted: bool
 
     model_config = {"from_attributes": True}
-
-
-class PermissionWithGrantedPaginated(BaseModel):
-    items: list[PermissionWithGranted]
-    total: int
-    page: int
-    per_page: int
-    pages: int
 
 
 class TogglePermissionRequest(BaseModel):

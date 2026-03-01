@@ -43,10 +43,5 @@
   "aria_types_table_caption": "Types d'evenements de la feature {{feature}}",
   "aria_voir_payload": "Voir les donnees de l'evenement {{type}}",
   "aria_no_payload": "Aucune donnee",
-  "aria_payload_for": "Donnees de l'evenement {{type}}",
-  "aria_pagination": "Pagination des evenements",
-  "aria_per_page": "Nombre d'elements par page",
-  "aria_previous_page": "Page precedente",
-  "aria_next_page": "Page suivante",
-  "aria_page_number": "Page {{page}}"
+  "aria_payload_for": "Donnees de l'evenement {{type}}"
 }

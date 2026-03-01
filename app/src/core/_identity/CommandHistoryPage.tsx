@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import Layout from '../../core/Layout'
+import { Pagination } from '../../core/pagination'
 import api from '../../api'
 import './_identity.scss'
 
@@ -49,7 +50,7 @@ export default function CommandHistoryPage() {
   const detailModalRef = useRef<HTMLDivElement>(null)
   const detailModalTitleId = 'command-detail-modal-title'
 
-  const perPage = 20
+  const [perPage, setPerPage] = useState(20)
 
   // Escape key handler for detail modal
   useEffect(() => {
@@ -75,7 +76,7 @@ export default function CommandHistoryPage() {
     } finally {
       setLoading(false)
     }
-  }, [page, search, statusFilter])
+  }, [page, perPage, search, statusFilter])
 
   useEffect(() => {
     loadHistory()
@@ -130,6 +131,12 @@ export default function CommandHistoryPage() {
           <div className="unified-page-header-info">
             <h1>{t('command_history.page_title')}</h1>
             <p>{t('command_history.subtitle')}</p>
+          </div>
+          <div className="page-header-stats">
+            <div className="page-header-stat">
+              <span className="page-header-stat-value">{data?.total ?? 0}</span>
+              <span className="page-header-stat-label">{t('stat_executions')}</span>
+            </div>
           </div>
           <div className="unified-page-header-actions">
             <Link to="/admin/commands" className="btn btn-secondary btn-sm">
@@ -242,28 +249,16 @@ export default function CommandHistoryPage() {
           </div>
 
           {/* Pagination */}
-          {data && data.pages > 1 && (
-            <nav className="pagination" aria-label={t('a11y.pagination')}>
-              <button
-                className="btn btn-sm btn-secondary"
-                disabled={page <= 1}
-                onClick={() => setPage(p => p - 1)}
-                aria-label={t('common.previous')}
-              >
-                {t('common.previous')}
-              </button>
-              <span className="pagination-info" aria-live="polite" aria-atomic="true">
-                {t('command_history.pagination_page', { current: data.page, total: data.pages, count: data.total })}
-              </span>
-              <button
-                className="btn btn-sm btn-secondary"
-                disabled={page >= data.pages}
-                onClick={() => setPage(p => p + 1)}
-                aria-label={t('common.next')}
-              >
-                {t('common.next')}
-              </button>
-            </nav>
+          {data && (
+            <Pagination
+              page={page}
+              totalPages={data.pages}
+              total={data.total}
+              perPage={perPage}
+              countDisplay={t('command_history.pagination_page', { current: data.page, total: data.pages, count: data.total })}
+              onPageChange={(p) => setPage(p)}
+              onPerPageChange={(pp) => { setPerPage(pp); setPage(1) }}
+            />
           )}
         </div>
       )}

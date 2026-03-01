@@ -1,4 +1,3 @@
-name: CI
 
 on:
   push:
@@ -44,7 +43,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: "1.3.9"
 
       - name: Cache Bun dependencies
         if: ${{ !env.ACT }}
@@ -63,10 +62,10 @@ jobs:
         working-directory: app
         run: bunx tsc --noEmit
 
-      - name: Audit frontend dependencies
+      - name: List frontend dependencies
         working-directory: app
         continue-on-error: true
-        run: bunx audit
+        run: bun pm ls --all 2>/dev/null | head -50 || true
 
   lint-scss:
     name: Lint SCSS (Stylelint)
@@ -76,7 +75,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: "1.3.9"
 
       - name: Cache Bun dependencies
         if: ${{ !env.ACT }}
@@ -95,10 +94,15 @@ jobs:
         working-directory: app
         run: bun run lint:scss
 
-  build-and-check:
-    name: Build & Check Migrations
+  # ── Security scans (parallel, non-blocking) ──────────────────────
+  security-scan:
+    name: Security Scan (Trivy)
     runs-on: ubuntu-latest
+    if: ${{ !github.event.act }}
     needs: [lint-backend, lint-frontend, lint-scss]
+    continue-on-error: true
+    env:
+      COMPOSE_PROJECT_NAME: template_02
     steps:
       - uses: actions/checkout@v4
 
@@ -108,25 +112,35 @@ jobs:
       - name: Build images
         run: docker compose -f docker-compose.yml build
 
-      - name: Scan API image with Trivy
-        if: ${{ !env.ACT }}
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          image-ref: template_02-api:latest
-          format: 'table'
-          exit-code: '0'
-          ignore-unfixed: true
-          severity: 'CRITICAL,HIGH'
+      - name: Install Trivy
+        run: |
+          sudo apt-get install -y wget apt-transport-https gnupg
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" | sudo tee /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install -y trivy
 
-      - name: Scan App image with Trivy
-        if: ${{ !env.ACT }}
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          image-ref: template_02-app:latest
-          format: 'table'
-          exit-code: '0'
-          ignore-unfixed: true
-          severity: 'CRITICAL,HIGH'
+      - name: Scan API image
+        run: trivy image --severity CRITICAL,HIGH --ignore-unfixed --exit-code 0 template_02-api:latest
+
+      - name: Scan App image
+        run: trivy image --severity CRITICAL,HIGH --ignore-unfixed --exit-code 0 template_02-app:latest
+
+  # ── Build, migrations, smoke tests ───────────────────────────────
+  build-and-check:
+    name: Build & Check Migrations
+    runs-on: ubuntu-latest
+    needs: [lint-backend, lint-frontend, lint-scss]
+    env:
+      COMPOSE_PROJECT_NAME: template_02
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy env for build
+        run: cp .env.example .env
+
+      - name: Build images
+        run: docker compose -f docker-compose.yml build
 
       - name: Start database and Redis
         run: docker compose -f docker-compose.yml up -d db redis

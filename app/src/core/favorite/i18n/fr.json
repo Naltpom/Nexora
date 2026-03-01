@@ -1,0 +1,29 @@
+{
+  "btn_title": "Favoris",
+  "dropdown_title": "Mes favoris",
+  "dropdown_empty": "Aucun favori",
+  "dropdown_add_page": "Ajouter cette page",
+  "dropdown_view_all": "Voir tous les favoris",
+  "dropdown_added": "Favori ajoute",
+
+  "breadcrumb_home": "Accueil",
+  "breadcrumb_favorites": "Favoris",
+
+  "page_title": "Mes favoris",
+  "page_subtitle": "Gerez vos pages favorites pour un acces rapide",
+  "page_empty": "Aucun favori enregistre",
+  "page_empty_hint": "Utilisez l'etoile dans la barre de navigation pour ajouter des pages",
+
+  "modal_edit_title": "Modifier le favori",
+  "field_label": "Nom",
+  "field_label_placeholder": "Nom du favori",
+  "field_icon": "Icone (optionnel)",
+  "btn_save": "Enregistrer",
+  "btn_cancel": "Annuler",
+  "btn_edit": "Modifier",
+  "btn_delete": "Supprimer",
+  "confirm_delete": "Supprimer ce favori ?",
+
+  "aria_table": "Liste des favoris",
+  "aria_loading": "Chargement..."
+}

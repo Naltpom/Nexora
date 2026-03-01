@@ -29,6 +29,7 @@
 }
 
 .header-logo-icon {
+  background-color: var(--header-logo-bg, #1E40AF);
   border-radius: var(--radius);
   padding: 6px 10px;
   display: flex;

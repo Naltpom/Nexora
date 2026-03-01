@@ -47,6 +47,9 @@ interface TutorialContextType {
   resetAll: () => Promise<void>
   pendingNewPermissions: string[]
   dismissPending: () => void
+  pendingResume: ActiveTutorialState | null
+  resumeTutorial: () => void
+  dismissResume: () => void
 }
 
 const TutorialContext = createContext<TutorialContextType | undefined>(undefined)
@@ -58,6 +61,7 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
   const [featureTutorials, setFeatureTutorials] = useState<FeatureTutorial[]>([])
   const [permissionsSeen, setPermissionsSeen] = useState<Record<string, string>>({})
   const [active, setActive] = useState<ActiveTutorialState | null>(null)
+  const [pendingResume, setPendingResume] = useState<ActiveTutorialState | null>(null)
   const [seenLoaded, setSeenLoaded] = useState(false)
   const [pendingNewPermissions, setPendingNewPermissions] = useState<string[]>([])
   const [pendingDismissed, setPendingDismissed] = useState(
@@ -81,14 +85,14 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
       .catch(() => setSeenLoaded(true))
   }, [user])
 
-  // Restore active state from sessionStorage (RGPD: only if functional consent)
+  // Restore saved tutorial state as pending resume (not auto-start)
   useEffect(() => {
     if (!hasConsent('functional')) return
     const saved = sessionStorage.getItem('tutorial_active')
     if (saved) {
       try {
         const state = JSON.parse(saved) as ActiveTutorialState
-        setActive(state)
+        setPendingResume(state)
       } catch {
         sessionStorage.removeItem('tutorial_active')
       }
@@ -390,6 +394,18 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const resumeTutorial = useCallback(() => {
+    if (pendingResume) {
+      setActive(pendingResume)
+      setPendingResume(null)
+    }
+  }, [pendingResume])
+
+  const dismissResume = useCallback(() => {
+    setPendingResume(null)
+    sessionStorage.removeItem('tutorial_active')
+  }, [])
+
   const contextValue = useMemo(() => ({
     featureTutorials,
     permissionsSeen,
@@ -412,6 +428,9 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
     resetAll,
     pendingNewPermissions,
     dismissPending,
+    pendingResume,
+    resumeTutorial,
+    dismissResume,
   }), [
     featureTutorials, permissionsSeen, active,
     currentStep, currentPermissionTutorial, currentFeatureTutorial,
@@ -420,6 +439,7 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
     nextStep, prevStep, skipCurrent, skipAll,
     closeTutorial, markPermissionSeen, resetAll,
     pendingNewPermissions, dismissPending,
+    pendingResume, resumeTutorial, dismissResume,
   ])
 
   return (

@@ -117,7 +117,7 @@
   &__permissions {
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    gap: var(--density-gap, 12px);
     padding: var(--density-gap, 12px);
   }
 }

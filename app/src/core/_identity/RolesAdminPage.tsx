@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import Layout from '../../core/Layout'
 import { useConfirm } from '../../core/ConfirmModal'
 import { usePermission } from '../PermissionContext'
+import { Pagination } from '../../core/pagination'
 import api from '../../api'
 import './_identity.scss'
 
@@ -75,10 +76,7 @@ const RoleTableRow = memo(function RoleTableRow({
 
   return (
     <tr
-      style={{
-        backgroundColor: isSelected ? 'rgba(30, 64, 175, 0.08)' : undefined,
-        cursor: isPermsMode ? 'pointer' : undefined,
-      }}
+      className={[isSelected ? 'role-row--selected' : '', isPermsMode ? 'role-row--clickable' : ''].filter(Boolean).join(' ') || undefined}
       onClick={isPermsMode ? () => openPerms(role) : undefined}
       onKeyDown={isPermsMode ? (e) => handleRoleRowKeyDown(e, role) : undefined}
       tabIndex={isPermsMode ? 0 : undefined}
@@ -404,72 +402,6 @@ export default function RolesAdminPage() {
     }
   }
 
-  /* ---------------------------------------------------------------- */
-  /*  Pagination                                                      */
-  /* ---------------------------------------------------------------- */
-
-  const renderPagination = () => {
-    const pages: (number | '...')[] = []
-    for (let i = 1; i <= permsTotalPages; i++) {
-      if (i === 1 || i === permsTotalPages || (i >= permsPage - 1 && i <= permsPage + 1)) {
-        pages.push(i)
-      } else if (pages[pages.length - 1] !== '...') {
-        pages.push('...')
-      }
-    }
-
-    return (
-      <nav aria-label={t('a11y.pagination')} className="unified-pagination">
-        <div className="unified-pagination-info">
-          {permsTotal !== 1 ? t('roles_admin.badge_permissions_plural', { count: permsTotal }) : t('roles_admin.badge_permissions', { count: permsTotal })}
-        </div>
-        <div className="unified-pagination-controls">
-          <select
-            className="per-page-select"
-            value={permsPerPage}
-            onChange={(e) => handlePermsPerPageChange(Number(e.target.value))}
-            aria-label={t('a11y.per_page_select')}
-          >
-            <option value={10}>10</option>
-            <option value={20}>20</option>
-            <option value={50}>50</option>
-          </select>
-          <button
-            className="unified-pagination-btn"
-            disabled={permsPage <= 1}
-            onClick={() => handlePermsPageChange(permsPage - 1)}
-            aria-label={t('a11y.pagination_previous')}
-          >
-            &laquo;
-          </button>
-          {pages.map((p, i) =>
-            p === '...' ? (
-              <span key={`dots-${i}`} className="unified-pagination-dots" aria-hidden="true">...</span>
-            ) : (
-              <button
-                key={p}
-                className={`unified-pagination-btn ${p === permsPage ? 'active' : ''}`}
-                onClick={() => handlePermsPageChange(p)}
-                aria-label={t('a11y.pagination_page', { page: p })}
-                aria-current={p === permsPage ? 'page' : undefined}
-              >
-                {p}
-              </button>
-            )
-          )}
-          <button
-            className="unified-pagination-btn"
-            disabled={permsPage >= permsTotalPages}
-            onClick={() => handlePermsPageChange(permsPage + 1)}
-            aria-label={t('a11y.pagination_next')}
-          >
-            &raquo;
-          </button>
-        </div>
-      </nav>
-    )
-  }
-
   // Close modal on Escape
   useEffect(() => {
     const handleEscape = (e: globalThis.KeyboardEvent) => {
@@ -501,6 +433,12 @@ export default function RolesAdminPage() {
             <h1>{t('roles_admin.page_title')}</h1>
             <p>{t('roles_admin.subtitle')}</p>
           </div>
+          <div className="page-header-stats">
+            <div className="page-header-stat">
+              <span className="page-header-stat-value">{roles.length}</span>
+              <span className="page-header-stat-label">{t('stat_roles')}</span>
+            </div>
+          </div>
           <div className="unified-page-header-actions">
             {can('roles.create') && (
               <button className="btn-unified-primary" onClick={openCreate}>
@@ -520,8 +458,7 @@ export default function RolesAdminPage() {
         <div className={isPermsMode ? 'flex-row-lg' : ''}>
           {/* ---- Roles table ---- */}
           <div
-            className={`unified-card card-table${isPermsMode ? '' : ' full-width-breakout'}`}
-            style={isPermsMode ? { flex: '0 0 240px', overflow: 'hidden' } : undefined}
+            className={`unified-card card-table${isPermsMode ? ' roles-table-narrow' : ' full-width-breakout'}`}
           >
             <div className="table-container">
               <table className="unified-table">
@@ -647,7 +584,7 @@ export default function RolesAdminPage() {
                               {perm.description || '\u2014'}
                             </td>
                             <td className="text-center">
-                              <label className="toggle" style={{ cursor: togglingPermId === perm.id ? 'wait' : 'pointer' }}>
+                              <label className={`toggle${togglingPermId === perm.id ? ' toggle--loading' : ''}`}>
                                 <input
                                   type="checkbox"
                                   checked={perm.granted}
@@ -669,7 +606,16 @@ export default function RolesAdminPage() {
               {/* Pagination */}
               {!permsLoading && permsTotal > 0 && (
                 <div className="section-padding-h">
-                  {renderPagination()}
+                  <Pagination
+                    page={permsPage}
+                    totalPages={permsTotalPages}
+                    total={permsTotal}
+                    perPage={permsPerPage}
+                    perPageOptions={[10, 20, 50]}
+                    countDisplay={permsTotal !== 1 ? t('roles_admin.badge_permissions_plural', { count: permsTotal }) : t('roles_admin.badge_permissions', { count: permsTotal })}
+                    onPageChange={handlePermsPageChange}
+                    onPerPageChange={handlePermsPerPageChange}
+                  />
                 </div>
               )}
             </div>

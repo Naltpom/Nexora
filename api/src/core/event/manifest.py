@@ -12,6 +12,7 @@ manifest = FeatureManifest(
         "event.read_all",
         "event.types",
     ],
+    tutorial_order=80,
     tutorials=[
         {
             "permission": "event.read",

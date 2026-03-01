@@ -46,6 +46,9 @@ class FeatureManifest:
     #   "steps": [{"target": ".css", "title": "...", "description": "...", "position": "bottom", "navigateTo": "/path"}]}
     tutorials: list[dict[str, Any]] = field(default_factory=list)
 
+    # Tutorial display order (lower = first, 0 = inherit parent or alphabetical fallback)
+    tutorial_order: int = 0
+
     # Required config keys
     config_keys: list[str] = field(default_factory=list)
 
@@ -288,9 +291,18 @@ class FeatureRegistry:
         return events
 
     def collect_all_tutorials(self) -> list[dict]:
-        """Gather all tutorial declarations from active feature manifests, sorted by feature name."""
+        """Gather all tutorial declarations from active feature manifests, sorted by tutorial_order then name."""
+
+        def _sort_key(m: FeatureManifest) -> tuple:
+            order = m.tutorial_order
+            if not order and m.parent:
+                p = self._manifests.get(m.parent)
+                if p:
+                    order = p.tutorial_order
+            return (order or 999, m.name)
+
         result = []
-        for manifest in sorted(self._manifests.values(), key=lambda m: m.name):
+        for manifest in sorted(self._manifests.values(), key=_sort_key):
             if not self.is_active(manifest.name):
                 continue
             if manifest.tutorials:

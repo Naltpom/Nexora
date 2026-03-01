@@ -1,44 +1,7 @@
 /* Events feature styles */
 
-.events-empty-state {
-  text-align: center;
-  padding: var(--density-card-padding, 24px);
-  color: var(--gray-400);
-}
-
-.events-no-match {
-  text-align: center;
-  padding: var(--density-card-padding, 24px);
-  color: var(--gray-400);
-}
-
 .events-badge-sm {
   font-size: 0.6875rem;
-}
-
-.events-stats {
-  display: flex;
-  gap: var(--section-gap, 24px);
-}
-
-.events-stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-
-  &-value {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--text-primary, var(--gray-700));
-  }
-
-  &-label {
-    font-size: 0.75rem;
-    color: var(--gray-400);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
 }
 
 /* Search bar standalone (Types page) */
@@ -112,16 +75,6 @@
 
   input[type="checkbox"] {
     accent-color: var(--primary, #6366f1);
-  }
-}
-
-.events-resource {
-  font-size: 0.8125rem;
-
-  &-id {
-    margin-left: 4px;
-    color: var(--gray-400);
-    font-size: 0.75rem;
   }
 }
 

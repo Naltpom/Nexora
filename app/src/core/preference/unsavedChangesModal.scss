@@ -24,6 +24,9 @@
 
 .unsaved-modal__body {
   padding: 0 var(--density-card-padding, 24px) var(--density-gap, 16px);
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 
   > p {
     font-size: 0.875rem;

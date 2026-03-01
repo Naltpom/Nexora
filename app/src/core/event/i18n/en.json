@@ -43,10 +43,5 @@
   "aria_types_table_caption": "Event types for feature {{feature}}",
   "aria_voir_payload": "View data for event {{type}}",
   "aria_no_payload": "No data",
-  "aria_payload_for": "Data for event {{type}}",
-  "aria_pagination": "Events pagination",
-  "aria_per_page": "Number of items per page",
-  "aria_previous_page": "Previous page",
-  "aria_next_page": "Next page",
-  "aria_page_number": "Page {{page}}"
+  "aria_payload_for": "Data for event {{type}}"
 }

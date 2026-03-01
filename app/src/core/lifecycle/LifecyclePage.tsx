@@ -126,14 +126,14 @@ export default function LifecyclePage() {
             <p>{t('page_subtitle')}</p>
           </div>
           {dashboard && (
-            <div className="lifecycle-stats" aria-label={t('aria_stats')}>
-              <div className="lifecycle-stat" aria-label={`${dashboard.total_active} ${t('stat_active')}`}>
-                <span className="lifecycle-stat-value" aria-hidden="true">{dashboard.total_active}</span>
-                <span className="lifecycle-stat-label">{t('stat_active')}</span>
+            <div className="page-header-stats" aria-label={t('aria_stats')}>
+              <div className="page-header-stat" aria-label={`${dashboard.total_active} ${t('stat_active')}`}>
+                <span className="page-header-stat-value" aria-hidden="true">{dashboard.total_active}</span>
+                <span className="page-header-stat-label">{t('stat_active')}</span>
               </div>
-              <div className="lifecycle-stat" aria-label={`${dashboard.total_archived} ${t('stat_archived')}`}>
-                <span className="lifecycle-stat-value" aria-hidden="true">{dashboard.total_archived}</span>
-                <span className="lifecycle-stat-label">{t('stat_archived')}</span>
+              <div className="page-header-stat" aria-label={`${dashboard.total_archived} ${t('stat_archived')}`}>
+                <span className="page-header-stat-value" aria-hidden="true">{dashboard.total_archived}</span>
+                <span className="page-header-stat-label">{t('stat_archived')}</span>
               </div>
             </div>
           )}

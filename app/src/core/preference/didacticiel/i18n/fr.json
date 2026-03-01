@@ -29,6 +29,10 @@
   "tutorial_notification_view": "Voir",
   "tutorial_notification_later": "Plus tard",
 
+  "tutorial_resume_text": "Un didacticiel etait en cours. Reprendre ou vous vous etiez arrete ?",
+  "tutorial_resume_yes": "Reprendre",
+  "tutorial_resume_no": "Fermer",
+
   "tutorial_engine_element_not_found_title": "Element introuvable",
   "tutorial_engine_element_not_found_description": "L'element cible n'a pas ete trouve sur cette page. Passez a l'etape suivante.",
   "tutorial_engine_previous": "Precedent",

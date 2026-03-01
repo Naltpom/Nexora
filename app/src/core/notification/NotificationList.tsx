@@ -5,6 +5,7 @@ import Layout from '../../core/Layout'
 import { usePermission } from '../PermissionContext'
 import { useNotifications } from './NotificationContext'
 import { useConfirm } from '../../core/ConfirmModal'
+import { Pagination } from '../../core/pagination'
 import api from '../../api'
 import './notifications.scss'
 
@@ -247,6 +248,12 @@ function UserNotificationList() {
             <h1>{t('user_list_title')}</h1>
             <p>{t('user_list_subtitle')}</p>
           </div>
+          <div className="page-header-stats">
+            <div className="page-header-stat">
+              <span className="page-header-stat-value">{total}</span>
+              <span className="page-header-stat-label">{t('stat_notifications')}</span>
+            </div>
+          </div>
           <div className="unified-page-header-actions">
             {hasUnread && (
               <button
@@ -300,7 +307,7 @@ function UserNotificationList() {
             totalPages={totalPages}
             total={total}
             perPage={perPage}
-            label="notification"
+            itemLabel="notification"
             onPageChange={goToPage}
             onPerPageChange={(pp) => { setPerPage(pp); setPage(1); loadData(1, pp) }}
           />
@@ -640,6 +647,12 @@ function AdminNotificationList() {
             <h1>{t('admin_list_title')}</h1>
             <p>{t('admin_list_subtitle')}</p>
           </div>
+          <div className="page-header-stats">
+            <div className="page-header-stat">
+              <span className="page-header-stat-value">{total}</span>
+              <span className="page-header-stat-label">{t('stat_notifications')}</span>
+            </div>
+          </div>
           <div className="unified-page-header-actions">
             <label className="unified-filter-checkbox">
               <input
@@ -738,94 +751,12 @@ function AdminNotificationList() {
             totalPages={totalPages}
             total={total}
             perPage={perPage}
-            label="notification"
+            itemLabel="notification"
             onPageChange={goToPage}
             onPerPageChange={(pp) => { setPerPage(pp); setPage(1); loadData(1, undefined, pp) }}
           />
         </>
       )}
     </>
-  )
-}
-
-// -- Shared Pagination --
-
-function Pagination({
-  page, totalPages, total, perPage, label, onPageChange, onPerPageChange,
-}: {
-  page: number
-  totalPages: number
-  total: number
-  perPage: number
-  label: string
-  onPageChange: (p: number) => void
-  onPerPageChange: (pp: number) => void
-}) {
-  const { t } = useTranslation('notification')
-  return (
-    <nav className="unified-pagination" aria-label={t('aria_pagination')}>
-      <span className="unified-pagination-info">{total} {label}{total > 1 ? 's' : ''}</span>
-      <div className="unified-pagination-controls">
-        <select
-          className="per-page-select"
-          value={perPage}
-          onChange={(e) => onPerPageChange(parseInt(e.target.value))}
-          aria-label={t('aria_per_page')}
-        >
-          <option value={10}>{t('pagination_per_page_10')}</option>
-          <option value={25}>{t('pagination_per_page_25')}</option>
-          <option value={50}>{t('pagination_per_page_50')}</option>
-          <option value={100}>{t('pagination_per_page_100')}</option>
-        </select>
-        {totalPages > 1 && (
-          <>
-            <button
-              className="unified-pagination-btn"
-              disabled={page <= 1}
-              onClick={() => onPageChange(page - 1)}
-              aria-label={t('aria_previous_page')}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1)
-              .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
-              .reduce((acc: (number | string)[], p, idx, arr) => {
-                if (idx > 0 && typeof arr[idx - 1] === 'number' && (p as number) - (arr[idx - 1] as number) > 1) {
-                  acc.push('...')
-                }
-                acc.push(p)
-                return acc
-              }, [])
-              .map((p, i) =>
-                typeof p === 'string' ? (
-                  <span key={`dots-${i}`} className="unified-pagination-dots" aria-hidden="true">...</span>
-                ) : (
-                  <button
-                    key={p}
-                    className={`unified-pagination-btn${p === page ? ' active' : ''}`}
-                    onClick={() => onPageChange(p)}
-                    aria-current={p === page ? 'page' : undefined}
-                    aria-label={t('aria_page_number', { page: p })}
-                  >
-                    {p}
-                  </button>
-                )
-              )}
-            <button
-              className="unified-pagination-btn"
-              disabled={page >= totalPages}
-              onClick={() => onPageChange(page + 1)}
-              aria-label={t('aria_next_page')}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
-            </button>
-          </>
-        )}
-      </div>
-    </nav>
   )
 }

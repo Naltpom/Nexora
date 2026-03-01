@@ -11,12 +11,14 @@ manifest = FeatureManifest(
     children=["notification.email", "notification.push", "notification.webhook"],
     permissions=[
         "notification.read", "notification.delete",
+        "notification.email.resend", "notification.push.resend",
         "notification.rules.read", "notification.rules.create",
         "notification.rules.update", "notification.rules.delete",
         "notification.admin",
     ],
     events=[
         {"event_type": "notification.rule_created", "label": "Regle de notification creee", "category": "Notifications", "description": "Une nouvelle regle de notification a ete creee"},
+        {"event_type": "notification.push.resent", "label": "Push renvoye", "category": "Notifications", "description": "Une notification push a ete renvoyee manuellement"},
     ],
     tutorials=[
         {
@@ -44,24 +46,6 @@ manifest = FeatureManifest(
             "steps": [{"target": ".notif-section-header .btn-primary", "title": "Creer une regle", "description": "Cliquez ici pour creer une nouvelle regle de notification avec des evenements et canaux personnalises.", "position": "bottom", "navigateTo": "/notifications/settings"}],
         },
         {
-            "permission": "notification.webhook.create",
-            "label": "Creer un webhook",
-            "description": "Configurez des webhooks pour recevoir des notifications HTTP.",
-            "steps": [{"target": ".notif-section-header .btn-primary", "title": "Ajouter un webhook", "description": "Cliquez ici pour creer un nouveau webhook. Choisissez le format (custom, Slack, Discord) et configurez l'URL.", "position": "bottom", "navigateTo": "/notifications/settings?tab=webhooks"}],
-        },
-        {
-            "permission": "notification.webhook.read",
-            "label": "Configurer des webhooks",
-            "description": "Consultez et gerez vos webhooks de notification.",
-            "steps": [{"target": ".notif-section", "title": "Vos webhooks", "description": "Retrouvez ici la liste de vos webhooks personnels et globaux. Testez, modifiez ou supprimez-les.", "position": "top", "navigateTo": "/notifications/settings?tab=webhooks"}],
-        },
-        {
-            "permission": "notification.admin",
-            "label": "Administration des notifications",
-            "description": "Gerez les regles globales et parametres admin.",
-            "steps": [{"target": ".notif-section", "title": "Section administration", "description": "En tant qu'admin, vous pouvez gerer les regles globales qui s'appliquent a tous les utilisateurs.", "position": "top", "navigateTo": "/notifications/settings"}],
-        },
-        {
             "permission": "notification.rules.update",
             "label": "Modifier une regle",
             "description": "Modifiez les parametres d'une regle de notification existante.",
@@ -73,7 +57,14 @@ manifest = FeatureManifest(
             "description": "Supprimez une regle de notification que vous ne souhaitez plus.",
             "steps": [{"target": ".btn-icon-danger", "title": "Supprimer", "description": "Cliquez sur l'icone de suppression pour retirer une regle. Cette action est irreversible.", "position": "left", "navigateTo": "/notifications/settings"}],
         },
+        {
+            "permission": "notification.admin",
+            "label": "Administration des notifications",
+            "description": "Gerez les regles globales et parametres admin.",
+            "steps": [{"target": ".notif-section", "title": "Section administration", "description": "En tant qu'admin, vous pouvez gerer les regles globales qui s'appliquent a tous les utilisateurs.", "position": "top", "navigateTo": "/notifications/settings"}],
+        },
     ],
+    tutorial_order=50,
     router_module="src.core.notification.routes",
     router_prefix="/api/notifications",
     router_tags=["Notifications"],

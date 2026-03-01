@@ -130,6 +130,12 @@ export default function CommandsAdminPage() {
             <h1>{t('commands_admin.page_title')}</h1>
             <p>{t('commands_admin.subtitle')}</p>
           </div>
+          <div className="page-header-stats">
+            <div className="page-header-stat">
+              <span className="page-header-stat-value">{commands.length}</span>
+              <span className="page-header-stat-label">{t('stat_commandes')}</span>
+            </div>
+          </div>
           <div className="unified-page-header-actions">
             <Link to="/admin/commands/history" className="btn btn-secondary btn-sm">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">

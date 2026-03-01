@@ -78,5 +78,13 @@
   "bg_theme_constellations": "Constellations",
   "error_boundary_title": "Oops, something went wrong",
   "error_boundary_description": "An unexpected error occurred. Please reload the page.",
-  "error_boundary_reload": "Reload page"
+  "error_boundary_reload": "Reload page",
+  "pagination_total": "{{count}} items",
+  "pagination_total_one": "{{count}} item",
+  "pagination_per_page_aria": "Items per page",
+  "pagination_per_page_option": "{{count}} / page",
+  "pagination_aria_label": "Pagination",
+  "pagination_previous": "Previous page",
+  "pagination_next": "Next page",
+  "pagination_page_number": "Page {{page}}"
 }

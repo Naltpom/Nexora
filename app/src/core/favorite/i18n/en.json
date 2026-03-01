@@ -1,0 +1,29 @@
+{
+  "btn_title": "Favorites",
+  "dropdown_title": "My favorites",
+  "dropdown_empty": "No favorites",
+  "dropdown_add_page": "Add this page",
+  "dropdown_view_all": "View all favorites",
+  "dropdown_added": "Favorite added",
+
+  "breadcrumb_home": "Home",
+  "breadcrumb_favorites": "Favorites",
+
+  "page_title": "My favorites",
+  "page_subtitle": "Manage your favorite pages for quick access",
+  "page_empty": "No favorites saved",
+  "page_empty_hint": "Use the star in the navigation bar to add pages",
+
+  "modal_edit_title": "Edit favorite",
+  "field_label": "Name",
+  "field_label_placeholder": "Favorite name",
+  "field_icon": "Icon (optional)",
+  "btn_save": "Save",
+  "btn_cancel": "Cancel",
+  "btn_edit": "Edit",
+  "btn_delete": "Delete",
+  "confirm_delete": "Delete this favorite?",
+
+  "aria_table": "Favorites list",
+  "aria_loading": "Loading..."
+}

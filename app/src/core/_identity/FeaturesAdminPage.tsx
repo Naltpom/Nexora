@@ -316,6 +316,12 @@ export default function FeaturesAdminPage() {
             <h1>{t('features_admin.page_title')}</h1>
             <p>{t('features_admin.subtitle')}</p>
           </div>
+          <div className="page-header-stats">
+            <div className="page-header-stat">
+              <span className="page-header-stat-value">{features.length}</span>
+              <span className="page-header-stat-label">{t('stat_features')}</span>
+            </div>
+          </div>
         </div>
       </div>
 

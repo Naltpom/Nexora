@@ -1,0 +1,96 @@
+{
+  "banner_dismiss": "Masquer",
+  "banner_aria_dismiss": "Masquer cette annonce",
+
+  "breadcrumb_home": "Accueil",
+  "breadcrumb_announcements": "Annonces",
+
+  "admin_title": "Annonces systeme",
+  "admin_subtitle": "Gerez les annonces affichees aux utilisateurs (bannieres et modales)",
+  "admin_btn_create": "Nouvelle annonce",
+  "admin_search_placeholder": "Rechercher...",
+  "admin_empty": "Aucune annonce",
+
+  "col_title": "Titre",
+  "col_mode": "Mode",
+  "col_type": "Type",
+  "col_target": "Cible",
+  "col_ack": "Lu",
+  "col_start": "Debut",
+  "col_end": "Fin",
+  "col_active": "Actif",
+  "col_actions": "Actions",
+
+  "type_info": "Info",
+  "type_warning": "Avertissement",
+  "type_success": "Succes",
+  "type_danger": "Urgent",
+
+  "display_banner": "Banniere",
+  "display_modal": "Modale",
+  "display_mandatory": "Obligatoire",
+
+  "target_all": "Tous",
+
+  "modal_create_title": "Nouvelle annonce",
+  "modal_edit_title": "Modifier l'annonce",
+  "field_title": "Titre",
+  "field_title_placeholder": "Titre de l'annonce",
+  "field_body": "Contenu (optionnel)",
+  "field_body_placeholder": "Corps de l'annonce...",
+  "field_type": "Type",
+  "field_display": "Affichage",
+  "field_target_roles": "Roles cibles",
+  "field_target_roles_placeholder": "Tous les utilisateurs si vide",
+  "field_start_date": "Date de debut",
+  "field_end_date": "Date de fin (optionnel)",
+  "field_priority": "Priorite",
+  "field_dismissible": "Masquable par l'utilisateur",
+  "field_requires_ack": "Lecture obligatoire",
+  "field_active": "Active",
+  "btn_save": "Enregistrer",
+  "btn_cancel": "Annuler",
+
+  "confirm_delete": "Supprimer cette annonce ?",
+  "btn_edit": "Modifier",
+  "btn_delete": "Supprimer",
+
+  "stat_annonces": "Annonces",
+
+  "ack_details_title": "Voir les validations",
+  "ack_modal_title": "Validations : {{title}}",
+  "ack_modal_empty": "Aucune validation pour le moment",
+  "ack_col_user": "Utilisateur",
+  "ack_col_email": "Email",
+  "ack_col_date": "Date",
+
+  "megaphone_title": "Annonces",
+  "megaphone_dropdown_title": "Annonces",
+  "megaphone_dropdown_empty": "Aucune annonce",
+  "megaphone_view_all": "Voir tout",
+
+  "modal_acknowledge_btn": "J'ai lu et compris",
+  "modal_close_btn": "Fermer",
+
+  "page_title": "Annonces",
+  "page_subtitle": "Historique de toutes les annonces",
+  "page_empty": "Aucune annonce pour le moment",
+
+  "time_ago_just_now": "A l'instant",
+  "time_ago_minutes": "Il y a {{minutes}} min",
+  "time_ago_hours": "Il y a {{hours}} h",
+  "time_ago_days": "Il y a {{days}} j",
+
+  "aria_table": "Tableau des annonces systeme",
+  "aria_loading": "Chargement...",
+
+  "rte_bold": "Gras",
+  "rte_italic": "Italique",
+  "rte_strike": "Barre",
+  "rte_code": "Code inline",
+  "rte_heading": "Titre H3",
+  "rte_bullet_list": "Liste a puces",
+  "rte_ordered_list": "Liste numerotee",
+  "rte_code_block": "Bloc de code",
+  "rte_image": "Image"
+}

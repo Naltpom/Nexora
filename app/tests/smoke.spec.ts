@@ -57,6 +57,17 @@ const PROTECTED_PAGES = [
   // Lifecycle
   '/admin/lifecycle',
 
+  // Comments
+  '/admin/comments',
+  '/admin/comments/policies',
+
+  // Favorite
+  '/favorites',
+
+  // Announcement
+  '/admin/announcements',
+  '/announcements',
+
   // Home (last: the root route may need the auth context fully warmed up)
   '/',
 ]

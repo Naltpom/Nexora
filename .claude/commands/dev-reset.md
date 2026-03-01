@@ -36,7 +36,15 @@ docker compose exec api python -m src.seed
 
 Verifie que le seed s'est termine avec succes (message "Seed termine avec succes").
 
-## Etape 5 — Confirmation
+## Etape 5 — Lancer les fixtures de masse
+
+```bash
+docker compose exec api python -m src.run_fixtures --scale 10000
+```
+
+Genere ~10 000 entrees par feature (users, events, notifications, etc.) pour avoir un jeu de donnees realiste. Verifie que la generation se termine sans erreur.
+
+## Etape 6 — Confirmation
 
 Afficher un resume :
 - Status des 3 containers (db, api, app)

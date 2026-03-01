@@ -77,11 +77,6 @@
   "alert_push_sent_title": "Push resent",
   "alert_send_error": "Error while sending",
 
-  "pagination_per_page_10": "10 / page",
-  "pagination_per_page_25": "25 / page",
-  "pagination_per_page_50": "50 / page",
-  "pagination_per_page_100": "100 / page",
-
   "settings_page_title": "Notification management",
   "settings_page_subtitle": "Configure your notification rules and webhooks",
   "settings_tab_rules": "Rules",
@@ -172,6 +167,8 @@
   "webhook_modal_error_url_required": "URL is required",
   "webhook_modal_error_save": "Error while saving",
 
+  "stat_notifications": "",
+
   "page_title_notifications": "Notifications",
   "page_title_settings": "Notification Settings",
 
@@ -185,11 +182,6 @@
   "aria_resend_email": "Resend email for: {{title}}",
   "aria_resend_webhook": "Resend webhook for: {{title}}",
   "aria_resend_push": "Resend push notification for: {{title}}",
-  "aria_pagination": "Notifications pagination",
-  "aria_per_page": "Number of items per page",
-  "aria_previous_page": "Previous page",
-  "aria_next_page": "Next page",
-  "aria_page_number": "Page {{page}}",
   "aria_settings_tabs": "Settings tabs",
   "aria_close_modal": "Close dialog",
   "aria_toggle_rule": "Enable or disable rule: {{name}}",

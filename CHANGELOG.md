@@ -1,5 +1,86 @@
 # Changelog
 
+## 2026.03.1
+
+### fixture_generator (NEW)
+
+- **Generateur de fixtures de masse** : systeme decentralise de generation de donnees, pattern identique aux manifests/commands — chaque feature core definit un `fixtures.py` avec un `FixtureDefinition`
+- **FixtureRegistry** (`api/src/core/fixture_registry.py`) : decouverte automatique via `rglob("fixtures.py")`, resolution de dependances par tri topologique (Kahn), orchestration avec `FixtureContext` partage entre features
+- **CLI runner** (`python -m src.run_fixtures`) : options `--scale N`, `--list`, `--dry-run` ; execution via Docker
+- **7 feature fixtures** : `_identity` (users + roles), `event` (events masse), `notification` (notifications), `rgpd` (consent, rights requests, access logs), `mfa` (TOTP/email configs, backup codes), `sso` (OAuth2 accounts), `lifecycle` (emails)
+- **Idempotence** : check `check_table` / `check_min_rows` avant insertion, skip si deja peuple
+- **Dependance** : `faker>=28.0.0` ajoutee a `requirements.txt`
+
+### pagination (NEW)
+
+- **Module backend centralise** (`api/src/core/pagination.py`) : `PaginatedResponse[T]` (schema generique), `PaginationParams` (dependance FastAPI injectable avec defaults configurables), `paginate()` (helper async count+sort+offset/limit), `escape_search()` / `search_like_pattern()` (echappement SQL LIKE)
+- **Composant frontend partage** (`app/src/core/pagination/`) : `<Pagination />` (boutons numerotes, ellipsis, prev/next, selecteur per-page), `usePagination()` (hook de gestion d'etat avec debounce recherche 300ms, `getApiParams()`, `updateFromResponse()`)
+- **Traductions communes** : cles pagination dans `common` namespace (fr + en)
+
+### comments (NEW)
+
+- **Feature generique de commentaires** (`api/src/core/comments/` + `app/src/core/comments/`) : systeme polymorphique de commentaires attachable a n'importe quelle entite via `resource_type` + `resource_id`
+- **Backend** : modele `Comment` (soft delete, threading via `parent_id`, flag `is_edited`), CRUD complet, endpoint de recherche @mentions, pagination centralisee, events audit
+- **Moderation** : statut `pending`/`approved`/`rejected`, modele `CommentPolicy` pour pre-moderation par `resource_type`, page admin moderation avec filtres/tri/pagination, page admin politiques
+- **Editeur rich text (TipTap)** : remplacement du textarea par RichTextEditor (gras, italique, titres, listes, code, @mentions TipTap, images), upload images RTE, rendu HTML
+- **Permissions** : `comments.read`, `comments.create`, `comments.update`, `comments.delete` en GlobalPermission, `comments.moderate`, `comments.policies` pour admin
+- **Events** : `comments.created`, `comments.updated`, `comments.deleted`, `comments.approved`, `comments.rejected`, `comments.policy_created`, `comments.policy_updated`, `comments.policy_deleted`
+- **Migrations Alembic** : table `comments` + `comment_policies` + global permissions
+
+### announcement (NEW)
+
+- **Feature annonces systeme** (`api/src/core/announcement/` + `app/src/core/announcement/`) : bannieres d'annonces affichees a tous les utilisateurs ou ciblees par role, avec dates d'affichage et possibilite de masquer
+- **Backend** : modeles `Announcement` + `AnnouncementDismissal`, CRUD admin complet, endpoint actives filtre par role/date/dismissed, events audit
+- **Frontend** : `AnnouncementBanner` (bandeaux colores avec icones par type), `AnnouncementModal` (affichage modale), `AnnouncementBlocker` (bloquante), `AnnouncementButton` (header), `AnnouncementsPage`, `AnnouncementAdmin`
+- **Permissions** : `announcement.read` en GlobalPermission, `announcement.manage` pour admin
+- **Events** : `announcement.created`, `announcement.updated`, `announcement.deleted`
+- **Migrations Alembic** : tables announcements + announcement_dismissals, feature_state, permissions
+
+### favorite (NEW)
+
+- **Feature favoris generique** (`api/src/core/favorite/` + `app/src/core/favorite/`) : systeme de favoris permettant de sauvegarder n'importe quelle page (URL avec filtres) pour un acces rapide
+- **Backend** : modele `Favorite` (user_id, label, icon, url, position), endpoints CRUD + reorder batch, events audit
+- **Frontend** : `FavoriteButton` dans le header (dropdown avec liste des favoris + "Ajouter cette page"), `FavoritesPage` avec reorder drag-and-drop, edit modal, icones personnalisables
+- **Permissions** : `favorite.read` + `favorite.manage` en GlobalPermission
+- **Events** : `favorite.created`, `favorite.updated`, `favorite.deleted`
+- **Migration Alembic** : table favorites, feature_state, global permissions
+
+### _identity
+
+- **Refactoring pagination** : `routes_users.py`, `routes_commands.py`, `routes_roles.py` utilisent `PaginationParams` + `paginate()` — suppression du code duplique
+- **Securite sort whitelist** : `GET /users/` remplace `getattr(User, sort_by)` par un whitelist explicite `{email, first_name, last_name}`
+- **Schemas nettoyes** : suppression de `UserPaginatedResponse`, `UserListPaginatedResponse`, `PermissionWithGrantedPaginated` (remplaces par `PaginatedResponse[T]`)
+- **Frontend** : `UsersAdminPage`, `CommandHistoryPage`, `RolesAdminPage` utilisent `<Pagination />` partage
+- **Fix** : suppression import `Query` inutilise dans `routes_roles.py`
+
+### event
+
+- **Refactoring pagination** : `routes.py` + `services.py` utilisent `PaginationParams` + `paginate()` avec sort whitelist
+- **Frontend** : `EventsPage` utilise `<Pagination />` partage
+
+### notification
+
+- **Refactoring pagination** : `routes.py` + `services.py` utilisent `PaginationParams` + `paginate()` avec sort whitelist
+- **Frontend** : `NotificationList` (user + admin) utilise `<Pagination />` partage
+- **Nouvelles permissions** : `notification.email.resend`, `notification.push.resend` pour le renvoi de notifications
+- **Nouvel event** : `notification.push.resent` (renvoi push manuel)
+- **Fix** : correction permission POST /rules/my (`notification.rules.create` au lieu de `notification.rules.read`)
+
+### i18n
+
+- **Nettoyage cles dupliquees** : suppression des cles pagination specifiques par feature — remplacees par les cles communes
+
+### SCSS & compliance
+
+- **Comments SCSS** : correction `font-size` em → rem, `border-radius` hardcode → `var(--radius)`, property order fix
+- **Favorite SCSS** : correction padding hardcode → `var(--density-card-padding)`
+- **Header** : inline style `backgroundColor` → CSS variable `--header-logo-bg`
+- **RolesAdminPage** : inline styles remplaces par classes CSS (`.role-row--selected`, `.role-row--clickable`, `.roles-table-narrow`, `.toggle--loading`)
+
+### Infra
+
+- **CI** : mise a jour workflow (smoke tests Playwright, worker verification, trivy scan, alembic check)
+
 ## 2026.02.57
 
 ### tests (NEW)

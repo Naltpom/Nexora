@@ -9,16 +9,18 @@ const featureModules: Record<string, any> = {
   ...import.meta.glob('../../features/*/index.ts', { eager: true }),
 }
 
-const ADMIN_GROUP_ORDER: AdminGroup[] = ['gestion', 'systeme', 'securite']
+const ADMIN_GROUP_ORDER: AdminGroup[] = ['gestion', 'contenu', 'systeme', 'securite']
 
 const ADMIN_GROUP_LABELS: Record<AdminGroup, string> = {
   gestion: 'Gestion',
+  contenu: 'Contenu',
   systeme: 'Systeme',
   securite: 'Securite & Conformite',
 }
 
 const ADMIN_GROUP_ICONS: Record<AdminGroup, string> = {
   gestion: 'users',
+  contenu: 'message-circle',
   systeme: 'sliders',
   securite: 'shield-check',
 }

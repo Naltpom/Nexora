@@ -52,12 +52,14 @@ manifest = FeatureManifest(
         {"event_type": "preference.updated", "label": "Preferences modifiees", "category": "Utilisateurs", "description": "Un utilisateur a modifie ses preferences"},
     ],
     tutorials=[
+        # -- Recherche --
         {
             "permission": "search.global",
             "label": "Recherche globale",
             "description": "Trouvez rapidement utilisateurs, roles et parametres depuis la barre de recherche.",
             "steps": [{"target": ".global-search-container", "title": "Recherche globale", "description": "Utilisez cette barre de recherche pour trouver rapidement des utilisateurs, roles ou parametres.", "position": "bottom"}],
         },
+        # -- Utilisateurs (CRUD) --
         {
             "permission": "users.read",
             "label": "Consulter les utilisateurs",
@@ -74,6 +76,19 @@ manifest = FeatureManifest(
             "steps": [{"target": ".btn-unified-primary", "title": "Creer un utilisateur", "description": "Cliquez ici pour ajouter un nouvel utilisateur au systeme.", "position": "bottom", "navigateTo": "/admin/users?tab=users"}],
         },
         {
+            "permission": "users.update",
+            "label": "Modifier un utilisateur",
+            "description": "Modifiez les informations, roles et permissions d'un utilisateur.",
+            "steps": [{"target": ".unified-table tbody tr", "title": "Details utilisateur", "description": "Cliquez sur un utilisateur pour acceder a sa fiche et modifier ses informations, roles ou permissions.", "position": "top", "navigateTo": "/admin/users"}],
+        },
+        {
+            "permission": "users.delete",
+            "label": "Supprimer un utilisateur",
+            "description": "Supprimez un utilisateur du systeme.",
+            "steps": [{"target": ".btn-icon-danger", "title": "Supprimer", "description": "Cliquez sur l'icone de suppression pour retirer un utilisateur. Cette action est irreversible.", "position": "left", "navigateTo": "/admin/users"}],
+        },
+        # -- Roles (CRUD) --
+        {
             "permission": "roles.read",
             "label": "Consulter les roles",
             "description": "Consultez les roles existants et leurs permissions associees.",
@@ -85,6 +100,45 @@ manifest = FeatureManifest(
             "description": "Creez de nouveaux roles avec des permissions personnalisees.",
             "steps": [{"target": ".btn-unified-primary", "title": "Creer un role", "description": "Cliquez ici pour creer un nouveau role avec des permissions personnalisees.", "position": "bottom", "navigateTo": "/admin/roles"}],
         },
+        {
+            "permission": "roles.update",
+            "label": "Modifier un role",
+            "description": "Modifiez le nom, la description ou les permissions d'un role existant.",
+            "steps": [{"target": ".unified-table", "title": "Modifier un role", "description": "Utilisez les icones de modification dans le tableau pour editer le nom, la description et les permissions d'un role.", "position": "top", "navigateTo": "/admin/roles"}],
+        },
+        {
+            "permission": "roles.delete",
+            "label": "Supprimer un role",
+            "description": "Supprimez un role qui n'est plus necessaire.",
+            "steps": [{"target": ".unified-table", "title": "Supprimer un role", "description": "Utilisez l'icone de suppression dans le tableau pour retirer un role. Les utilisateurs associes perdront ses permissions.", "position": "top", "navigateTo": "/admin/roles"}],
+        },
+        # -- Permissions --
+        {
+            "permission": "permissions.read",
+            "label": "Consulter les permissions",
+            "description": "Consultez la liste des permissions disponibles et leur etat.",
+            "steps": [{"target": ".unified-table", "title": "Liste des permissions", "description": "Consultez toutes les permissions du systeme, groupees par feature. Chaque permission peut etre activee ou desactivee.", "position": "top", "navigateTo": "/admin/permissions"}],
+        },
+        {
+            "permission": "permissions.manage",
+            "label": "Gerer les permissions",
+            "description": "Activez ou desactivez les permissions et configurez les acces.",
+            "steps": [{"target": ".toggle-switch", "title": "Activer/desactiver", "description": "Utilisez les toggles pour activer ou desactiver des permissions individuelles.", "position": "left", "navigateTo": "/admin/permissions"}],
+        },
+        # -- Invitations --
+        {
+            "permission": "invitations.read",
+            "label": "Consulter les invitations",
+            "description": "Consultez les invitations envoyees et leur statut.",
+            "steps": [{"target": ".invitations-table", "title": "Liste des invitations", "description": "Retrouvez ici toutes les invitations envoyees, leur statut (en attente, expiree) et la date d'envoi.", "position": "top", "navigateTo": "/admin/users?tab=invitations"}],
+        },
+        {
+            "permission": "invitations.create",
+            "label": "Envoyer une invitation",
+            "description": "Invitez de nouveaux utilisateurs par email.",
+            "steps": [{"target": ".btn-unified-primary", "title": "Inviter un utilisateur", "description": "Cliquez ici pour envoyer une invitation par email. L'utilisateur recevra un lien pour creer son compte.", "position": "bottom", "navigateTo": "/admin/users?tab=invitations"}],
+        },
+        # -- Features & Settings --
         {
             "permission": "features.read",
             "label": "Gerer les features",
@@ -100,61 +154,15 @@ manifest = FeatureManifest(
             "description": "Configurez le nom, la description, le logo et les couleurs de l'application.",
             "steps": [{"target": ".settings-grid", "title": "Parametres de l'application", "description": "Configurez le nom, la description, le logo et les couleurs de votre application.", "position": "top", "navigateTo": "/admin/settings"}],
         },
+        # -- Impersonation --
         {
             "permission": "impersonation.start",
             "label": "Impersonation",
             "description": "Connectez-vous en tant qu'un autre utilisateur pour diagnostiquer des problemes.",
             "steps": [{"target": ".impersonate-btn", "title": "Impersonation", "description": "Cliquez sur ce bouton pour vous connecter en tant que cet utilisateur. Utile pour diagnostiquer des problemes.", "position": "left", "navigateTo": "/admin/users"}],
         },
-        {
-            "permission": "users.update",
-            "label": "Modifier un utilisateur",
-            "description": "Modifiez les informations, roles et permissions d'un utilisateur.",
-            "steps": [{"target": ".unified-table tbody tr", "title": "Details utilisateur", "description": "Cliquez sur un utilisateur pour acceder a sa fiche et modifier ses informations, roles ou permissions.", "position": "top", "navigateTo": "/admin/users"}],
-        },
-        {
-            "permission": "users.delete",
-            "label": "Supprimer un utilisateur",
-            "description": "Supprimez un utilisateur du systeme.",
-            "steps": [{"target": ".btn-icon-danger", "title": "Supprimer", "description": "Cliquez sur l'icone de suppression pour retirer un utilisateur. Cette action est irreversible.", "position": "left", "navigateTo": "/admin/users"}],
-        },
-        {
-            "permission": "roles.update",
-            "label": "Modifier un role",
-            "description": "Modifiez le nom, la description ou les permissions d'un role existant.",
-            "steps": [{"target": ".unified-table", "title": "Modifier un role", "description": "Utilisez les icones de modification dans le tableau pour editer le nom, la description et les permissions d'un role.", "position": "top", "navigateTo": "/admin/roles"}],
-        },
-        {
-            "permission": "roles.delete",
-            "label": "Supprimer un role",
-            "description": "Supprimez un role qui n'est plus necessaire.",
-            "steps": [{"target": ".unified-table", "title": "Supprimer un role", "description": "Utilisez l'icone de suppression dans le tableau pour retirer un role. Les utilisateurs associes perdront ses permissions.", "position": "top", "navigateTo": "/admin/roles"}],
-        },
-        {
-            "permission": "permissions.read",
-            "label": "Consulter les permissions",
-            "description": "Consultez la liste des permissions disponibles et leur etat.",
-            "steps": [{"target": ".unified-table", "title": "Liste des permissions", "description": "Consultez toutes les permissions du systeme, groupees par feature. Chaque permission peut etre activee ou desactivee.", "position": "top", "navigateTo": "/admin/permissions"}],
-        },
-        {
-            "permission": "permissions.manage",
-            "label": "Gerer les permissions",
-            "description": "Activez ou desactivez les permissions et configurez les acces.",
-            "steps": [{"target": ".toggle-switch", "title": "Activer/desactiver", "description": "Utilisez les toggles pour activer ou desactiver des permissions individuelles.", "position": "left", "navigateTo": "/admin/permissions"}],
-        },
-        {
-            "permission": "invitations.read",
-            "label": "Consulter les invitations",
-            "description": "Consultez les invitations envoyees et leur statut.",
-            "steps": [{"target": ".invitations-table", "title": "Liste des invitations", "description": "Retrouvez ici toutes les invitations envoyees, leur statut (en attente, expiree) et la date d'envoi.", "position": "top", "navigateTo": "/admin/users?tab=invitations"}],
-        },
-        {
-            "permission": "invitations.create",
-            "label": "Envoyer une invitation",
-            "description": "Invitez de nouveaux utilisateurs par email.",
-            "steps": [{"target": ".btn-unified-primary", "title": "Inviter un utilisateur", "description": "Cliquez ici pour envoyer une invitation par email. L'utilisateur recevra un lien pour creer son compte.", "position": "bottom", "navigateTo": "/admin/users?tab=invitations"}],
-        },
     ],
+    tutorial_order=60,
     middleware=[ImpersonationAuditMiddleware, LastActiveMiddleware],
     extra_routers=[
         {"module": "src.core._identity.routes_auth", "prefix": "/api/auth", "tags": ["Auth"]},

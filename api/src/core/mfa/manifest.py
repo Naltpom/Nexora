@@ -20,6 +20,7 @@ manifest = FeatureManifest(
         {"event_type": "mfa.policy_updated", "label": "Politique MFA modifiee", "category": "MFA", "description": "Une politique MFA de role a ete mise a jour"},
         {"event_type": "mfa.policy_deleted", "label": "Politique MFA supprimee", "category": "MFA", "description": "Une politique MFA de role a ete supprimee"},
     ],
+    tutorial_order=20,
     tutorials=[
         {
             "permission": "mfa.setup",

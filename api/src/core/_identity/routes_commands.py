@@ -2,12 +2,13 @@
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..command_registry import get_command_registry
 from ..database import get_db
 from ..events import event_bus
+from ..pagination import PaginatedResponse, PaginationParams, paginate
 from ..permissions import require_permission
 from .models import CommandExecution, CommandState, User
 from .routes_auth import get_current_user
@@ -22,11 +23,11 @@ class CommandToggleRequest(BaseModel):
 
 @router.get(
     "/history",
+    response_model=PaginatedResponse[CommandExecutionResponse],
     dependencies=[Depends(require_permission("commands.read"))],
 )
 async def get_command_history(
-    page: int = Query(1, ge=1),
-    per_page: int = Query(20, ge=1, le=100),
+    pagination: PaginationParams = Depends(PaginationParams(default_per_page=20)),
     command_name: str | None = Query(None),
     command_status: str | None = Query(None, alias="status"),
     db: AsyncSession = Depends(get_db),
@@ -39,13 +40,7 @@ async def get_command_history(
     if command_status:
         query = query.where(CommandExecution.status == command_status)
 
-    # Count total
-    count_query = select(func.count()).select_from(query.subquery())
-    total = (await db.execute(count_query)).scalar() or 0
-
-    # Paginate
-    offset = (page - 1) * per_page
-    result = await db.execute(query.offset(offset).limit(per_page))
+    result, total, pages = await paginate(db, query, pagination)
     logs = result.scalars().all()
 
     # Batch resolve user names
@@ -56,8 +51,8 @@ async def get_command_history(
         for u in user_result.scalars().all():
             user_names[u.id] = f"{u.first_name} {u.last_name}"
 
-    return {
-        "items": [
+    return PaginatedResponse(
+        items=[
             CommandExecutionResponse(
                 id=log.id,
                 command_name=log.command_name,
@@ -74,11 +69,11 @@ async def get_command_history(
             )
             for log in logs
         ],
-        "total": total,
-        "page": page,
-        "per_page": per_page,
-        "pages": (total + per_page - 1) // per_page if total else 0,
-    }
+        total=total,
+        page=pagination.page,
+        per_page=pagination.per_page,
+        pages=pages,
+    )
 
 
 @router.get(

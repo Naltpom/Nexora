@@ -6,6 +6,8 @@ import { useFeature } from './FeatureContext'
 import { useAppSettings } from './AppSettingsContext'
 
 const MFASetupBanner = lazy(() => import('./mfa/MFASetupBanner'))
+const AnnouncementBanner = lazy(() => import('./announcement/AnnouncementBanner'))
+const AnnouncementBlocker = lazy(() => import('./announcement/AnnouncementBlocker'))
 
 interface BreadcrumbItem {
   label: string
@@ -39,6 +41,16 @@ export default function Layout({ children, breadcrumb, fullWidth, title }: Props
       {isActive('mfa') && (
         <Suspense fallback={null}>
           <MFASetupBanner />
+        </Suspense>
+      )}
+      {isActive('announcement') && (
+        <Suspense fallback={null}>
+          <AnnouncementBanner />
+        </Suspense>
+      )}
+      {isActive('announcement') && (
+        <Suspense fallback={null}>
+          <AnnouncementBlocker />
         </Suspense>
       )}
       <main id="main-content" className={`main-content page-enter${fullWidth ? ' main-content-full' : ''}`}>

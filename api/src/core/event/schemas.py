@@ -24,9 +24,3 @@ class EventListItem(BaseModel):
     created_at: datetime
 
 
-class EventListPaginatedResponse(BaseModel):
-    items: list[EventListItem]
-    total: int
-    page: int
-    per_page: int
-    pages: int

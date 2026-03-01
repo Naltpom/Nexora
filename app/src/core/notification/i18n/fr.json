@@ -77,11 +77,6 @@
   "alert_push_sent_title": "Push renvoye",
   "alert_send_error": "Erreur lors de l'envoi",
 
-  "pagination_per_page_10": "10 / page",
-  "pagination_per_page_25": "25 / page",
-  "pagination_per_page_50": "50 / page",
-  "pagination_per_page_100": "100 / page",
-
   "settings_page_title": "Gestion des notifications",
   "settings_page_subtitle": "Configurez vos regles de notification et webhooks",
   "settings_tab_rules": "Regles",
@@ -172,6 +167,8 @@
   "webhook_modal_error_url_required": "L'URL est requise",
   "webhook_modal_error_save": "Erreur lors de la sauvegarde",
 
+  "stat_notifications": "Notifications",
+
   "page_title_notifications": "Notifications",
   "page_title_settings": "Parametres des notifications",
 
@@ -185,11 +182,6 @@
   "aria_resend_email": "Renvoyer l'email pour : {{title}}",
   "aria_resend_webhook": "Renvoyer le webhook pour : {{title}}",
   "aria_resend_push": "Renvoyer la notification push pour : {{title}}",
-  "aria_pagination": "Pagination des notifications",
-  "aria_per_page": "Nombre d'elements par page",
-  "aria_previous_page": "Page precedente",
-  "aria_next_page": "Page suivante",
-  "aria_page_number": "Page {{page}}",
   "aria_settings_tabs": "Onglets de parametres",
   "aria_close_modal": "Fermer la fenetre",
   "aria_toggle_rule": "Activer ou desactiver la regle : {{name}}",

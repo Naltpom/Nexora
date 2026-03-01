@@ -1,11 +1,10 @@
 """Event feature services: event persistence and listing."""
 
-import math
-
-from sqlalchemy import asc, desc, func, or_, select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .._identity.models import User
+from ..pagination import PaginationParams, paginate, search_like_pattern
 from .models import Event
 
 
@@ -32,14 +31,10 @@ async def persist_event(
 
 async def list_events(
     db: AsyncSession,
+    pagination: PaginationParams,
     *,
     user_id: int | None = None,
-    search: str = "",
     event_type_filter: str = "",
-    sort_by: str = "created_at",
-    sort_dir: str = "desc",
-    page: int = 1,
-    per_page: int = 25,
 ) -> tuple[list[dict], int, int]:
     """List persisted events with pagination. Returns (rows, total, pages)."""
     query = select(Event, User).join(User, Event.actor_id == User.id)
@@ -50,9 +45,8 @@ async def list_events(
     if event_type_filter:
         query = query.where(Event.event_type == event_type_filter)
 
-    if search:
-        search_escaped = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
-        like = f"%{search_escaped}%"
+    if pagination.search:
+        like = search_like_pattern(pagination.search)
         query = query.where(
             or_(
                 Event.event_type.ilike(like),
@@ -61,21 +55,17 @@ async def list_events(
             )
         )
 
-    # Count
-    count_q = select(func.count()).select_from(query.subquery())
-    total = (await db.execute(count_q)).scalar() or 0
+    sort_whitelist = {
+        "created_at": Event.created_at,
+        "event_type": Event.event_type,
+        "resource_type": Event.resource_type,
+    }
+    result, total, pages = await paginate(
+        db, query, pagination,
+        sort_whitelist=sort_whitelist,
+        default_sort_column=Event.created_at,
+    )
 
-    # Sorting (whitelist to prevent attribute probing)
-    allowed_sort = {"created_at": Event.created_at, "event_type": Event.event_type, "resource_type": Event.resource_type}
-    sort_column = allowed_sort.get(sort_by, Event.created_at)
-    order = desc(sort_column) if sort_dir == "desc" else asc(sort_column)
-    query = query.order_by(order)
-
-    # Pagination
-    offset = (page - 1) * per_page
-    query = query.offset(offset).limit(per_page)
-
-    result = await db.execute(query)
     rows = []
     for event, user in result.all():
         rows.append({
@@ -89,5 +79,4 @@ async def list_events(
             "created_at": event.created_at,
         })
 
-    pages = max(1, math.ceil(total / per_page))
     return rows, total, pages

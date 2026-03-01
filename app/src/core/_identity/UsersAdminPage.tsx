@@ -7,6 +7,7 @@ import { useConfirm } from '../../core/ConfirmModal'
 import { usePermission } from '../PermissionContext'
 import MultiSelect, { MultiSelectOption } from '../../core/MultiSelect'
 import api from '../../api'
+import { Pagination } from '../../core/pagination'
 import './_identity.scss'
 
 interface RoleCompact {
@@ -627,6 +628,12 @@ export default function Users() {
             <h1>{t('users_admin.page_title')}</h1>
             <p>{t('users_admin.subtitle')}</p>
           </div>
+          <div className="page-header-stats">
+            <div className="page-header-stat">
+              <span className="page-header-stat-value">{total}</span>
+              <span className="page-header-stat-label">{t('stat_utilisateurs')}</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -861,75 +868,19 @@ export default function Users() {
           </div>
           </div>
 
-          <nav aria-label={t('a11y.pagination')} className="unified-pagination">
-            <span className="unified-pagination-info">{total > 1 ? t('users_admin.pagination_count_plural', { count: total }) : t('users_admin.pagination_count', { count: total })}</span>
-            <div className="unified-pagination-controls">
-              <select
-                className="per-page-select"
-                value={perPage}
-                aria-label={t('a11y.per_page_select')}
-                onChange={(e) => {
-                  const newPerPage = parseInt(e.target.value)
-                  setPerPage(newPerPage)
-                  setPage(1)
-                  loadData(1, search, newPerPage)
-                }}
-              >
-                <option value={10}>{t('users_admin.per_page_10')}</option>
-                <option value={25}>{t('users_admin.per_page_25')}</option>
-                <option value={50}>{t('users_admin.per_page_50')}</option>
-                <option value={100}>{t('users_admin.per_page_100')}</option>
-              </select>
-              {totalPages > 1 && (
-                <>
-                  <button
-                    className="unified-pagination-btn"
-                    disabled={page <= 1}
-                    onClick={() => goToPage(page - 1)}
-                    aria-label={t('a11y.pagination_previous')}
-                  >
-                    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="15 18 9 12 15 6" />
-                    </svg>
-                  </button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1)
-                    .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
-                    .reduce((acc: (number | string)[], p, idx, arr) => {
-                      if (idx > 0 && typeof arr[idx - 1] === 'number' && (p as number) - (arr[idx - 1] as number) > 1) {
-                        acc.push('...')
-                      }
-                      acc.push(p)
-                      return acc
-                    }, [])
-                    .map((p, i) =>
-                      typeof p === 'string' ? (
-                        <span key={`dots-${i}`} className="unified-pagination-dots" aria-hidden="true">...</span>
-                      ) : (
-                        <button
-                          key={p}
-                          className={`unified-pagination-btn${p === page ? ' active' : ''}`}
-                          onClick={() => goToPage(p)}
-                          aria-label={t('a11y.pagination_page', { page: p })}
-                          aria-current={p === page ? 'page' : undefined}
-                        >
-                          {p}
-                        </button>
-                      )
-                    )}
-                  <button
-                    className="unified-pagination-btn"
-                    disabled={page >= totalPages}
-                    onClick={() => goToPage(page + 1)}
-                    aria-label={t('a11y.pagination_next')}
-                  >
-                    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="9 18 15 12 9 6" />
-                    </svg>
-                  </button>
-                </>
-              )}
-            </div>
-          </nav>
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            total={total}
+            perPage={perPage}
+            countDisplay={total > 1 ? t('users_admin.pagination_count_plural', { count: total }) : t('users_admin.pagination_count', { count: total })}
+            onPageChange={goToPage}
+            onPerPageChange={(newPerPage) => {
+              setPerPage(newPerPage)
+              setPage(1)
+              loadData(1, search, newPerPage)
+            }}
+          />
 
           {hasChanges && (
             <div className="unified-changes-bar" role="status" aria-live="polite" aria-label={t('a11y.changes_pending')}>

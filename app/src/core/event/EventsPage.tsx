@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import Layout from '../../core/Layout'
 import api from '../../api'
 import { usePermission } from '../PermissionContext'
+import { Pagination } from '../../core/pagination'
 import './events.scss'
 
 /* -- Types -- */
@@ -43,9 +44,9 @@ const EventTableRow = memo(function EventTableRow({ evt, isExpanded, onTogglePay
       <td><code className="badge-tag badge-tag--mono">{evt.event_type}</code></td>
       <td>{evt.actor_email}</td>
       <td>
-        <span className="events-resource">
+        <span className="resource-badge">
           {evt.resource_type}
-          <span className="events-resource-id">#{evt.resource_id}</span>
+          <span className="resource-badge-id">#{evt.resource_id}</span>
         </span>
       </td>
       <td>
@@ -191,10 +192,10 @@ export default function EventsPage() {
             <h1>{t('titre_journal')}</h1>
             <p>{t('sous_titre_journal')}</p>
           </div>
-          <div className="events-stats">
-            <div className="events-stat">
-              <span className="events-stat-value">{total}</span>
-              <span className="events-stat-label">{t('stat_events')}</span>
+          <div className="page-header-stats">
+            <div className="page-header-stat">
+              <span className="page-header-stat-value">{total}</span>
+              <span className="page-header-stat-label">{t('stat_events')}</span>
             </div>
           </div>
         </div>
@@ -230,7 +231,7 @@ export default function EventsPage() {
             </div>
 
             {events.length === 0 ? (
-              <div className="events-no-match" role="status">
+              <div className="table-no-match" role="status">
                 {t('aucun_event')}
               </div>
             ) : (
@@ -313,70 +314,15 @@ export default function EventsPage() {
             )}
           </div>
 
-          <nav className="unified-pagination" aria-label={t('aria_pagination')}>
-            <span className="unified-pagination-info">{total} {t('stat_events')}</span>
-            <div className="unified-pagination-controls">
-              <select
-                className="per-page-select"
-                value={perPage}
-                onChange={(e) => handlePerPageChange(parseInt(e.target.value))}
-                aria-label={t('aria_per_page')}
-              >
-                <option value={10}>{t('pagination_10')}</option>
-                <option value={25}>{t('pagination_25')}</option>
-                <option value={50}>{t('pagination_50')}</option>
-                <option value={100}>{t('pagination_100')}</option>
-              </select>
-              {totalPages > 1 && (
-                <>
-                  <button
-                    className="unified-pagination-btn"
-                    disabled={page <= 1}
-                    onClick={() => goToPage(page - 1)}
-                    aria-label={t('aria_previous_page')}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <polyline points="15 18 9 12 15 6" />
-                    </svg>
-                  </button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1)
-                    .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
-                    .reduce((acc: (number | string)[], p, idx, arr) => {
-                      if (idx > 0 && typeof arr[idx - 1] === 'number' && (p as number) - (arr[idx - 1] as number) > 1) {
-                        acc.push('...')
-                      }
-                      acc.push(p)
-                      return acc
-                    }, [])
-                    .map((p, i) =>
-                      typeof p === 'string' ? (
-                        <span key={`dots-${i}`} className="unified-pagination-dots" aria-hidden="true">...</span>
-                      ) : (
-                        <button
-                          key={p}
-                          className={`unified-pagination-btn${p === page ? ' active' : ''}`}
-                          onClick={() => goToPage(p)}
-                          aria-current={p === page ? 'page' : undefined}
-                          aria-label={t('aria_page_number', { page: p })}
-                        >
-                          {p}
-                        </button>
-                      )
-                    )}
-                  <button
-                    className="unified-pagination-btn"
-                    disabled={page >= totalPages}
-                    onClick={() => goToPage(page + 1)}
-                    aria-label={t('aria_next_page')}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <polyline points="9 18 15 12 9 6" />
-                    </svg>
-                  </button>
-                </>
-              )}
-            </div>
-          </nav>
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            total={total}
+            perPage={perPage}
+            countDisplay={`${total} ${t('stat_events')}`}
+            onPageChange={goToPage}
+            onPerPageChange={handlePerPageChange}
+          />
         </>
       )}
     </Layout>

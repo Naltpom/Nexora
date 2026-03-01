@@ -11,6 +11,14 @@ manifest = FeatureManifest(
         {"event_type": "notification.push.unsubscribed", "label": "Desabonnement push", "category": "Notifications", "description": "Un utilisateur s'est desabonne des notifications push"},
         {"event_type": "notification.push.resent", "label": "Push renvoye", "category": "Notifications", "description": "Une notification push a ete renvoyee manuellement"},
     ],
+    tutorials=[
+        {
+            "permission": "notification.push.subscribe",
+            "label": "Activer les notifications push",
+            "description": "Recevez des notifications directement dans votre navigateur.",
+            "steps": [{"target": ".notif-push-controls", "title": "Notifications push", "description": "Activez les notifications push pour recevoir des alertes en temps reel, meme lorsque l'application est en arriere-plan.", "position": "bottom", "navigateTo": "/notifications/settings"}],
+        },
+    ],
     config_keys=["VAPID_PRIVATE_KEY", "VAPID_PUBLIC_KEY", "PUSH_ENABLED"],
     router_module="src.core.notification.push.routes",
     router_prefix="/api/notifications/push",

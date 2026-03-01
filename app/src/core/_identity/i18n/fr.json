@@ -291,6 +291,12 @@
     "pagination_page": "Page {{current}} / {{total}} ({{count}} resultats)"
   },
 
+  "stat_utilisateurs": "Utilisateurs",
+  "stat_roles": "Roles",
+  "stat_commandes": "Commandes",
+  "stat_executions": "Executions",
+  "stat_features": "Features",
+
   "features_admin": {
     "page_title": "Gestion des features",
     "subtitle": "Activez ou desactivez les fonctionnalites de l'application",
@@ -644,10 +650,6 @@
     "table_caption_role_permissions": "Permissions du role {{name}}",
     "table_caption_permissions_feature": "Permissions de la feature {{feature}}",
     "table_caption_user_permissions": "Permissions de l'utilisateur",
-    "pagination": "Pagination",
-    "pagination_page": "Page {{page}}",
-    "pagination_previous": "Page precedente",
-    "pagination_next": "Page suivante",
     "search_users": "Rechercher des utilisateurs",
     "search_permissions": "Rechercher des permissions",
     "search_role_permissions": "Rechercher des permissions du role",

@@ -18,6 +18,7 @@ manifest = FeatureManifest(
         {"event_type": "sso.login_failed", "label": "Connexion SSO echouee", "category": "SSO", "description": "Une tentative de connexion SSO a echoue"},
         {"event_type": "sso.link_failed", "label": "Liaison SSO echouee", "category": "SSO", "description": "Une tentative de liaison de compte SSO a echoue"},
     ],
+    tutorial_order=30,
     tutorials=[
         {
             "permission": "sso.link",

@@ -1,11 +1,16 @@
 """Notification feature services: notification processing, queries."""
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import asc, desc, func, or_, select, update
+from sqlalchemy import func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+
+if TYPE_CHECKING:
+    from ..pagination import PaginationParams
 
 from ..event.models import Event
 from ..realtime.services import sse_broadcaster
@@ -347,19 +352,16 @@ async def process_notifications(
 
 async def list_notifications(
     db: AsyncSession,
+    pagination: PaginationParams,
     *,
     user_id: int | None = None,
     unread_only: bool = False,
     include_deleted: bool = False,
-    search: str = "",
-    sort_by: str = "created_at",
-    sort_dir: str = "desc",
-    page: int = 1,
-    per_page: int = 20,
     include_admin_fields: bool = False,
-) -> tuple[list[dict], int]:
-    """List notifications with pagination. Returns (rows, total)."""
+) -> tuple[list[dict], int, int]:
+    """List notifications with pagination. Returns (rows, total, pages)."""
     from .._identity.models import User
+    from ..pagination import paginate, search_like_pattern
 
     query = select(Notification, Event, User).join(
         Event, Notification.event_id == Event.id
@@ -376,34 +378,25 @@ async def list_notifications(
     if unread_only:
         query = query.where(Notification.is_read.is_(False))
 
-    if search:
-        search_escaped = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    if pagination.search:
+        like = search_like_pattern(pagination.search)
         search_filter = or_(
-            Notification.title.ilike(f"%{search_escaped}%"),
-            Notification.body.ilike(f"%{search_escaped}%"),
+            Notification.title.ilike(like),
+            Notification.body.ilike(like),
         )
         query = query.where(search_filter)
 
-    # Count query
-    count_query = select(func.count()).select_from(query.subquery())
-    total_result = await db.execute(count_query)
-    total = total_result.scalar() or 0
-
-    # Sorting
-    allowed_sort = {
+    sort_whitelist = {
         "created_at": Notification.created_at,
         "title": Notification.title,
         "is_read": Notification.is_read,
     }
-    sort_column = allowed_sort.get(sort_by, Notification.created_at)
-    order = desc(sort_column) if sort_dir == "desc" else asc(sort_column)
-    query = query.order_by(order)
+    result, total, pages = await paginate(
+        db, query, pagination,
+        sort_whitelist=sort_whitelist,
+        default_sort_column=Notification.created_at,
+    )
 
-    # Pagination
-    offset = (page - 1) * per_page
-    query = query.offset(offset).limit(per_page)
-
-    result = await db.execute(query)
     rows = []
     for notif, event, user in result.all():
         row = {
@@ -425,7 +418,7 @@ async def list_notifications(
             row["user_name"] = f"{user.first_name} {user.last_name}"
         rows.append(row)
 
-    return rows, total
+    return rows, total, pages
 
 
 async def get_unread_count(db: AsyncSession, user_id: int) -> int:

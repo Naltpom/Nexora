@@ -1,5 +1,5 @@
 export type NavSection = 'user' | 'admin'
-export type AdminGroup = 'gestion' | 'systeme' | 'securite'
+export type AdminGroup = 'gestion' | 'contenu' | 'systeme' | 'securite'
 
 export interface NavItem {
   label: string

@@ -82,14 +82,14 @@ export default function EventTypesPage() {
             <h1>{t('titre_catalogue')}</h1>
             <p>{t('sous_titre_catalogue')}</p>
           </div>
-          <div className="events-stats">
-            <div className="events-stat">
-              <span className="events-stat-value">{totalEvents}</span>
-              <span className="events-stat-label">{t('stat_types')}</span>
+          <div className="page-header-stats">
+            <div className="page-header-stat">
+              <span className="page-header-stat-value">{totalEvents}</span>
+              <span className="page-header-stat-label">{t('stat_types')}</span>
             </div>
-            <div className="events-stat">
-              <span className="events-stat-value">{featureCount}</span>
-              <span className="events-stat-label">{t('stat_features')}</span>
+            <div className="page-header-stat">
+              <span className="page-header-stat-value">{featureCount}</span>
+              <span className="page-header-stat-label">{t('stat_features')}</span>
             </div>
           </div>
         </div>
@@ -100,7 +100,7 @@ export default function EventTypesPage() {
           <span className="sr-only">{t('aria_loading')}</span>
         </div>
       ) : eventTypes.length === 0 ? (
-        <div className="unified-card events-empty-state" role="status">
+        <div className="unified-card table-no-match" role="status">
           {t('aucun_type_declare')}
         </div>
       ) : (
@@ -117,7 +117,7 @@ export default function EventTypesPage() {
           </div>
 
           {Object.keys(filteredGroups).length === 0 ? (
-            <div className="unified-card events-empty-state" role="status">
+            <div className="unified-card table-no-match" role="status">
               {t('aucun_evenement_correspondant')}
             </div>
           ) : (

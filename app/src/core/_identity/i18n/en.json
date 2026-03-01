@@ -291,6 +291,12 @@
     "pagination_page": "Page {{current}} / {{total}} ({{count}} results)"
   },
 
+  "stat_utilisateurs": "",
+  "stat_roles": "",
+  "stat_commandes": "",
+  "stat_executions": "",
+  "stat_features": "",
+
   "features_admin": {
     "page_title": "Feature management",
     "subtitle": "Enable or disable application features",
@@ -644,10 +650,6 @@
     "table_caption_role_permissions": "Permissions for role {{name}}",
     "table_caption_permissions_feature": "Permissions for feature {{feature}}",
     "table_caption_user_permissions": "User permissions",
-    "pagination": "Pagination",
-    "pagination_page": "Page {{page}}",
-    "pagination_previous": "Previous page",
-    "pagination_next": "Next page",
     "search_users": "Search users",
     "search_permissions": "Search permissions",
     "search_role_permissions": "Search role permissions",
