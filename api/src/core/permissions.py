@@ -4,7 +4,7 @@ import logging
 
 from cachetools import TTLCache
 from fastapi import Depends, HTTPException, Request, status
-from sqlalchemy import select, text
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .config import settings
@@ -57,43 +57,36 @@ async def load_user_permissions(db: AsyncSession, user_id: int) -> dict[str, boo
         UserPermission,
         UserRole,
     )
-    from .database import async_session
 
     effective: dict[str, bool | None] = {}
 
-    # Use a dedicated REPEATABLE READ session for a consistent snapshot
-    # across all 3 queries (prevents race conditions during concurrent
-    # permission modifications).
-    async with async_session() as rr_db:
-        await rr_db.execute(text("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ"))
-
-        # 1. Global permissions
-        result = await rr_db.execute(
-            select(Permission.code, GlobalPermission.granted).join(
-                GlobalPermission, GlobalPermission.permission_id == Permission.id
-            )
+    # 1. Global permissions
+    result = await db.execute(
+        select(Permission.code, GlobalPermission.granted).join(
+            GlobalPermission, GlobalPermission.permission_id == Permission.id
         )
-        for code, granted in result.all():
-            effective[code] = granted
+    )
+    for code, granted in result.all():
+        effective[code] = granted
 
-        # 2. Role permissions (any role granting = True)
-        result = await rr_db.execute(
-            select(Permission.code).distinct()
-            .join(RolePermission, RolePermission.permission_id == Permission.id)
-            .join(UserRole, UserRole.role_id == RolePermission.role_id)
-            .where(UserRole.user_id == user_id)
-        )
-        for (code,) in result.all():
-            effective[code] = True
+    # 2. Role permissions (any role granting = True)
+    result = await db.execute(
+        select(Permission.code).distinct()
+        .join(RolePermission, RolePermission.permission_id == Permission.id)
+        .join(UserRole, UserRole.role_id == RolePermission.role_id)
+        .where(UserRole.user_id == user_id)
+    )
+    for (code,) in result.all():
+        effective[code] = True
 
-        # 3. User-specific permissions (highest priority)
-        result = await rr_db.execute(
-            select(Permission.code, UserPermission.granted).join(
-                UserPermission, UserPermission.permission_id == Permission.id
-            ).where(UserPermission.user_id == user_id)
-        )
-        for code, granted in result.all():
-            effective[code] = granted
+    # 3. User-specific permissions (highest priority)
+    result = await db.execute(
+        select(Permission.code, UserPermission.granted).join(
+            UserPermission, UserPermission.permission_id == Permission.id
+        ).where(UserPermission.user_id == user_id)
+    )
+    for code, granted in result.all():
+        effective[code] = granted
 
     # Store in cache
     _permission_cache[user_id] = effective

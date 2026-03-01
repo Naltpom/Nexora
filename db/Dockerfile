@@ -1,2 +1,2 @@
 FROM postgres:15
-RUN apt-get update && apt-get install -y postgresql-15-partman && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y postgresql-15-partman postgresql-15-pgvector && rm -rf /var/lib/apt/lists/*

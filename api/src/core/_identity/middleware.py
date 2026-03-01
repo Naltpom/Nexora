@@ -3,6 +3,7 @@
 from datetime import datetime, timezone
 
 import jwt
+from cachetools import TTLCache
 from fastapi import Request
 from jwt.exceptions import PyJWTError
 from sqlalchemy import update
@@ -12,6 +13,9 @@ from ..config import settings
 from ..database import async_session
 from ..security import decode_token
 from .models import ImpersonationAction, ImpersonationLog, User
+
+# Throttle last_active updates: 1 DB write per user per 60 seconds
+_last_active_cache: TTLCache = TTLCache(maxsize=1000, ttl=60)
 
 
 class ImpersonationAuditMiddleware(BaseHTTPMiddleware):
@@ -86,6 +90,11 @@ class LastActiveMiddleware(BaseHTTPMiddleware):
             return response
 
         user_id = int(user_id_str)
+
+        # Throttle: skip if already updated within the last 60s
+        if user_id in _last_active_cache:
+            return response
+        _last_active_cache[user_id] = True
 
         try:
             async with async_session() as db:

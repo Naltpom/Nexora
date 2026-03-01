@@ -1,5 +1,32 @@
 # Changelog
 
+## 2026.03.3
+
+### infra
+
+- **PgBouncer** : ajout du service `pgbouncer` (connection pooling `transaction` mode, `edoburu/pgbouncer` image)
+- Config : `POSTGRES_HOST=pgbouncer`, `POSTGRES_PORT=6432` par defaut dans `config.py` et `.env.example`
+- Pool sizing augmente : `POOL_SIZE=20`, `POOL_MAX_OVERFLOW=30`
+- `statement_cache_size=0` dans `connect_args` (requis pour PgBouncer transaction pooling)
+- Alembic bypass PgBouncer : `entrypoint.sh` et CI utilisent `POSTGRES_HOST=db POSTGRES_PORT=5432` pour les migrations (DDL incompatible transaction pooling)
+- CI : ajout step "Wait for PgBouncer" + migrations/check en direct DB
+
+### db
+
+- **pgvector** : ajout extension `vector` dans PostgreSQL (`postgresql-15-pgvector` + `CREATE EXTENSION IF NOT EXISTS vector`)
+
+### _identity
+
+- **LastActiveMiddleware** : throttling via `TTLCache` (1 write/user/60s) pour reduire la charge DB
+
+### permissions
+
+- Simplification `load_user_permissions()` : suppression de la session `REPEATABLE READ` dediee, utilise la session passee en parametre (compatible PgBouncer transaction pooling)
+
+### realtime
+
+- Refactoring SSE `/stream` : session temporaire pour les checks initiaux (user actif + permission), liberee avant le streaming pour ne pas monopoliser une connexion DB
+
 ## 2026.03.2
 
 ### file_storage (NEW)

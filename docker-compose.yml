@@ -20,6 +20,23 @@ services:
       timeout: 5s
       retries: 5
 
+  pgbouncer:
+    build:
+      context: ./pgbouncer
+      dockerfile: Dockerfile
+    container_name: template02_pgbouncer
+    restart: unless-stopped
+    ports:
+      - "6431:6432"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 6432 -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   redis:
     image: redis:7-alpine
     container_name: template02_redis
@@ -50,6 +67,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      pgbouncer:
+        condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck:
@@ -70,6 +89,8 @@ services:
     command: ["python", "-m", "arq", "src.worker.WorkerSettings"]
     depends_on:
       db:
+        condition: service_healthy
+      pgbouncer:
         condition: service_healthy
       redis:
         condition: service_healthy

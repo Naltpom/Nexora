@@ -9,6 +9,7 @@ engine = create_async_engine(
     pool_size=settings.POOL_SIZE,
     max_overflow=settings.POOL_MAX_OVERFLOW,
     pool_pre_ping=True,
+    connect_args={"statement_cache_size": 0},  # Required for PgBouncer transaction pooling
 )
 
 async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)

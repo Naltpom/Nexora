@@ -142,13 +142,20 @@ jobs:
       - name: Build images
         run: docker compose -f docker-compose.yml build
 
-      - name: Start database and Redis
-        run: docker compose -f docker-compose.yml up -d db redis
+      - name: Start database, PgBouncer and Redis
+        run: docker compose -f docker-compose.yml up -d db pgbouncer redis
 
       - name: Wait for database
         run: |
           for i in $(seq 1 30); do
             docker compose -f docker-compose.yml exec -T db pg_isready && break
+            sleep 1
+          done
+
+      - name: Wait for PgBouncer
+        run: |
+          for i in $(seq 1 15); do
+            docker compose -f docker-compose.yml exec -T pgbouncer pg_isready -h 127.0.0.1 -p 6432 && break
             sleep 1
           done
 
@@ -159,11 +166,11 @@ jobs:
             sleep 1
           done
 
-      - name: Run migrations
-        run: docker compose -f docker-compose.yml run --rm api alembic -c alembic/alembic.ini upgrade head
+      - name: Run migrations (direct DB, bypassing PgBouncer)
+        run: docker compose -f docker-compose.yml run --rm -e POSTGRES_HOST=db -e POSTGRES_PORT=5432 api alembic -c alembic/alembic.ini upgrade head
 
-      - name: Check no pending migrations
-        run: docker compose -f docker-compose.yml run --rm api alembic -c alembic/alembic.ini check
+      - name: Check no pending migrations (direct DB)
+        run: docker compose -f docker-compose.yml run --rm -e POSTGRES_HOST=db -e POSTGRES_PORT=5432 api alembic -c alembic/alembic.ini check
 
       - name: Verify worker starts
         run: |

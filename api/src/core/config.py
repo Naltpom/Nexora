@@ -6,12 +6,12 @@ class Settings(BaseSettings):
     POSTGRES_USER: str = "template_user"
     POSTGRES_PASSWORD: str = "template_dev_password"
     POSTGRES_DB: str = "template_db"
-    POSTGRES_HOST: str = "db"
-    POSTGRES_PORT: int = 5432
+    POSTGRES_HOST: str = "pgbouncer"
+    POSTGRES_PORT: int = 6432
 
     # Pool sizing DB
-    POOL_SIZE: int = 10
-    POOL_MAX_OVERFLOW: int = 20
+    POOL_SIZE: int = 20
+    POOL_MAX_OVERFLOW: int = 30
 
     # JWT
     SECRET_KEY: str = "dev_secret_key_change_in_production"
