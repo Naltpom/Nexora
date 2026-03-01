@@ -1,4 +1,5 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
+import { PUBLIC_PATHS } from './core/routes'
 
 // ── In-memory token store ──────────────────────────────────────────
 // The access_token lives in JS memory only (not localStorage).
@@ -7,11 +8,6 @@ let accessToken: string | null = null
 
 export function setAccessToken(token: string | null) {
   accessToken = token
-  if (token) {
-    localStorage.setItem('has_session', '1')
-  } else {
-    localStorage.removeItem('has_session')
-  }
 }
 
 export function getAccessToken(): string | null {
@@ -20,7 +16,6 @@ export function getAccessToken(): string | null {
 
 export function clearAccessToken() {
   accessToken = null
-  localStorage.removeItem('has_session')
 }
 
 // ── Axios instance ─────────────────────────────────────────────────
@@ -90,8 +85,14 @@ api.interceptors.response.use(
         return api(originalRequest)
       } catch (refreshError) {
         processQueue(refreshError, null)
-        clearAccessToken()
-        window.location.href = '/login'
+        // Don't clear a token that was set by a concurrent login
+        if (!accessToken) {
+          clearAccessToken()
+          // Only hard-redirect if not already on a public page
+          if (!PUBLIC_PATHS.some((p) => window.location.pathname.startsWith(p))) {
+            window.location.href = '/login'
+          }
+        }
         return Promise.reject(refreshError)
       } finally {
         isRefreshing = false

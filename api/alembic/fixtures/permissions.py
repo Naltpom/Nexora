@@ -32,6 +32,8 @@ ALL_PERMISSIONS: list[tuple[str, str]] = [
     ("search.global", "_identity"),
     ("commands.read", "_identity"),
     ("commands.manage", "_identity"),
+    ("roles.assign_super_admin", "_identity"),
+    ("impersonation.immune", "_identity"),
     # event
     ("event.read", "event"),
     # i18n
@@ -97,4 +99,13 @@ ALL_PERMISSIONS: list[tuple[str, str]] = [
     ("lifecycle.manage", "lifecycle"),
     # storybook
     ("storybook.read", "storybook"),
+    # file_storage
+    ("file_storage.upload", "file_storage"),
+    ("file_storage.read", "file_storage"),
+    ("file_storage.delete", "file_storage"),
+    ("file_storage.moderate", "file_storage"),
+    ("file_storage.policies", "file_storage"),
+    ("file_storage.admin", "file_storage"),
+    # onboarding
+    ("onboarding.read", "onboarding"),
 ]

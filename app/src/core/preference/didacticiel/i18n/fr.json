@@ -39,6 +39,7 @@
   "tutorial_engine_finish": "Terminer",
   "tutorial_engine_next": "Suivant",
   "tutorial_engine_skip_all": "Tout passer",
+  "tutorial_engine_progress": "Didacticiel {{current}} sur {{total}}",
   "tutorial_engine_skip": "Passer",
 
   "aide_aria_stats": "Statistiques des tutoriels"

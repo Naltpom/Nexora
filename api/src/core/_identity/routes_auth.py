@@ -5,7 +5,17 @@ import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Request, Response, status
+from fastapi import (
+    APIRouter,
+    Body,
+    Depends,
+    File,
+    HTTPException,
+    Request,
+    Response,
+    UploadFile,
+    status,
+)
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -228,6 +238,16 @@ async def get_me(
     except Exception:
         pass  # MFA feature not active
 
+    # Resolve avatar URL
+    avatar_url = None
+    if getattr(current_user, "avatar_file_id", None):
+        from ..file_storage.models import StorageDocument
+        avatar_doc = await db.scalar(
+            select(StorageDocument).where(StorageDocument.id == current_user.avatar_file_id)
+        )
+        if avatar_doc:
+            avatar_url = f"/api/file-storage/files/{avatar_doc.uuid}/thumbnail"
+
     return UserResponse(
         id=current_user.id,
         email=current_user.email,
@@ -240,6 +260,7 @@ async def get_me(
         last_login=current_user.last_login,
         last_active=current_user.last_active,
         created_at=current_user.created_at,
+        avatar_url=avatar_url,
         pending_legal_acceptances=pending,
         has_previous_acceptances=has_previous,
         mfa_setup_required=mfa_setup_required,
@@ -291,6 +312,16 @@ async def update_me(
     pending, has_previous = await get_pending_acceptances_for_user(
         db, user.id, user_created_at=user.created_at,
     )
+    # Resolve avatar URL
+    avatar_url = None
+    if getattr(user, "avatar_file_id", None):
+        from ..file_storage.models import StorageDocument
+        avatar_doc = await db.scalar(
+            select(StorageDocument).where(StorageDocument.id == user.avatar_file_id)
+        )
+        if avatar_doc:
+            avatar_url = f"/api/file-storage/files/{avatar_doc.uuid}/thumbnail"
+
     return UserResponse(
         id=user.id,
         email=user.email,
@@ -303,9 +334,94 @@ async def update_me(
         last_login=user.last_login,
         last_active=user.last_active,
         created_at=user.created_at,
+        avatar_url=avatar_url,
         pending_legal_acceptances=pending,
         has_previous_acceptances=has_previous,
     )
+
+
+# ---------------------------------------------------------------------------
+#  Avatar
+# ---------------------------------------------------------------------------
+
+
+@router.put(
+    "/me/avatar",
+    dependencies=[Depends(require_permission("file_storage.upload"))],
+)
+async def upload_avatar(
+    file: UploadFile = File(...),
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Upload or replace the current user's avatar."""
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Le fichier doit etre une image")
+
+    content = await file.read()
+    if len(content) > 2 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="L'avatar ne doit pas depasser 2 Mo")
+
+    from ..file_storage.models import StorageDocument
+    from ..file_storage.services import soft_delete_document
+    from ..file_storage.services import upload_file as fs_upload
+
+    # Delete old avatar if exists
+    result = await db.execute(select(User).where(User.id == current_user.id))
+    user = result.scalar_one()
+    if user.avatar_file_id:
+        old_doc = await db.scalar(
+            select(StorageDocument).where(StorageDocument.id == user.avatar_file_id)
+        )
+        if old_doc:
+            await soft_delete_document(db, old_doc)
+
+    try:
+        doc = await fs_upload(
+            db=db,
+            file_data=content,
+            filename=file.filename or "avatar.png",
+            mime_type=file.content_type,
+            user_id=current_user.id,
+            resource_type="user_avatar",
+            resource_id=current_user.id,
+            category="avatar",
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    user.avatar_file_id = doc.id
+    await db.flush()
+
+    return {
+        "avatar_url": f"/api/file-storage/files/{doc.uuid}/thumbnail",
+        "file_uuid": doc.uuid,
+    }
+
+
+@router.delete(
+    "/me/avatar",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_permission("file_storage.delete"))],
+)
+async def delete_avatar(
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Remove the current user's avatar."""
+    result = await db.execute(select(User).where(User.id == current_user.id))
+    user = result.scalar_one()
+
+    if user.avatar_file_id:
+        from ..file_storage.models import StorageDocument
+        from ..file_storage.services import soft_delete_document
+        old_doc = await db.scalar(
+            select(StorageDocument).where(StorageDocument.id == user.avatar_file_id)
+        )
+        if old_doc:
+            await soft_delete_document(db, old_doc)
+        user.avatar_file_id = None
+        await db.flush()
 
 
 # ---------------------------------------------------------------------------

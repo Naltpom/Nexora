@@ -71,7 +71,6 @@ def main():
             {
                 "origin": origin,
                 "localStorage": [
-                    {"name": "has_session", "value": "1"},
                     {"name": "rgpd_consent_given", "value": "1"},
                     {"name": "rgpd_consent_necessary", "value": "1"},
                     {"name": "rgpd_consent_functional", "value": "1"},

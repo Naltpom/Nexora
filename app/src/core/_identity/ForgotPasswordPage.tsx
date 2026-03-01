@@ -2,7 +2,7 @@ import { useState, FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import './_identity.scss'
-import axios from 'axios'
+import api from '../../api'
 import PageSEO from './PageSEO'
 
 export default function ForgotPassword() {
@@ -18,7 +18,7 @@ export default function ForgotPassword() {
 
     setLoading(true)
     try {
-      await axios.post('/api/auth/forgot-password', { email })
+      await api.post('/auth/forgot-password', { email })
       setSuccess(true)
     } catch (err: any) {
       setError(err.response?.data?.detail || t('forgot_password.error_default'))

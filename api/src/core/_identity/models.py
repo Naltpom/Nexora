@@ -43,6 +43,11 @@ class User(Base):
     )
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
+    # Avatar (file_storage)
+    avatar_file_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("storage_documents.id", ondelete="SET NULL", use_alter=True), nullable=True,
+    )
+
     __table_args__ = (
         Index("ix_users_email", func.lower(email), unique=True),
     )

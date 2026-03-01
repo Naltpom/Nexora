@@ -108,6 +108,7 @@ class UserResponse(BaseModel):
     last_login: datetime | None = None
     last_active: datetime | None = None
     created_at: datetime
+    avatar_url: str | None = None
     pending_legal_acceptances: list[PendingLegalAcceptance] = []
     has_previous_acceptances: bool = False
     mfa_setup_required: bool = False

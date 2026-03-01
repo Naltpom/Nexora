@@ -167,6 +167,10 @@
   "webhook_modal_error_url_required": "L'URL est requise",
   "webhook_modal_error_save": "Erreur lors de la sauvegarde",
 
+  "channel_in_app": "In-App",
+  "channel_email": "Email",
+  "channel_webhook": "Webhook",
+
   "stat_notifications": "Notifications",
 
   "page_title_notifications": "Notifications",

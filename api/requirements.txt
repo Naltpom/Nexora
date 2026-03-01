@@ -24,3 +24,5 @@ cachetools==5.5.1
 redis[hiredis]==5.2.1
 arq==0.26.1
 faker>=28.0.0
+Pillow==11.1.0
+pyclamd==0.4.0

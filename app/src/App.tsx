@@ -1,5 +1,5 @@
 import { useState, useEffect, Suspense, lazy } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from './core/AuthContext'
 import { useFeature } from './core/FeatureContext'
 import ProtectedRoute from './core/ProtectedRoute'
@@ -8,6 +8,7 @@ import BackgroundThemePicker from './core/BackgroundThemePicker'
 
 const TutorialWrapper = lazy(() => import('./core/preference/didacticiel/TutorialWrapper'))
 const CookieBanner = lazy(() => import('./core/rgpd/CookieBanner'))
+const OnboardingOverlay = lazy(() => import('./core/onboarding/OnboardingOverlay'))
 
 // Identity pages (always available)
 import LoginPage from './core/_identity/LoginPage'
@@ -36,6 +37,15 @@ const coreModules = import.meta.glob('./core/*/index.ts', { eager: true }) as Re
 const projectModules = import.meta.glob('./features/*/index.ts', { eager: true }) as Record<string, any>
 const featureModules = { ...coreModules, ...projectModules }
 
+function LogoutRoute() {
+  const { logout } = useAuth()
+  const navigate = useNavigate()
+  useEffect(() => {
+    logout().then(() => navigate('/login', { replace: true }))
+  }, [logout, navigate])
+  return <div className="loading-screen"><div className="spinner" /></div>
+}
+
 function LoginSkeleton() {
   return (
     <div className="login-container">
@@ -58,22 +68,17 @@ function LoginSkeleton() {
 }
 
 export default function App() {
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading, getPreference } = useAuth()
   const { isActive, loading: featuresLoading } = useFeature()
   const [showBgPicker, setShowBgPicker] = useState(false)
   const [timedOut, setTimedOut] = useState(false)
-  const hasToken = !!localStorage.getItem('has_session')
 
-  // Public pages: render immediately (no skeleton). Authenticated: wait for auth+features.
-  const anyLoading = hasToken ? (authLoading || featuresLoading) : false
+  const anyLoading = authLoading || featuresLoading
   useEffect(() => {
     if (!anyLoading) return
     const id = setTimeout(() => setTimedOut(true), 1500)
     return () => clearTimeout(id)
   }, [anyLoading])
-
-  // Show skeleton on public pages while contexts load (or until timeout)
-  const showSkeleton = !hasToken && anyLoading && !timedOut
 
   const themeFeatureAvailable = !!user && isActive('preference.theme')
 
@@ -122,6 +127,7 @@ export default function App() {
       <Route path="/verify-email" element={user ? <Navigate to="/" /> : <VerifyEmailPage />} />
       <Route path="/invitation/:token" element={<AcceptInvitationPage />} />
       <Route path="/sso/callback/:provider" element={<SSOCallbackPage />} />
+      <Route path="/logout" element={<LogoutRoute />} />
       <Route path="/change-password" element={user ? <ForceChangePasswordPage /> : <Navigate to="/login" />} />
       <Route path="/accept-legal" element={user ? <AcceptLegalPage /> : <Navigate to="/login" />} />
 
@@ -153,7 +159,7 @@ export default function App() {
 
       {/* Catch-all: show spinner while contexts load (prevents redirect on HMR reload), then redirect */}
       <Route path="*" element={
-        hasToken && anyLoading && !timedOut
+        anyLoading && !timedOut
           ? <div className="loading-screen"><div className="spinner" /></div>
           : <Navigate to="/" replace />
       } />
@@ -162,28 +168,27 @@ export default function App() {
 
   return (
     <>
-      <MeshBackground randomOnLoad={!hasToken} />
-      {showSkeleton ? (
-        <LoginSkeleton />
-      ) : (
-        <>
-          {themeFeatureAvailable && (
-            <BackgroundThemePicker
-              isOpen={showBgPicker}
-              onClose={() => setShowBgPicker(false)}
-            />
-          )}
-          <Suspense fallback={<LoginSkeleton />}>
-            {user && isActive('preference.didacticiel') ? (
-              <TutorialWrapper>{routes}</TutorialWrapper>
-            ) : routes}
-          </Suspense>
-          {isActive('rgpd.consentement') && (
-            <Suspense fallback={null}>
-              <CookieBanner />
-            </Suspense>
-          )}
-        </>
+      <MeshBackground randomOnLoad={!user} />
+      {themeFeatureAvailable && (
+        <BackgroundThemePicker
+          isOpen={showBgPicker}
+          onClose={() => setShowBgPicker(false)}
+        />
+      )}
+      <Suspense fallback={<LoginSkeleton />}>
+        {user && isActive('preference.didacticiel') ? (
+          <TutorialWrapper>{routes}</TutorialWrapper>
+        ) : routes}
+      </Suspense>
+      {isActive('rgpd.consentement') && (
+        <Suspense fallback={null}>
+          <CookieBanner />
+        </Suspense>
+      )}
+      {user && isActive('onboarding') && getPreference('onboarding_completed') !== true && (
+        <Suspense fallback={null}>
+          <OnboardingOverlay />
+        </Suspense>
       )}
     </>
   )

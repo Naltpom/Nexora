@@ -7,10 +7,12 @@ services:
       - ./api/pytest.ini:/app/pytest.ini
       - ./api/requirements-test.txt:/app/requirements-test.txt
       - ./backups:/app/backups
+      - ./uploads:/app/uploads
 
   worker:
     volumes:
       - ./api/src:/app/src
+      - ./uploads:/app/uploads
 
   app:
     volumes:

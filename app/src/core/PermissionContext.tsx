@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react'
-import api, { getAccessToken } from '../api'
+import api from '../api'
 import { useAuth } from './AuthContext'
 
 interface PermissionContextType {
@@ -20,12 +20,6 @@ export function PermissionProvider({ children }: { children: ReactNode }) {
 
   const fetchPermissions = useCallback(async () => {
     try {
-      const token = getAccessToken()
-      if (!token && !localStorage.getItem('has_session')) {
-        setPermissions([])
-        setLoading(false)
-        return
-      }
       const response = await api.get('/auth/me/permissions')
       setPermissions(response.data.permissions || [])
     } catch {
@@ -36,6 +30,11 @@ export function PermissionProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
+    if (!user) {
+      setPermissions([])
+      setLoading(false)
+      return
+    }
     fetchPermissions()
   }, [user?.id, fetchPermissions])
 

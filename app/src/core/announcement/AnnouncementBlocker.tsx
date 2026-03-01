@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useAuth } from '../AuthContext'
+import { useFeature } from '../FeatureContext'
 import { useRealtimeEvent } from '../realtime/useRealtimeEvent'
 import api from '../../api'
 import AnnouncementModal from './AnnouncementModal'
@@ -17,7 +19,11 @@ interface ModalAnnouncement {
 }
 
 export default function AnnouncementBlocker() {
+  const { user } = useAuth()
+  const { isActive } = useFeature()
   const [queue, setQueue] = useState<ModalAnnouncement[]>([])
+  const onboardingDone = (user?.preferences as Record<string, unknown>)?.onboarding_completed === true
+  const isBlocking = !isActive('onboarding') || onboardingDone
 
   const fetchMandatory = useCallback(async () => {
     try {
@@ -30,8 +36,10 @@ export default function AnnouncementBlocker() {
   }, [])
 
   useEffect(() => {
-    fetchMandatory()
-  }, [fetchMandatory])
+    if (isBlocking) {
+      fetchMandatory()
+    }
+  }, [isBlocking, fetchMandatory])
 
   const handleSSE = useCallback((data: unknown) => {
     const evt = data as { action?: string; requires_acknowledgment?: boolean }
@@ -46,7 +54,15 @@ export default function AnnouncementBlocker() {
     setQueue(prev => prev.filter(a => a.id !== id))
   }, [])
 
-  if (queue.length === 0) return null
+  const hasItems = queue.length > 0
+
+  useEffect(() => {
+    document.documentElement.toggleAttribute('data-modal-blocking', isBlocking && hasItems)
+    return () => document.documentElement.removeAttribute('data-modal-blocking')
+  }, [isBlocking, hasItems])
+
+  if (!isBlocking) return null
+  if (!hasItems) return null
 
   return (
     <AnnouncementModal

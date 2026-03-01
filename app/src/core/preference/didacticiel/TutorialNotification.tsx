@@ -1,5 +1,7 @@
 import { useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { useAuth } from '../../AuthContext'
+import { useFeature } from '../../FeatureContext'
 import { useTutorial } from './TutorialContext'
 import './didacticiel.scss'
 
@@ -7,6 +9,8 @@ const BLOCKED_PATHS = ['/accept-legal', '/change-password']
 
 export default function TutorialNotification() {
   const { t } = useTranslation('preference.didacticiel')
+  const { getPreference } = useAuth()
+  const { isActive } = useFeature()
   const {
     pendingNewPermissions,
     startUnseenTutorials,
@@ -19,6 +23,7 @@ export default function TutorialNotification() {
   const location = useLocation()
 
   if (BLOCKED_PATHS.includes(location.pathname)) return null
+  if (isActive('onboarding') && getPreference('onboarding_completed') !== true) return null
 
   // Resume notification takes priority over new tutorials notification
   if (pendingResume && !active) {

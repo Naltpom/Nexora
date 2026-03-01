@@ -1,4 +1,5 @@
 import { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef, ReactNode } from 'react'
+import axios from 'axios'
 import i18next from 'i18next'
 import api, { setAccessToken, getAccessToken, clearAccessToken } from '../api'
 import type { User } from '../types'
@@ -44,12 +45,16 @@ interface AuthState {
   loading: boolean
   isImpersonating: boolean
   impersonatedUser: { id: number; name: string } | null
+  mfaSetupRequired: boolean
+  mfaGraceExpires: string | null
 }
 
 type AuthAction =
   | { type: 'FETCH_USER_SUCCESS'; user: User; isImpersonating: boolean; impersonatedUser: { id: number; name: string } | null }
   | { type: 'FETCH_USER_FAILURE' }
   | { type: 'UPDATE_PREFERENCE'; key: string; value: any }
+  | { type: 'SET_MFA_STATUS'; mfaSetupRequired: boolean; mfaGraceExpires: string | null }
+  | { type: 'CLEAR_MFA_STATUS' }
   | { type: 'LOGOUT' }
 
 const initialState: AuthState = {
@@ -57,16 +62,21 @@ const initialState: AuthState = {
   loading: true,
   isImpersonating: false,
   impersonatedUser: null,
+  mfaSetupRequired: false,
+  mfaGraceExpires: null,
 }
 
 function authReducer(state: AuthState, action: AuthAction): AuthState {
   switch (action.type) {
     case 'FETCH_USER_SUCCESS':
       return {
+        ...state,
         user: action.user,
         loading: false,
         isImpersonating: action.isImpersonating,
         impersonatedUser: action.impersonatedUser,
+        mfaSetupRequired: action.user.mfa_setup_required || false,
+        mfaGraceExpires: action.user.mfa_grace_period_expires || null,
       }
     case 'FETCH_USER_FAILURE':
       return { ...initialState, loading: false }
@@ -79,6 +89,10 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
           preferences: { ...(state.user.preferences || {}), [action.key]: action.value },
         },
       }
+    case 'SET_MFA_STATUS':
+      return { ...state, mfaSetupRequired: action.mfaSetupRequired, mfaGraceExpires: action.mfaGraceExpires }
+    case 'CLEAR_MFA_STATUS':
+      return { ...state, mfaSetupRequired: false, mfaGraceExpires: null }
     case 'LOGOUT':
       return { ...initialState, loading: false }
     default:
@@ -106,42 +120,31 @@ function setLocalPreferences(userId: number, prefs: Record<string, any>) {
 function applyUserPreferences(userData: User) {
   if (!userData.preferences || !userData.id) return
 
-  const local = getLocalPreferences(userData.id)
-  const merged = { ...userData.preferences, ...local }
-  setLocalPreferences(userData.id, merged)
-  userData.preferences = merged
+  // DB is the source of truth — replace localStorage entirely.
+  // localStorage is only an optimistic cache within the current session.
+  const prefs = { ...userData.preferences }
+  setLocalPreferences(userData.id, prefs)
+  userData.preferences = prefs
 
-  if (merged.theme) {
-    document.documentElement.setAttribute('data-theme', merged.theme)
+  if (prefs.theme) {
+    document.documentElement.setAttribute('data-theme', prefs.theme)
   }
-  if (merged.backgroundTheme !== undefined) {
-    document.documentElement.setAttribute('data-bg-theme', String(merged.backgroundTheme))
+  if (prefs.backgroundTheme !== undefined) {
+    document.documentElement.setAttribute('data-bg-theme', String(prefs.backgroundTheme))
   }
-  if (merged.customColors) {
-    const themeKey = (merged.theme || 'light') === 'dark' ? 'dark' : 'light'
-    const colors = merged.customColors[themeKey]
+  if (prefs.customColors) {
+    const themeKey = (prefs.theme || 'light') === 'dark' ? 'dark' : 'light'
+    const colors = prefs.customColors[themeKey]
     if (colors) {
       for (const [k, v] of Object.entries(colors)) {
         if (v) document.documentElement.style.setProperty(`--${k}`, v as string)
       }
     }
   }
-  applyAllPreferences(merged)
+  applyAllPreferences(prefs)
   if (hasConsent('functional')) {
-    if (merged.theme) localStorage.setItem('last_theme', merged.theme)
-    if (merged.backgroundTheme !== undefined) localStorage.setItem('last_bg_theme', String(merged.backgroundTheme))
-  }
-}
-
-function syncMfaStatus(userData: User) {
-  if (userData.mfa_setup_required) {
-    localStorage.setItem('mfa_setup_required', 'true')
-    if (userData.mfa_grace_period_expires) {
-      localStorage.setItem('mfa_grace_period_expires', userData.mfa_grace_period_expires)
-    }
-  } else {
-    localStorage.removeItem('mfa_setup_required')
-    localStorage.removeItem('mfa_grace_period_expires')
+    if (prefs.theme) localStorage.setItem('last_theme', prefs.theme)
+    if (prefs.backgroundTheme !== undefined) localStorage.setItem('last_bg_theme', String(prefs.backgroundTheme))
   }
 }
 
@@ -159,15 +162,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUser = useCallback(async () => {
     try {
-      const token = getAccessToken()
-      if (!token && !localStorage.getItem('has_session')) {
-        dispatch({ type: 'FETCH_USER_FAILURE' })
-        return
+      // Pre-refresh: if no token in memory (page reload), obtain one
+      // from the HttpOnly cookie BEFORE calling /auth/me to avoid a 401.
+      if (!getAccessToken()) {
+        try {
+          const r = await axios.post('/api/auth/refresh', {}, { withCredentials: true })
+          setAccessToken(r.data.access_token)
+        } catch {
+          // No valid cookie → user is not authenticated
+          dispatch({ type: 'FETCH_USER_FAILURE' })
+          return
+        }
       }
       const response = await api.get('/auth/me')
       const userData = response.data as User
       applyUserPreferences(userData)
-      syncMfaStatus(userData)
 
       // Check impersonation status
       let impersonating = false
@@ -187,8 +196,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       dispatch({ type: 'FETCH_USER_SUCCESS', user: userData, isImpersonating: impersonating, impersonatedUser: impersonatedUsr })
     } catch {
-      clearAccessToken()
-      dispatch({ type: 'FETCH_USER_FAILURE' })
+      // Don't clear a token set by a concurrent login
+      if (!getAccessToken()) {
+        clearAccessToken()
+      }
+      // Don't overwrite a successful login with a failure from a stale request
+      if (!userRef.current) {
+        dispatch({ type: 'FETCH_USER_FAILURE' })
+      }
     }
   }, [])
 
@@ -223,10 +238,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAccessToken(access_token)
 
     if (mfa_setup_required) {
-      localStorage.setItem('mfa_setup_required', 'true')
-      if (mfa_grace_period_expires) {
-        localStorage.setItem('mfa_grace_period_expires', mfa_grace_period_expires)
-      }
+      dispatch({ type: 'SET_MFA_STATUS', mfaSetupRequired: true, mfaGraceExpires: mfa_grace_period_expires || null })
     }
 
     await fetchUser()
@@ -247,17 +259,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [fetchUser])
 
   const isMfaSetupRequired = useCallback((): boolean => {
-    return localStorage.getItem('mfa_setup_required') === 'true'
-  }, [])
+    return state.mfaSetupRequired
+  }, [state.mfaSetupRequired])
 
   const getMfaGraceExpires = useCallback((): Date | null => {
-    const raw = localStorage.getItem('mfa_grace_period_expires')
-    return raw ? new Date(raw) : null
-  }, [])
+    return state.mfaGraceExpires ? new Date(state.mfaGraceExpires) : null
+  }, [state.mfaGraceExpires])
 
   const clearMfaSetupRequired = useCallback(() => {
-    localStorage.removeItem('mfa_setup_required')
-    localStorage.removeItem('mfa_grace_period_expires')
+    dispatch({ type: 'CLEAR_MFA_STATUS' })
   }, [])
 
   const logout = useCallback(async () => {
@@ -268,8 +278,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     clearAccessToken()
     localStorage.removeItem('impersonation_active')
-    localStorage.removeItem('mfa_setup_required')
-    localStorage.removeItem('mfa_grace_period_expires')
     dispatch({ type: 'LOGOUT' })
   }, [])
 

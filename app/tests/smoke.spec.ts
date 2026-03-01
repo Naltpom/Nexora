@@ -89,8 +89,8 @@ async function assertPageRendersWithoutErrors(
   await page.goto(path, { waitUntil: 'domcontentloaded', timeout: 15_000 })
 
   // Wait for the app to finish rendering. For protected pages, the SPA
-  // needs to: load → detect has_session → call /auth/me → 401 →
-  // refresh via cookie → retry /auth/me → render. Give it enough time.
+  // needs to: load → call /auth/me → 401 → refresh via cookie →
+  // retry /auth/me → render. Give it enough time.
   await page.waitForTimeout(expectNoLoginRedirect ? 4_000 : 2_000)
 
   // Protected pages should NOT redirect to /login
@@ -162,8 +162,6 @@ test.describe('Protected pages', () => {
         return { ok: false, status: res.status, body: await res.text() }
       }
       const data = await res.json()
-      // Store the access token marker
-      localStorage.setItem('has_session', '1')
       return { ok: true, status: res.status, hasToken: !!data.access_token }
     })
 
@@ -172,8 +170,8 @@ test.describe('Protected pages', () => {
     }
 
     // Navigate to a protected page and wait for auth to fully resolve.
-    // The SPA needs to: load → detect has_session → call /auth/me → 401 →
-    // refresh via cookie → retry /auth/me → render.
+    // The SPA needs to: load → call /auth/me → 401 → refresh via cookie →
+    // retry /auth/me → render.
     // We wait until the URL no longer contains /login (auth resolved).
     await page.goto('/profile', { waitUntil: 'domcontentloaded' })
     try {

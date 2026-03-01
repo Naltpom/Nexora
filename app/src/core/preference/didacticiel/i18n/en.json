@@ -39,6 +39,7 @@
   "tutorial_engine_finish": "Finish",
   "tutorial_engine_next": "Next",
   "tutorial_engine_skip_all": "Skip all",
+  "tutorial_engine_progress": "Tutorial {{current}} of {{total}}",
   "tutorial_engine_skip": "Skip",
 
   "aide_aria_stats": "Tutorial statistics"

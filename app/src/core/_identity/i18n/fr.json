@@ -332,7 +332,9 @@
     "badge_children": "{{count}} enfant",
     "badge_children_plural": "{{count}} enfants",
     "tooltip_view_permissions": "Voir les permissions",
-    "tooltip_view_children": "Voir les enfants"
+    "tooltip_view_children": "Voir les enfants",
+    "badge_core": "Core",
+    "badge_routes": "Routes"
   },
 
   "app_settings": {

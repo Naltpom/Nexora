@@ -34,6 +34,10 @@ interface TutorialContextType {
   currentFeatureTutorial: FeatureTutorial | null
   totalStepsInChain: number
   currentStepInChain: number
+  totalTutorials: number
+  currentTutorialNumber: number
+  totalStepsGlobal: number
+  currentStepGlobal: number
   startFeatureTutorial: (featureName: string) => void
   startPermissionTutorial: (featureName: string, permission: string) => void
   startUnseenTutorials: () => void
@@ -171,6 +175,46 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
     }
     return { totalStepsInChain: total, currentStepInChain: current }
   }, [active, currentFeatureTutorial, currentPermissionTutorial])
+
+  // Calculate global totals across ALL feature tutorials
+  const { totalTutorials, currentTutorialNumber, totalStepsGlobal, currentStepGlobal } = useMemo(() => {
+    let tutCount = 0
+    let stepsCount = 0
+    for (const ft of featureTutorials) {
+      tutCount += ft.permissionTutorials.length
+      for (const pt of ft.permissionTutorials) {
+        stepsCount += pt.steps.length
+      }
+    }
+
+    if (!active) {
+      return { totalTutorials: tutCount, currentTutorialNumber: 0, totalStepsGlobal: stepsCount, currentStepGlobal: 0 }
+    }
+
+    let currentTutNum = 0
+    let currentGlobalStep = 0
+    let found = false
+    for (const ft of featureTutorials) {
+      for (let pi = 0; pi < ft.permissionTutorials.length; pi++) {
+        const pt = ft.permissionTutorials[pi]
+        currentTutNum++
+        if (ft.featureName === active.featureName && pi === active.permissionIndex) {
+          currentGlobalStep += active.stepIndex + 1
+          found = true
+          break
+        }
+        currentGlobalStep += pt.steps.length
+      }
+      if (found) break
+    }
+
+    return {
+      totalTutorials: tutCount,
+      currentTutorialNumber: found ? currentTutNum : 0,
+      totalStepsGlobal: stepsCount,
+      currentStepGlobal: found ? currentGlobalStep : 0,
+    }
+  }, [active, featureTutorials])
 
   const markPermissionSeen = useCallback(async (permission: string) => {
     setPermissionsSeen((prev) => ({ ...prev, [permission]: new Date().toISOString() }))
@@ -415,6 +459,10 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
     currentFeatureTutorial,
     totalStepsInChain,
     currentStepInChain,
+    totalTutorials,
+    currentTutorialNumber,
+    totalStepsGlobal,
+    currentStepGlobal,
     startFeatureTutorial,
     startPermissionTutorial,
     startUnseenTutorials,
@@ -435,6 +483,7 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
     featureTutorials, permissionsSeen, active,
     currentStep, currentPermissionTutorial, currentFeatureTutorial,
     totalStepsInChain, currentStepInChain,
+    totalTutorials, currentTutorialNumber, totalStepsGlobal, currentStepGlobal,
     startFeatureTutorial, startPermissionTutorial, startUnseenTutorials, startAllTutorials,
     nextStep, prevStep, skipCurrent, skipAll,
     closeTutorial, markPermissionSeen, resetAll,

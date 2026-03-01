@@ -81,10 +81,10 @@ const FeatureTableRow = memo(function FeatureTableRow({
       <td>
         <div className="flex-row-xs flex-wrap">
           {feature.is_core && (
-            <span className="badge badge-secondary text-xs">Core</span>
+            <span className="badge badge-secondary text-xs">{t('features_admin.badge_core')}</span>
           )}
           {feature.has_routes && (
-            <span className="badge badge-secondary text-xs">Routes</span>
+            <span className="badge badge-secondary text-xs">{t('features_admin.badge_routes')}</span>
           )}
           {feature.permissions.length > 0 && (
             <span

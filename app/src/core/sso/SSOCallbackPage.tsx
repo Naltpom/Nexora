@@ -68,14 +68,6 @@ export default function SSOCallbackPage() {
               state: { mfa_token: data.mfa_token, mfa_methods: data.mfa_methods },
             })
           } else {
-            // Store MFA setup flags before loginWithSSO
-            if (data.mfa_setup_required) {
-              localStorage.setItem('mfa_setup_required', 'true')
-              if (data.mfa_grace_period_expires) {
-                localStorage.setItem('mfa_grace_period_expires', data.mfa_grace_period_expires)
-              }
-            }
-
             await loginWithSSO(data.access_token)
 
             // Handle MFA setup enforcement

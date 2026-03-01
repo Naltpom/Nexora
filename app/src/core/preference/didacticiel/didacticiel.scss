@@ -173,6 +173,10 @@
 /* Highlight ring around target element */
 .tutorial-highlight {
   position: fixed;
+  top: var(--highlight-top);
+  left: var(--highlight-left);
+  width: var(--highlight-width);
+  height: var(--highlight-height);
   border-radius: var(--radius);
   box-shadow: 0 0 0 3px var(--primary, #4f46e5), 0 0 12px rgba(79, 70, 229, 0.4);
   pointer-events: none;
@@ -243,7 +247,23 @@
     display: flex;
     align-items: center;
     gap: var(--density-gap, 12px);
+    margin-bottom: 8px;
+  }
+
+  &-progress {
+    height: 3px;
+    background: var(--gray-200);
+    border-radius: var(--radius);
     margin-bottom: var(--density-gap, 12px);
+    overflow: hidden;
+
+    &__bar {
+      height: 100%;
+      width: var(--progress, 0%);
+      background: var(--primary, #4f46e5);
+      border-radius: var(--radius);
+      transition: width 0.3s ease;
+    }
   }
 
   &-step {
@@ -537,6 +557,12 @@
   }
 }
 
+/* ===== Priority: hide tutorial when announcement modal is blocking ===== */
+html[data-modal-blocking] .tutorial-notification,
+html[data-modal-blocking] .tutorial-overlay {
+  display: none;
+}
+
 /* ===== Dark theme ===== */
 [data-theme="dark"] {
   // Tutorial tooltip
@@ -559,6 +585,10 @@
 
     &-step {
       background: rgba(139, 92, 246, 0.2);
+    }
+
+    &-progress {
+      background: rgba(255, 255, 255, 0.1);
     }
 
     &-close {

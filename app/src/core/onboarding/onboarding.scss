@@ -1,0 +1,446 @@
+// ─── Onboarding Wizard Overlay ───
+
+.onboarding-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  animation: onboarding-fade-in 0.3s ease;
+}
+
+.onboarding-wizard {
+  background: var(--gray-50);
+  border-radius: var(--radius, 8px);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.25);
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  @media (max-width: 640px) {
+    max-width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+}
+
+.onboarding-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--density-card-padding, 24px);
+}
+
+.onboarding-footer {
+  padding: 0 var(--density-card-padding, 24px) var(--density-card-padding, 24px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--density-gap, 12px);
+  flex-shrink: 0;
+}
+
+.onboarding-footer-right {
+  display: flex;
+  gap: var(--density-gap, 12px);
+}
+
+// ─── Progress dots ───
+
+.onboarding-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 0 0.5rem;
+}
+
+.onboarding-dot {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+  background: var(--gray-300);
+  transition: background 0.2s, transform 0.2s;
+
+  &--active {
+    background: var(--primary);
+    transform: scale(1.2);
+  }
+
+  &--done {
+    background: var(--primary);
+    opacity: 0.5;
+  }
+}
+
+// ─── Step titles ───
+
+.onboarding-step-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: var(--gray-900);
+}
+
+.onboarding-step-subtitle {
+  font-size: 0.875rem;
+  color: var(--gray-500);
+  margin-bottom: var(--section-gap, 24px);
+}
+
+// ─── Step: Welcome ───
+
+.onboarding-welcome-icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+  color: var(--primary);
+
+  svg {
+    width: 3rem;
+    height: 3rem;
+  }
+}
+
+.onboarding-profile-form {
+  display: flex;
+  gap: var(--density-gap, 12px);
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+  }
+
+  .form-group {
+    flex: 1;
+  }
+}
+
+// ─── Step: Theme ───
+
+.onboarding-section-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  margin-bottom: 0.5rem;
+}
+
+.onboarding-theme-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--density-gap, 12px);
+  margin-bottom: var(--section-gap, 24px);
+}
+
+.onboarding-theme-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: var(--density-card-padding, 24px);
+  border: 2px solid transparent;
+  border-radius: var(--radius, 8px);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  font-size: 0.875rem;
+  font-weight: 500;
+
+  svg {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+
+  &:hover {
+    border-color: var(--gray-400);
+  }
+
+  &--active {
+    border-color: var(--primary);
+    color: var(--primary);
+
+    svg { stroke: var(--primary); }
+  }
+
+  // Each card always previews its own theme
+  &--light {
+    background: #f9fafb;
+    color: #374151;
+    border-color: #e5e7eb;
+
+    svg { stroke: #9ca3af; }
+
+    &.onboarding-theme-card--active {
+      background: rgba(79, 70, 229, 0.06);
+      border-color: var(--primary);
+      color: var(--primary);
+
+      svg { stroke: var(--primary); }
+    }
+  }
+
+  &--dark {
+    background: #1e1b2e;
+    color: #d1d5db;
+    border-color: #374151;
+
+    svg { stroke: #9ca3af; }
+
+    &.onboarding-theme-card--active {
+      background: rgba(79, 70, 229, 0.15);
+      border-color: var(--primary);
+      color: var(--primary);
+
+      svg { stroke: var(--primary); }
+    }
+  }
+}
+
+.onboarding-langue-grid {
+  display: flex;
+  gap: var(--density-gap, 12px);
+}
+
+.onboarding-langue-card {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--density-btn-padding, 8px 16px);
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius, 8px);
+  background: var(--gray-100);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gray-700);
+  transition: border-color 0.15s, background 0.15s;
+
+  &:hover {
+    border-color: var(--gray-400);
+  }
+
+  &--active {
+    border-color: var(--primary);
+    background: rgba(79, 70, 229, 0.08);
+    color: var(--primary);
+    font-weight: 600;
+  }
+}
+
+// ─── Step: Preferences ───
+
+.onboarding-prefs-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--section-gap, 24px);
+}
+
+.onboarding-prefs-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.onboarding-prefs-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gray-700);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.onboarding-prefs-value {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--primary);
+  background: rgba(79, 70, 229, 0.1);
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius, 8px);
+}
+
+.onboarding-prefs-slider {
+  width: 100%;
+  accent-color: var(--primary);
+}
+
+.onboarding-density-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.onboarding-density-btn {
+  flex: 1;
+  padding: var(--density-btn-padding, 8px 16px);
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius, 8px);
+  background: var(--gray-50);
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--gray-700);
+  transition: border-color 0.15s, background 0.15s;
+
+  &:hover {
+    border-color: var(--gray-400);
+  }
+
+  &--active {
+    border-color: var(--primary);
+    background: rgba(79, 70, 229, 0.08);
+    color: var(--primary);
+  }
+}
+
+.onboarding-prefs-preview {
+  margin-top: var(--density-gap, 12px);
+  padding: var(--density-card-padding, 24px);
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius, 8px);
+  font-size: 0.875rem;
+  color: var(--gray-600);
+  text-align: center;
+}
+
+// ─── Step: Accessibilite ───
+
+.onboarding-a11y-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-gap, 12px);
+}
+
+.onboarding-a11y-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--density-gap, 12px);
+  padding: var(--density-btn-padding, 8px 16px);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius, 8px);
+  background: var(--gray-50);
+  cursor: pointer;
+  transition: border-color 0.15s;
+
+  &:hover {
+    border-color: var(--gray-400);
+  }
+}
+
+.onboarding-a11y-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.onboarding-a11y-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gray-900);
+}
+
+.onboarding-a11y-desc {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+}
+
+// ─── Step: Features ───
+
+.onboarding-features-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--density-gap, 12px);
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.onboarding-feature-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--density-gap, 12px);
+  padding: var(--density-card-padding, 24px);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius, 8px);
+  background: var(--gray-50);
+}
+
+.onboarding-feature-icon {
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(79, 70, 229, 0.1);
+  border-radius: var(--radius, 8px);
+  color: var(--primary);
+
+  svg {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+}
+
+.onboarding-feature-info {
+  min-width: 0;
+}
+
+.onboarding-feature-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--gray-900);
+}
+
+.onboarding-feature-desc {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+  margin-top: 0.125rem;
+}
+
+// ─── Animation ───
+
+@keyframes onboarding-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+// ─── Dark theme ───
+// CSS variables (--gray-*) auto-adapt in dark mode via _reset.scss.
+// Only override hardcoded values (white backgrounds).
+
+[data-theme="dark"] .onboarding-overlay {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+[data-theme="dark"] .onboarding-wizard {
+  background: #1e1b2e;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .onboarding-langue-card--active {
+  background: rgba(139, 92, 246, 0.15);
+}
+
+[data-theme="dark"] .onboarding-density-btn--active {
+  background: rgba(139, 92, 246, 0.15);
+}
+
+[data-theme="dark"] .onboarding-prefs-value {
+  background: rgba(139, 92, 246, 0.2);
+}
+
+[data-theme="dark"] .onboarding-feature-icon {
+  background: rgba(139, 92, 246, 0.15);
+}

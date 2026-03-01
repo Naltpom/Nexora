@@ -80,6 +80,19 @@ services:
       retries: 3
       start_period: 10s
 
+  clamav:
+    image: clamav/clamav:stable
+    container_name: template02_clamav
+    restart: unless-stopped
+    volumes:
+      - clamav_data:/var/lib/clamav
+    healthcheck:
+      test: ["CMD", "clamdcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
   app:
     build:
       context: ./app
@@ -106,3 +119,4 @@ volumes:
   redis_data:
   upload_files:
   rich_text_images:
+  clamav_data:

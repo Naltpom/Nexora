@@ -16,6 +16,7 @@ from .core._identity.models import Permission, Role, RolePermission, User, UserR
 from .core.config import settings as app_settings
 from .core.database import Base, async_session, engine
 from .core.event.models import Event
+from .core.file_storage.models import StorageDocument  # noqa: F401 — register table metadata
 from .core.notification.models import Notification
 from .core.security import hash_password
 

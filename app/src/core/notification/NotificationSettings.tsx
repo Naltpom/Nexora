@@ -509,7 +509,7 @@ export default function NotificationSettings() {
                   />
                   <span className="notif-toggle-slider" />
                 </span>
-                <span className="notif-admin-channel-label">In-App</span>
+                <span className="notif-admin-channel-label">{t('channel_in_app')}</span>
               </label>
               <label className="notif-admin-channel-toggle">
                 <span className="notif-toggle notif-toggle-sm">
@@ -520,7 +520,7 @@ export default function NotificationSettings() {
                   />
                   <span className="notif-toggle-slider" />
                 </span>
-                <span className="notif-admin-channel-label">Email</span>
+                <span className="notif-admin-channel-label">{t('channel_email')}</span>
               </label>
               <label className="notif-admin-channel-toggle">
                 <span className="notif-toggle notif-toggle-sm">
@@ -531,7 +531,7 @@ export default function NotificationSettings() {
                   />
                   <span className="notif-toggle-slider" />
                 </span>
-                <span className="notif-admin-channel-label">Webhook</span>
+                <span className="notif-admin-channel-label">{t('channel_webhook')}</span>
               </label>
             </div>
           ) : locked ? (
@@ -541,7 +541,7 @@ export default function NotificationSettings() {
                   className={`notif-channel-btn in-app ${(rule.user_preference ? rule.user_preference.channel_in_app : rule.default_in_app) ? 'active' : ''}`}
                   onClick={() => toggleTemplateChannel(rule, 'channel_in_app')}
                 >
-                  In-App
+                  {t('channel_in_app')}
                 </button>
               )}
               {rule.channel_email && (
@@ -549,7 +549,7 @@ export default function NotificationSettings() {
                   className={`notif-channel-btn email ${(rule.user_preference ? rule.user_preference.channel_email : rule.default_email) ? 'active' : ''}`}
                   onClick={() => toggleTemplateChannel(rule, 'channel_email')}
                 >
-                  Email
+                  {t('channel_email')}
                 </button>
               )}
               {rule.channel_webhook && myWebhooks.length > 0 && (
@@ -602,13 +602,13 @@ export default function NotificationSettings() {
                 className={`notif-channel-btn in-app ${rule.channel_in_app ? 'active' : ''}`}
                 onClick={() => togglePersonalChannel(rule, 'channel_in_app')}
               >
-                In-App
+                {t('channel_in_app')}
               </button>
               <button
                 className={`notif-channel-btn email ${rule.channel_email ? 'active' : ''}`}
                 onClick={() => togglePersonalChannel(rule, 'channel_email')}
               >
-                Email
+                {t('channel_email')}
               </button>
               {myWebhooks.length > 0 && (
                 <div className="multi-select-container" ref={openWebhookDropdown === rule.id ? webhookDropdownRef : undefined}>
@@ -1007,7 +1007,7 @@ export default function NotificationSettings() {
                         ...(!e.target.checked && { default_in_app: false }),
                       }))}
                     />
-                    In-App
+                    {t('channel_in_app')}
                   </label>
                   <label className="notif-channel-option">
                     <input
@@ -1019,7 +1019,7 @@ export default function NotificationSettings() {
                         ...(!e.target.checked && { default_email: false }),
                       }))}
                     />
-                    Email
+                    {t('channel_email')}
                   </label>
                   <label className="notif-channel-option">
                     <input
@@ -1031,7 +1031,7 @@ export default function NotificationSettings() {
                         ...(!e.target.checked && { default_webhook: false }),
                       }))}
                     />
-                    Webhook
+                    {t('channel_webhook')}
                   </label>
                 </div>
               </div>
@@ -1065,7 +1065,7 @@ export default function NotificationSettings() {
                         disabled={!ruleForm.channel_in_app}
                         onChange={e => setRuleForm(prev => ({ ...prev, default_in_app: e.target.checked }))}
                       />
-                      In-App
+                      {t('channel_in_app')}
                     </label>
                     <label className={`notif-channel-option${!ruleForm.channel_email ? ' disabled' : ''}`}>
                       <input
@@ -1074,7 +1074,7 @@ export default function NotificationSettings() {
                         disabled={!ruleForm.channel_email}
                         onChange={e => setRuleForm(prev => ({ ...prev, default_email: e.target.checked }))}
                       />
-                      Email
+                      {t('channel_email')}
                     </label>
                     <label className={`notif-channel-option${!ruleForm.channel_webhook ? ' disabled' : ''}`}>
                       <input
@@ -1083,7 +1083,7 @@ export default function NotificationSettings() {
                         disabled={!ruleForm.channel_webhook}
                         onChange={e => setRuleForm(prev => ({ ...prev, default_webhook: e.target.checked }))}
                       />
-                      Webhook
+                      {t('channel_webhook')}
                     </label>
                   </div>
                 </div>

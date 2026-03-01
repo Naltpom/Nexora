@@ -106,6 +106,8 @@ ALL_PERMISSIONS = [
     ("sso.github.login", "sso.github"),
     # storybook
     ("storybook.read", "storybook"),
+    # onboarding
+    ("onboarding.read", "onboarding"),
 ]
 
 # ── Global permissions (every authenticated user) ────────────────────────
@@ -120,6 +122,7 @@ GLOBAL_PERMISSION_CODES = [
     "rgpd.read", "rgpd.consentement.read", "rgpd.droits.read",
     "rgpd.export.read", "rgpd.politique.read",
     "storybook.read",
+    "onboarding.read",
     # Personnel
     "notification.delete", "notification.rules.read",
     "notification.push.subscribe", "notification.push.read",

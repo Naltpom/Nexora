@@ -18,16 +18,16 @@ import './core/styles/animations.scss'
 
 // Apply theme + preferences before render to prevent flash
 ;(() => {
-  const hasSession = localStorage.getItem('has_session')
-  if (hasSession && hasConsent('functional')) {
-    // Returning user: apply cached theme preferences synchronously
+  if (hasConsent('functional')) {
     const theme = localStorage.getItem('last_theme')
     const bgTheme = localStorage.getItem('last_bg_theme')
     if (theme) document.documentElement.setAttribute('data-theme', theme)
     if (bgTheme) document.documentElement.setAttribute('data-bg-theme', bgTheme)
-    // Full preferences (font, density, etc.) applied by AuthContext after auth
-  } else if (!hasSession) {
-    // Public page (login/register): follow browser preference
+    if (!theme) {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+      document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light')
+    }
+  } else {
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
     document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light')
   }

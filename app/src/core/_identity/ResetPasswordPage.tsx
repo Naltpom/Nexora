@@ -1,7 +1,7 @@
 import { useState, useEffect, FormEvent } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import axios from 'axios'
+import api from '../../api'
 import PageSEO from './PageSEO'
 import { validatePassword } from './passwordPolicy'
 
@@ -29,7 +29,7 @@ export default function ResetPassword() {
 
   const verifyToken = async () => {
     try {
-      const response = await axios.post('/api/auth/verify-reset-token', { token })
+      const response = await api.post('/auth/verify-reset-token', { token })
       setTokenValid(true)
       setUserEmail(response.data.email)
     } catch (err: any) {
@@ -57,7 +57,7 @@ export default function ResetPassword() {
 
     setLoading(true)
     try {
-      await axios.post('/api/auth/reset-password', {
+      await api.post('/auth/reset-password', {
         token,
         new_password: newPassword,
       })

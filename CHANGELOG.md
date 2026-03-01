@@ -1,5 +1,49 @@
 # Changelog
 
+## 2026.03.2
+
+### file_storage (NEW)
+
+- **Feature core de gestion de fichiers** : upload single/multiple, download, soft-delete, tracking en DB via `StorageDocument` (association polymorphe `resource_type`/`resource_id`)
+- **Abstraction storage** : interface `StorageBackend` (Protocol) avec implementation `LocalStorage` ; pret pour S3/MinIO via config `STORAGE_BACKEND`
+- **Scan antivirus ClamAV** : integration optionnelle via `pyclamd`, service Docker `clamav`, toggle `ANTIVIRUS_ENABLED`
+- **Thumbnails** : generation automatique pour images (JPEG/PNG/WebP/GIF) via Pillow, stockage dans `/app/uploads/thumbs/`
+- **Quotas** : suivi de l'espace par utilisateur, configurable via `UPLOAD_QUOTA_MB` (0 = illimite par defaut)
+- **Composants frontend reutilisables** : `<FileUpload>` (single, drag & drop, mode compact), `<FileUploadMultiple>`, `<FilePreview>` (thumbnail/icone), `<FileList>` (list/grid), `<QuotaIndicator>`
+- **Hooks** : `useFileUpload` (progress, cancel, retry, validation), `useFileList` (fetch pagine, delete, download)
+- **Page admin** : gestion de tous les fichiers, stats, filtres (images/documents/autres), recherche, pagination
+- **Moderation par type de document** : table `FileStoragePolicy` avec `requires_moderation` configurable par `resource_type` (pattern identique a `CommentPolicy`)
+- **Statut de moderation** : champ `status` (approved/pending/rejected) sur `StorageDocument`, champs `moderated_by_id` et `moderated_at`
+- **Endpoints moderation** : `GET /admin/moderation` (queue pending), `PATCH /admin/files/{uuid}/approve`, `PATCH /admin/files/{uuid}/reject`
+- **Endpoints policies** : `GET /admin/policies`, `PUT /admin/policies/{resource_type}`, `DELETE /admin/policies/{resource_type}`
+- **Page admin policies** : `FileStoragePoliciesPage.tsx` — CRUD des politiques de moderation avec toggle actif/inactif
+- **Page admin fichiers** : colonne statut, boutons Approuver/Rejeter, stat "En moderation"
+- **Chemin de stockage structure** : `{resource_type}/{YYYY}/{MM}/{uuid}.ext` au lieu de `files/{uuid}.ext`
+- **Thumbnails moderation** : chemin adapte au nouveau pattern (`thumbs/{resource_type}/{YYYY}/{MM}/...`)
+- **Permissions** : `file_storage.upload`, `file_storage.read`, `file_storage.delete` (GlobalPermission), `file_storage.admin`, `file_storage.moderate`, `file_storage.policies` (role admin)
+- **Events** : `file_storage.uploaded`, `file_storage.deleted`, `file_storage.approved`, `file_storage.rejected`, `file_storage.policy_updated`, `file_storage.policy_deleted`
+- **Fixtures** : generation de faux fichiers sur disque (images PNG/JPEG, PDF, texte, CSV) + records DB, politiques de moderation
+- **Antivirus** : activation ClamAV en local (`.env` configure)
+- **Migration Alembic** : table `storage_documents`, `file_storage_policies`, feature_state, permissions, role admin
+
+### onboarding (NEW)
+
+- **Wizard multi-etapes** : overlay plein ecran au premier login avec 4 etapes : bienvenue/profil, theme/langue, preferences UI, decouverte des fonctionnalites
+- **Preview live** : changement de theme, densite, taille de texte et arrondis appliques en temps reel pendant le wizard
+- **Sauvegarde progressive** : chaque etape persiste ses choix individuellement, `onboarding_completed` set a la fin ou au skip
+- **Skippable** : bouton "Passer" toujours visible, le wizard ne reapparait jamais apres completion ou skip
+- **Migration Alembic** : feature_state + global_permission + marquage des users existants comme "onboarding complete"
+- **Feature toggleable** : desactivable via admin Features
+
+### _identity
+
+- **Avatar utilisateur** : champ `avatar_file_id` sur `users` (FK `use_alter=True`), endpoints `PUT/DELETE /api/auth/me/avatar`, `avatar_url` dans `UserResponse`
+- Composant `<FileUpload compact>` dans la page profil, affichage avatar dans le header (fallback initiales)
+
+### docker
+
+- Ajout du service `clamav` (ClamAV antivirus) avec volume `clamav_data`
+
 ## 2026.03.1
 
 ### fixture_generator (NEW)

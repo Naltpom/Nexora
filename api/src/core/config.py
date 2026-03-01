@@ -26,6 +26,16 @@ class Settings(BaseSettings):
     UPLOAD_DIR: str = "/app/uploads"
     MAX_UPLOAD_SIZE_MB: int = 50
 
+    # File storage
+    STORAGE_BACKEND: str = "local"  # "local" (futur: "s3")
+    UPLOAD_QUOTA_MB: int = 0  # 0 = illimite
+    UPLOAD_THUMBNAIL_SIZE: int = 200  # px max dimension
+
+    # Antivirus (ClamAV)
+    ANTIVIRUS_ENABLED: bool = False
+    ANTIVIRUS_HOST: str = "clamav"
+    ANTIVIRUS_PORT: int = 3310
+
     # SMTP
     SMTP_HOST: str = "smtp.office365.com"
     SMTP_PORT: int = 587

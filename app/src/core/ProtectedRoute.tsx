@@ -14,7 +14,7 @@ interface Props {
 
 export default function ProtectedRoute({ children, requireSuperAdmin = false, permission, feature, isPublic = false }: Props) {
   const { t } = useTranslation('common')
-  const { user, loading, isImpersonating } = useAuth()
+  const { user, loading, isImpersonating, isMfaSetupRequired, getMfaGraceExpires } = useAuth()
   const { can } = usePermission()
   const { isActive } = useFeature()
   const location = useLocation()
@@ -53,9 +53,9 @@ export default function ProtectedRoute({ children, requireSuperAdmin = false, pe
     }
 
     // MFA setup enforcement after grace period
-    if (localStorage.getItem('mfa_setup_required') === 'true') {
-      const raw = localStorage.getItem('mfa_grace_period_expires')
-      if (raw && new Date() >= new Date(raw)) {
+    if (isMfaSetupRequired()) {
+      const expires = getMfaGraceExpires()
+      if (expires && new Date() >= expires) {
         return <Navigate to="/mfa/force-setup" replace />
       }
     }

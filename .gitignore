@@ -67,6 +67,9 @@ backup_*
 backups/*.sql
 backups/*.dump
 
+# Uploads (dev bind mount)
+uploads/
+
 # Plans
 docs/plans
 docs/analyses

@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { useAuth } from '../../AuthContext'
+import { useFeature } from '../../FeatureContext'
 import { useTutorial } from './TutorialContext'
 import './didacticiel.scss'
 
@@ -69,12 +71,16 @@ function clampTop(top: number, vh: number, gap: number): number {
 
 export default function TutorialEngine() {
   const { t } = useTranslation('preference.didacticiel')
+  const { getPreference } = useAuth()
+  const { isActive } = useFeature()
   const {
     active,
     currentStep,
     currentPermissionTutorial,
-    totalStepsInChain,
-    currentStepInChain,
+    totalTutorials,
+    currentTutorialNumber,
+    totalStepsGlobal,
+    currentStepGlobal,
     nextStep,
     prevStep,
     skipCurrent,
@@ -189,6 +195,7 @@ export default function TutorialEngine() {
   }, [updatePosition, active, ready])
 
   if (location.pathname === '/accept-legal' || location.pathname === '/change-password') return null
+  if (isActive('onboarding') && getPreference('onboarding_completed') !== true) return null
   if (!active || !currentStep) return null
 
   // Show only the dark overlay while loading (no tooltip, no highlight)
@@ -292,7 +299,7 @@ export default function TutorialEngine() {
     <div
       className="tutorial-overlay"
       onClick={(e) => {
-        if (e.target === e.currentTarget) closeTutorial()
+        if (e.target === e.currentTarget) nextStep()
       }}
     >
       {/* SVG mask overlay */}
@@ -327,11 +334,11 @@ export default function TutorialEngine() {
         <div
           className="tutorial-highlight"
           style={{
-            top: targetRect.top - padding,
-            left: targetRect.left - padding,
-            width: targetRect.width + padding * 2,
-            height: targetRect.height + padding * 2,
-          }}
+            '--highlight-top': `${targetRect.top - padding}px`,
+            '--highlight-left': `${targetRect.left - padding}px`,
+            '--highlight-width': `${targetRect.width + padding * 2}px`,
+            '--highlight-height': `${targetRect.height + padding * 2}px`,
+          } as React.CSSProperties}
         />
       )}
 
@@ -343,13 +350,8 @@ export default function TutorialEngine() {
       >
         <div className="tutorial-tooltip-header">
           <span className="tutorial-tooltip-step">
-            {currentStepInChain} / {totalStepsInChain}
+            {currentTutorialNumber} / {totalTutorials}
           </span>
-          {currentPermissionTutorial && (
-            <span className="tutorial-tooltip-label">
-              {currentPermissionTutorial.label}
-            </span>
-          )}
           <button
             className="tutorial-tooltip-close"
             onClick={closeTutorial}
@@ -357,6 +359,12 @@ export default function TutorialEngine() {
           >
             &times;
           </button>
+        </div>
+        <div className="tutorial-tooltip-progress">
+          <div
+            className="tutorial-tooltip-progress__bar"
+            style={{ '--progress': `${totalStepsGlobal > 0 ? (currentStepGlobal / totalStepsGlobal) * 100 : 0}%` } as React.CSSProperties}
+          />
         </div>
         <h3 className="tutorial-tooltip-title">
           {elementNotFound ? t('tutorial_engine_element_not_found_title') : currentStep.title}
