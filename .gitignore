@@ -50,6 +50,8 @@ env/
 htmlcov/
 .tox/
 .nox/
+app/test-results/
+app/tests/.auth-state.json
 
 # Logs
 *.log
@@ -61,14 +63,19 @@ logs/
 
 # Node
 node_modules/
+package-lock.json
+
+# Secrets (Docker Secrets files — keep directory, ignore contents)
+secrets/*
+!secrets/.gitkeep
 
 # Backups
 backup_*
 backups/*.sql
 backups/*.dump
 
-# Uploads (dev bind mount)
-uploads/
+# Uploads (keep root directory, ignore contents)
+uploads/*
 !uploads/.gitkeep
 
 # Plans

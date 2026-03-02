@@ -91,7 +91,7 @@ def create_app() -> FastAPI:
     application = FastAPI(
         title="Nexora",
         description="Feature-based modular application template",
-        version="2026.03.5",
+        version="2026.03.6",
         lifespan=lifespan,
         docs_url="/api/docs" if settings.is_dev else None,
         openapi_url="/api/openapi.json" if settings.is_dev else None,

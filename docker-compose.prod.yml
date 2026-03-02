@@ -1,0 +1,161 @@
+# Production/Staging override
+# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+services:
+  db:
+    ports: []
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  pgbouncer:
+    ports: []
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    secrets:
+      - postgres_password
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  redis:
+    ports: []
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --requirepass ${REDIS_PASSWORD}
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  meilisearch:
+    ports: []
+    environment:
+      MEILI_ENV: production
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+  clamav:
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  api:
+    ports: []
+    entrypoint: ["./entrypoint.prod.sh"]
+    environment:
+      - UVICORN_WORKERS=${UVICORN_WORKERS:-4}
+    secrets:
+      - secret_key
+      - postgres_password
+      - encryption_key
+      - redis_password
+      - meilisearch_master_key
+      - smtp_password
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "10"
+
+  worker:
+    secrets:
+      - secret_key
+      - postgres_password
+      - encryption_key
+      - redis_password
+      - meilisearch_master_key
+      - smtp_password
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+  app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile.prod
+      args:
+        VITE_ENV: production
+    ports: []
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:80/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ── Gateway Nginx (SSL + reverse proxy) ────────────────────────────
+  nginx:
+    build:
+      context: ./deploy/nginx
+      dockerfile: Dockerfile
+    container_name: template02_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DOMAIN=${DOMAIN:-localhost}
+    volumes:
+      - certbot_conf:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    depends_on:
+      api:
+        condition: service_healthy
+      app:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:80/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+  # ── Certbot (Let's Encrypt auto-renewal) ───────────────────────────
+  certbot:
+    image: certbot/certbot
+    container_name: template02_certbot
+    restart: unless-stopped
+    volumes:
+      - certbot_conf:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --quiet; sleep 12h & wait $${!}; done'"
+
+secrets:
+  secret_key:
+    file: ./secrets/secret_key
+  postgres_password:
+    file: ./secrets/postgres_password
+  encryption_key:
+    file: ./secrets/encryption_key
+  redis_password:
+    file: ./secrets/redis_password
+  meilisearch_master_key:
+    file: ./secrets/meilisearch_master_key
+  smtp_password:
+    file: ./secrets/smtp_password
+
+volumes:
+  certbot_conf:
+  certbot_www:

@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026.03.6
+
+### infra — Production-Ready Infrastructure
+
+- **Production Dockerfile frontend** (`app/Dockerfile.prod`) : multi-stage build Bun → Nginx Alpine, SPA fallback, gzip, cache assets immutable
+- **Production entrypoint API** (`api/entrypoint.prod.sh`) : uvicorn multi-worker sans `--reload`, proxy-headers pour IP client correcte derriere Nginx
+- **Gateway Nginx** (`deploy/nginx/`) : reverse proxy SSL (Let's Encrypt), rate limiting (general + auth), support SSE `/api/realtime/stream`, envsubst `${DOMAIN}`
+- **Docker Compose production** (`docker-compose.prod.yml`) : ports internes fermes, log rotation, service certbot auto-renewal, service nginx gateway
+- **Docker Secrets** : secrets sensibles (SECRET_KEY, ENCRYPTION_KEY, POSTGRES_PASSWORD, REDIS_PASSWORD, MEILISEARCH_MASTER_KEY, SMTP_PASSWORD) montes en `/run/secrets/`, jamais dans les env vars Docker
+- **Pydantic secrets_dir** (`api/src/core/config.py`) : support natif Docker Secrets via `secrets_dir = "/run/secrets"`
+- **PgBouncer dynamique** : entrypoint genere `userlist.txt` depuis Docker Secrets ou env vars, pool sizes augmentes (40/400)
+- **Templates environnement** (`deploy/env/`) : `.env.production.example` et `.env.staging.example` avec toutes les variables documentees
+- **Scripts de deploiement** (`deploy/scripts/`) : `init-secrets.sh` (generation des secrets), `init-ssl.sh` (bootstrap Let's Encrypt), `backup.sh` (pg_dump + uploads avec retention)
+- **Deploy workflow** (`.github/workflows/deploy.yml`) : utilise `docker-compose.prod.yml`, rolling update avec nginx
+- **Multi-instance** : chaque client = 1 clone du template avec son propre `.env`, `secrets/`, branding via admin UI, features via feature_flags
+- **Documentation** (`deploy/docs/`) : DEPLOYMENT.md (guide complet), SECURITY.md (checklist securite), BACKUP.md (backup/restore), ARCHITECTURE.md (schema infra)
+- **Environnement recette** : ajout de l'option `recette` dans le workflow GitHub Actions Deploy
+- **CI fixes** : Dockerfiles compatibles DinD (`COPY --chmod`, `--chown`), entrypoints LF, PgBouncer env vars + healthcheck `start_period`
+- **Gitignore** : ajout `test-results/`, `.auth-state.json`, `package-lock.json`, `secrets/`
+
 ## 2026.03.5
 
 ### dashboard (NEW)

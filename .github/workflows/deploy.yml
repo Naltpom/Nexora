@@ -17,6 +17,7 @@ on:
         default: "staging"
         type: choice
         options:
+          - recette
           - staging
           - production
 
@@ -44,22 +45,23 @@ jobs:
           script: |
             set -e
             cd ${{ secrets.APP_DIR || '/app' }}
+            COMPOSE="docker compose -f docker-compose.yml -f docker-compose.prod.yml"
 
             echo "=== Pull latest code ==="
             git pull origin main
 
             echo "=== Build new images (without stopping running containers) ==="
-            docker compose build
+            $COMPOSE build
 
             echo "=== Run migrations BEFORE switching to new code ==="
-            docker compose run --rm api alembic -c alembic/alembic.ini upgrade head
+            $COMPOSE run --rm -e POSTGRES_HOST=db -e POSTGRES_PORT=5432 api alembic -c alembic/alembic.ini upgrade head
 
             echo "=== Rolling update: recreate services one by one ==="
-            docker compose up -d --no-deps --force-recreate api
+            $COMPOSE up -d --no-deps --force-recreate api
 
             echo "=== Wait for API to be healthy ==="
             for i in $(seq 1 30); do
-              if docker compose exec -T api python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')" 2>/dev/null; then
+              if $COMPOSE exec -T api python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')" 2>/dev/null; then
                 echo "API is healthy (attempt $i)"
                 break
               fi
@@ -67,14 +69,15 @@ jobs:
               sleep 2
             done
 
-            docker compose up -d --no-deps --force-recreate worker
-            docker compose up -d --no-deps --force-recreate app
+            $COMPOSE up -d --no-deps --force-recreate worker
+            $COMPOSE up -d --no-deps --force-recreate app
+            $COMPOSE up -d --no-deps --force-recreate nginx
 
             echo "=== Cleanup old images ==="
             docker image prune -f
 
             echo "=== Deployment complete ==="
-            docker compose ps
+            $COMPOSE ps
 
   # ─── Cloud Deployment (Container Services) ───────────────────────
   deploy-cloud:

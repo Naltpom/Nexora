@@ -1,3 +1,5 @@
 FROM edoburu/pgbouncer:latest
-COPY pgbouncer.ini /etc/pgbouncer/pgbouncer.ini
-COPY userlist.txt /etc/pgbouncer/userlist.txt
+COPY --chown=postgres:postgres pgbouncer.ini /etc/pgbouncer/pgbouncer.ini
+COPY --chown=postgres:postgres userlist.txt /etc/pgbouncer/userlist.txt
+COPY --chmod=755 entrypoint.sh /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
