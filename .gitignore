@@ -69,6 +69,7 @@ backups/*.dump
 
 # Uploads (dev bind mount)
 uploads/
+!uploads/.gitkeep
 
 # Plans
 docs/plans

@@ -17,6 +17,14 @@ export const manifest = {
   navItems: [
     {
       label: 'Annonces',
+      path: '/announcements',
+      icon: 'megaphone',
+      section: 'user',
+      permission: 'announcement.read',
+      order: 37,
+    },
+    {
+      label: 'Annonces',
       path: '/admin/announcements',
       icon: 'megaphone',
       section: 'admin',

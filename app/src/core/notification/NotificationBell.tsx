@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { useNotifications } from './NotificationContext'
 import { useFeature } from '../../core/FeatureContext'
+import { useMediaQuery } from '../../core/hooks/useMediaQuery'
 import './notifications.scss'
 
 interface NotifItem {
@@ -87,6 +88,7 @@ export default function NotificationBell() {
   const { t } = useTranslation('notification')
   const { notifications, unreadCount, markAsRead, markAsUnread, markAllAsRead, deleteNotification, fetchNotifications } = useNotifications()
   const { isActive } = useFeature()
+  const isMobile = useMediaQuery('(max-width: 768px)')
   const pushActive = isActive('notification.push')
   const [open, setOpen] = useState(false)
   const [wiggle, setWiggle] = useState(false)
@@ -132,6 +134,8 @@ export default function NotificationBell() {
   const handleDelete = useCallback((id: number) => {
     deleteNotification(id)
   }, [deleteNotification])
+
+  if (isMobile && unreadCount === 0) return null
 
   return (
     <div className={`notification-bell${wiggle ? ' notification-bell-wiggle' : ''}`} ref={dropdownRef}>

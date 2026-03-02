@@ -1,0 +1,81 @@
+{
+  "page_title": "",
+  "page_subtitle": "",
+
+  "breadcrumb_home": "",
+  "breadcrumb_feature_flags": "",
+
+  "btn_create": "",
+  "search_placeholder": "",
+  "empty": "",
+  "loading": "",
+
+  "col_feature": "",
+  "col_strategy": "",
+  "col_status": "",
+  "col_description": "",
+  "col_details": "",
+  "col_actions": "",
+
+  "strategy_boolean": "",
+  "strategy_percentage": "",
+  "strategy_targeted": "",
+  "strategy_ab_test": "",
+
+  "status_enabled": "",
+  "status_disabled": "",
+  "feature_active": "",
+  "feature_inactive": "",
+
+  "modal_create_title": "",
+  "modal_edit_title": "",
+
+  "field_feature": "",
+  "field_feature_placeholder": "",
+  "field_strategy": "",
+  "field_description": "",
+  "field_description_placeholder": "",
+  "field_enabled": "",
+  "field_rollout_percentage": "",
+  "field_target_roles": "",
+  "field_target_roles_placeholder": "",
+  "field_target_users": "",
+  "field_target_users_placeholder": "",
+  "field_variants": "",
+  "field_variant_name": "",
+  "field_variant_weight": "",
+  "btn_add_variant": "",
+  "btn_remove_variant": "",
+  "variant_weight_sum": "",
+
+  "btn_save": "",
+  "btn_cancel": "",
+  "btn_edit": "",
+  "btn_delete": "",
+  "confirm_delete": "",
+
+  "stat_flags": "",
+
+  "preview_title": "",
+  "preview_user_label": "",
+  "preview_user_placeholder": "",
+  "preview_btn_evaluate": "",
+  "preview_result_enabled": "",
+  "preview_result_disabled": "",
+  "preview_result_variant": "",
+  "preview_result_reason": "",
+  "preview_result_strategy": "",
+
+  "toast_created": "",
+  "toast_updated": "",
+  "toast_deleted": "",
+  "toast_error": "",
+
+  "details_percentage": "",
+  "details_roles": "",
+  "details_users": "",
+  "details_variants": "",
+
+  "aria_table": "",
+  "aria_loading": ""
+}

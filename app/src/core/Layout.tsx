@@ -8,6 +8,7 @@ import { useAppSettings } from './AppSettingsContext'
 const MFASetupBanner = lazy(() => import('./mfa/MFASetupBanner'))
 const AnnouncementBanner = lazy(() => import('./announcement/AnnouncementBanner'))
 const AnnouncementBlocker = lazy(() => import('./announcement/AnnouncementBlocker'))
+const MaintenanceAdminBanner = lazy(() => import('./maintenance_mode/MaintenanceAdminBanner'))
 
 interface BreadcrumbItem {
   label: string
@@ -38,6 +39,11 @@ export default function Layout({ children, breadcrumb, fullWidth, title }: Props
       </a>
       <Header />
       <ImpersonationBanner />
+      {isActive('maintenance_mode') && (
+        <Suspense fallback={null}>
+          <MaintenanceAdminBanner />
+        </Suspense>
+      )}
       {isActive('mfa') && (
         <Suspense fallback={null}>
           <MFASetupBanner />

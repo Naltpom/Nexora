@@ -148,6 +148,11 @@ class Settings(BaseSettings):
     # Redis
     REDIS_URL: str = "redis://redis:6379/0"
 
+    # Meilisearch
+    MEILISEARCH_URL: str = "http://meilisearch:7700"
+    MEILISEARCH_MASTER_KEY: str = "meili_dev_master_key"
+    MEILISEARCH_ENABLED: bool = True
+
     @property
     def database_url(self) -> str:
         return (

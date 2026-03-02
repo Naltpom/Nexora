@@ -8,6 +8,7 @@ from arq.connections import RedisSettings
 
 from src.core.config import settings
 from src.core.cron_parser import cron_to_arq_kwargs
+from src.core.search.tasks import search_full_reindex
 
 logger = logging.getLogger(__name__)
 
@@ -151,9 +152,45 @@ def _build_cron_jobs() -> list:
     return jobs
 
 
+def _load_feature_states_sync() -> dict[str, bool]:
+    """Load feature states from DB (sync, for worker startup)."""
+    from sqlalchemy import create_engine, inspect, select
+    from sqlalchemy.orm import Session
+
+    from src.core._identity.models import FeatureState
+
+    sync_engine = create_engine(settings.database_url_sync)
+    states = {}
+    try:
+        with Session(sync_engine) as session:
+            inspector = inspect(sync_engine)
+            if "feature_states" in inspector.get_table_names():
+                rows = session.execute(select(FeatureState)).scalars().all()
+                for row in rows:
+                    states[row.name] = row.is_active
+    except Exception as e:
+        logger.warning("Could not load feature states in worker: %s", e)
+    finally:
+        sync_engine.dispose()
+    return states
+
+
+async def _on_worker_startup(ctx):
+    """Initialize registries needed by worker tasks (separate process from API)."""
+    from src.core.feature_registry import FeatureRegistry, get_registry
+
+    if not get_registry():
+        registry = FeatureRegistry()
+        registry.discover()
+        db_states = _load_feature_states_sync()
+        registry.load_states(db_states)
+        logger.info("Feature registry initialized in worker (%d features active).", sum(db_states.values()))
+
+
 class WorkerSettings:
-    functions = [send_email_task, send_webhook_task, send_push_task]
+    functions = [send_email_task, send_webhook_task, send_push_task, search_full_reindex]
     redis_settings = _parse_redis_url(settings.REDIS_URL)
     max_jobs = 10
     job_timeout = 60
     cron_jobs = _build_cron_jobs()
+    on_startup = _on_worker_startup

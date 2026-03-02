@@ -1,4 +1,4 @@
-from ..feature_registry import FeatureManifest
+from ..feature_registry import FeatureManifest, SearchIndexConfig
 from .middleware import ImpersonationAuditMiddleware, LastActiveMiddleware
 
 manifest = FeatureManifest(
@@ -15,7 +15,6 @@ manifest = FeatureManifest(
         "invitations.create", "invitations.read", "invitations.delete",
         "impersonation.start", "impersonation.read", "impersonation.immune",
         "backups.create", "backups.restore", "backups.read",
-        "search.global",
         "commands.read", "commands.manage",
     ],
     events=[
@@ -52,13 +51,6 @@ manifest = FeatureManifest(
         {"event_type": "preference.updated", "label": "Preferences modifiees", "category": "Utilisateurs", "description": "Un utilisateur a modifie ses preferences"},
     ],
     tutorials=[
-        # -- Recherche --
-        {
-            "permission": "search.global",
-            "label": "Recherche globale",
-            "description": "Trouvez rapidement utilisateurs, roles et parametres depuis la barre de recherche.",
-            "steps": [{"target": ".global-search-container", "title": "Recherche globale", "description": "Utilisez cette barre de recherche pour trouver rapidement des utilisateurs, roles ou parametres.", "position": "bottom"}],
-        },
         # -- Utilisateurs (CRUD) --
         {
             "permission": "users.read",
@@ -163,6 +155,21 @@ manifest = FeatureManifest(
         },
     ],
     tutorial_order=60,
+    search_indexes=[
+        SearchIndexConfig(
+            index_name="users",
+            model_module="src.core._identity.models",
+            model_class="User",
+            searchable_attributes=["email", "first_name", "last_name"],
+            filterable_attributes=["is_active"],
+            sortable_attributes=["created_at", "email"],
+            serializer_module="src.core.search.serializers",
+            serializer_function="serialize_user",
+            read_permission="users.read",
+            base_filter_module="src.core.search.serializers",
+            base_filter_function="user_base_filter",
+        ),
+    ],
     middleware=[ImpersonationAuditMiddleware, LastActiveMiddleware],
     extra_routers=[
         {"module": "src.core._identity.routes_auth", "prefix": "/api/auth", "tags": ["Auth"]},
@@ -172,7 +179,7 @@ manifest = FeatureManifest(
         {"module": "src.core._identity.routes_features", "prefix": "/api/features", "tags": ["Features"]},
         {"module": "src.core._identity.routes_settings", "prefix": "/api/settings", "tags": ["Settings"]},
         {"module": "src.core._identity.routes_health", "prefix": "/api", "tags": ["Health"]},
-        {"module": "src.core._identity.routes_search", "prefix": "/api", "tags": ["Search"]},
+
         {"module": "src.core._identity.routes_impersonation", "prefix": "/api/impersonation", "tags": ["Impersonation"]},
         {"module": "src.core._identity.routes_invitations", "prefix": "/api", "tags": ["Invitations"]},
         {"module": "src.core._identity.routes_backups", "prefix": "/api/backups", "tags": ["Backups"]},

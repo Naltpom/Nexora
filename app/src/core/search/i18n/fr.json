@@ -1,0 +1,12 @@
+{
+  "palette_placeholder": "Rechercher...",
+  "palette_loading": "Recherche en cours...",
+  "palette_no_results": "Aucun resultat pour \"{{query}}\"",
+  "palette_empty_hint": "Tapez pour rechercher utilisateurs, annonces...",
+  "palette_esc_hint": "Echap",
+  "category_users": "Utilisateurs",
+  "category_announcements": "Annonces",
+  "trigger_placeholder": "Rechercher...",
+  "trigger_shortcut": "Ctrl+K",
+  "trigger_shortcut_mac": "\u2318K"
+}

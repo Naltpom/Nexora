@@ -91,7 +91,7 @@ def create_app() -> FastAPI:
     application = FastAPI(
         title="Nexora",
         description="Feature-based modular application template",
-        version="2026.03.3",
+        version="2026.03.5",
         lifespan=lifespan,
         docs_url="/api/docs" if settings.is_dev else None,
         openapi_url="/api/openapi.json" if settings.is_dev else None,
@@ -129,6 +129,10 @@ def create_app() -> FastAPI:
     db_states = load_feature_states_sync()
     registry.load_states(db_states)
     registry.validate()
+
+    # ── Maintenance mode middleware (must intercept before feature gate) ─
+    from .core.maintenance_mode.middleware import MaintenanceMiddleware
+    application.add_middleware(MaintenanceMiddleware)
 
     # ── Feature gate middleware (rejects requests to disabled features) ─
     application.add_middleware(FeatureGateMiddleware)
@@ -225,6 +229,21 @@ async def lifespan(app: FastAPI):
                     logger.info(f"Promoted {settings.DEFAULT_ADMIN_EMAIL} to {slug}.")
         except Exception as e:
             logger.warning(f"Could not promote admin user: {e}")
+
+    # 4. Configure Meilisearch indexes + initial reindex (non-blocking)
+    if settings.MEILISEARCH_ENABLED:
+        try:
+            from .core.search.services import configure_indexes
+
+            await configure_indexes()
+            logger.info("Meilisearch indexes configured.")
+
+            from .core.tasks import enqueue
+
+            await enqueue("search_full_reindex")
+            logger.info("Initial Meilisearch reindex enqueued.")
+        except Exception as e:
+            logger.warning(f"Could not configure Meilisearch: {e}")
 
     yield  # Application runs here
 

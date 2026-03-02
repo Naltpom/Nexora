@@ -1,5 +1,98 @@
 # Changelog
 
+## 2026.03.5
+
+### dashboard (NEW)
+
+- **Feature core de tableau de bord personnalisable** : page d'accueil avec widgets drag-and-drop via `@dnd-kit`
+- **Widget registry extensible** : `widget_registry.py` (backend) et `WidgetWrapper.tsx` (frontend) avec lazy-loading des widgets
+- **Widgets inclus** : stats users/notifications/invitations/events, activity feed, system health, quick links (user/admin), feature showcase, welcome banner
+- **Layout persistant** : sauvegarde du layout en DB par utilisateur (`DashboardLayout` model), API CRUD avec reset aux defauts
+- **Mode edition** : barre flottante `DashboardEditBar` avec drag handles, resize (half/full), remove, catalogue de widgets
+- **Page admin** : gestion du layout par defaut (admin), apercu du dashboard
+- Permissions : `dashboard.read` (GlobalPermission), `dashboard.manage` (admin)
+- Migration Alembic : table `dashboard_layouts`, seed feature_state + permissions
+- Support dark/light theme complet, responsive
+- i18n : traductions FR et EN
+
+### feature_flags (NEW)
+
+- **Feature core de feature flags avancee** : gestion des flags avec strategies multiples (boolean, percentage, targeted, ab_test)
+- **Strategies** : `boolean` (on/off simple), `percentage` (rollout progressif), `targeted` (par roles/users), `ab_test` (variantes avec poids)
+- **API CRUD** : `GET/POST/PUT/DELETE /api/feature-flags/`, `GET /api/feature-flags/{name}/evaluate` (evaluation pour l'utilisateur courant)
+- **Admin UI** : tableau avec recherche, badges de strategie, modal de creation/edition avec formulaire dynamique, preview d'evaluation
+- **Hook `useFeatureFlag`** : hook React pour evaluation cote frontend, integration avec le feature registry
+- **Dependency `check_feature_flag`** : FastAPI dependency pour gating conditionnel des endpoints par feature flag
+- Permissions : `feature_flags.read`, `feature_flags.manage` (admin)
+- Migration Alembic : table `feature_flags` avec FK vers `feature_states`, seed permissions
+- Support dark/light theme complet
+- i18n : traductions FR et EN
+
+### maintenance_mode (NEW)
+
+- **Feature core de mode maintenance** : activation/desactivation avec message personnalise et fin programmee
+- **Middleware de gating** : `MaintenanceMiddleware` bloque les requetes non-admin (retourne 503) quand le mode maintenance est actif
+- **Page maintenance** : page publique stylisee avec message, compte a rebours, auto-refresh
+- **Admin UI** : page d'administration avec activation/desactivation, message, planification de fenetres de maintenance, historique
+- **Guard frontend** : `MaintenanceGuard` wrapper qui redirige les non-admins vers la page maintenance
+- **Banniere admin** : `MaintenanceAdminBanner` affichee dans le header quand le mode est actif
+- **SSE realtime** : notifications temps reel via `maintenance_mode` event pour synchronisation instantanee
+- **Commandes planifiees** : `MaintenanceAutoEnable` et `MaintenanceAutoDisable` pour activation/desactivation programmee
+- Permissions : `maintenance_mode.read` (GlobalPermission), `maintenance_mode.manage` (admin)
+- Migration Alembic : table `maintenance_windows`, seed feature_state + permissions
+- Support dark/light theme complet
+- i18n : traductions FR et EN
+
+### search (NEW)
+
+- Deplace dans cette release (etait prevu en 2026.03.4, jamais committe)
+
+### infra
+
+- **Meilisearch** : nouveau service Docker (`getmeili/meilisearch:v1.12`), port 7700, volume `meilisearch_data`
+- **CI** : ruff pinner a `0.15.4` pour stabilite, `alembic check` valide la coherence modeles/DB
+
+### _identity
+
+- Suppression de `routes_search.py` (recherche migree vers la feature `search`)
+- Mise a jour du manifest : suppression du router search, ajout des `search_indexes` pour Meilisearch
+
+### announcement
+
+- Mise a jour du manifest : ajout des `search_indexes` pour Meilisearch
+- Ajout des permissions `announcement.read` et `announcement.manage` dans les fixtures
+
+### SCSS compliance
+
+- Mise en conformite des variables de densite CSS sur tous les fichiers SCSS modifies : `_header.scss`, `UserMenu.scss`, `notifications.scss`, `announcement.scss`, `favorite.scss`, `_loading.scss`, `dashboard.scss`
+- Corrections : padding → `var(--density-*)`, gap → `var(--density-gap)` / `var(--section-gap)`, border-radius → `var(--radius)`
+
+### hooks
+
+- Nouveau hook `useMediaQuery` : hook utilitaire pour les media queries reactives
+
+## 2026.03.4
+
+- **Feature core de recherche globale full-text via Meilisearch** : service Docker `meilisearch:v1.12`, SDK async `meilisearch-python-sdk`
+- **Architecture extensible par feature** : nouveau dataclass `SearchIndexConfig` dans `FeatureManifest`, chaque feature declare ses index searchables dans son `manifest.py`
+- **Sync incrementale** : event handlers sur le `EventBus` pour mise a jour Meilisearch en temps reel (user CRUD, announcement CRUD)
+- **Reindex bulk** : job ARQ `search_full_reindex`, endpoint admin `POST /api/search/reindex` (permission `search.reindex`)
+- **API multi-index** : `GET /api/search?q=` (recherche globale multi-index, resultats filtres par permissions user)
+- **API mono-index** : `GET /api/search/{index}?q=` (pour acceleration des tableaux, avec pagination, filtres, tri)
+- **Command Palette (Ctrl+K)** : modal type Spotlight/VS Code avec recherche debounced, resultats groupes par categorie, navigation clavier (ArrowUp/Down, Enter, Escape)
+- **Header trigger** : bouton stylise dans le header avec badge raccourci `Ctrl+K` / `Cmd+K`, ouvre la command palette
+- **Registry extensible** : `searchRegistry.ts` permet a chaque feature d'enregistrer son renderer de resultats via `registerSearchRenderer()`
+- **Hook `useTableSearch`** : hook opt-in pour acceleration des recherches dans les tableaux via Meilisearch (fallback ILIKE)
+- **Indexes initiaux** : `users` (email, first_name, last_name) et `announcements` (title, body)
+- Permissions : `search.global` (GlobalPermission, tous les utilisateurs authentifies), `search.reindex` (admin)
+- Support dark/light theme complet, responsive (trigger masque ≤640px)
+- i18n : traductions FR et EN completes
+
+### infra
+
+- **Meilisearch** : nouveau service Docker (`getmeili/meilisearch:v1.12`), port 7700, volume `meilisearch_data`
+- `api` et `worker` : `depends_on: meilisearch: condition: service_healthy`
+
 ## 2026.03.3
 
 ### infra

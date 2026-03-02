@@ -2,13 +2,17 @@ import { useState, useEffect, Suspense, lazy } from 'react'
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from './core/AuthContext'
 import { useFeature } from './core/FeatureContext'
+import { usePermission } from './core/PermissionContext'
 import ProtectedRoute from './core/ProtectedRoute'
 import MeshBackground from './core/MeshBackground'
 import BackgroundThemePicker from './core/BackgroundThemePicker'
+import { CommandPaletteProvider } from './core/search/CommandPaletteProvider'
 
 const TutorialWrapper = lazy(() => import('./core/preference/didacticiel/TutorialWrapper'))
 const CookieBanner = lazy(() => import('./core/rgpd/CookieBanner'))
 const OnboardingOverlay = lazy(() => import('./core/onboarding/OnboardingOverlay'))
+const MaintenanceGuard = lazy(() => import('./core/maintenance_mode/MaintenanceGuard'))
+const DashboardPage = lazy(() => import('./core/dashboard/DashboardPage'))
 
 // Identity pages (always available)
 import LoginPage from './core/_identity/LoginPage'
@@ -51,7 +55,7 @@ function LoginSkeleton() {
     <div className="login-container">
       <div className="login-card">
         <div className="login-header">
-          <div className="skeleton skeleton-circle" style={{ width: 48, height: 48, margin: '0 auto' }} />
+          <div className="skeleton skeleton-circle skeleton-avatar-lg" />
           <div className="skeleton skeleton-text skeleton-text-lg" />
           <div className="skeleton skeleton-text skeleton-text-sm" />
         </div>
@@ -70,6 +74,7 @@ function LoginSkeleton() {
 export default function App() {
   const { user, loading: authLoading, getPreference } = useAuth()
   const { isActive, loading: featuresLoading } = useFeature()
+  const { can } = usePermission()
   const [showBgPicker, setShowBgPicker] = useState(false)
   const [timedOut, setTimedOut] = useState(false)
 
@@ -132,7 +137,17 @@ export default function App() {
       <Route path="/accept-legal" element={user ? <AcceptLegalPage /> : <Navigate to="/login" />} />
 
       {/* Core protected routes */}
-      <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+      <Route path="/" element={
+        <ProtectedRoute>
+          {isActive('dashboard') ? (
+            <Suspense fallback={<div className="loading-screen"><div className="spinner" /></div>}>
+              <DashboardPage />
+            </Suspense>
+          ) : (
+            <HomePage />
+          )}
+        </ProtectedRoute>
+      } />
       <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
       <Route path="/admin/users" element={<ProtectedRoute permission="users.read"><UsersAdminPage /></ProtectedRoute>} />
       <Route path="/admin/users/:uuid" element={<ProtectedRoute permission="users.read"><UserDetailPage /></ProtectedRoute>} />
@@ -175,11 +190,21 @@ export default function App() {
           onClose={() => setShowBgPicker(false)}
         />
       )}
-      <Suspense fallback={<LoginSkeleton />}>
-        {user && isActive('preference.didacticiel') ? (
-          <TutorialWrapper>{routes}</TutorialWrapper>
-        ) : routes}
-      </Suspense>
+      <CommandPaletteProvider>
+        <Suspense fallback={<LoginSkeleton />}>
+          {isActive('maintenance_mode') ? (
+            <MaintenanceGuard canBypass={can('maintenance_mode.manage')}>
+              {user && isActive('preference.didacticiel') ? (
+                <TutorialWrapper>{routes}</TutorialWrapper>
+              ) : routes}
+            </MaintenanceGuard>
+          ) : (
+            user && isActive('preference.didacticiel') ? (
+              <TutorialWrapper>{routes}</TutorialWrapper>
+            ) : routes
+          )}
+        </Suspense>
+      </CommandPaletteProvider>
       {isActive('rgpd.consentement') && (
         <Suspense fallback={null}>
           <CookieBanner />

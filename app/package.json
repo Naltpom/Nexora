@@ -1,7 +1,7 @@
 {
   "name": "nexora",
   "private": true,
-  "version": "2026.03.3",
+  "version": "2026.03.5",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,14 +13,23 @@
     "extends": "stylelint-config-standard-scss",
     "rules": {
       "declaration-property-unit-allowed-list": {
-        "font-size": ["rem", "em", "%"]
+        "font-size": [
+          "rem",
+          "em",
+          "%"
+        ]
       },
       "declaration-property-value-disallowed-list": {
-        "border-radius": ["/^\\d{1,2}px/"]
+        "border-radius": [
+          "/^\\d{1,2}px/"
+        ]
       },
-      "declaration-no-important": [true, {
-        "severity": "warning"
-      }],
+      "declaration-no-important": [
+        true,
+        {
+          "severity": "warning"
+        }
+      ],
       "selector-class-pattern": null,
       "no-descending-specificity": null,
       "color-function-notation": null,
@@ -45,7 +54,10 @@
     },
     "overrides": [
       {
-        "files": ["**/accessibilite/**/*.scss", "**/animations.scss"],
+        "files": [
+          "**/accessibilite/**/*.scss",
+          "**/animations.scss"
+        ],
         "rules": {
           "declaration-no-important": null,
           "declaration-property-value-disallowed-list": null
@@ -54,6 +66,9 @@
     ]
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@tiptap/extension-image": "^2.1.13",
     "@tiptap/extension-mention": "^2.1.13",
     "@tiptap/extension-placeholder": "^2.1.13",

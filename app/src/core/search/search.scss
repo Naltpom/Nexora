@@ -1,0 +1,416 @@
+/* ==================== */
+/* Search — Command Palette & Header Trigger */
+/* ==================== */
+
+/* ── Header Search Trigger ──────────────────────────── */
+
+.search-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: var(--density-btn-padding, 8px 16px);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius);
+  background: var(--gray-50);
+  color: var(--gray-500);
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  font-size: 0.8125rem;
+  min-width: 200px;
+}
+
+.search-trigger:hover {
+  border-color: var(--gray-400);
+  color: var(--gray-700);
+}
+
+.search-trigger:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.search-trigger-icon {
+  flex-shrink: 0;
+  color: var(--gray-400);
+}
+
+.search-trigger-text {
+  flex: 1;
+  text-align: left;
+  color: var(--gray-400);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-trigger-kbd {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 6px;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius);
+  background: white;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--gray-500);
+  line-height: 1;
+}
+
+/* ── Command Palette Overlay ────────────────────────── */
+
+.command-palette-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 15vh;
+  z-index: 1200;
+  animation: cpOverlayFadeIn 0.15s ease-out;
+}
+
+@keyframes cpOverlayFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ── Command Palette ────────────────────────────────── */
+
+.command-palette {
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  max-width: 640px;
+  margin: 0 16px;
+  overflow: hidden;
+  animation: cpSlideIn 0.15s ease-out;
+}
+
+@keyframes cpSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── Input Wrapper ──────────────────────────────────── */
+
+.command-palette-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.command-palette-input-icon {
+  flex-shrink: 0;
+  color: var(--gray-400);
+}
+
+.command-palette-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 1rem;
+  color: var(--gray-900);
+  background: transparent;
+}
+
+.command-palette-input::placeholder {
+  color: var(--gray-400);
+}
+
+.command-palette-input-kbd {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 8px;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius);
+  background: var(--gray-50);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--gray-500);
+  line-height: 1;
+}
+
+/* ── Body ───────────────────────────────────────────── */
+
+.command-palette-body {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+/* ── Loading / Empty / Hint ─────────────────────────── */
+
+.command-palette-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px 16px;
+  font-size: 0.875rem;
+  color: var(--gray-500);
+}
+
+.command-palette-loading svg {
+  animation: cpSpin 1s linear infinite;
+  color: var(--gray-400);
+}
+
+@keyframes cpSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.command-palette-empty {
+  padding: 24px 16px;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--gray-500);
+}
+
+.command-palette-hint {
+  padding: 24px 16px;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--gray-400);
+}
+
+/* ── Groups ─────────────────────────────────────────── */
+
+.command-palette-group {
+  padding: 4px 0;
+}
+
+.command-palette-group + .command-palette-group {
+  border-top: 1px solid var(--gray-100);
+}
+
+.command-palette-group-title {
+  padding: 8px 16px 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--gray-400);
+}
+
+/* ── Result Items ───────────────────────────────────── */
+
+.command-palette-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: var(--density-input-padding, 8px 12px);
+  margin: 0 6px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.command-palette-item:hover {
+  background: var(--gray-50);
+}
+
+.command-palette-item--active {
+  background: var(--primary);
+  color: white;
+}
+
+.command-palette-item--active .command-palette-item-icon {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.command-palette-item--active .command-palette-item-title {
+  color: white;
+}
+
+.command-palette-item--active .command-palette-item-subtitle {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.command-palette-item--active .command-palette-item-badge {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.command-palette-item-icon {
+  flex-shrink: 0;
+  color: var(--gray-400);
+  display: flex;
+  align-items: center;
+}
+
+.command-palette-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.command-palette-item-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gray-800);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.command-palette-item-subtitle {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+.command-palette-item-badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--radius);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  background: var(--gray-100);
+  color: var(--gray-600);
+}
+
+/* ── Dark Theme ─────────────────────────────────────── */
+
+[data-theme="dark"] .search-trigger {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+[data-theme="dark"] .search-trigger:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+[data-theme="dark"] .search-trigger-text {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+[data-theme="dark"] .search-trigger-icon {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+[data-theme="dark"] .search-trigger-kbd {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.4);
+}
+
+[data-theme="dark"] .command-palette-overlay {
+  background: rgba(0, 0, 0, 0.65);
+}
+
+[data-theme="dark"] .command-palette {
+  background: #1e1b2e;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .command-palette-input-wrapper {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .command-palette-input-icon {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+[data-theme="dark"] .command-palette-input {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="dark"] .command-palette-input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+[data-theme="dark"] .command-palette-input-kbd {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.4);
+}
+
+[data-theme="dark"] .command-palette-loading {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+[data-theme="dark"] .command-palette-loading svg {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+[data-theme="dark"] .command-palette-empty {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+[data-theme="dark"] .command-palette-hint {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+[data-theme="dark"] .command-palette-group + .command-palette-group {
+  border-top-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .command-palette-group-title {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+[data-theme="dark"] .command-palette-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .command-palette-item--active {
+  background: var(--primary);
+}
+
+[data-theme="dark"] .command-palette-item-icon {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+[data-theme="dark"] .command-palette-item-title {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="dark"] .command-palette-item-subtitle {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+[data-theme="dark"] .command-palette-item-badge {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ── Responsive ─────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .search-trigger {
+    display: none;
+  }
+
+  .command-palette {
+    max-width: 100%;
+    margin: 0 8px;
+  }
+}

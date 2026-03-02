@@ -437,3 +437,16 @@
   width: 28rem;
   max-width: 90vw;
 }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .favorite-dropdown {
+    position: fixed;
+    top: 52px;
+    right: 8px;
+    left: 8px;
+    width: auto;
+    max-height: calc(100vh - 60px);
+    max-height: calc(100dvh - 60px);
+  }
+}

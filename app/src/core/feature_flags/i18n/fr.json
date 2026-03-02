@@ -1,0 +1,81 @@
+{
+  "page_title": "Feature Flags",
+  "page_subtitle": "Configurez des regles avancees pour le deploiement progressif des features",
+
+  "breadcrumb_home": "Accueil",
+  "breadcrumb_feature_flags": "Feature Flags",
+
+  "btn_create": "Nouveau flag",
+  "search_placeholder": "Rechercher...",
+  "empty": "Aucun flag configure",
+  "loading": "Chargement...",
+
+  "col_feature": "Feature",
+  "col_strategy": "Strategie",
+  "col_status": "Statut",
+  "col_description": "Description",
+  "col_details": "Details",
+  "col_actions": "Actions",
+
+  "strategy_boolean": "Booleen",
+  "strategy_percentage": "Pourcentage",
+  "strategy_targeted": "Cible",
+  "strategy_ab_test": "A/B Test",
+
+  "status_enabled": "Actif",
+  "status_disabled": "Inactif",
+  "feature_active": "Feature ON",
+  "feature_inactive": "Feature OFF",
+
+  "modal_create_title": "Nouveau flag",
+  "modal_edit_title": "Modifier le flag",
+
+  "field_feature": "Feature",
+  "field_feature_placeholder": "Selectionnez une feature",
+  "field_strategy": "Strategie",
+  "field_description": "Description (optionnel)",
+  "field_description_placeholder": "Decrivez l'objectif de ce flag",
+  "field_enabled": "Active",
+  "field_rollout_percentage": "Pourcentage de deploiement",
+  "field_target_roles": "Roles cibles",
+  "field_target_roles_placeholder": "Selectionnez les roles",
+  "field_target_users": "Utilisateurs cibles (IDs)",
+  "field_target_users_placeholder": "Ex: 1, 5, 12",
+  "field_variants": "Variantes",
+  "field_variant_name": "Nom",
+  "field_variant_weight": "Poids (%)",
+  "btn_add_variant": "Ajouter une variante",
+  "btn_remove_variant": "Retirer",
+  "variant_weight_sum": "La somme des poids doit etre 100 (actuellement {{sum}})",
+
+  "btn_save": "Enregistrer",
+  "btn_cancel": "Annuler",
+  "btn_edit": "Modifier",
+  "btn_delete": "Supprimer",
+  "confirm_delete": "Supprimer ce flag ?",
+
+  "stat_flags": "Flags",
+
+  "preview_title": "Simulation",
+  "preview_user_label": "ID utilisateur",
+  "preview_user_placeholder": "ID du user a simuler",
+  "preview_btn_evaluate": "Evaluer",
+  "preview_result_enabled": "Active",
+  "preview_result_disabled": "Desactive",
+  "preview_result_variant": "Variante : {{variant}}",
+  "preview_result_reason": "Raison : {{reason}}",
+  "preview_result_strategy": "Strategie : {{strategy}}",
+
+  "toast_created": "Flag cree",
+  "toast_updated": "Flag mis a jour",
+  "toast_deleted": "Flag supprime",
+  "toast_error": "Une erreur est survenue",
+
+  "details_percentage": "{{percentage}}% deploye",
+  "details_roles": "{{count}} role(s) cible(s)",
+  "details_users": "{{count}} utilisateur(s) cible(s)",
+  "details_variants": "{{count}} variante(s)",
+
+  "aria_table": "Tableau des feature flags",
+  "aria_loading": "Chargement..."
+}

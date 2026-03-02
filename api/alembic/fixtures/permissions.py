@@ -29,7 +29,6 @@ ALL_PERMISSIONS: list[tuple[str, str]] = [
     ("backups.create", "_identity"),
     ("backups.restore", "_identity"),
     ("backups.read", "_identity"),
-    ("search.global", "_identity"),
     ("commands.read", "_identity"),
     ("commands.manage", "_identity"),
     ("roles.assign_super_admin", "_identity"),
@@ -108,4 +107,19 @@ ALL_PERMISSIONS: list[tuple[str, str]] = [
     ("file_storage.admin", "file_storage"),
     # onboarding
     ("onboarding.read", "onboarding"),
+    # search
+    ("search.global", "search"),
+    ("search.reindex", "search"),
+    # dashboard
+    ("dashboard.read", "dashboard"),
+    ("dashboard.manage", "dashboard"),
+    # feature_flags
+    ("feature_flags.read", "feature_flags"),
+    ("feature_flags.manage", "feature_flags"),
+    # maintenance_mode
+    ("maintenance_mode.read", "maintenance_mode"),
+    ("maintenance_mode.manage", "maintenance_mode"),
+    # announcement
+    ("announcement.read", "announcement"),
+    ("announcement.manage", "announcement"),
 ]

@@ -1,4 +1,4 @@
-from ..feature_registry import FeatureManifest
+from ..feature_registry import FeatureManifest, SearchIndexConfig
 
 manifest = FeatureManifest(
     name="announcement",
@@ -45,6 +45,19 @@ manifest = FeatureManifest(
         },
     ],
     tutorial_order=55,
+    search_indexes=[
+        SearchIndexConfig(
+            index_name="announcements",
+            model_module="src.core.announcement.models",
+            model_class="Announcement",
+            searchable_attributes=["title", "body"],
+            filterable_attributes=["type", "is_active"],
+            sortable_attributes=["created_at", "priority"],
+            serializer_module="src.core.search.serializers",
+            serializer_function="serialize_announcement",
+            read_permission="announcement.read",
+        ),
+    ],
     depends=["realtime"],
     router_module="src.core.announcement.routes",
     router_prefix="/api/announcements",

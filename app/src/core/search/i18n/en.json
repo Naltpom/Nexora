@@ -1,0 +1,12 @@
+{
+  "palette_placeholder": "Search...",
+  "palette_loading": "Searching...",
+  "palette_no_results": "No results for \"{{query}}\"",
+  "palette_empty_hint": "Type to search users, announcements...",
+  "palette_esc_hint": "Esc",
+  "category_users": "Users",
+  "category_announcements": "Announcements",
+  "trigger_placeholder": "Search...",
+  "trigger_shortcut": "Ctrl+K",
+  "trigger_shortcut_mac": "\u2318K"
+}

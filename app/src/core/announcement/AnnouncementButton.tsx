@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { useRealtimeEvent } from '../realtime/useRealtimeEvent'
+import { useMediaQuery } from '../hooks/useMediaQuery'
 import api from '../../api'
 import AnnouncementModal from './AnnouncementModal'
 import './announcement.scss'
@@ -74,6 +75,7 @@ export default function AnnouncementButton() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [wiggle, setWiggle] = useState(false)
   const [selectedAnn, setSelectedAnn] = useState<ModalAnnouncement | null>(null)
+  const isMobile = useMediaQuery('(max-width: 768px)')
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   const fetchUnreadCount = useCallback(async () => {
@@ -152,6 +154,8 @@ export default function AnnouncementButton() {
   const handleModalClose = useCallback(() => {
     setSelectedAnn(null)
   }, [])
+
+  if (isMobile && unreadCount === 0) return null
 
   return (
     <>

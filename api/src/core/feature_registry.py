@@ -20,6 +20,25 @@ PROJECT_FEATURES_DIR = Path(__file__).resolve().parent.parent / "features"  # ap
 
 
 @dataclass
+class SearchIndexConfig:
+    """Declares a searchable Meilisearch index for a feature."""
+
+    index_name: str
+    model_module: str
+    model_class: str
+    primary_key: str = "id"
+    searchable_attributes: list[str] = field(default_factory=list)
+    filterable_attributes: list[str] = field(default_factory=list)
+    sortable_attributes: list[str] = field(default_factory=list)
+    displayed_attributes: list[str] | None = None
+    serializer_module: str = ""
+    serializer_function: str = ""
+    read_permission: str = ""
+    base_filter_module: str = ""
+    base_filter_function: str = ""
+
+
+@dataclass
 class FeatureManifest:
     """Declaration of a feature's metadata and capabilities."""
 
@@ -69,6 +88,12 @@ class FeatureManifest:
 
     # Core features cannot be disabled
     is_core: bool = False
+
+    # Search indexes this feature contributes (Meilisearch)
+    search_indexes: list[SearchIndexConfig] = field(default_factory=list)
+
+    # Dashboard widgets this feature provides
+    widgets: list[dict[str, Any]] = field(default_factory=list)
 
 
 _registry_instance: "FeatureRegistry | None" = None
@@ -262,6 +287,14 @@ class FeatureRegistry:
         "import": "Importer",
     }
 
+    def collect_search_indexes(self) -> list[tuple["FeatureManifest", "SearchIndexConfig"]]:
+        """Return all search index configs from active features."""
+        result = []
+        for manifest in self.get_active_manifests():
+            for idx in manifest.search_indexes:
+                result.append((manifest, idx))
+        return result
+
     def collect_all_permissions(self) -> list[dict]:
         """Gather all permissions from all manifests, sorted by feature then code."""
         perms = []
@@ -289,6 +322,16 @@ class FeatureRegistry:
             for evt in sorted(manifest.events, key=lambda e: e["event_type"]):
                 events.append({**evt, "feature": manifest.name})
         return events
+
+    def collect_all_widgets(self, *, include_inactive: bool = False) -> list[dict]:
+        """Gather all widget declarations from active feature manifests."""
+        widgets = []
+        for manifest in sorted(self._manifests.values(), key=lambda m: m.name):
+            if not include_inactive and not self.is_active(manifest.name):
+                continue
+            for widget in manifest.widgets:
+                widgets.append({**widget, "feature": manifest.name})
+        return widgets
 
     def collect_all_tutorials(self) -> list[dict]:
         """Gather all tutorial declarations from active feature manifests, sorted by tutorial_order then name."""

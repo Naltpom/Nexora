@@ -176,7 +176,7 @@
 .notification-item {
   display: flex;
   gap: 10px;
-  padding: 12px 18px;
+  padding: var(--density-padding, 12px 18px);
   border-bottom: 1px solid var(--gray-100);
   cursor: pointer;
   transition: background 0.1s;
@@ -369,7 +369,7 @@
 }
 
 .notif-tab {
-  padding: 7px 18px;
+  padding: var(--density-btn-padding, 7px 18px);
   border: none;
   background: transparent;
   border-radius: var(--radius);
@@ -483,7 +483,7 @@
 
   thead th {
     text-align: left;
-    padding: 10px 24px;
+    padding: var(--density-padding, 10px 24px);
     font-size: 0.6875rem;
     font-weight: 600;
     text-transform: uppercase;
@@ -500,7 +500,7 @@
   }
 
   tbody td {
-    padding: 12px 24px;
+    padding: var(--density-padding, 12px 24px);
     font-size: 0.8125rem;
     color: var(--gray-700);
     border-bottom: 1px solid var(--gray-100);
@@ -1123,7 +1123,7 @@
 .notification-list-card {
   display: flex;
   gap: 12px;
-  padding: 14px 20px;
+  padding: var(--density-padding, 14px 20px);
   border-bottom: 1px solid var(--gray-100);
   align-items: flex-start;
   transition: background 0.1s;
@@ -1271,7 +1271,7 @@
   border: 1px solid var(--gray-200);
   border-radius: var(--radius);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06);
-  padding: 20px;
+  padding: var(--density-card-padding, 20px);
   width: 340px;
   display: flex;
   flex-direction: column;
@@ -1347,7 +1347,7 @@
 
   &-btn {
     flex: 1;
-    padding: 9px 16px;
+    padding: var(--density-btn-padding, 9px 16px);
     border-radius: var(--radius);
     border: none;
     font-size: 0.8125rem;
@@ -1558,5 +1558,18 @@
   color: var(--text-secondary);
   margin-top: 4px;
   display: block;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .notification-dropdown {
+    position: fixed;
+    top: 52px;
+    right: 8px;
+    left: 8px;
+    width: auto;
+    max-height: calc(100vh - 60px);
+    max-height: calc(100dvh - 60px);
+  }
 }
 
