@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, memo, FormEvent, KeyboardEvent } from 'react'
-import { useNavigate, Link, useSearchParams } from 'react-router-dom'
+import { useNavigate, Link, useSearchParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import Layout from '../../core/Layout'
 import { useAuth } from '../../core/AuthContext'

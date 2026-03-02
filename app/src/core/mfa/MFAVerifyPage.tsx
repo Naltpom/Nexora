@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, FormEvent, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router'
 import { useAuth } from '../../core/AuthContext'
 import api from '../../api'
 import './mfa.scss'

@@ -1,5 +1,5 @@
 import { Suspense, lazy, useState, useEffect, useCallback, useRef, type KeyboardEvent } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import Layout from '../../core/Layout'
 import './storybook.scss'

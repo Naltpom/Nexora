@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026.03.7
+
+### chore — Mise a jour majeure des dependances
+
+- **Python** : 3.11 → 3.13 (Dockerfile API + CI)
+- **PostgreSQL** : 15 → 18 (Dockerfile DB, extensions partman + pgvector)
+- **React** : 18 → 19, `@types/react` et `@types/react-dom` 18 → 19
+- **React Router** : `react-router-dom` v6 → `react-router` v7 (migration imports dans tous les TSX)
+- **Vite** : 5 → 7
+- **SQLAlchemy** : 2.0.36 → 2.0.47
+- **bcrypt** : 4.2.1 → 5.0.0
+- **qrcode** : 7.4.2 → 8.2
+- **redis** : 5.2.1 → 5.3.1
+- **arq** : 0.26.1 → 0.27.0
+- **email-validator** : 2.2.0 → 2.3.0
+- **CI** : `actions/checkout` v4 → v6, `actions/setup-python` v5 → v6, `actions/setup-node` v4 → v6
+- **BrowserRouter** : suppression des `future` flags v7 (devenues comportement par defaut)
+- **seed.py** : fix ordre d'assignation du role `super_admin` (apres creation des roles)
+- **docker-compose.yml** : correction volume PostgreSQL (`/var/lib/postgresql`)
+- **Suppression** : `dependabot.yml` (gestion manuelle des dependances)
+
 ## 2026.03.6
 
 ### infra — Production-Ready Infrastructure

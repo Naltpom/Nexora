@@ -1,5 +1,5 @@
 import { useState, useEffect, Suspense, lazy } from 'react'
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useNavigate } from 'react-router'
 import { useAuth } from './core/AuthContext'
 import { useFeature } from './core/FeatureContext'
 import { usePermission } from './core/PermissionContext'

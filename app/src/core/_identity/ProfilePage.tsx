@@ -1,5 +1,5 @@
 import { useState, FormEvent, Suspense, lazy } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import './_identity.scss'
 import Layout from '../../core/Layout'

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../AuthContext'
 import { useFeature } from '../../FeatureContext'

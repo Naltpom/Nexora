@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useSearchParams, useNavigate, Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../core/AuthContext'
 import api from '../../api'
