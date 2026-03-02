@@ -21,7 +21,7 @@ pyotp==2.9.0
 qrcode[pil]==7.4.2
 slowapi==0.1.9
 cachetools==5.5.1
-redis[hiredis]==5.2.1
+redis[hiredis]==7.2.1
 arq==0.26.1
 faker>=28.0.0
 Pillow==11.1.0
