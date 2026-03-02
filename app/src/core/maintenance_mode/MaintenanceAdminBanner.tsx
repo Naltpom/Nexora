@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router'
 import { useMaintenanceStatus } from './useMaintenanceStatus'
 import { useRealtimeEvent } from '../realtime/useRealtimeEvent'
 import './maintenance_mode.scss'

@@ -10,11 +10,11 @@ jobs:
     name: Lint Backend (Python)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
-          python-version: "3.11"
+          python-version: "3.13"
 
       - name: Cache pip packages
         if: ${{ !env.ACT }}
@@ -39,7 +39,7 @@ jobs:
     name: Lint Frontend (TypeScript)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: oven-sh/setup-bun@v2
         with:
@@ -71,7 +71,7 @@ jobs:
     name: Lint SCSS (Stylelint)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: oven-sh/setup-bun@v2
         with:
@@ -104,7 +104,7 @@ jobs:
     env:
       COMPOSE_PROJECT_NAME: template_02
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Copy env for build
         run: cp .env.example .env
@@ -134,7 +134,7 @@ jobs:
     env:
       COMPOSE_PROJECT_NAME: template_02
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Copy env for build
         run: cp .env.example .env
@@ -263,7 +263,7 @@ jobs:
           docker compose -f docker-compose.yml exec -T -e PLAYWRIGHT_ORIGIN=http://localhost:5472 api \
             python -m tests.generate_auth_state > app/tests/.auth-state.json
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "20"
 

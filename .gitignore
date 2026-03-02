@@ -90,3 +90,5 @@ docs/analyses
 issues/
 docs/
 *.old
+
+!deploy/**

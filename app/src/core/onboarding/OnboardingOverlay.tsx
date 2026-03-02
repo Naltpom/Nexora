@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router'
 import { useAuth } from '../AuthContext'
 import { useFeature } from '../FeatureContext'
 import OnboardingWizard from './OnboardingWizard'

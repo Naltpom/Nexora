@@ -130,9 +130,6 @@ async def seed():
             session.add(admin)
         await session.flush()
 
-        # Assign super_admin role
-        await _assign_role(session, admin.id, app_settings.SUPER_ADMIN_ROLE_SLUG)
-
         # ── Roles from fixtures ────────────────────────────────────────
         for role_data in ROLES:
             existing_role = await session.execute(
@@ -145,6 +142,9 @@ async def seed():
                     description=role_data["description"],
                 ))
         await session.flush()
+
+        # Assign super_admin role (after roles are created)
+        await _assign_role(session, admin.id, app_settings.SUPER_ADMIN_ROLE_SLUG)
 
         # Assign role permissions (from ROLE_PERMISSION_MAP + global codes)
         for role_slug, perm_codes in ROLE_PERMISSION_MAP.items():

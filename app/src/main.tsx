@@ -1,5 +1,5 @@
 import ReactDOM from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
+import { BrowserRouter } from 'react-router'
 import App from './App'
 import { AuthProvider } from './core/AuthContext'
 import { PermissionProvider } from './core/PermissionContext'
@@ -41,7 +41,7 @@ if ('serviceWorker' in navigator) {
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
+  <BrowserRouter>
       <AppSettingsProvider>
         <AuthProvider>
           <I18nProvider>

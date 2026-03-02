@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useImperativeHandle, forwardRef, type RefObject } from 'react'
+import { useState, useEffect, useCallback, useImperativeHandle, type Ref, type RefObject } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import type { SuggestionProps, SuggestionKeyDownProps } from '@tiptap/suggestion'
 import i18next from 'i18next'
@@ -13,13 +13,14 @@ export interface MentionUser {
 interface MentionListProps {
   items: MentionUser[]
   command: (item: { id: string; label: string }) => void
+  ref?: Ref<MentionListRef>
 }
 
 interface MentionListRef {
   onKeyDown: (props: SuggestionKeyDownProps) => boolean
 }
 
-const MentionList = forwardRef<MentionListRef, MentionListProps>(({ items, command }, ref) => {
+function MentionList({ items, command, ref }: MentionListProps) {
   const [selectedIndex, setSelectedIndex] = useState(0)
 
   useEffect(() => {
@@ -75,7 +76,7 @@ const MentionList = forwardRef<MentionListRef, MentionListProps>(({ items, comma
       ))}
     </>
   )
-})
+}
 
 export function createMentionSuggestion(usersRef: RefObject<MentionUser[]>) {
   return {

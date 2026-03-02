@@ -1,5 +1,5 @@
 import { useState, FormEvent } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import './_identity.scss'
 import api from '../../api'

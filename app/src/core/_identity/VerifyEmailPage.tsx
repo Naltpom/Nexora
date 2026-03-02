@@ -1,5 +1,5 @@
 import { useState, useEffect, FormEvent, useRef } from 'react'
-import { useNavigate, useLocation, Link } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import api, { setAccessToken } from '../../api'
 import { useAuth } from '../../core/AuthContext'

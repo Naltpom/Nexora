@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router'
 import api from '../../api'
 import { CONSENT_KEY, cleanupFunctionalStorage } from './consentManager'
 import './rgpd.scss'

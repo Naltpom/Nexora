@@ -1,6 +1,6 @@
 import { Suspense, lazy, useState, useEffect, useMemo, useRef, useCallback, type KeyboardEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
+import { useNavigate, useLocation, useSearchParams } from 'react-router'
 import Layout from '../../core/Layout'
 import { useFeature } from '../../core/FeatureContext'
 import { usePermission } from '../../core/PermissionContext'

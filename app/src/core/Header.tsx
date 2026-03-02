@@ -2,7 +2,7 @@ import { lazy, Suspense } from 'react'
 import { useAuth } from './AuthContext'
 import { useAppSettings } from './AppSettingsContext'
 import { useFeature } from './FeatureContext'
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router'
 import { HeaderSearchTrigger } from './search/HeaderSearchTrigger'
 import { UserMenu } from './navigation'
 
