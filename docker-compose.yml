@@ -3,7 +3,7 @@ services:
     build:
       context: ./db
       dockerfile: Dockerfile
-    container_name: template02_db
+    container_name: nexora_db
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -24,7 +24,7 @@ services:
     build:
       context: ./pgbouncer
       dockerfile: Dockerfile
-    container_name: template02_pgbouncer
+    container_name: nexora_pgbouncer
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -44,7 +44,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: template02_redis
+    container_name: nexora_redis
     restart: unless-stopped
     ports:
       - "6479:6379"
@@ -60,7 +60,7 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
-    container_name: template02_api
+    container_name: nexora_api
     restart: unless-stopped
     env_file:
       - .env
@@ -89,7 +89,7 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
-    container_name: template02_worker
+    container_name: nexora_worker
     restart: unless-stopped
     env_file:
       - .env
@@ -112,7 +112,7 @@ services:
 
   clamav:
     image: clamav/clamav:stable
-    container_name: template02_clamav
+    container_name: nexora_clamav
     restart: unless-stopped
     volumes:
       - clamav_data:/var/lib/clamav
@@ -125,7 +125,7 @@ services:
 
   meilisearch:
     image: getmeili/meilisearch:v1.12
-    container_name: template02_meilisearch
+    container_name: nexora_meilisearch
     restart: unless-stopped
     environment:
       MEILI_MASTER_KEY: ${MEILISEARCH_MASTER_KEY:-meili_dev_master_key}
@@ -146,7 +146,7 @@ services:
     build:
       context: ./app
       dockerfile: Dockerfile
-    container_name: template02_app
+    container_name: nexora_app
     restart: unless-stopped
     environment:
       - VITE_API_URL=${VITE_API_URL}

@@ -196,7 +196,7 @@ jobs:
 
       - name: Wait for API and App healthy
         run: |
-          for pair in "api:template02_api" "app:template02_app"; do
+          for pair in "api:nexora_api" "app:nexora_app"; do
             svc="${pair%%:*}"
             ctr="${pair##*:}"
             echo "Waiting for $svc ($ctr)..."
@@ -251,15 +251,15 @@ jobs:
 
       - name: Run backend smoke tests (pytest)
         run: |
-          docker cp api/tests template02_api:/app/tests
-          docker cp api/pytest.ini template02_api:/app/pytest.ini
-          docker cp api/requirements-test.txt template02_api:/app/requirements-test.txt
+          docker cp api/tests nexora_api:/app/tests
+          docker cp api/pytest.ini nexora_api:/app/pytest.ini
+          docker cp api/requirements-test.txt nexora_api:/app/requirements-test.txt
           docker compose -f docker-compose.yml exec -T api sh -c \
             "pip install -q -r requirements-test.txt && python -m pytest tests/ -v --tb=short"
 
       - name: Generate Playwright auth state
         run: |
-          docker cp api/tests/generate_auth_state.py template02_api:/app/tests/generate_auth_state.py
+          docker cp api/tests/generate_auth_state.py nexora_api:/app/tests/generate_auth_state.py
           docker compose -f docker-compose.yml exec -T -e PLAYWRIGHT_ORIGIN=http://localhost:5472 api \
             python -m tests.generate_auth_state > app/tests/.auth-state.json
 

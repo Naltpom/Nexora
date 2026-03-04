@@ -77,7 +77,7 @@ $COMPOSE start api worker
 COMPOSE="docker compose -f docker-compose.yml -f docker-compose.prod.yml"
 
 # 1. Copier l'archive dans le container API
-docker cp backups/uploads_20260302_030000.tar.gz template02_api:/tmp/
+docker cp backups/uploads_20260302_030000.tar.gz nexora_api:/tmp/
 
 # 2. Extraire
 $COMPOSE exec api tar xzf /tmp/uploads_20260302_030000.tar.gz -C /
