@@ -72,7 +72,7 @@ function LoginSkeleton() {
 }
 
 export default function App() {
-  const { user, loading: authLoading, getPreference } = useAuth()
+  const { user, loading: authLoading, getPreference, isImpersonating } = useAuth()
   const { isActive, loading: featuresLoading } = useFeature()
   const { can } = usePermission()
   const [showBgPicker, setShowBgPicker] = useState(false)
@@ -194,12 +194,12 @@ export default function App() {
         <Suspense fallback={<LoginSkeleton />}>
           {isActive('maintenance_mode') ? (
             <MaintenanceGuard canBypass={can('maintenance_mode.manage')}>
-              {user && isActive('preference.didacticiel') ? (
+              {user && !isImpersonating && isActive('preference.didacticiel') ? (
                 <TutorialWrapper>{routes}</TutorialWrapper>
               ) : routes}
             </MaintenanceGuard>
           ) : (
-            user && isActive('preference.didacticiel') ? (
+            user && !isImpersonating && isActive('preference.didacticiel') ? (
               <TutorialWrapper>{routes}</TutorialWrapper>
             ) : routes
           )}
@@ -210,7 +210,7 @@ export default function App() {
           <CookieBanner />
         </Suspense>
       )}
-      {user && isActive('onboarding') && getPreference('onboarding_completed') !== true && (
+      {user && !isImpersonating && isActive('onboarding') && getPreference('onboarding_completed') !== true && (
         <Suspense fallback={null}>
           <OnboardingOverlay />
         </Suspense>

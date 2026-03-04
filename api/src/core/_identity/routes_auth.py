@@ -184,6 +184,12 @@ async def refresh_token(
         )
 
     token_data = {"sub": str(user.id), "email": user.email, "lang": user.language}
+
+    # Preserve impersonation claims through token refresh
+    if payload.get("impersonated_by"):
+        token_data["impersonated_by"] = payload["impersonated_by"]
+        token_data["impersonation_session_id"] = payload.get("impersonation_session_id")
+
     new_refresh = create_refresh_token(token_data)
 
     # Create new session + set new cookie

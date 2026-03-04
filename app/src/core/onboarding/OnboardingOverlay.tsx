@@ -5,11 +5,12 @@ import { useFeature } from '../FeatureContext'
 import OnboardingWizard from './OnboardingWizard'
 
 export default function OnboardingOverlay() {
-  const { user, getPreference, updatePreference } = useAuth()
+  const { user, isImpersonating, getPreference, updatePreference } = useAuth()
   const { isActive } = useFeature()
   const location = useLocation()
   const [dismissed, setDismissed] = useState(false)
 
+  if (isImpersonating) return null
   if (location.pathname === '/accept-legal' || location.pathname === '/change-password') return null
   if (!user || dismissed || !isActive('onboarding') || getPreference('onboarding_completed') === true) {
     return null

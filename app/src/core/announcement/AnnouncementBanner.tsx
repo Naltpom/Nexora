@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useAuth } from '../AuthContext'
 import { useRealtimeEvent } from '../realtime/useRealtimeEvent'
 import api from '../../api'
 import './announcement.scss'
@@ -18,6 +19,7 @@ interface AnnouncementItem {
 
 export default function AnnouncementBanner() {
   const { t } = useTranslation('announcement')
+  const { isImpersonating } = useAuth()
   const [announcements, setAnnouncements] = useState<AnnouncementItem[]>([])
 
   const fetchActive = useCallback(() => {
@@ -46,6 +48,7 @@ export default function AnnouncementBanner() {
     }
   }, [])
 
+  if (isImpersonating) return null
   if (announcements.length === 0) return null
 
   return (

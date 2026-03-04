@@ -19,7 +19,7 @@ interface ModalAnnouncement {
 }
 
 export default function AnnouncementBlocker() {
-  const { user } = useAuth()
+  const { user, isImpersonating } = useAuth()
   const { isActive } = useFeature()
   const [queue, setQueue] = useState<ModalAnnouncement[]>([])
   const onboardingDone = (user?.preferences as Record<string, unknown>)?.onboarding_completed === true
@@ -61,6 +61,7 @@ export default function AnnouncementBlocker() {
     return () => document.documentElement.removeAttribute('data-modal-blocking')
   }, [isBlocking, hasItems])
 
+  if (isImpersonating) return null
   if (!isBlocking) return null
   if (!hasItems) return null
 

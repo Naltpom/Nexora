@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026.03.8
+
+### _identity / impersonation
+
+- **Token refresh** : preserve les claims `impersonated_by` et `impersonation_session_id` lors du refresh token, evitant la perte de contexte d'impersonation
+- **App.tsx** : masque le tutoriel (TutorialWrapper) et l'onboarding (OnboardingOverlay) en mode impersonation
+- **AnnouncementBanner** : masque les bannieres d'annonce en mode impersonation
+- **AnnouncementBlocker** : masque les modales bloquantes d'annonce en mode impersonation
+- **OnboardingOverlay** : ajout du guard `isImpersonating` pour eviter de modifier les preferences de l'utilisateur cible
+
 ## 2026.03.7
 
 ### chore — Mise a jour majeure des dependances
