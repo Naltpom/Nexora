@@ -13,6 +13,7 @@ class NotificationResponse(BaseModel):
     body: str | None = None
     link: str | None = None
     is_read: bool
+    required_permission: str | None = None
     email_sent_at: datetime | None = None
     webhook_sent_at: datetime | None = None
     push_sent_at: datetime | None = None
@@ -29,6 +30,7 @@ class AdminNotificationResponse(BaseModel):
     body: str | None = None
     link: str | None = None
     is_read: bool
+    required_permission: str | None = None
     email_sent_at: datetime | None = None
     webhook_sent_at: datetime | None = None
     push_sent_at: datetime | None = None
@@ -98,7 +100,7 @@ class UserRulePreferenceResponse(BaseModel):
 class NotificationRuleResponse(BaseModel):
     id: int
     name: str
-    created_by_id: int
+    created_by_id: int | None = None
     created_by_name: str | None = None
     event_types: list[str]
     target_type: str

@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next'
 import Layout from '../Layout'
 import api from '../../api'
 import WidgetCatalog from './WidgetCatalog'
-import type { WidgetConfig, WidgetDefinition } from './useDashboard'
+import type { WidgetConfig, WidgetDefinition, WidgetSize, WidgetHeight } from './useDashboard'
+import { SIZE_OPTIONS, HEIGHT_OPTIONS } from './useDashboard'
 import './dashboard.scss'
 
 interface RoleOption {
@@ -77,10 +78,10 @@ export default function DashboardAdmin() {
     }
   }
 
-  const handleAddWidget = (widgetId: string, size: 'half' | 'full') => {
+  const handleAddWidget = (widgetId: string, size: WidgetSize, height: WidgetHeight = 1) => {
     setWidgets(prev => [
       ...prev,
-      { widget_id: widgetId, position: prev.length, size },
+      { widget_id: widgetId, position: prev.length, size, height },
     ])
     setShowCatalog(false)
   }
@@ -89,10 +90,12 @@ export default function DashboardAdmin() {
     setWidgets(prev => prev.filter((_, i) => i !== index).map((w, i) => ({ ...w, position: i })))
   }
 
-  const handleResizeWidget = (index: number) => {
-    setWidgets(prev => prev.map((w, i) =>
-      i === index ? { ...w, size: w.size === 'half' ? 'full' : 'half' } : w
-    ))
+  const handleChangeSize = (index: number, size: WidgetSize) => {
+    setWidgets(prev => prev.map((w, i) => i === index ? { ...w, size } : w))
+  }
+
+  const handleChangeHeight = (index: number, height: WidgetHeight) => {
+    setWidgets(prev => prev.map((w, i) => i === index ? { ...w, height } : w))
   }
 
   return (
@@ -137,16 +140,26 @@ export default function DashboardAdmin() {
                     <div key={`${w.widget_id}-${idx}`} className="dashboard-admin-item">
                       <div className="dashboard-admin-item-info">
                         <span className="font-medium">{w.widget_id}</span>
-                        <span className="text-muted">{w.size}</span>
                       </div>
                       <div className="dashboard-admin-item-actions">
-                        <button
-                          className="btn btn-ghost btn-xs"
-                          onClick={() => handleResizeWidget(idx)}
-                          title={w.size === 'half' ? t('expand') : t('shrink')}
+                        <select
+                          className="dashboard-widget-select"
+                          value={w.size}
+                          onChange={e => handleChangeSize(idx, e.target.value as WidgetSize)}
                         >
-                          {w.size === 'half' ? '↔' : '↕'}
-                        </button>
+                          {SIZE_OPTIONS.map(s => (
+                            <option key={s} value={s}>{t(`size_short_${s.replace('-', '_')}`)}</option>
+                          ))}
+                        </select>
+                        <select
+                          className="dashboard-widget-select"
+                          value={w.height || 1}
+                          onChange={e => handleChangeHeight(idx, Number(e.target.value) as WidgetHeight)}
+                        >
+                          {HEIGHT_OPTIONS.map(h => (
+                            <option key={h} value={h}>{t(`height_short_${h}`)}</option>
+                          ))}
+                        </select>
                         <button
                           className="btn btn-ghost btn-xs"
                           onClick={() => handleRemoveWidget(idx)}

@@ -19,6 +19,7 @@ class DashboardLayout(Base):
     role_slug: Mapped[str | None] = mapped_column(String(100), nullable=True)
     is_default: Mapped[bool] = mapped_column(Boolean, default=False)
     widgets: Mapped[dict] = mapped_column(JSONB, nullable=False, default=list)
+    full_width: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc),
     )

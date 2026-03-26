@@ -31,71 +31,85 @@ export default function MultiSelect({ options, values, onChange, placeholder, cl
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
+  const selectedSet = new Set(values)
   const filtered = options.filter(o =>
-    o.label.toLowerCase().includes(search.toLowerCase())
+    !selectedSet.has(o.value) && o.label.toLowerCase().includes(search.toLowerCase()),
   )
+  const selectedOptions = values
+    .map(v => options.find(o => o.value === v))
+    .filter(Boolean) as MultiSelectOption[]
 
-  const handleOpen = () => {
-    setOpen(!open)
+  const handleAdd = (val: string) => {
+    onChange([...values, val])
     setSearch('')
-    if (!open) {
-      setTimeout(() => inputRef.current?.focus(), 0)
-    }
+    inputRef.current?.focus()
   }
 
-  const handleToggle = (val: string) => {
-    if (values.includes(val)) {
-      onChange(values.filter(v => v !== val))
-    } else {
-      onChange([...values, val])
+  const handleRemove = (val: string) => {
+    onChange(values.filter(v => v !== val))
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' && search === '' && values.length > 0) {
+      onChange(values.slice(0, -1))
     }
   }
 
   return (
     <div className={`multi-select-container ${className || ''}`} ref={containerRef}>
-      <button className="multi-select-trigger" onClick={handleOpen} type="button">
-        {values.length === 0 ? (
-          <span className="multi-select-trigger-placeholder">{placeholder || 'Select...'}</span>
-        ) : (
-          <span className="multi-select-trigger-count">{values.length} / {options.length}</span>
-        )}
-        <svg className="multi-select-trigger-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
-      </button>
-      {open && (
-        <div className="multi-select-dropdown">
-          <div className="multi-select-search">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
-            </svg>
-            <input
-              ref={inputRef}
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={placeholder || 'Search...'}
-            />
-          </div>
-          {filtered.map(o => (
-            <label key={o.value} className="multi-select-option">
-              <input
-                type="checkbox"
-                checked={values.includes(o.value)}
-                onChange={() => handleToggle(o.value)}
+      <div
+        className="multi-select-control"
+        onClick={() => { setOpen(true); inputRef.current?.focus() }}
+      >
+        {selectedOptions.map(opt => (
+          <span key={opt.value} className="multi-select-badge">
+            {opt.color && (
+              <span
+                className="multi-select-color-dot"
+                style={{ '--dot-color': opt.color } as React.CSSProperties}
               />
+            )}
+            <span className="multi-select-badge-label">{opt.label}</span>
+            <button
+              type="button"
+              className="multi-select-badge-remove"
+              onClick={e => { e.stopPropagation(); handleRemove(opt.value) }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </span>
+        ))}
+        <input
+          ref={inputRef}
+          className="multi-select-input"
+          type="text"
+          value={search}
+          onChange={e => { setSearch(e.target.value); setOpen(true) }}
+          onFocus={() => setOpen(true)}
+          onKeyDown={handleKeyDown}
+          placeholder={selectedOptions.length === 0 ? (placeholder || '--') : ''}
+        />
+      </div>
+
+      {open && filtered.length > 0 && (
+        <div className="multi-select-dropdown">
+          {filtered.map(o => (
+            <div
+              key={o.value}
+              className="multi-select-option"
+              onMouseDown={e => { e.preventDefault(); handleAdd(o.value) }}
+            >
               {o.color && (
                 <span
                   className="multi-select-color-dot"
-                  style={{ background: o.color } as React.CSSProperties}
+                  style={{ '--dot-color': o.color } as React.CSSProperties}
                 />
               )}
               {o.label}
-            </label>
+            </div>
           ))}
-          {filtered.length === 0 && (
-            <div className="multi-select-empty">-</div>
-          )}
         </div>
       )}
     </div>

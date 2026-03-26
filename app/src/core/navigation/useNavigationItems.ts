@@ -60,6 +60,10 @@ export function useNavigationItems() {
       .filter(i => i.section === 'user')
       .sort((a, b) => (a.order ?? 100) - (b.order ?? 100))
 
+    const sidebarItems = allItems
+      .filter(i => i.section === 'sidebar')
+      .sort((a, b) => (a.order ?? 100) - (b.order ?? 100))
+
     const adminItems = allItems.filter(i => i.section === 'admin')
 
     const adminGroups: AdminGroupData[] = ADMIN_GROUP_ORDER
@@ -73,6 +77,6 @@ export function useNavigationItems() {
       }))
       .filter(g => g.items.length > 0)
 
-    return { userItems, adminGroups }
+    return { userItems, sidebarItems, adminGroups }
   }, [user, isActive, can])
 }

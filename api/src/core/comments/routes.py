@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
+from ..events import event_bus
 from ..pagination import PaginatedResponse, PaginationParams
 from ..permissions import load_user_permissions, require_permission
 from ..security import get_current_user
@@ -73,6 +74,11 @@ async def create_comment_endpoint(
         parent_id=body.parent_id,
     )
     await db.commit()
+    await event_bus.emit(
+        "comments.created", db=db, actor_id=current_user.id,
+        resource_type=comment.resource_type, resource_id=comment.resource_id,
+        payload={"comment_id": comment.id, "parent_id": comment.parent_id},
+    )
 
     return CommentResponse(
         id=comment.id,
@@ -114,6 +120,11 @@ async def update_comment_endpoint(
         is_admin=is_admin,
     )
     await db.commit()
+    await event_bus.emit(
+        "comments.updated", db=db, actor_id=current_user.id,
+        resource_type=comment.resource_type, resource_id=comment.resource_id,
+        payload={"comment_id": comment.id},
+    )
 
     from .._identity.models import User
     user = await db.get(User, comment.user_id)
@@ -156,6 +167,11 @@ async def delete_comment_endpoint(
         is_admin=is_admin,
     )
     await db.commit()
+    await event_bus.emit(
+        "comments.deleted", db=db, actor_id=current_user.id,
+        resource_type="comment", resource_id=comment_id,
+        payload={"comment_id": comment_id},
+    )
 
 
 @router.get(

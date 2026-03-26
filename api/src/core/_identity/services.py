@@ -209,7 +209,7 @@ async def authenticate_user(
                 db.add(user)
                 await db.flush()
 
-            if not user.is_active or user.archived_at is not None:
+            if not user.is_active or not user.can_login or user.archived_at is not None:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Email ou mot de passe incorrect",
@@ -249,7 +249,7 @@ async def authenticate_user(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Email ou mot de passe incorrect",
             )
-        if not user.is_active or user.archived_at is not None:
+        if not user.is_active or not user.can_login or user.archived_at is not None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Email ou mot de passe incorrect",

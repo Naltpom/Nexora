@@ -7,7 +7,9 @@ manifest = FeatureManifest(
     is_core=True,
     permissions=[
         "feature_flags.read",
-        "feature_flags.manage",
+        "feature_flags.create",
+        "feature_flags.update",
+        "feature_flags.delete",
     ],
     events=[
         {

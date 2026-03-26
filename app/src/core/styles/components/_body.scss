@@ -16,6 +16,23 @@ body {
   overflow-x: clip;
 }
 
+.layout-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+
+  // CSS variable for sidebar-aware layouts
+  --sidebar-current-width: 0px;
+}
+
+.layout-body:has(> .sidebar:not(.sidebar-collapsed, .sidebar-mobile)) {
+  --sidebar-current-width: 240px;
+}
+
+.layout-body:has(> .sidebar.sidebar-collapsed) {
+  --sidebar-current-width: 56px;
+}
+
 .main-content {
   flex: 1;
   max-width: var(--content-max-width, 960px);

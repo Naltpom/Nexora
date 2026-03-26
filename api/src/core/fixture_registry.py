@@ -115,7 +115,7 @@ class FixtureRegistry:
         for base_dir in [CORE_FEATURES_DIR, PROJECT_FEATURES_DIR]:
             if not base_dir.exists():
                 continue
-            for fixtures_path in base_dir.rglob("fixtures.py"):
+            for fixtures_path in base_dir.rglob("fixtures*.py"):
                 rel = fixtures_path.relative_to(Path(__file__).resolve().parent.parent)
                 module_name = "src." + str(rel.with_suffix("")).replace("\\", ".").replace("/", ".")
 

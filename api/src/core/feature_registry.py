@@ -36,6 +36,8 @@ class SearchIndexConfig:
     read_permission: str = ""
     base_filter_module: str = ""
     base_filter_function: str = ""
+    query_options_module: str = ""
+    query_options_function: str = ""
 
 
 @dataclass
@@ -94,6 +96,11 @@ class FeatureManifest:
 
     # Dashboard widgets this feature provides
     widgets: list[dict[str, Any]] = field(default_factory=list)
+
+    # Form field definitions for the form builder
+    # Each dict: {"category": "...", "name": "...", "label_key": "...",
+    #   "target_model": "...", "target_column": "...", "field_type": "text", "validation_regex": None}
+    form_field_definitions: list[dict[str, Any]] = field(default_factory=list)
 
 
 _registry_instance: "FeatureRegistry | None" = None
@@ -356,6 +363,14 @@ class FeatureRegistry:
                     "permission_tutorials": manifest.tutorials,
                 })
         return result
+
+    def collect_form_field_definitions(self) -> list[dict]:
+        """Gather all form field definitions from active features, grouped by category."""
+        definitions = []
+        for manifest in self.get_active_manifests():
+            for defn in manifest.form_field_definitions:
+                definitions.append({**defn, "feature": manifest.name})
+        return definitions
 
     def get_feature_for_path(self, path: str) -> str | None:
         """Return the feature name that owns the given request path, or None."""

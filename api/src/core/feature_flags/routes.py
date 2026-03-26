@@ -50,7 +50,7 @@ async def get_one(feature_name: str, db: AsyncSession = Depends(get_db)):
     "/",
     response_model=FeatureFlagResponse,
     status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(require_permission("feature_flags.manage"))],
+    dependencies=[Depends(require_permission("feature_flags.create"))],
 )
 async def create(
     data: FeatureFlagCreate,
@@ -100,7 +100,7 @@ async def create(
 @router.put(
     "/{feature_name}",
     response_model=FeatureFlagResponse,
-    dependencies=[Depends(require_permission("feature_flags.manage"))],
+    dependencies=[Depends(require_permission("feature_flags.update"))],
 )
 async def update(
     feature_name: str,
@@ -153,7 +153,7 @@ async def update(
 @router.delete(
     "/{feature_name}",
     status_code=status.HTTP_204_NO_CONTENT,
-    dependencies=[Depends(require_permission("feature_flags.manage"))],
+    dependencies=[Depends(require_permission("feature_flags.delete"))],
 )
 async def delete(
     feature_name: str,

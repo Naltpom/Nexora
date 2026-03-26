@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
+from ..events import event_bus
 from ..permissions import require_permission
 from ..security import get_current_user
 from .schemas import LifecycleDashboardResponse, LifecycleSettingsResponse, ReactivateResponse
@@ -35,6 +36,11 @@ async def reactivate(
     """Reactivate an archived user."""
     result = await reactivate_user(db, user_id, current_user.id)
     await db.commit()
+    await event_bus.emit(
+        "lifecycle.user_reactivated", db=db, actor_id=current_user.id,
+        resource_type="user", resource_id=user_id,
+        payload={"user_id": user_id},
+    )
     return result
 
 

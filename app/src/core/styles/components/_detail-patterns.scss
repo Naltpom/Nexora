@@ -1,0 +1,48 @@
+// ─── Shared Detail Page Patterns ───
+
+/* Grid 2 colonnes pour detail */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--section-gap, 24px);
+
+  .unified-card {
+    padding: var(--density-card-padding, 24px);
+  }
+}
+
+@media (max-width: 768px) {
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Header de section dans un tab (titre + bouton) */
+.tab-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--density-gap, 12px);
+  padding: var(--density-card-padding, 24px);
+  padding-bottom: 0;
+  margin-bottom: var(--section-gap, 24px);
+}
+
+/* Meta card en bas de page */
+.detail-meta-card {
+  margin-top: var(--section-gap, 24px);
+  padding: var(--density-card-padding, 24px);
+  font-size: 0.8125rem;
+  color: var(--gray-500);
+}
+
+/* Table link (nom cliquable dans une cellule) */
+.table-link {
+  color: var(--primary);
+  cursor: pointer;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

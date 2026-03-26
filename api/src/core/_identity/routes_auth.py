@@ -176,7 +176,7 @@ async def refresh_token(
 
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
-    if not user or not user.is_active or user.deleted_at is not None or user.archived_at is not None:
+    if not user or not user.is_active or not user.can_login or user.deleted_at is not None or user.archived_at is not None:
         clear_refresh_cookie(response)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -261,6 +261,7 @@ async def get_me(
         last_name=current_user.last_name,
         auth_source=current_user.auth_source,
         is_active=current_user.is_active,
+        can_login=current_user.can_login,
         must_change_password=current_user.must_change_password,
         preferences=current_user.preferences,
         last_login=current_user.last_login,
@@ -276,9 +277,61 @@ async def get_me(
 
 @router.get("/me/permissions")
 async def get_my_permissions(
-    permission_codes: list[str] = Depends(get_user_permission_codes),
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
-    return {"permissions": permission_codes}
+    """Return the current user's permissions with scope information.
+
+    Returns a dict where each key is a permission code and the value
+    contains is_global (bool) and scopes (dict of scope_type -> list of scope_ids).
+    This is a generic format that does not depend on any specific feature.
+    """
+    from ..permissions import load_user_permissions
+
+    perms = await load_user_permissions(db, current_user.id)
+    return {
+        "permissions": [code for code, granted in perms.items() if granted is True],
+    }
+
+
+@router.get("/me/memberships")
+async def get_my_memberships(
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return the current user's scoped role memberships in a generic format.
+
+    Returns raw scope_type/scope_id pairs without resolving entity names.
+    This keeps the endpoint feature-agnostic. The frontend can resolve
+    entity details via the relevant feature APIs.
+
+    Requires the UserRole model to have scope_type and scope_id columns.
+    Returns empty dict if scoped roles are not enabled.
+    """
+    from .models import UserRole
+
+    # Check if the UserRole model has scope columns (they may not exist yet)
+    if not hasattr(UserRole, "scope_type") or not hasattr(UserRole, "scope_id"):
+        return {}
+
+    result = await db.execute(
+        select(UserRole.scope_type, UserRole.scope_id).distinct()
+        .where(
+            UserRole.user_id == current_user.id,
+            UserRole.scope_type.isnot(None),
+            UserRole.scope_type != "global",
+            UserRole.scope_id.isnot(None),
+            UserRole.scope_id != 0,
+        )
+    )
+
+    memberships: dict[str, list[int]] = {}
+    for scope_type, scope_id in result.all():
+        if scope_type not in memberships:
+            memberships[scope_type] = []
+        memberships[scope_type].append(scope_id)
+
+    return memberships
 
 
 @router.put("/me", response_model=UserResponse)
@@ -335,6 +388,7 @@ async def update_me(
         last_name=user.last_name,
         auth_source=user.auth_source,
         is_active=user.is_active,
+        can_login=user.can_login,
         must_change_password=user.must_change_password,
         preferences=user.preferences,
         last_login=user.last_login,

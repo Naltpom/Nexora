@@ -6,7 +6,7 @@ export const manifest = {
     {
       path: '/admin/feature-flags',
       component: lazy(() => import('./FeatureFlagsAdmin')),
-      permission: 'feature_flags.manage',
+      permission: 'feature_flags.read',
     },
   ],
   navItems: [
@@ -16,7 +16,7 @@ export const manifest = {
       icon: 'flag',
       section: 'admin',
       adminGroup: 'systeme',
-      permission: 'feature_flags.manage',
+      permission: 'feature_flags.read',
       order: 15,
     },
   ],

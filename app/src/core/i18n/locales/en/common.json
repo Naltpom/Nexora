@@ -86,5 +86,8 @@
   "pagination_aria_label": "Pagination",
   "pagination_previous": "Previous page",
   "pagination_next": "Next page",
-  "pagination_page_number": "Page {{page}}"
+  "pagination_page_number": "Page {{page}}",
+  "dashboard": "Dashboard",
+  "sidebar_expand": "Expand menu",
+  "sidebar_collapse": "Collapse menu"
 }

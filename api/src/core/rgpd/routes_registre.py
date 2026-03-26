@@ -60,7 +60,7 @@ async def list_register_entries(db: AsyncSession = Depends(get_db)):
     "/",
     response_model=RegisterEntryResponse,
     status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(require_permission("rgpd.registre.manage"))],
+    dependencies=[Depends(require_permission("rgpd.registre.create"))],
 )
 async def create_register_entry(
     data: RegisterEntryCreate,
@@ -96,7 +96,7 @@ async def create_register_entry(
 @router.put(
     "/{entry_id}",
     response_model=RegisterEntryResponse,
-    dependencies=[Depends(require_permission("rgpd.registre.manage"))],
+    dependencies=[Depends(require_permission("rgpd.registre.update"))],
 )
 async def update_register_entry(
     entry_id: int,
@@ -132,7 +132,7 @@ async def update_register_entry(
 @router.delete(
     "/{entry_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    dependencies=[Depends(require_permission("rgpd.registre.manage"))],
+    dependencies=[Depends(require_permission("rgpd.registre.delete"))],
 )
 async def delete_register_entry(
     entry_id: int,

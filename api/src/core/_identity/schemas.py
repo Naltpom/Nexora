@@ -86,6 +86,7 @@ class UserUpdate(BaseModel):
     first_name: str | None = None
     last_name: str | None = None
     is_active: bool | None = None
+    can_login: bool | None = None
     must_change_password: bool | None = None
 
 
@@ -103,6 +104,7 @@ class UserResponse(BaseModel):
     last_name: str
     auth_source: str
     is_active: bool
+    can_login: bool = True
     must_change_password: bool
     preferences: dict | None = None
     last_login: datetime | None = None

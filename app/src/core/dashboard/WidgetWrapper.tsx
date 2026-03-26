@@ -1,6 +1,7 @@
 import { Suspense, lazy } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { WidgetConfig } from './useDashboard'
+import type { WidgetConfig, WidgetSize, WidgetHeight } from './useDashboard'
+import { SIZE_OPTIONS, HEIGHT_OPTIONS } from './useDashboard'
 
 const StatWidget = lazy(() => import('./widgets/StatWidget'))
 const ActivityWidget = lazy(() => import('./widgets/ActivityWidget'))
@@ -8,10 +9,11 @@ const SystemHealthWidget = lazy(() => import('./widgets/SystemHealthWidget'))
 const QuickLinksWidget = lazy(() => import('./widgets/QuickLinksWidget'))
 const FeatureShowcaseWidget = lazy(() => import('./widgets/FeatureShowcaseWidget'))
 const WelcomeBannerWidget = lazy(() => import('./widgets/WelcomeBannerWidget'))
+const SpacerWidget = lazy(() => import('./widgets/SpacerWidget'))
 
 interface WidgetProps {
   widgetId: string
-  size: 'half' | 'full'
+  size: WidgetSize
 }
 
 const WIDGET_MAP: Record<string, React.LazyExoticComponent<React.ComponentType<WidgetProps>>> = {
@@ -25,6 +27,7 @@ const WIDGET_MAP: Record<string, React.LazyExoticComponent<React.ComponentType<W
   quick_links_admin: QuickLinksWidget,
   feature_showcase: FeatureShowcaseWidget,
   welcome_banner: WelcomeBannerWidget,
+  spacer: SpacerWidget,
 }
 
 interface WidgetWrapperProps {
@@ -33,7 +36,8 @@ interface WidgetWrapperProps {
   dragAttributes?: Record<string, any>
   dragListeners?: Record<string, any>
   onRemove: () => void
-  onResize: (size: 'half' | 'full') => void
+  onResize: (size: WidgetSize) => void
+  onResizeHeight: (height: WidgetHeight) => void
 }
 
 export default function WidgetWrapper({
@@ -43,6 +47,7 @@ export default function WidgetWrapper({
   dragListeners,
   onRemove,
   onResize,
+  onResizeHeight,
 }: WidgetWrapperProps) {
   const { t } = useTranslation('dashboard')
   const Component = WIDGET_MAP[widget.widget_id]
@@ -56,7 +61,7 @@ export default function WidgetWrapper({
   }
 
   return (
-    <div className={`dashboard-widget${editMode ? ' dashboard-widget--edit' : ''}`}>
+    <div className={`dashboard-widget${editMode ? ' dashboard-widget--edit' : ''}${widget.widget_id === 'spacer' ? ' dashboard-widget--spacer' : ''}`}>
       {editMode && (
         <div className="dashboard-widget-toolbar">
           <button
@@ -75,30 +80,26 @@ export default function WidgetWrapper({
             </svg>
           </button>
           <div className="dashboard-widget-actions">
-            <button
-              className="dashboard-widget-resize"
-              onClick={() => onResize(widget.size === 'half' ? 'full' : 'half')}
+            <select
+              className="dashboard-widget-select"
+              value={widget.size}
+              onChange={e => onResize(e.target.value as WidgetSize)}
               aria-label={t('resize')}
-              title={widget.size === 'half' ? t('expand') : t('shrink')}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                {widget.size === 'half' ? (
-                  <>
-                    <polyline points="15 3 21 3 21 9" />
-                    <polyline points="9 21 3 21 3 15" />
-                    <line x1="21" y1="3" x2="14" y2="10" />
-                    <line x1="3" y1="21" x2="10" y2="14" />
-                  </>
-                ) : (
-                  <>
-                    <polyline points="4 14 10 14 10 20" />
-                    <polyline points="20 10 14 10 14 4" />
-                    <line x1="14" y1="10" x2="21" y2="3" />
-                    <line x1="3" y1="21" x2="10" y2="14" />
-                  </>
-                )}
-              </svg>
-            </button>
+              {SIZE_OPTIONS.map(s => (
+                <option key={s} value={s}>{t(`size_short_${s.replace('-', '_')}`)}</option>
+              ))}
+            </select>
+            <select
+              className="dashboard-widget-select"
+              value={widget.height || 1}
+              onChange={e => onResizeHeight(Number(e.target.value) as WidgetHeight)}
+              aria-label={t('resize_height')}
+            >
+              {HEIGHT_OPTIONS.map(h => (
+                <option key={h} value={h}>{t(`height_short_${h}`)}</option>
+              ))}
+            </select>
             <button
               className="dashboard-widget-remove"
               onClick={onRemove}

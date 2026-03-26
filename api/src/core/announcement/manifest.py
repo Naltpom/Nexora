@@ -6,7 +6,9 @@ manifest = FeatureManifest(
     description="Bannieres d'annonces systeme (maintenance, nouvelles features)",
     permissions=[
         "announcement.read",
-        "announcement.manage",
+        "announcement.create",
+        "announcement.update",
+        "announcement.delete",
     ],
     events=[
         {
@@ -30,7 +32,7 @@ manifest = FeatureManifest(
     ],
     tutorials=[
         {
-            "permission": "announcement.manage",
+            "permission": "announcement.create",
             "label": "Gerer les annonces",
             "description": "Creez, modifiez et supprimez les annonces systeme.",
             "steps": [

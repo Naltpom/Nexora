@@ -178,7 +178,7 @@ async def get_current_user(
         # CRITICAL-03: verify the original admin is still active and has impersonation permission
         admin_result = await db.execute(select(User).where(User.id == int(impersonated_by)))
         admin_user = admin_result.scalar_one_or_none()
-        if admin_user is None or not admin_user.is_active or admin_user.deleted_at is not None or admin_user.archived_at is not None:
+        if admin_user is None or not admin_user.is_active or not admin_user.can_login or admin_user.deleted_at is not None or admin_user.archived_at is not None:
             session.ended_at = datetime.now(timezone.utc)
             await db.flush()
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Administrateur source désactivé")
@@ -188,7 +188,7 @@ async def get_current_user(
 
     result = await db.execute(select(User).where(User.id == int(user_id)))
     user = result.scalar_one_or_none()
-    if user is None or not user.is_active or user.deleted_at is not None or user.archived_at is not None:
+    if user is None or not user.is_active or not user.can_login or user.deleted_at is not None or user.archived_at is not None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Utilisateur introuvable ou désactivé")
 
     user._impersonated_by = impersonated_by
@@ -229,7 +229,7 @@ async def get_current_user_from_query_token(
 
     result = await db.execute(select(User).where(User.id == int(user_id)))
     user = result.scalar_one_or_none()
-    if user is None or not user.is_active or user.deleted_at is not None:
+    if user is None or not user.is_active or not user.can_login or user.deleted_at is not None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Utilisateur introuvable")
     return user
 

@@ -67,7 +67,7 @@ async def find_or_create_user_from_sso(
         user = None
 
     # Block auto-link on deactivated/deleted user
-    if user and (not user.is_active or user.deleted_at is not None):
+    if user and (not user.is_active or not user.can_login or user.deleted_at is not None):
         from fastapi import HTTPException, status
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -91,8 +91,9 @@ async def find_or_create_user_from_sso(
         await db.flush()
         is_new_user = True
 
-    # Create SSO account link
+    # Create SSO account link (multiple accounts per provider allowed)
     auto_linked = not is_new_user  # existing user found by email → auto-link
+
     sso_account = SSOAccount(
         user_id=user.id,
         provider=provider,
@@ -134,7 +135,7 @@ async def issue_tokens_for_sso_user(db: AsyncSession, user) -> dict:
 
     Returns a dict suitable for SSOCallbackResponse.
     """
-    if not user.is_active or user.deleted_at is not None:
+    if not user.is_active or not user.can_login or user.deleted_at is not None:
         from fastapi import HTTPException, status
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

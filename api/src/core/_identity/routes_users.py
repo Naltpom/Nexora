@@ -265,6 +265,8 @@ async def update_user(
         user.last_name = data.last_name
     if data.is_active is not None:
         user.is_active = data.is_active
+    if data.can_login is not None:
+        user.can_login = data.can_login
     if data.must_change_password is not None:
         user.must_change_password = data.must_change_password
 
@@ -552,6 +554,8 @@ async def update_user_by_uuid(
         user.last_name = data.last_name
     if data.is_active is not None:
         user.is_active = data.is_active
+    if data.can_login is not None:
+        user.can_login = data.can_login
     if data.must_change_password is not None:
         user.must_change_password = data.must_change_password
 

@@ -6,7 +6,9 @@ manifest = FeatureManifest(
     description="Systeme de favoris generique pour acces rapide aux pages",
     permissions=[
         "favorite.read",
-        "favorite.manage",
+        "favorite.create",
+        "favorite.update",
+        "favorite.delete",
     ],
     events=[
         {

@@ -29,6 +29,5 @@ class SSOAccount(Base):
 
     __table_args__ = (
         UniqueConstraint("provider", "provider_user_id", name="uq_sso_provider_user"),
-        UniqueConstraint("user_id", "provider", name="uq_sso_user_provider"),
         Index("ix_sso_user_provider", "user_id", "provider"),
     )

@@ -95,7 +95,7 @@ async def create_rights_request(
 @router.get(
     "/admin",
     response_model=RightsRequestListResponse,
-    dependencies=[Depends(require_permission("rgpd.droits.manage"))],
+    dependencies=[Depends(require_permission("rgpd.droits.process"))],
 )
 async def list_all_rights_requests(
     page: int = Query(1, ge=1),
@@ -146,7 +146,7 @@ async def list_all_rights_requests(
 @router.get(
     "/admin/{request_id}",
     response_model=RightsRequestResponse,
-    dependencies=[Depends(require_permission("rgpd.droits.manage"))],
+    dependencies=[Depends(require_permission("rgpd.droits.process"))],
 )
 async def get_rights_request_detail(
     request_id: int,
@@ -172,7 +172,7 @@ async def get_rights_request_detail(
 @router.put(
     "/admin/{request_id}",
     response_model=RightsRequestResponse,
-    dependencies=[Depends(require_permission("rgpd.droits.manage"))],
+    dependencies=[Depends(require_permission("rgpd.droits.process"))],
 )
 async def process_rights_request(
     request_id: int,

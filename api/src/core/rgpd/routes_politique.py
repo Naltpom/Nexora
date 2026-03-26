@@ -222,7 +222,7 @@ async def accept_legal_pages(
 @router.get(
     "/",
     response_model=LegalPageListResponse,
-    dependencies=[Depends(require_permission("rgpd.politique.manage"))],
+    dependencies=[Depends(require_permission("rgpd.politique.update"))],
 )
 async def list_legal_pages(db: AsyncSession = Depends(get_db)):
     """Admin: list all legal pages (published and drafts)."""
@@ -251,7 +251,7 @@ async def list_legal_pages(db: AsyncSession = Depends(get_db)):
 @router.put(
     "/{slug}",
     response_model=LegalPageResponse,
-    dependencies=[Depends(require_permission("rgpd.politique.manage"))],
+    dependencies=[Depends(require_permission("rgpd.politique.update"))],
 )
 async def upsert_legal_page(
     slug: str,
@@ -315,7 +315,7 @@ async def upsert_legal_page(
 @router.get(
     "/{slug}/versions",
     response_model=list[LegalPageVersionResponse],
-    dependencies=[Depends(require_permission("rgpd.politique.manage"))],
+    dependencies=[Depends(require_permission("rgpd.politique.update"))],
 )
 async def get_legal_page_versions(
     slug: str,

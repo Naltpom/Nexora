@@ -1,10 +1,14 @@
-"""Notification feature services: notification processing, queries."""
+"""Notification feature services: notification processing, queries.
+
+Features can register their own notification content builders via the
+content_builder_registry. See register_content_builder() below.
+"""
 
 from __future__ import annotations
 
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 
 from sqlalchemy import func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,45 +25,119 @@ logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
+#  Content builder registry (plugin mechanism for features)
+# ---------------------------------------------------------------------------
+
+# Type: callable(event) -> (title, body, link) or None
+ContentBuilderFn = Callable[..., tuple[str, str | None, str | None] | None]
+
+# Registry: maps event_type prefix -> builder function
+# Features register with register_content_builder("my_feature.*", my_builder)
+_content_builders: list[tuple[str, ContentBuilderFn]] = []
+
+
+def register_content_builder(event_pattern: str, builder: ContentBuilderFn) -> None:
+    """Register a content builder for a set of event types.
+
+    event_pattern can be:
+    - An exact event type: "my_feature.item_created"
+    - A wildcard prefix: "my_feature.*" (matches all my_feature.* events)
+    - A category prefix: "my_feature." (matches my_feature.*)
+
+    Features should call this at import time or during setup to register
+    their notification content builders.
+    """
+    _content_builders.append((event_pattern, builder))
+
+
+def _find_content_builder(event_type: str) -> ContentBuilderFn | None:
+    """Find the most specific content builder for an event type."""
+    # Try exact match first
+    for pattern, builder in _content_builders:
+        if pattern == event_type:
+            return builder
+
+    # Try prefix match (pattern ending with ".*" or just a prefix)
+    for pattern, builder in _content_builders:
+        if pattern.endswith(".*"):
+            prefix = pattern[:-2]
+            if event_type.startswith(prefix + "."):
+                return builder
+        elif pattern.endswith("."):
+            if event_type.startswith(pattern):
+                return builder
+
+    return None
+
+
+# ---------------------------------------------------------------------------
 #  Notification content builder
 # ---------------------------------------------------------------------------
 
 
-def build_notification_content(event: Event) -> tuple[str, str | None, str | None]:
-    """Build (title, body, link) from an Event."""
+def build_notification_content(event) -> tuple[str, str | None, str | None]:
+    """Build (title, body, link) from an Event or pseudo-event SimpleNamespace.
+
+    Core event types are handled here. Feature-specific event types are
+    delegated to registered content builders.
+    """
     payload = event.payload or {}
     actor = payload.get("actor_name", "Quelqu'un")
 
+    # ── Core identity events ──
     if event.event_type == "user.registered":
         user_name = payload.get("user_name", actor)
-        msg = f"{user_name} s'est inscrit"
-    elif event.event_type == "user.invited":
-        invited = payload.get("invited_email", "un utilisateur")
-        msg = f"{actor} a invite {invited}"
-    elif event.event_type == "user.invitation_accepted":
-        member = payload.get("member_name", "Un utilisateur")
-        msg = f"Invitation acceptee par {member}"
-    elif event.event_type == "user.updated":
-        msg = f"{actor} a mis a jour son profil"
-    elif event.event_type == "user.deactivated":
-        target = payload.get("target_name", "un utilisateur")
-        msg = f"{actor} a desactive {target}"
-    elif event.event_type == "admin.impersonation_started":
-        target = payload.get("target_name", "un utilisateur")
-        msg = f"{actor} impersonifie {target}"
-    else:
-        msg = event.event_type
+        return f"{user_name} s'est inscrit", None, None
 
-    title = msg
-    return title, None, None
+    if event.event_type == "user.invited":
+        title = "Vous avez ete invite sur l'application"
+        body = f"Par {actor}" if actor != "Quelqu'un" else None
+        return title, body, None
+
+    if event.event_type == "user.invitation_accepted":
+        member = payload.get("member_name", "Un utilisateur")
+        return f"Invitation acceptee par {member}", None, None
+
+    if event.event_type == "user.updated":
+        return f"{actor} a mis a jour son profil", None, None
+
+    if event.event_type == "user.deactivated":
+        target = payload.get("target_name", "un utilisateur")
+        return f"{actor} a desactive {target}", None, None
+
+    # ── Core admin events ──
+    if event.event_type == "admin.impersonation_started":
+        target = payload.get("target_name", "un utilisateur")
+        return f"{actor} impersonifie {target}", None, None
+
+    # ── Core lifecycle events ──
+    if event.event_type == "exports.ready":
+        export_label = payload.get("export_label", "Export")
+        fmt = payload.get("format", "")
+        count = payload.get("count", 0)
+        entry_uuid = payload.get("entry_uuid", "")
+        title = f"Export termine : {export_label}"
+        body = f"{count} element(s), format {fmt.upper()}" if count else f"Format {fmt.upper()}"
+        link = f"/exports?e={entry_uuid}" if entry_uuid else "/exports"
+        return title, body, link
+
+    # ── Feature-registered content builders (plugin mechanism) ──
+    builder = _find_content_builder(event.event_type)
+    if builder:
+        result = builder(event)
+        if result is not None:
+            return result
+
+    # ── Fallback: use event_type as title ──
+    return event.event_type, None, None
 
 
 def build_webhook_payload(
     webhook_format: str,
-    event: Event,
+    event,
     webhook_prefix: str | None = None,
 ) -> dict:
-    """Build a webhook payload for an Event, respecting the webhook format."""
+    """Build a webhook payload for an Event or pseudo-event, respecting the webhook format."""
     title, body, link = build_notification_content(event)
     compact = title
 
@@ -77,14 +155,15 @@ def build_webhook_payload(
             result["content"] = webhook_prefix
         return result
 
+    created_at = getattr(event, "created_at", None)
     result = {
         "event_type": event.event_type,
         "event_id": event.id,
         "actor_id": event.actor_id,
-        "resource_type": event.resource_type,
-        "resource_id": event.resource_id,
+        "resource_type": getattr(event, "resource_type", None),
+        "resource_id": getattr(event, "resource_id", None),
         "payload": event.payload,
-        "created_at": event.created_at.isoformat() if event.created_at else None,
+        "created_at": created_at.isoformat() if created_at else None,
     }
     if webhook_prefix:
         result["prefix"] = webhook_prefix
@@ -127,19 +206,23 @@ def resolve_channels(
 
 async def process_notifications(
     db: AsyncSession,
-    event: Event,
+    event,
 ) -> None:
-    """Match rules against the event, create notifications, trigger delivery channels."""
-    from .._identity.models import User
-    from .webhook.models import Webhook
+    """Match rules against the event, create targeted notifications.
 
-    # Get all active rules
+    Supports ``target_type`` values:
+    - ``"event_target"``: reads ``target_user_id`` from event payload (1 recipient)
+    - ``"users"``: uses ``rule.target_user_ids`` list
+    - ``"self"``: the rule creator
+    - ``"all"``: all active users (legacy, avoided for performance)
+    """
+    from .._identity.models import User
+
+    # Get matching rules
     result = await db.execute(
         select(NotificationRule).where(NotificationRule.is_active.is_(True))
     )
     all_rules = result.scalars().all()
-
-    # Find matching rules
     rules = [r for r in all_rules if r.matches_event(event.event_type)]
     if not rules:
         return
@@ -159,27 +242,33 @@ async def process_notifications(
     notified_users: set[int] = set()
     webhook_rule_ids: set[int] = set()
     explicit_webhook_ids: set[int] = set()
-
-    # Collect all pending work before doing bulk DB operations
     pending_inserts: list[dict] = []
     pending_deliveries: list[dict] = []
 
     for rule in rules:
-        # Resolve recipients — IDs only for "all" target (avoid loading full User objects)
-        if rule.target_type == "all":
-            user_result = await db.execute(
-                select(User.id).where(User.is_active.is_(True))
-            )
-            recipient_ids = {row[0] for row in user_result.all()}
+        # Resolve recipients based on target_type
+        if rule.target_type == "event_target":
+            target_id = (event.payload or {}).get("target_user_id")
+            if not target_id:
+                continue
+            recipient_ids = {target_id}
         elif rule.target_type == "users":
             recipient_ids = set(rule.target_user_ids or [])
         elif rule.target_type == "self":
             recipient_ids = {rule.created_by_id}
+        elif rule.target_type == "all":
+            user_result = await db.execute(
+                select(User.id).where(User.is_active.is_(True))
+            )
+            recipient_ids = {row[0] for row in user_result.all()}
         else:
-            recipient_ids = set()
+            continue
 
-        # Exclude the actor
-        recipient_ids.discard(event.actor_id)
+        # Don't notify actors about their own actions, except for
+        # event_target rules where the actor IS the intended recipient
+        # (e.g., "your export is ready").
+        if rule.target_type != "event_target":
+            recipient_ids.discard(event.actor_id)
         new_recipients = recipient_ids - notified_users
         if not new_recipients:
             continue
@@ -218,7 +307,6 @@ async def process_notifications(
                 "link": link,
             })
 
-            # Collect webhook data
             if channels["webhook"]:
                 if rule.is_default_template and pref and pref.webhook_ids:
                     explicit_webhook_ids.update(pref.webhook_ids)
@@ -229,33 +317,27 @@ async def process_notifications(
 
         notified_users.update(new_recipients)
 
-    # --- Batch insert notifications ---
+    # --- Insert notifications ---
     if pending_inserts:
         from sqlalchemy import insert as sa_insert
 
-        FANOUT_BATCH = 5000
+        stmt = sa_insert(Notification).values(pending_inserts).returning(
+            Notification.id, Notification.user_id, Notification.title,
+            Notification.body, Notification.link, Notification.created_at,
+        )
+        insert_result = await db.execute(stmt)
 
-        for i in range(0, len(pending_inserts), FANOUT_BATCH):
-            chunk = pending_inserts[i: i + FANOUT_BATCH]
-            stmt = sa_insert(Notification).values(chunk).returning(
-                Notification.id, Notification.user_id, Notification.title,
-                Notification.body, Notification.link, Notification.created_at,
-            )
-            insert_result = await db.execute(stmt)
-            inserted_rows = insert_result.all()
-
-            # Push SSE for each inserted notification
-            for row in inserted_rows:
-                notif_id, uid, n_title, n_body, n_link, n_created = row
-                await sse_broadcaster.push(uid, event_type="notification", data={
-                    "id": notif_id,
-                    "title": n_title,
-                    "body": n_body,
-                    "link": n_link,
-                    "is_read": False,
-                    "event_type": event.event_type,
-                    "created_at": n_created.isoformat() if n_created else None,
-                })
+        for row in insert_result.all():
+            notif_id, uid, n_title, n_body, n_link, n_created = row
+            await sse_broadcaster.push(uid, event_type="notification", data={
+                "id": notif_id,
+                "title": n_title,
+                "body": n_body,
+                "link": n_link,
+                "is_read": False,
+                "event_type": event.event_type,
+                "created_at": n_created.isoformat() if n_created else None,
+            })
 
         await db.flush()
 
@@ -287,9 +369,10 @@ async def process_notifications(
         if channels["push"]:
             await enqueue("send_push_task", uid, delivery["title"], delivery["body"], delivery["link"])
 
-    # Enqueue webhook deliveries
+    # --- Enqueue webhook deliveries ---
     if webhook_rule_ids or explicit_webhook_ids:
         from ..encryption import decrypt_value, is_encrypted
+        from .webhook.models import Webhook
 
         def _decrypt_secret(secret: str | None) -> str | None:
             if secret and is_encrypted(secret):
@@ -365,7 +448,7 @@ async def list_notifications(
 
     query = select(Notification, Event, User).join(
         Event, Notification.event_id == Event.id
-    ).join(
+    ).outerjoin(
         User, Notification.user_id == User.id
     )
 
@@ -414,8 +497,8 @@ async def list_notifications(
         }
         if include_admin_fields:
             row["user_id"] = notif.user_id
-            row["user_email"] = user.email
-            row["user_name"] = f"{user.first_name} {user.last_name}"
+            row["user_email"] = user.email if user else None
+            row["user_name"] = f"{user.first_name} {user.last_name}" if user else None
         rows.append(row)
 
     return rows, total, pages
@@ -541,7 +624,7 @@ async def list_all_rules(db: AsyncSession) -> list[dict]:
     from .._identity.models import User
 
     result = await db.execute(
-        select(NotificationRule, User).join(
+        select(NotificationRule, User).outerjoin(
             User, NotificationRule.created_by_id == User.id
         ).where(
             NotificationRule.target_type != "self",
@@ -558,7 +641,7 @@ async def list_my_rules(db: AsyncSession, user_id: int) -> list[dict]:
     from .._identity.models import User
 
     result = await db.execute(
-        select(NotificationRule, User).join(
+        select(NotificationRule, User).outerjoin(
             User, NotificationRule.created_by_id == User.id
         ).where(
             or_(

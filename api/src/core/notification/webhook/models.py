@@ -21,8 +21,8 @@ class Webhook(Base):
     is_global: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     format: Mapped[str] = mapped_column(String(20), default="custom", nullable=False)  # custom, slack, discord
     prefix: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    event_types: Mapped[list | None] = mapped_column(JSONB, nullable=True)  # null = all events
-    notification_rule_ids: Mapped[list | None] = mapped_column(JSONB, nullable=True)  # null = all rules
+    event_types: Mapped[list | None] = mapped_column(JSONB(none_as_null=True), nullable=True)  # null = all events
+    notification_rule_ids: Mapped[list | None] = mapped_column(JSONB(none_as_null=True), nullable=True)  # null = all rules
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )

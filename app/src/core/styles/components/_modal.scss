@@ -1,18 +1,25 @@
-/* Modal */
+/* ══════════════════════════════════════════════════════════════════════════
+   Modal — Global reusable modal patterns
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Overlay ── */
+
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.4);
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1100;
 }
 
+/* ── Base modal ── */
+
 .modal {
   background: white;
   border-radius: var(--radius);
-  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   width: 100%;
   max-width: 500px;
   max-height: 90vh;
@@ -26,6 +33,26 @@
     min-height: 0;
   }
 }
+
+/* ── Size variants ── */
+
+.modal--sm {
+  max-width: 400px;
+}
+
+.modal--md {
+  max-width: 560px;
+}
+
+.modal--lg {
+  max-width: 800px;
+}
+
+.modal--xl {
+  max-width: 900px;
+}
+
+/* ── Header ── */
 
 .modal-header {
   padding: 16px 20px;
@@ -50,12 +77,16 @@
   padding: 4px;
 }
 
+/* ── Body ── */
+
 .modal-body {
   padding: 20px;
   overflow-y: auto;
   flex: 1;
   min-height: 0;
 }
+
+/* ── Footer ── */
 
 .modal-footer {
   padding: 12px 20px;
@@ -66,7 +97,95 @@
   flex-shrink: 0;
 }
 
-/* Permissions modal - wider */
+/* ── Section divider inside modal body ── */
+
+.modal-section {
+  padding: var(--density-gap, 12px) 0;
+  border-top: 1px solid var(--gray-100);
+
+  &:first-child {
+    padding-top: 0;
+    border-top: none;
+  }
+}
+
+.modal-section-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+  color: var(--gray-700);
+}
+
+/* ── Spinner (reusable loading indicator) ── */
+
+.modal-spinner {
+  width: 1.125rem;
+  height: 1.125rem;
+  border: 2px solid var(--gray-200);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: modal-spin 0.7s linear infinite;
+}
+
+@keyframes modal-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── Status line (inline feedback: pending, success, error) ── */
+
+.modal-status {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+
+  &--pending {
+    color: var(--gray-500);
+  }
+
+  &--success {
+    color: var(--success, #10b981);
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  &--error {
+    color: var(--danger, #ef4444);
+  }
+}
+
+.modal-status-icon {
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+/* ── Inline error text ── */
+
+.modal-error {
+  color: var(--danger, #ef4444);
+  font-size: 0.8125rem;
+  margin: 0;
+}
+
+/* ── Empty state ── */
+
+.modal-empty {
+  font-size: 0.8125rem;
+  color: var(--gray-400);
+  font-style: italic;
+  margin: 0;
+}
+
+/* ── Highlighted row (for deep-link / focus) ── */
+
+.modal-row--highlighted {
+  background: var(--primary-light, rgba(30, 64, 175, 0.08));
+}
+
+/* ── Permissions modal (legacy alias, maps to --lg) ── */
+
 .modal-permissions {
   max-width: 800px;
 }
@@ -91,7 +210,8 @@
   color: var(--gray-400);
 }
 
-/* Recap modal */
+/* ── Recap modal ── */
+
 .recap-list {
   list-style: none;
   padding: 0;
@@ -133,6 +253,7 @@
 }
 
 /* Source badge */
+
 .source-badge {
   display: inline-flex;
   align-items: center;
@@ -143,26 +264,59 @@
 }
 
 .source-local {
-  background: #F3F4F6;
-  color: #6B7280;
+  background: #f3f4f6;
+  color: #6b7280;
 }
 
 .source-intranet {
-  background: #EDE9FE;
-  color: #6D28D9;
+  background: #ede9fe;
+  color: #6d28d9;
 }
 
-/* Dark overrides */
+/* ── Dark overrides ── */
+
 [data-theme="dark"] .modal {
   background: #1e1b2e;
-  border-color: rgba(255,255,255,0.08);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 [data-theme="dark"] .modal-header,
 [data-theme="dark"] .modal-footer {
-  border-color: rgba(255,255,255,0.08);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 [data-theme="dark"] .modal-close {
-  color: rgba(255,255,255,0.5);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+[data-theme="dark"] .modal-section {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .modal-section-title {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+[data-theme="dark"] .modal-empty {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+[data-theme="dark"] .modal-spinner {
+  border-color: rgba(255, 255, 255, 0.1);
+  border-top-color: var(--primary);
+}
+
+[data-theme="dark"] .modal-row--highlighted {
+  background: rgba(139, 92, 246, 0.15);
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 960px) {
+  .modal--lg,
+  .modal--xl,
+  .modal-permissions {
+    max-width: calc(100vw - 2rem);
+    margin: 1rem;
+  }
 }

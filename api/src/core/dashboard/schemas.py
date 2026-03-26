@@ -8,17 +8,20 @@ from pydantic import BaseModel
 class WidgetConfig(BaseModel):
     widget_id: str
     position: int
-    size: str = "half"  # "half" or "full"
+    size: str = "half"
+    height: int = 1  # 1-5 rows
     config: dict | None = None
 
 
 class LayoutResponse(BaseModel):
     widgets: list[WidgetConfig]
     source: str  # "user", "role", "default"
+    full_width: bool = False
 
 
 class LayoutSave(BaseModel):
     widgets: list[WidgetConfig]
+    full_width: bool = False
 
 
 class WidgetDefinitionResponse(BaseModel):
@@ -27,6 +30,8 @@ class WidgetDefinitionResponse(BaseModel):
     description: str
     category: str
     default_size: str
+    default_height: int = 1
+    icon: str | None = None
     data_endpoint: str | None = None
 
 

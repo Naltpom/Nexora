@@ -66,6 +66,23 @@ export function SearchResultItem({ result, isActive, onClick }: SearchResultItem
         {result.subtitle && <div className="command-palette-item-subtitle">{result.subtitle}</div>}
       </div>
       {result.badge && <span className="command-palette-item-badge">{result.badge}</span>}
+      {result.actions && result.actions.length > 0 && (
+        <div className="command-palette-item-actions">
+          {result.actions.map((action) => (
+            <button
+              key={action.key}
+              className="command-palette-item-action"
+              title={action.tooltip}
+              onClick={(e) => {
+                e.stopPropagation()
+                action.onClick()
+              }}
+            >
+              {action.icon}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

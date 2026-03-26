@@ -86,5 +86,8 @@
   "pagination_aria_label": "Pagination",
   "pagination_previous": "Page precedente",
   "pagination_next": "Page suivante",
-  "pagination_page_number": "Page {{page}}"
+  "pagination_page_number": "Page {{page}}",
+  "dashboard": "Tableau de bord",
+  "sidebar_expand": "Developper le menu",
+  "sidebar_collapse": "Reduire le menu"
 }

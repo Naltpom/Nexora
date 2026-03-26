@@ -1,0 +1,426 @@
+// ── OC selector (inside page-header-card) ──
+
+.exports-oc-selector {
+  display: flex;
+  align-items: center;
+  gap: var(--density-gap, 12px);
+}
+
+.exports-oc-label {
+  font-weight: 500;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.exports-oc-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+// ── Section grouping ──
+
+.exports-section {
+  margin-bottom: var(--section-gap, 24px);
+}
+
+.exports-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 var(--density-gap, 12px);
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--gray-100);
+  color: var(--gray-900);
+}
+
+.exports-scope-hint {
+  color: var(--gray-400);
+  font-size: 0.8125rem;
+  font-style: italic;
+  margin: 0;
+}
+
+// ── Cards grid ──
+
+.exports-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--density-gap, 12px);
+}
+
+// ── Compact card ──
+
+.export-card {
+  background: white;
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  overflow: hidden;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+}
+
+.export-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--density-gap, 12px);
+  padding: var(--density-card-padding, 24px);
+  user-select: none;
+}
+
+.export-card-icon {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  background: var(--primary-light, rgba(59, 130, 246, 0.1));
+  color: var(--primary);
+
+  svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}
+
+.export-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.export-card-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin: 0 0 0.125rem;
+  color: var(--gray-900);
+}
+
+.export-card-desc {
+  font-size: 0.8125rem;
+  color: var(--gray-400);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.export-card-badge {
+  flex-shrink: 0;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  &--xml {
+    background: rgba(245, 158, 11, 0.15);
+    color: #d97706;
+  }
+
+  &--excel {
+    background: rgba(16, 185, 129, 0.15);
+    color: #059669;
+  }
+
+  &--csv {
+    background: rgba(99, 102, 241, 0.15);
+    color: #6366f1;
+  }
+
+  &--json {
+    background: rgba(59, 130, 246, 0.15);
+    color: #3b82f6;
+  }
+
+  &--pdf {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+  }
+}
+
+// ── Export-specific modal content (params form) ──
+// Modal shell uses centralized .modal--xl from _modal.scss
+
+.export-modal-params {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-gap, 12px);
+  margin-bottom: var(--density-gap, 12px);
+}
+
+.export-modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.export-modal-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--gray-700);
+}
+
+.export-modal-required {
+  color: var(--danger, #ef4444);
+  margin-left: 0.125rem;
+}
+
+.export-modal-params .list-filter-select,
+.export-modal-params .list-search-input {
+  width: 100%;
+}
+
+.export-modal-years {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.export-modal-year {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  user-select: none;
+
+  input[type="checkbox"] {
+    cursor: pointer;
+  }
+}
+
+.export-modal-dates {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+// ── Export actions section (border separator) ──
+
+.export-actions {
+  border-bottom: 1px solid var(--gray-100);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+// ── Export modal table (compact) ──
+
+.export-modal-table {
+  font-size: 0.8125rem;
+
+  th, td {
+    padding: var(--density-padding, 8px 12px);
+  }
+}
+
+// ── Status badges ──
+
+.export-status-badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  &--success {
+    background: rgba(16, 185, 129, 0.15);
+    color: #059669;
+  }
+
+  &--pending {
+    background: rgba(245, 158, 11, 0.15);
+    color: #d97706;
+  }
+
+  &--error {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+  }
+}
+
+// ── Standalone history section ──
+
+.exports-history {
+  margin-top: var(--section-gap, 24px);
+}
+
+.export-history-oc {
+  font-size: 0.75rem;
+  color: var(--gray-400);
+}
+
+.export-history-params {
+  max-width: 350px;
+}
+
+.export-history-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.export-history-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.75rem;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--gray-100);
+}
+
+.export-history-badge-label {
+  padding: 0.125rem 0.375rem;
+  background: var(--gray-50);
+  color: var(--gray-500);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.export-history-badge-value {
+  padding: 0.125rem 0.375rem;
+  color: var(--gray-700);
+  white-space: nowrap;
+}
+
+.export-history-actions {
+  display: flex;
+  gap: 0.375rem;
+}
+
+// ── Dark theme ──
+
+[data-theme="dark"] {
+  .exports-section-title {
+    color: rgba(255, 255, 255, 0.9);
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .exports-scope-hint {
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  .export-card {
+    background: #1e1b2e;
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+
+    &:hover {
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  .export-card-title {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .export-card-desc {
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  .export-card-badge {
+    &--xml {
+      background: rgba(245, 158, 11, 0.2);
+      color: #fbbf24;
+    }
+
+    &--excel {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+    }
+
+    &--csv {
+      background: rgba(99, 102, 241, 0.2);
+      color: #a5b4fc;
+    }
+
+    &--json {
+      background: rgba(59, 130, 246, 0.2);
+      color: #93c5fd;
+    }
+
+    &--pdf {
+      background: rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+    }
+  }
+
+  .export-modal-label {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .export-actions {
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .export-status-badge {
+    &--success {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+    }
+
+    &--pending {
+      background: rgba(245, 158, 11, 0.2);
+      color: #fbbf24;
+    }
+
+    &--error {
+      background: rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+    }
+  }
+
+  .export-history-badge {
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .export-history-badge-label {
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .export-history-badge-value {
+    color: rgba(255, 255, 255, 0.8);
+  }
+}
+
+// ── Responsive ──
+
+@media (max-width: 960px) {
+  .export-modal-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .exports-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .export-modal-dates {
+    flex-direction: column;
+  }
+
+  .export-modal-years {
+    gap: 0.375rem;
+  }
+
+  .exports-oc-selector {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

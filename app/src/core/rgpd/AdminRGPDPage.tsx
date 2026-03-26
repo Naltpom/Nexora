@@ -264,7 +264,7 @@ function RegisterTab() {
 
       <div className="rgpd-section-header">
         <h2>{t('admin_register_tab.heading')}</h2>
-        {can('rgpd.registre.manage') && (
+        {can('rgpd.registre.create') && (
           <button
             className="btn btn-primary btn-sm"
             onClick={() => { resetForm(); setShowForm(true) }}
@@ -342,14 +342,18 @@ function RegisterTab() {
             <article key={entry.id} className="unified-card rgpd-register-item">
               <div className="rgpd-register-item-header">
                 <h3>{entry.name}</h3>
-                {can('rgpd.registre.manage') && (
+                {(can('rgpd.registre.update') || can('rgpd.registre.delete')) && (
                   <div className="rgpd-register-actions">
-                    <button className="btn-icon btn-icon-secondary" onClick={() => handleEdit(entry)} aria-label={t('admin_register_tab.btn_edit_title')}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                    </button>
-                    <button className="btn-icon btn-icon-danger" onClick={() => handleDelete(entry.id)} aria-label={t('admin_register_tab.btn_delete_title')}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                    </button>
+                    {can('rgpd.registre.update') && (
+                      <button className="btn-icon btn-icon-secondary" onClick={() => handleEdit(entry)} aria-label={t('admin_register_tab.btn_edit_title')}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      </button>
+                    )}
+                    {can('rgpd.registre.delete') && (
+                      <button className="btn-icon btn-icon-danger" onClick={() => handleDelete(entry.id)} aria-label={t('admin_register_tab.btn_delete_title')}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -435,7 +439,7 @@ function RightsTab() {
                 {req.admin_response && (
                   <div className="rgpd-request-response"><strong>{t('admin_rights_tab.response_label')}</strong> {req.admin_response}</div>
                 )}
-                {can('rgpd.droits.manage') && (req.status === 'pending' || req.status === 'processing') ? (
+                {can('rgpd.droits.process') && (req.status === 'pending' || req.status === 'processing') ? (
                   processingId === req.id ? (
                     <form
                       className="rgpd-process-form"
@@ -700,7 +704,7 @@ function LegalPagesTab() {
                 >
                   {t('admin_legal_pages_tab.btn_history')}
                 </button>
-                {can('rgpd.politique.manage') && (
+                {can('rgpd.politique.update') && (
                   <button className="btn btn-secondary btn-sm" onClick={() => handleEdit(page)}>
                     {t('admin_legal_pages_tab.btn_edit')}
                   </button>

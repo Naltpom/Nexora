@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { usePermission } from '../../core/PermissionContext'
 import Layout from '../../core/Layout'
-import api from '../../api'
+import api, { parseApiError } from '../../api'
 import '../_identity/_identity.scss'
 import './notifications.scss'
 
@@ -377,8 +377,13 @@ export default function NotificationSettings() {
   }
 
   const saveWebhook = async () => {
-    if (!webhookForm.url.trim()) {
+    const url = webhookForm.url.trim()
+    if (!url) {
       setError(t('webhook_modal_error_url_required'))
+      return
+    }
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      setError(t('webhook_modal_error_url_invalid'))
       return
     }
     setSaving(true)
@@ -386,7 +391,7 @@ export default function NotificationSettings() {
     try {
       const payload: any = {
         name: webhookForm.name || null,
-        url: webhookForm.url,
+        url,
         secret: webhookForm.secret || null,
         format: webhookForm.format,
         prefix: webhookForm.prefix || null,
@@ -405,7 +410,7 @@ export default function NotificationSettings() {
       setShowWebhookModal(false)
       loadData()
     } catch (err: any) {
-      setError(err.response?.data?.detail || t('webhook_modal_error_save'))
+      setError(parseApiError(err, t('webhook_modal_error_save')))
     } finally {
       setSaving(false)
     }

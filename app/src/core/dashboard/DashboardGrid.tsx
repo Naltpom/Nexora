@@ -14,14 +14,23 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import WidgetWrapper from './WidgetWrapper'
-import type { WidgetConfig } from './useDashboard'
+import type { WidgetConfig, WidgetSize, WidgetHeight } from './useDashboard'
 
 interface DashboardGridProps {
   widgets: WidgetConfig[]
   editMode: boolean
   onMove: (from: number, to: number) => void
   onRemove: (index: number) => void
-  onResize: (index: number, size: 'half' | 'full') => void
+  onResize: (index: number, size: WidgetSize) => void
+  onResizeHeight: (index: number, height: WidgetHeight) => void
+}
+
+function gridItemClass(widget: WidgetConfig, extra?: string): string {
+  const h = widget.height || 1
+  let cls = `dashboard-grid-item dashboard-grid-item--${widget.size}`
+  if (h > 1) cls += ` dashboard-grid-item--h${h}`
+  if (extra) cls += ` ${extra}`
+  return cls
 }
 
 function SortableWidget({
@@ -30,12 +39,14 @@ function SortableWidget({
   editMode,
   onRemove,
   onResize,
+  onResizeHeight,
 }: {
   widget: WidgetConfig
   index: number
   editMode: boolean
   onRemove: (index: number) => void
-  onResize: (index: number, size: 'half' | 'full') => void
+  onResize: (index: number, size: WidgetSize) => void
+  onResizeHeight: (index: number, height: WidgetHeight) => void
 }) {
   const {
     attributes,
@@ -56,7 +67,7 @@ function SortableWidget({
     <div
       ref={setNodeRef}
       style={style}
-      className={`dashboard-grid-item dashboard-grid-item--${widget.size}${isDragging ? ' dashboard-grid-item--dragging' : ''}`}
+      className={gridItemClass(widget, isDragging ? 'dashboard-grid-item--dragging' : undefined)}
     >
       <WidgetWrapper
         widget={widget}
@@ -65,6 +76,7 @@ function SortableWidget({
         dragListeners={listeners}
         onRemove={() => onRemove(index)}
         onResize={(size) => onResize(index, size)}
+        onResizeHeight={(height) => onResizeHeight(index, height)}
       />
     </div>
   )
@@ -76,6 +88,7 @@ export default function DashboardGrid({
   onMove,
   onRemove,
   onResize,
+  onResizeHeight,
 }: DashboardGridProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -106,13 +119,14 @@ export default function DashboardGrid({
         {widgets.map((widget, index) => (
           <div
             key={`${widget.widget_id}-${index}`}
-            className={`dashboard-grid-item dashboard-grid-item--${widget.size}`}
+            className={gridItemClass(widget)}
           >
             <WidgetWrapper
               widget={widget}
               editMode={false}
               onRemove={() => {}}
               onResize={() => {}}
+              onResizeHeight={() => {}}
             />
           </div>
         ))}
@@ -138,6 +152,7 @@ export default function DashboardGrid({
               editMode={editMode}
               onRemove={onRemove}
               onResize={onResize}
+              onResizeHeight={onResizeHeight}
             />
           ))}
         </div>

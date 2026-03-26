@@ -1,16 +1,16 @@
 import { useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
-import type { WidgetDefinition, WidgetConfig } from './useDashboard'
+import type { WidgetDefinition, WidgetConfig, WidgetSize, WidgetHeight } from './useDashboard'
 
 interface WidgetCatalogProps {
   available: WidgetDefinition[]
   current: WidgetConfig[]
-  onAdd: (id: string, size: 'half' | 'full') => void
+  onAdd: (id: string, size: WidgetSize, height: WidgetHeight) => void
   onClose: () => void
 }
 
-const CATEGORY_ORDER = ['stats', 'activity', 'system', 'links', 'info']
+const CATEGORY_ORDER = ['business', 'charts', 'monitoring', 'stats', 'activity', 'system', 'links', 'info']
 
 export default function WidgetCatalog({
   available,
@@ -63,7 +63,7 @@ export default function WidgetCatalog({
                       className={`catalog-item${alreadyAdded ? ' catalog-item--disabled' : ''}`}
                       onClick={() => {
                         if (!alreadyAdded) {
-                          onAdd(w.id, w.default_size as 'half' | 'full')
+                          onAdd(w.id, w.default_size as WidgetSize, (w.default_height || 1) as WidgetHeight)
                         }
                       }}
                       disabled={alreadyAdded}

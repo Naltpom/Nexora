@@ -2,6 +2,13 @@ import { ReactNode } from 'react'
 
 export type SearchCategory = 'users' | 'announcements' | string
 
+export interface SearchResultAction {
+  key: string
+  icon: ReactNode
+  tooltip: string
+  onClick: () => void
+}
+
 export interface SearchResult {
   id: string | number
   category: SearchCategory
@@ -11,6 +18,7 @@ export interface SearchResult {
   badge?: string
   link?: string
   onSelect?: () => void
+  actions?: SearchResultAction[]
 }
 
 export interface SearchResultGroup {

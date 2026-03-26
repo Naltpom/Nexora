@@ -1,9 +1,15 @@
-"""Dashboard feature routes."""
+"""Dashboard feature routes.
+
+Generic dashboard routes. Features register their own widget data providers
+via the widget_registry; the GET /widgets/{widget_id}/data endpoint dispatches
+to them automatically.
+"""
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
+from ..events import event_bus
 from ..permissions import require_permission
 from ..security import get_current_user
 from .schemas import (
@@ -24,6 +30,7 @@ from .services import (
     get_stats_users,
     get_system_health,
     get_user_layout,
+    get_widget_data,
     save_default_layout,
     save_user_layout,
 )
@@ -74,10 +81,15 @@ async def get_layout(
 ):
     """Get the current user's dashboard layout (resolved: user -> role -> default)."""
     role_slugs = await _get_user_role_slugs(db, current_user.id)
-    widgets, source = await get_user_layout(db, current_user.id, role_slugs)
+    user_perms = await _get_user_perms(db, current_user.id)
+    active_features = await _get_active_features()
+    widgets, source, full_width = await get_user_layout(
+        db, current_user.id, role_slugs, user_perms, active_features,
+    )
     return LayoutResponse(
         widgets=[WidgetConfig(**w) for w in widgets],
         source=source,
+        full_width=full_width,
     )
 
 
@@ -91,7 +103,9 @@ async def save_layout(
     db: AsyncSession = Depends(get_db),
 ):
     """Save the current user's personal dashboard layout."""
-    await save_user_layout(db, current_user.id, [w.model_dump() for w in data.widgets])
+    await save_user_layout(
+        db, current_user.id, [w.model_dump() for w in data.widgets], data.full_width,
+    )
     return {"ok": True}
 
 
@@ -133,13 +147,53 @@ async def list_widgets(
             description=w.description,
             category=w.category,
             default_size=w.default_size,
+            default_height=w.default_height,
+            icon=w.icon,
             data_endpoint=w.data_endpoint,
         )
         for w in available
     ]
 
 
-# ── Widget data endpoints ────────────────────────────────────────────────
+# ── Generic widget data endpoint ─────────────────────────────────────────
+# Dispatches to data_provider callbacks registered on WidgetDefinition.
+# Features register their own data providers when they register widgets.
+
+
+@router.get(
+    "/widgets/{widget_id}/data",
+    dependencies=[Depends(require_permission("dashboard.read"))],
+)
+async def widget_data(
+    widget_id: str,
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get data for a specific widget via its registered data provider."""
+    widget_def = widget_registry.get_by_id(widget_id)
+    if not widget_def:
+        raise HTTPException(status_code=404, detail="Widget not found")
+
+    # Check permission
+    if widget_def.required_permission:
+        user_perms = await _get_user_perms(db, current_user.id)
+        if user_perms.get(widget_def.required_permission) is not True:
+            raise HTTPException(status_code=403, detail="Permission denied")
+
+    # Check feature gate
+    if widget_def.feature_gate:
+        active_features = await _get_active_features()
+        if widget_def.feature_gate not in active_features:
+            raise HTTPException(status_code=404, detail="Feature not active")
+
+    data = await get_widget_data(db, widget_id, user_id=current_user.id)
+    if data is None:
+        raise HTTPException(status_code=404, detail="No data provider for this widget")
+    return data
+
+
+# ── Core widget data endpoints ───────────────────────────────────────────
+# Named endpoints for the built-in template widgets.
 
 
 @router.get(
@@ -201,7 +255,7 @@ async def system_health(db: AsyncSession = Depends(get_db)):
 @router.get(
     "/defaults/{role_slug}",
     response_model=LayoutResponse,
-    dependencies=[Depends(require_permission("dashboard.manage"))],
+    dependencies=[Depends(require_permission("dashboard.update"))],
 )
 async def get_default(
     role_slug: str,
@@ -220,25 +274,32 @@ async def get_default(
 
 @router.put(
     "/defaults/{role_slug}",
-    dependencies=[Depends(require_permission("dashboard.manage"))],
+    dependencies=[Depends(require_permission("dashboard.update"))],
 )
 async def save_default(
     role_slug: str,
     data: LayoutSave,
+    current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Save the default layout for a role."""
     slug = None if role_slug == "__global__" else role_slug
     await save_default_layout(db, slug, [w.model_dump() for w in data.widgets])
+    await event_bus.emit(
+        "dashboard.defaults.updated", db=db, actor_id=current_user.id,
+        resource_type="dashboard_default", resource_id=0,
+        payload={"role_slug": role_slug},
+    )
     return {"ok": True}
 
 
 @router.delete(
     "/defaults/{role_slug}",
-    dependencies=[Depends(require_permission("dashboard.manage"))],
+    dependencies=[Depends(require_permission("dashboard.delete"))],
 )
 async def delete_default(
     role_slug: str,
+    current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Delete the default layout for a role."""
@@ -246,4 +307,9 @@ async def delete_default(
     found = await delete_default_layout(db, slug)
     if not found:
         raise HTTPException(status_code=404, detail="No default layout found")
+    await event_bus.emit(
+        "dashboard.defaults.deleted", db=db, actor_id=current_user.id,
+        resource_type="dashboard_default", resource_id=0,
+        payload={"role_slug": role_slug},
+    )
     return {"ok": True}

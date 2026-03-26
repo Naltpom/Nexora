@@ -55,7 +55,7 @@ async def list_favorites_endpoint(
     "/",
     response_model=FavoriteResponse,
     status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(require_permission("favorite.manage"))],
+    dependencies=[Depends(require_permission("favorite.create"))],
 )
 async def create_favorite_endpoint(
     data: FavoriteCreate,
@@ -93,7 +93,7 @@ async def create_favorite_endpoint(
 @router.put(
     "/{favorite_id}",
     response_model=FavoriteResponse,
-    dependencies=[Depends(require_permission("favorite.manage"))],
+    dependencies=[Depends(require_permission("favorite.update"))],
 )
 async def update_favorite_endpoint(
     favorite_id: int,
@@ -129,7 +129,7 @@ async def update_favorite_endpoint(
 @router.delete(
     "/{favorite_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    dependencies=[Depends(require_permission("favorite.manage"))],
+    dependencies=[Depends(require_permission("favorite.delete"))],
 )
 async def delete_favorite_endpoint(
     favorite_id: int,
@@ -153,7 +153,7 @@ async def delete_favorite_endpoint(
 
 @router.put(
     "/reorder",
-    dependencies=[Depends(require_permission("favorite.manage"))],
+    dependencies=[Depends(require_permission("favorite.update"))],
 )
 async def reorder_favorites_endpoint(
     data: FavoriteReorder,

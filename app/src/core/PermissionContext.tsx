@@ -2,28 +2,36 @@ import { createContext, useContext, useState, useEffect, useCallback, useMemo, R
 import api from '../api'
 import { useAuth } from './AuthContext'
 
+export interface PermissionGrant {
+  is_global: boolean
+  scopes: Record<string, number[]>
+}
+
 interface PermissionContextType {
-  permissions: string[]
+  grants: Record<string, PermissionGrant>
+  permissions: string[]  // backward compat: list of permission codes
   loading: boolean
   can: (code: string) => boolean
   canAny: (...codes: string[]) => boolean
   canAll: (...codes: string[]) => boolean
+  canGlobal: (code: string) => boolean
+  getGrant: (code: string) => PermissionGrant | undefined
   refreshPermissions: () => Promise<void>
 }
 
 const PermissionContext = createContext<PermissionContextType | undefined>(undefined)
 
 export function PermissionProvider({ children }: { children: ReactNode }) {
-  const [permissions, setPermissions] = useState<string[]>([])
+  const [grants, setGrants] = useState<Record<string, PermissionGrant>>({})
   const [loading, setLoading] = useState(true)
   const { user } = useAuth()
 
   const fetchPermissions = useCallback(async () => {
     try {
       const response = await api.get('/auth/me/permissions')
-      setPermissions(response.data.permissions || [])
+      setGrants(response.data.permissions || {})
     } catch {
-      setPermissions([])
+      setGrants({})
     } finally {
       setLoading(false)
     }
@@ -31,20 +39,23 @@ export function PermissionProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!user) {
-      setPermissions([])
+      setGrants({})
       setLoading(false)
       return
     }
     fetchPermissions()
   }, [user?.id, fetchPermissions])
 
-  const can = useCallback((code: string): boolean => permissions.includes(code), [permissions])
-  const canAny = useCallback((...codes: string[]): boolean => codes.some(c => permissions.includes(c)), [permissions])
-  const canAll = useCallback((...codes: string[]): boolean => codes.every(c => permissions.includes(c)), [permissions])
+  const permissions = useMemo(() => Object.keys(grants), [grants])
+  const can = useCallback((code: string) => code in grants, [grants])
+  const canAny = useCallback((...codes: string[]) => codes.some(c => c in grants), [grants])
+  const canAll = useCallback((...codes: string[]) => codes.every(c => c in grants), [grants])
+  const canGlobal = useCallback((code: string) => grants[code]?.is_global === true, [grants])
+  const getGrant = useCallback((code: string): PermissionGrant | undefined => grants[code], [grants])
 
   const contextValue = useMemo(() => ({
-    permissions, loading, can, canAny, canAll, refreshPermissions: fetchPermissions
-  }), [permissions, loading, can, canAny, canAll, fetchPermissions])
+    grants, permissions, loading, can, canAny, canAll, canGlobal, getGrant, refreshPermissions: fetchPermissions
+  }), [grants, permissions, loading, can, canAny, canAll, canGlobal, getGrant, fetchPermissions])
 
   return (
     <PermissionContext.Provider value={contextValue}>

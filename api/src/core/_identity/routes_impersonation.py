@@ -64,7 +64,7 @@ async def start_impersonation(
     target = result.scalar_one_or_none()
     if not target:
         raise HTTPException(status_code=404, detail="Utilisateur cible introuvable")
-    if not target.is_active:
+    if not target.is_active or not target.can_login:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Impossible d'impersonifier un utilisateur inactif",
@@ -160,7 +160,7 @@ async def stop_impersonation(
     # Get admin user
     result = await db.execute(select(User).where(User.id == admin_user_id))
     admin = result.scalar_one_or_none()
-    if not admin or not admin.is_active:
+    if not admin or not admin.is_active or not admin.can_login:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Utilisateur administrateur introuvable",
@@ -226,7 +226,7 @@ async def switch_impersonation(
     target = result.scalar_one_or_none()
     if not target:
         raise HTTPException(status_code=404, detail="Utilisateur cible introuvable")
-    if not target.is_active:
+    if not target.is_active or not target.can_login:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Impossible d'impersonifier un utilisateur inactif",

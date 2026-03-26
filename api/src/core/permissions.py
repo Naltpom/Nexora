@@ -1,6 +1,7 @@
 """Permission checking system with granular feature.action permissions."""
 
 import logging
+from dataclasses import dataclass, field
 
 from cachetools import TTLCache
 from fastapi import Depends, HTTPException, Request, status
@@ -12,6 +13,22 @@ from .database import get_db
 from .security import get_current_user
 
 logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+#  PermissionGrant — carries scope information per permission
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class PermissionGrant:
+    is_global: bool = False
+    scopes: dict[str, list[int]] = field(default_factory=dict)
+
+    @property
+    def granted(self) -> bool:
+        return self.is_global or any(bool(ids) for ids in self.scopes.values())
+
 
 # In-process TTL cache: key = user_id (int), value = effective permission dict
 _permission_cache: TTLCache = TTLCache(
@@ -118,6 +135,29 @@ def require_permission(*codes: str):
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail=f"Permission requise: {code}",
                 )
+        return current_user
+
+    return checker
+
+
+def require_any_permission(*codes: str):
+    """
+    FastAPI dependency: user must have at least ONE of the listed permissions.
+
+    Usage:
+        @router.get("/", dependencies=[Depends(require_any_permission("a.read", "b.read"))])
+    """
+
+    async def checker(
+        current_user=Depends(get_current_user),
+        db: AsyncSession = Depends(get_db),
+    ):
+        user_perms = await load_user_permissions(db, current_user.id)
+        if not any(user_perms.get(code) is True for code in codes):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Permission requise (au moins une): {', '.join(codes)}",
+            )
         return current_user
 
     return checker

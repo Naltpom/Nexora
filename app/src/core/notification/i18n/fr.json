@@ -165,6 +165,7 @@
   "webhook_modal_save_edit": "Modifier",
   "webhook_modal_save_create": "Creer",
   "webhook_modal_error_url_required": "L'URL est requise",
+  "webhook_modal_error_url_invalid": "L'URL doit commencer par http:// ou https://",
   "webhook_modal_error_save": "Erreur lors de la sauvegarde",
 
   "channel_in_app": "In-App",

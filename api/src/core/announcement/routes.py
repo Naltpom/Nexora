@@ -142,7 +142,7 @@ async def list_modal_user(
 
 @router.post(
     "/upload-image",
-    dependencies=[Depends(require_permission("announcement.manage"))],
+    dependencies=[Depends(require_permission("announcement.create"))],
 )
 async def upload_rte_image(
     file: UploadFile = File(...),
@@ -192,7 +192,7 @@ async def _broadcast_announcement(ann: Announcement, action: str = "created"):
 @router.get(
     "/",
     response_model=PaginatedResponse[AnnouncementAdminResponse],
-    dependencies=[Depends(require_permission("announcement.manage"))],
+    dependencies=[Depends(require_permission("announcement.create"))],
 )
 async def list_admin(
     pagination: PaginationParams = Depends(PaginationParams(
@@ -214,7 +214,7 @@ async def list_admin(
     "/",
     response_model=AnnouncementAdminResponse,
     status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(require_permission("announcement.manage"))],
+    dependencies=[Depends(require_permission("announcement.create"))],
 )
 async def create(
     data: AnnouncementCreate,
@@ -269,7 +269,7 @@ async def create(
 @router.put(
     "/{announcement_id}",
     response_model=AnnouncementAdminResponse,
-    dependencies=[Depends(require_permission("announcement.manage"))],
+    dependencies=[Depends(require_permission("announcement.update"))],
 )
 async def update(
     announcement_id: int,
@@ -335,7 +335,7 @@ async def update(
 @router.delete(
     "/{announcement_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    dependencies=[Depends(require_permission("announcement.manage"))],
+    dependencies=[Depends(require_permission("announcement.delete"))],
 )
 async def delete(
     announcement_id: int,
@@ -373,7 +373,7 @@ async def delete(
 @router.get(
     "/{announcement_id}/acknowledgments",
     response_model=list[AcknowledgmentDetail],
-    dependencies=[Depends(require_permission("announcement.manage"))],
+    dependencies=[Depends(require_permission("announcement.update"))],
 )
 async def acknowledgments(
     announcement_id: int,

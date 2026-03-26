@@ -37,7 +37,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <Layout title={t('page_title')}>
+    <Layout title={t('page_title')} fullWidth={dashboard.fullWidth}>
       <div className="dashboard-page">
         {/* Header */}
         <section className="dashboard-header" aria-labelledby="dashboard-greeting">
@@ -68,9 +68,12 @@ export default function DashboardPage() {
         {dashboard.editMode && (
           <DashboardEditBar
             onAddWidget={() => setCatalogOpen(true)}
+            onAddSpacer={() => dashboard.addWidget('spacer', 'col-6')}
             onSave={dashboard.saveLayout}
             onCancel={dashboard.cancelEdit}
             onReset={dashboard.resetLayout}
+            onToggleFullWidth={dashboard.toggleFullWidth}
+            fullWidth={dashboard.fullWidth}
             saving={dashboard.saving}
           />
         )}
@@ -82,6 +85,7 @@ export default function DashboardPage() {
           onMove={dashboard.moveWidget}
           onRemove={dashboard.removeWidget}
           onResize={dashboard.resizeWidget}
+          onResizeHeight={dashboard.resizeWidgetHeight}
         />
 
         {/* Widget catalog modal */}
@@ -89,8 +93,8 @@ export default function DashboardPage() {
           <WidgetCatalog
             available={dashboard.availableWidgets}
             current={dashboard.editMode ? dashboard.activeWidgets : []}
-            onAdd={(id, size) => {
-              dashboard.addWidget(id, size)
+            onAdd={(id, size, height) => {
+              dashboard.addWidget(id, size, height)
               setCatalogOpen(false)
             }}
             onClose={() => setCatalogOpen(false)}

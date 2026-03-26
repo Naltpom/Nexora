@@ -109,6 +109,7 @@ def create_app() -> FastAPI:
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["Authorization", "Content-Type", "Accept", "Accept-Language"],
+        expose_headers=["Content-Disposition"],
     )
 
     # ── Security headers ──────────────────────────────────────────────

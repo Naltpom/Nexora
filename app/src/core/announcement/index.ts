@@ -6,7 +6,7 @@ export const manifest = {
     {
       path: '/admin/announcements',
       component: lazy(() => import('./AnnouncementAdmin')),
-      permission: 'announcement.manage',
+      permission: 'announcement.create',
     },
     {
       path: '/announcements',
@@ -29,7 +29,7 @@ export const manifest = {
       icon: 'megaphone',
       section: 'admin',
       adminGroup: 'systeme',
-      permission: 'announcement.manage',
+      permission: 'announcement.create',
       order: 20,
     },
   ],

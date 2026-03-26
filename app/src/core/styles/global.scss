@@ -9,6 +9,7 @@
 
 // Navigation & structure
 @use 'components/header';
+@use 'components/sidebar';
 @use 'components/breadcrumb';
 
 // Base UI
@@ -19,6 +20,7 @@
 @use 'components/badges';
 @use 'components/loading';
 @use 'components/error-boundary';
+@use 'components/tabs';
 
 // Content
 @use 'components/cards';
@@ -28,6 +30,10 @@
 @use 'components/unified-table';
 @use 'components/inline-edit';
 @use 'components/rich-text';
+
+// Patterns
+@use 'components/detail-patterns';
+@use 'components/list-patterns';
 
 // Dropdowns & selects
 @use 'components/multi-select';

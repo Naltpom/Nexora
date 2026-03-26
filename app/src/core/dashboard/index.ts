@@ -6,7 +6,7 @@ export const manifest = {
     {
       path: '/dashboard/admin',
       component: lazy(() => import('./DashboardAdmin')),
-      permission: 'dashboard.manage',
+      permission: 'dashboard.update',
     },
   ],
   navItems: [
@@ -16,7 +16,7 @@ export const manifest = {
       icon: 'layout-dashboard',
       section: 'admin',
       adminGroup: 'systeme',
-      permission: 'dashboard.manage',
+      permission: 'dashboard.update',
       order: 5,
     },
   ],

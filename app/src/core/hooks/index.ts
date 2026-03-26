@@ -1,3 +1,7 @@
 export { useScrollReveal } from './useScrollReveal'
 export { useCountUp } from './useCountUp'
 export { useMediaQuery } from './useMediaQuery'
+export { useSortableTable } from './useSortableTable'
+export type { SortDirection, SortType } from './useSortableTable'
+export { SortableHeader } from './SortableHeader'
+export { useSingleItemRedirect } from './useSingleItemRedirect'

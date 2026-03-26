@@ -27,10 +27,14 @@ const api = axios.create({
   withCredentials: true,
 })
 
-// Request interceptor: attach JWT from memory
+// Request interceptor: attach JWT from memory + handle FormData content-type
 api.interceptors.request.use((config) => {
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`
+  }
+  // Let the browser set the correct Content-Type (with boundary) for FormData
+  if (config.data instanceof FormData) {
+    delete config.headers['Content-Type']
   }
   return config
 })
@@ -102,5 +106,23 @@ api.interceptors.response.use(
     return Promise.reject(error)
   }
 )
+
+/**
+ * Parse API error detail into a displayable string.
+ * Handles both string detail (FastAPI HTTPException) and array detail (Pydantic 422).
+ */
+export function parseApiError(err: any, fallback: string): string {
+  const detail = err?.response?.data?.detail
+  if (typeof detail === 'string') return detail
+  if (Array.isArray(detail)) {
+    return detail
+      .map((e: any) => {
+        const msg: string = e.msg || ''
+        return msg.replace(/^Value error, /i, '')
+      })
+      .join('. ')
+  }
+  return fallback
+}
 
 export default api

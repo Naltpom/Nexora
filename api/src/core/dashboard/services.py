@@ -1,5 +1,10 @@
-"""Dashboard feature services."""
+"""Dashboard feature services.
 
+Generic dashboard layout management with plugin-based widget data dispatch.
+Features register their own widgets and data providers via the widget_registry.
+"""
+
+import logging
 import time
 from datetime import datetime, timedelta, timezone
 
@@ -8,14 +13,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .models import DashboardLayout
 
+logger = logging.getLogger(__name__)
+
 # ── Default layouts ──────────────────────────────────────────────────────
+# Only reference generic template widgets that ship with the core.
 
 DEFAULT_ADMIN_WIDGETS = [
     {"widget_id": "stats_users", "position": 0, "size": "half"},
     {"widget_id": "stats_events", "position": 1, "size": "half"},
     {"widget_id": "stats_notifications", "position": 2, "size": "half"},
     {"widget_id": "stats_invitations", "position": 3, "size": "half"},
-    {"widget_id": "activity_feed", "position": 4, "size": "full"},
+    {"widget_id": "activity_feed", "position": 4, "size": "full", "height": 2},
     {"widget_id": "system_health", "position": 5, "size": "full"},
     {"widget_id": "quick_links_admin", "position": 6, "size": "half"},
     {"widget_id": "quick_links_user", "position": 7, "size": "half"},
@@ -25,7 +33,7 @@ DEFAULT_USER_WIDGETS = [
     {"widget_id": "welcome_banner", "position": 0, "size": "full"},
     {"widget_id": "stats_notifications", "position": 1, "size": "half"},
     {"widget_id": "quick_links_user", "position": 2, "size": "half"},
-    {"widget_id": "activity_feed", "position": 3, "size": "full"},
+    {"widget_id": "activity_feed", "position": 3, "size": "full", "height": 2},
     {"widget_id": "feature_showcase", "position": 4, "size": "full"},
 ]
 
@@ -39,15 +47,21 @@ async def get_user_layout(
     db: AsyncSession,
     user_id: int,
     role_slugs: list[str],
-) -> tuple[list[dict], str]:
-    """Resolve layout: user -> role -> default. Returns (widgets, source)."""
-    # 1. User-specific layout
+    user_perms: dict[str, bool | None] | None = None,
+    active_features: set[str] | None = None,
+) -> tuple[list[dict], str, bool]:
+    """Resolve layout: user -> role -> default. Returns (widgets, source, full_width).
+
+    When user_perms and active_features are provided, non-user layouts are
+    filtered to only include widgets the user has access to.
+    """
+    # 1. User-specific layout (no filtering - user chose these)
     result = await db.execute(
         select(DashboardLayout).where(DashboardLayout.user_id == user_id)
     )
     layout = result.scalar_one_or_none()
     if layout:
-        return layout.widgets, "user"
+        return layout.widgets, "user", layout.full_width
 
     # 2. Role-based layout (first match)
     for slug in role_slugs:
@@ -59,7 +73,8 @@ async def get_user_layout(
         )
         layout = result.scalar_one_or_none()
         if layout:
-            return layout.widgets, "role"
+            widgets = _filter_widgets(layout.widgets, user_perms, active_features)
+            return widgets, "role", layout.full_width
 
     # 3. Default layout
     result = await db.execute(
@@ -71,19 +86,34 @@ async def get_user_layout(
     )
     layout = result.scalar_one_or_none()
     if layout:
-        return layout.widgets, "default"
+        widgets = _filter_widgets(layout.widgets, user_perms, active_features)
+        return widgets, "default", layout.full_width
 
     # 4. Hardcoded fallback based on roles
     has_admin = any(s in ("super_admin", "admin") for s in role_slugs)
-    if has_admin:
-        return DEFAULT_ADMIN_WIDGETS, "default"
-    return DEFAULT_USER_WIDGETS, "default"
+    widgets = DEFAULT_ADMIN_WIDGETS if has_admin else DEFAULT_USER_WIDGETS
+    widgets = _filter_widgets(widgets, user_perms, active_features)
+    return widgets, "default", False
+
+
+def _filter_widgets(
+    widgets: list[dict],
+    user_perms: dict[str, bool | None] | None,
+    active_features: set[str] | None,
+) -> list[dict]:
+    """Filter widgets by permission and feature gate when context is available."""
+    if user_perms is None or active_features is None:
+        return widgets
+    from .widget_registry import widget_registry
+    available_ids = {w.id for w in widget_registry.get_available(user_perms, active_features)}
+    return [w for w in widgets if w["widget_id"] in available_ids]
 
 
 async def save_user_layout(
     db: AsyncSession,
     user_id: int,
     widgets: list[dict],
+    full_width: bool = False,
 ) -> None:
     """Save or update the user's personal layout."""
     result = await db.execute(
@@ -92,8 +122,9 @@ async def save_user_layout(
     layout = result.scalar_one_or_none()
     if layout:
         layout.widgets = widgets
+        layout.full_width = full_width
     else:
-        db.add(DashboardLayout(user_id=user_id, widgets=widgets))
+        db.add(DashboardLayout(user_id=user_id, widgets=widgets, full_width=full_width))
     await db.flush()
 
 
@@ -167,7 +198,26 @@ async def delete_default_layout(
     return True
 
 
-# ── Widget data endpoints ────────────────────────────────────────────────
+# ── Generic widget data dispatch ─────────────────────────────────────────
+
+
+async def get_widget_data(db: AsyncSession, widget_id: str, **kwargs) -> dict | list | None:
+    """Dispatch to the registered data provider for a widget.
+
+    Returns None if the widget has no data provider registered.
+    Features register data providers via WidgetDefinition.data_provider.
+    """
+    from .widget_registry import widget_registry
+
+    widget = widget_registry.get_by_id(widget_id)
+    if not widget or not widget.data_provider:
+        return None
+    return await widget.data_provider(db, **kwargs)
+
+
+# ── Core widget data functions ───────────────────────────────────────────
+# These are the data providers for the built-in template widgets.
+# Project-specific widget data providers are registered by features.
 
 
 async def get_stats_users(db: AsyncSession) -> dict:

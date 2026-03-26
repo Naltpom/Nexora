@@ -27,6 +27,7 @@ class Notification(Base):
     email_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     webhook_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     push_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    required_permission: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), primary_key=True,
