@@ -106,7 +106,7 @@ services:
     build:
       context: ./deploy/nginx
       dockerfile: Dockerfile
-    container_name: nexora_nginx
+    container_name: sitter_nginx
     restart: unless-stopped
     ports:
       - "80:80"
@@ -135,7 +135,7 @@ services:
   # ── Certbot (Let's Encrypt auto-renewal) ───────────────────────────
   certbot:
     image: certbot/certbot
-    container_name: nexora_certbot
+    container_name: sitter_certbot
     restart: unless-stopped
     volumes:
       - certbot_conf:/etc/letsencrypt

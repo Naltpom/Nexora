@@ -3,14 +3,14 @@ services:
     build:
       context: ./db
       dockerfile: Dockerfile
-    container_name: nexora_db
+    container_name: sitter_db
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5470:5432"
+      - "5480:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
       - ./db/init:/docker-entrypoint-initdb.d
@@ -24,14 +24,14 @@ services:
     build:
       context: ./pgbouncer
       dockerfile: Dockerfile
-    container_name: nexora_pgbouncer
+    container_name: sitter_pgbouncer
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "6431:6432"
+      - "6441:6432"
     depends_on:
       db:
         condition: service_healthy
@@ -44,10 +44,10 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: nexora_redis
+    container_name: sitter_redis
     restart: unless-stopped
     ports:
-      - "6479:6379"
+      - "6489:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -60,12 +60,12 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
-    container_name: nexora_api
+    container_name: sitter_api
     restart: unless-stopped
     env_file:
       - .env
     ports:
-      - "5471:8000"
+      - "5481:8000"
     volumes:
       - upload_files:/app/uploads
       - rich_text_images:/app/rich_text_images
@@ -89,7 +89,7 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
-    container_name: nexora_worker
+    container_name: sitter_worker
     restart: unless-stopped
     env_file:
       - .env
@@ -112,7 +112,7 @@ services:
 
   clamav:
     image: clamav/clamav:stable
-    container_name: nexora_clamav
+    container_name: sitter_clamav
     restart: unless-stopped
     volumes:
       - clamav_data:/var/lib/clamav
@@ -125,14 +125,14 @@ services:
 
   meilisearch:
     image: getmeili/meilisearch:v1.12
-    container_name: nexora_meilisearch
+    container_name: sitter_meilisearch
     restart: unless-stopped
     environment:
       MEILI_MASTER_KEY: ${MEILISEARCH_MASTER_KEY:-meili_dev_master_key}
       MEILI_ENV: ${MEILISEARCH_ENV:-development}
       MEILI_NO_ANALYTICS: "true"
     ports:
-      - "7700:7700"
+      - "7710:7700"
     volumes:
       - meilisearch_data:/meili_data
     healthcheck:
@@ -146,13 +146,13 @@ services:
     build:
       context: ./app
       dockerfile: Dockerfile
-    container_name: nexora_app
+    container_name: sitter_app
     restart: unless-stopped
     environment:
       - VITE_API_URL=${VITE_API_URL}
       - VITE_ENV=${ENV}
     ports:
-      - "5472:3000"
+      - "5482:3000"
     depends_on:
       api:
         condition: service_healthy

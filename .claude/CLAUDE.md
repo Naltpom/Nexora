@@ -11,7 +11,7 @@ Architecture modulaire feature-based avec Feature Registry.
 
 ## Mode de developpement
 
-MODE: can_both
+MODE: project
 
 Valeurs possibles :
 - `template` → les nouvelles features vont dans `core/` (api + app), automatiquement
@@ -42,7 +42,7 @@ Quand tu crees une feature :
 - PostgreSQL
 
 ### Infra
-- Docker : 3 services (db:5470, api:5471, app:5472)
+- Docker : 3 services (db:5480, api:5481, app:5482)
 - Hot reload en dev (uvicorn --reload + vite)
 
 ## Securite & Autorisation (RBAC)

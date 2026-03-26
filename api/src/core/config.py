@@ -42,7 +42,7 @@ class Settings(BaseSettings):
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
     SMTP_FROM_EMAIL: str = "noreply@example.com"
-    SMTP_FROM_NAME: str = "Nexora"
+    SMTP_FROM_NAME: str = "Sitter"
     SMTP_USE_TLS: bool = True
     EMAIL_ENABLED: bool = False
 
@@ -76,7 +76,7 @@ class Settings(BaseSettings):
     SSO_GITHUB_REDIRECT_URI: str = "http://localhost:5472/sso/callback/github"
 
     # MFA - TOTP
-    MFA_TOTP_ISSUER_NAME: str = "Nexora"
+    MFA_TOTP_ISSUER_NAME: str = "Sitter"
 
     # MFA - Email OTP
     MFA_EMAIL_CODE_LENGTH: int = 6

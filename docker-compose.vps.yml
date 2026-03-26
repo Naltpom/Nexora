@@ -1,0 +1,35 @@
+# VPS override — system Nginx handles SSL/proxy, no Docker nginx/certbot
+# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml -f docker-compose.vps.yml up -d
+
+services:
+  # Override ports: expose on localhost only (for system Nginx proxy)
+  api:
+    ports: !override
+      - "127.0.0.1:5481:8000"
+
+  app:
+    ports: !override
+      - "127.0.0.1:5482:80"
+
+  # Remove all external ports for internal services
+  db:
+    ports: !override []
+
+  pgbouncer:
+    ports: !override []
+
+  redis:
+    ports: !override []
+
+  meilisearch:
+    ports: !override []
+
+  # Disable Docker-managed nginx (system Nginx handles this)
+  nginx:
+    profiles:
+      - disabled
+
+  # Disable Docker-managed certbot (system Certbot handles this)
+  certbot:
+    profiles:
+      - disabled
