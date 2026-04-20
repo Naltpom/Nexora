@@ -65,7 +65,7 @@ services:
     env_file:
       - .env
     ports:
-      - "5481:8000"
+      - "5471:8000"
     volumes:
       - upload_files:/app/uploads
       - rich_text_images:/app/rich_text_images
@@ -152,7 +152,7 @@ services:
       - VITE_API_URL=${VITE_API_URL}
       - VITE_ENV=${ENV}
     ports:
-      - "5482:3000"
+      - "5472:3000"
     depends_on:
       api:
         condition: service_healthy
