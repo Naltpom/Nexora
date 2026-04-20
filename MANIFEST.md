@@ -744,8 +744,8 @@ deja presente fait rollback toute la transaction et bloque toute la chaine
 de migrations.
 
 ```python
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 from src.core.alembic_helpers import has_column, has_index, has_table, has_unique_constraint
 

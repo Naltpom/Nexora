@@ -10,9 +10,10 @@ Convention: `if not has_X(...): op.create_X(...)` on upgrade,
 
 Example::
 
-    from alembic import op
     import sqlalchemy as sa
-    from src.core.alembic_helpers import has_column, has_table, has_index
+    from alembic import op
+
+    from src.core.alembic_helpers import has_column, has_index, has_table
 
     def upgrade() -> None:
         if not has_column("users", "can_login"):
@@ -25,8 +26,8 @@ Example::
         if has_column("users", "can_login"):
             op.drop_column("users", "can_login")
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 
 def _inspector() -> sa.Inspector:

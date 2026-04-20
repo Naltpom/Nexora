@@ -19,11 +19,10 @@ Create Date: 2026-04-20 08:25:31.859099
 """
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 from src.core.alembic_helpers import has_column, has_index, has_table, has_unique_constraint
-
 
 # revision identifiers, used by Alembic.
 revision: str = '74aa82f2daf9'
