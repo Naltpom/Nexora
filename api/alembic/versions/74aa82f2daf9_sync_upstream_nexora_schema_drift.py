@@ -7,10 +7,10 @@ Catch-up migration for drift between ORM models and existing migrations:
 - Drops uq_sso_user_provider unique constraint (replaced by partial index)
 - Adds users.can_login (unblocks startup admin promote query)
 
-Each operation is idempotent: if a project has already applied part of the
-drift manually (e.g. added can_login by hand), the migration inspects the
-live schema and skips what is already there. Safe to run on any DB state
-<= revision u4v5w6x7y8z9.
+Each operation is idempotent via alembic.helpers: if a project has already
+applied part of the drift manually (e.g. added can_login by hand), the
+migration inspects the live schema and skips what is already there. Safe
+to run on any DB state <= revision u4v5w6x7y8z9.
 
 Revision ID: 74aa82f2daf9
 Revises: u4v5w6x7y8z9
@@ -22,6 +22,8 @@ from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 
+from alembic.helpers import has_column, has_index, has_table, has_unique_constraint
+
 
 # revision identifiers, used by Alembic.
 revision: str = '74aa82f2daf9'
@@ -30,35 +32,9 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
-def _inspector():
-    return sa.inspect(op.get_bind())
-
-
-def _has_table(name: str) -> bool:
-    return name in _inspector().get_table_names()
-
-
-def _has_column(table: str, column: str) -> bool:
-    if not _has_table(table):
-        return False
-    return column in {c["name"] for c in _inspector().get_columns(table)}
-
-
-def _has_index(table: str, index: str) -> bool:
-    if not _has_table(table):
-        return False
-    return index in {i["name"] for i in _inspector().get_indexes(table)}
-
-
-def _has_unique_constraint(table: str, name: str) -> bool:
-    if not _has_table(table):
-        return False
-    return name in {c["name"] for c in _inspector().get_unique_constraints(table)}
-
-
 def upgrade() -> None:
     # ── export_history table ────────────────────────────────────────────
-    if not _has_table("export_history"):
+    if not has_table("export_history"):
         op.create_table(
             "export_history",
             sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
@@ -89,23 +65,23 @@ def upgrade() -> None:
         ("ix_export_history_user_id", ["user_id"], False),
         ("ix_export_history_uuid", ["uuid"], True),
     ]:
-        if not _has_index("export_history", idx_name):
+        if not has_index("export_history", idx_name):
             op.create_index(idx_name, "export_history", cols, unique=unique)
 
     # ── dashboard_layouts.full_width ────────────────────────────────────
-    if not _has_column("dashboard_layouts", "full_width"):
+    if not has_column("dashboard_layouts", "full_width"):
         op.add_column(
             "dashboard_layouts",
             sa.Column("full_width", sa.Boolean(), server_default="false", nullable=False),
         )
 
     # ── notifications.required_permission + index ──────────────────────
-    if not _has_column("notifications", "required_permission"):
+    if not has_column("notifications", "required_permission"):
         op.add_column(
             "notifications",
             sa.Column("required_permission", sa.String(length=100), nullable=True),
         )
-    if not _has_index("notifications", "ix_notifications_required_permission"):
+    if not has_index("notifications", "ix_notifications_required_permission"):
         op.create_index(
             "ix_notifications_required_permission",
             "notifications",
@@ -114,11 +90,11 @@ def upgrade() -> None:
         )
 
     # ── drop uq_sso_user_provider (only if it still exists) ────────────
-    if _has_unique_constraint("sso_accounts", "uq_sso_user_provider"):
+    if has_unique_constraint("sso_accounts", "uq_sso_user_provider"):
         op.drop_constraint("uq_sso_user_provider", "sso_accounts", type_="unique")
 
     # ── users.can_login ────────────────────────────────────────────────
-    if not _has_column("users", "can_login"):
+    if not has_column("users", "can_login"):
         op.add_column(
             "users",
             sa.Column("can_login", sa.Boolean(), server_default="true", nullable=False),
@@ -126,10 +102,10 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    if _has_column("users", "can_login"):
+    if has_column("users", "can_login"):
         op.drop_column("users", "can_login")
 
-    if not _has_unique_constraint("sso_accounts", "uq_sso_user_provider"):
+    if not has_unique_constraint("sso_accounts", "uq_sso_user_provider"):
         op.create_unique_constraint(
             "uq_sso_user_provider",
             "sso_accounts",
@@ -137,12 +113,12 @@ def downgrade() -> None:
             postgresql_nulls_not_distinct=False,
         )
 
-    if _has_index("notifications", "ix_notifications_required_permission"):
+    if has_index("notifications", "ix_notifications_required_permission"):
         op.drop_index("ix_notifications_required_permission", table_name="notifications")
-    if _has_column("notifications", "required_permission"):
+    if has_column("notifications", "required_permission"):
         op.drop_column("notifications", "required_permission")
 
-    if _has_column("dashboard_layouts", "full_width"):
+    if has_column("dashboard_layouts", "full_width"):
         op.drop_column("dashboard_layouts", "full_width")
 
     for idx_name in [
@@ -152,8 +128,8 @@ def downgrade() -> None:
         "ix_export_history_feature_name",
         "ix_export_history_export_id",
     ]:
-        if _has_index("export_history", idx_name):
+        if has_index("export_history", idx_name):
             op.drop_index(idx_name, table_name="export_history")
 
-    if _has_table("export_history"):
+    if has_table("export_history"):
         op.drop_table("export_history")
