@@ -733,7 +733,58 @@ Si la feature cree des tables, generer une migration :
 docker compose exec api alembic -c alembic/alembic.ini revision --autogenerate -m "add ma_feature tables"
 ```
 
-Pour des donnees de bootstrap (global permissions, roles, etc.) → migration data :
+### Regle absolue : migrations idempotentes
+
+Toute migration schema (ajout de colonne, table, index, contrainte) **doit**
+etre gardee par une verification `if not has_X(...)` / `if has_X(...)` via
+les helpers de `src/core/alembic_helpers.py`. Objectif : une meme revision doit
+pouvoir tourner sur n'importe quel etat de DB, meme si un projet amont a
+deja patche manuellement une partie du drift. Sans ca, une seule colonne
+deja presente fait rollback toute la transaction et bloque toute la chaine
+de migrations.
+
+```python
+import sqlalchemy as sa
+from alembic import op
+
+from src.core.alembic_helpers import has_column, has_index, has_table, has_unique_constraint
+
+
+def upgrade() -> None:
+    if not has_column("users", "can_login"):
+        op.add_column(
+            "users",
+            sa.Column("can_login", sa.Boolean(), server_default="true", nullable=False),
+        )
+
+    if not has_index("notifications", "ix_notifications_required_permission"):
+        op.create_index(
+            "ix_notifications_required_permission",
+            "notifications",
+            ["required_permission"],
+        )
+
+
+def downgrade() -> None:
+    if has_index("notifications", "ix_notifications_required_permission"):
+        op.drop_index("ix_notifications_required_permission", table_name="notifications")
+
+    if has_column("users", "can_login"):
+        op.drop_column("users", "can_login")
+```
+
+Helpers disponibles : `has_table`, `has_column`, `has_index`,
+`has_unique_constraint`, `has_foreign_key`, `has_check_constraint`.
+
+Apres avoir genere une migration via `--autogenerate`, relire le fichier et
+envelopper chaque `op.add_column` / `op.create_table` / `op.create_index` /
+`op.drop_constraint` avec le helper approprie. L'autogenerate ne le fait
+**pas** automatiquement.
+
+### Migrations de donnees (seeds)
+
+Pour des donnees de bootstrap (global permissions, roles, etc.) → migration data.
+Utiliser `ON CONFLICT DO NOTHING` pour l'idempotence cote DML :
 
 ```bash
 docker compose exec api alembic -c alembic/alembic.ini revision -m "add ma_feature global permissions"
@@ -777,6 +828,7 @@ Avant de considerer la feature comme terminee :
 - [ ] Events emis via `persist_event()` dans les services/routes
 - [ ] Tutorials declares dans le manifest (si pertinent)
 - [ ] Migration Alembic generee (si modeles DB)
+- [ ] Migration **idempotente** : chaque op gardee par `has_table/has_column/has_index/...` (cf. section 15)
 - [ ] Migration data pour GlobalPermission (si permissions pour tous les users)
 
 ### Frontend
