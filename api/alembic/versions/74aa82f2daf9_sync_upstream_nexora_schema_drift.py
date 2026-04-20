@@ -22,7 +22,7 @@ from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 
-from alembic.helpers import has_column, has_index, has_table, has_unique_constraint
+from src.core.alembic_helpers import has_column, has_index, has_table, has_unique_constraint
 
 
 # revision identifiers, used by Alembic.

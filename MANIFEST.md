@@ -737,7 +737,7 @@ docker compose exec api alembic -c alembic/alembic.ini revision --autogenerate -
 
 Toute migration schema (ajout de colonne, table, index, contrainte) **doit**
 etre gardee par une verification `if not has_X(...)` / `if has_X(...)` via
-les helpers de `api/alembic/helpers.py`. Objectif : une meme revision doit
+les helpers de `src/core/alembic_helpers.py`. Objectif : une meme revision doit
 pouvoir tourner sur n'importe quel etat de DB, meme si un projet amont a
 deja patche manuellement une partie du drift. Sans ca, une seule colonne
 deja presente fait rollback toute la transaction et bloque toute la chaine
@@ -747,7 +747,7 @@ de migrations.
 from alembic import op
 import sqlalchemy as sa
 
-from alembic.helpers import has_column, has_index, has_table, has_unique_constraint
+from src.core.alembic_helpers import has_column, has_index, has_table, has_unique_constraint
 
 
 def upgrade() -> None:

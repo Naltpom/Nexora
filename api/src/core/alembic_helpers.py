@@ -12,7 +12,7 @@ Example::
 
     from alembic import op
     import sqlalchemy as sa
-    from alembic.helpers import has_column, has_table, has_index
+    from src.core.alembic_helpers import has_column, has_table, has_index
 
     def upgrade() -> None:
         if not has_column("users", "can_login"):
